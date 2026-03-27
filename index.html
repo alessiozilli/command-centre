@@ -17,7 +17,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:16
 .app{display:flex;flex-direction:column;min-height:100vh}
 /* SETUP */
 .setup-wrap{display:none;min-height:100vh;align-items:center;justify-content:center;padding:24px}
-.setup-wrap.show{display:flex}
+.setup-wrap.show{display:fle
 .setup-card{background:var(--surf);border:1px solid var(--surf3);border-radius:20px;padding:36px;width:100%;max-width:560px}
 .setup-logo{font-family:'Lexend Mega',sans-serif;font-size:13px;letter-spacing:0.09em;color:var(--text3);margin-bottom:24px}
 .setup-h{font-size:22px;font-weight:600;margin-bottom:6px}
@@ -542,7 +542,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeM();});
 
 (async()=>{
   const SB_URL='https://twrlvnfszohyrmivdhre.supabase.co';
-  const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3cmx2bmZzem9oeXJtaXZkaHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMwNzE5NzEsImV4cCI6MjA1ODY0Nzk3MX0.o96DFNbBObst0EAmX51rnRFXzu8oTN1o-HNAxN7MY8A';
+  const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3cmx2bmZzem9oeXJtaXZkaHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NjkxMTMsImV4cCI6MjA5MDE0NTExM30.o96DFNbBObst0EAmX51rnRFXzu8oTN1o-HNAxN7MY8A';
   sb=window.supabase.createClient(SB_URL,SB_KEY);
   await boot();
 })();
