@@ -212,6 +212,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:16
 <div class="toast" id="toast"></div>
 
 <script>
+/* ── GIST CONFIG ── */
+const GIST_ID='26f51aa8d43249be8cc62ee03c9df7cd',GIST_TOKEN='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',GIST_FILE='cc_tasks.json';
 /* ── DATA ── */
 const CATS = [
   {key:'per', label:'Personal',        color:'--per'},
@@ -284,42 +286,14 @@ const SEED = {
   ]
 };
 
-function load(){
-  try {
-    const raw = localStorage.getItem('cc_tasks');
-    data = raw ? JSON.parse(raw) : {};
-  } catch(e){ data = {}; }
-  // Seed with default tasks if empty
-  let isEmpty = true;
-  CATS.forEach(c => { if(data[c.key] && data[c.key].length > 0) isEmpty = false; });
-  if(isEmpty) data = JSON.parse(JSON.stringify(SEED));
-  CATS.forEach(c => { if(!data[c.key]) data[c.key] = []; });
-  persist();
-}
-function persist(){
-  showSyncStatus('saving');
-  try {
-    localStorage.setItem('cc_tasks', JSON.stringify(data));
-    setTimeout(()=> showSyncStatus('synced'), 400);
-  } catch(e){
-    showSyncStatus('error');
-  }
-}
-function showSyncStatus(state){
-  const dot = document.getElementById('syncDot');
-  const label = document.getElementById('syncLabel');
-  dot.className = 'sync-dot';
-  if(state === 'saving'){
-    dot.classList.add('saving');
-    label.textContent = 'Saving...';
-  } else if(state === 'synced'){
-    label.textContent = 'Synced';
-  } else if(state === 'error'){
-    dot.classList.add('error');
-    label.textContent = 'Sync error';
-  }
-}
-
+/* ── GIST SYNC ── */
+function debounce(fn,d){let t;return function(...a){clearTimeout(t);t=setTimeout(()=>fn(...a),d);}}
+async function fetchFromGist(){try{const r=await fetch('https://api.github.com/gists/'+GIST_ID,{headers:{'Authorization':'token '+GIST_TOKEN}});if(!r.ok)throw new Error(r.status);const g=await r.json();const f=g.files[GIST_FILE];if(!f)throw new Error('no file');return JSON.parse(f.content);}catch(e){console.error('Gist fetch:',e);return null;}}
+async function pushToGist(){try{const r=await fetch('https://api.github.com/gists/'+GIST_ID,{method:'PATCH',headers:{'Authorization':'token '+GIST_TOKEN,'Content-Type':'application/json'},body:JSON.stringify({files:{[GIST_FILE]:{content:JSON.stringify(data)}}})});if(!r.ok)throw new Error(r.status);showSyncStatus('synced');}catch(e){console.error('Gist push:',e);showSyncStatus('error');}}
+const debouncedPush=debounce(pushToGist,500);
+async function load(){showSyncStatus('loading');const g=await fetchFromGist();if(g){data=g;try{localStorage.setItem('cc_tasks',JSON.stringify(data));}catch(e){}showSyncStatus('synced');}else{try{const raw=localStorage.getItem('cc_tasks');data=raw?JSON.parse(raw):{};}catch(e){data={};}let empty=true;CATS.forEach(c=>{if(data[c.key]&&data[c.key].length>0)empty=false;});if(empty)data=JSON.parse(JSON.stringify(SEED));showSyncStatus('synced');}CATS.forEach(c=>{if(!data[c.key])data[c.key]=[];});}
+function persist(){showSyncStatus('saving');try{localStorage.setItem('cc_tasks',JSON.stringify(data));}catch(e){showSyncStatus('error');return;}debouncedPush();}
+function showSyncStatus(state){const dot=document.getElementById('syncDot');const label=document.getElementById('syncLabel');dot.className='sync-dot';if(state==='loading'){dot.classList.add('saving');label.textContent='Loading...';}else if(state==='saving'){dot.classList.add('saving');label.textContent='Saving...';}else if(state==='synced'){label.textContent='Synced';}else if(state==='error'){dot.classList.add('error');label.textContent='Sync error';}}
 /* ── HELPERS ── */
 function fmtDate(iso){
   if(!iso) return '';
@@ -574,8 +548,7 @@ function del(id){
 
 
 /* ── INIT ── */
-load();
-render();
+load().then(()=>{render();});
 </script>
 </body>
 </html>
