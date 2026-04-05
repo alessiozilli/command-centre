@@ -1,554 +1,1833 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Command Centre — Alessio</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&family=Lexend+Mega:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --az:#990000;--qf:#c4922a;--per:#3a7fbf;--td:#2a9e8f;--fam:#9b72cf;
-  --bg:#0f0f0f;--surf:#1a1a1a;--surf2:#242424;--surf3:#2e2e2e;
-  --text:#f0ede8;--text2:#a09c96;--text3:#6a6762;--border:#2e2e2e;
-  --r:10px;--font:'Lexend',sans-serif;
-}
-body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:16px;line-height:1.75;letter-spacing:0.02em;min-height:100vh}
-.app{display:flex;flex-direction:column;min-height:100vh}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AZ Command Centre</title>
+    <style>
+        /* ===== RESET & GLOBAL ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-/* HEADER */
-.hdr{padding:14px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surf);flex-wrap:wrap;gap:12px}
-.hdr-left{display:flex;flex-direction:column}
-.brand{font-family:'Lexend Mega',sans-serif;font-size:15px;letter-spacing:0.07em;color:var(--text)}
-.datelbl{font-size:11px;color:var(--text3);font-weight:300;margin-top:1px}
-.hdr-right{display:flex;align-items:center;gap:20px}
-.hdr-stats{display:flex;gap:18px}
-.stat{font-size:12px;color:var(--text3)}
-.stat strong{color:var(--text2);font-weight:500}
-.sync-status{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text3);font-weight:400;letter-spacing:0.01em}
-.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--td);flex-shrink:0;transition:background .3s}
-.sync-dot.saving{background:var(--qf);animation:pulse .6s ease-in-out}
-.sync-dot.error{background:#e05555}
-.sync-label{transition:opacity .2s}
-@keyframes pulse{0%{opacity:1}50%{opacity:.4}100%{opacity:1}}
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #0d1117;
+            color: #e6edf3;
+            line-height: 1.6;
+            font-size: 16px;
+        }
 
-/* TABS */
-.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--surf);overflow-x:auto}
-.tab{padding:10px 22px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--text3);font-family:var(--font);letter-spacing:0.02em;position:relative;white-space:nowrap;transition:color .15s}
-.tab:hover{color:var(--text2)}
-.tab.a-per{color:var(--per)}.tab.a-az{color:var(--az)}.tab.a-qf{color:var(--qf)}.tab.a-td{color:var(--td)}.tab.a-fam{color:var(--fam)}
-.tab.a-per::after,.tab.a-az::after,.tab.a-qf::after,.tab.a-td::after,.tab.a-fam::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
-.tab.a-per::after{background:var(--per)}.tab.a-az::after{background:var(--az)}.tab.a-qf::after{background:var(--qf)}.tab.a-td::after{background:var(--td)}.tab.a-fam::after{background:var(--fam)}
-.tc{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:8px}
-.tc-per{background:var(--per)}.tc-az{background:var(--az)}.tc-qf{background:var(--qf)}.tc-td{background:var(--td)}.tc-fam{background:var(--fam)}
+        /* ===== HEADER ===== */
+        header {
+            background-color: #161b22;
+            border-bottom: 1px solid #30363d;
+            padding: 2rem 2rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
 
-/* MAIN */
-.main{flex:1;padding:24px;max-width:900px;width:100%;margin:0 auto}
-.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px}
-.pt{font-size:20px;font-weight:600}
-.pt small{font-weight:300;font-size:13px;color:var(--text3);margin-left:8px}
-.add-btn{padding:8px 16px;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:var(--font);letter-spacing:0.02em;display:flex;align-items:center;gap:6px;transition:opacity .15s;white-space:nowrap}
-.add-btn:hover{opacity:.85}
-.ab-per{background:var(--per);color:#fff}.ab-az{background:var(--az);color:#fff}
-.ab-qf{background:var(--qf);color:#1a0e00}.ab-td{background:var(--td);color:#fff}.ab-fam{background:var(--fam);color:#fff}
+        header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            flex: 1;
+            min-width: 200px;
+        }
 
-/* STATS ROW */
-.sr{display:flex;gap:14px;margin-bottom:6px;flex-wrap:wrap}
-.sr span{font-size:12px;color:var(--text3)}
-.sr strong{color:var(--text2);font-weight:500}
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
 
-/* PROGRESS */
-.pb-wrap{height:3px;background:var(--surf3);border-radius:2px;margin-bottom:14px;overflow:hidden}
-.pb{height:100%;border-radius:2px;transition:width .3s}
-.pb-per{background:var(--per)}.pb-az{background:var(--az)}.pb-qf{background:var(--qf)}.pb-td{background:var(--td)}.pb-fam{background:var(--fam)}
+        .header-date {
+            font-size: 0.95rem;
+            color: #8b949e;
+            font-weight: 500;
+        }
 
-/* FILTER BUTTONS */
-.fb{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
-.fb-btn{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text3);font-family:var(--font);transition:all .15s}
-.fb-btn:hover{border-color:var(--text3)}
-.fb-btn.on{color:#fff;border-color:transparent}
-.fb-per.on{background:var(--per)}.fb-az.on{background:var(--az)}.fb-qf.on{background:var(--qf)}.fb-td.on{background:var(--td)}.fb-fam.on{background:var(--fam)}
+        .status-bar {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.9rem;
+        }
 
-/* TASK CARDS */
-.tg{display:flex;flex-direction:column;gap:8px}
-.card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;display:flex;align-items:flex-start;gap:12px;border-left:3px solid transparent;transition:background .15s}
-.card:hover{background:var(--surf2)}
-.bl-per{border-left-color:var(--per)}.bl-az{border-left-color:var(--az)}.bl-qf{border-left-color:var(--qf)}.bl-td{border-left-color:var(--td)}.bl-fam{border-left-color:var(--fam)}
-.card.done-card{opacity:.45}
-.chk{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);background:transparent;cursor:pointer;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:12px;color:transparent;transition:all .15s}
-.chk:hover{border-color:var(--text3)}
-.chk.checked{border-color:var(--td);color:var(--td)}
-.tb{flex:1;min-width:0}
-.tt{font-size:14px;font-weight:500;margin-bottom:2px}
-.tn{font-size:12px;color:var(--text3);line-height:1.5}
-.ta{display:flex;align-items:center;gap:8px;flex-shrink:0}
-.pri{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;padding:3px 8px;border-radius:4px}
-.pri-high{background:rgba(220,60,60,.15);color:#e05555}
-.pri-medium{background:rgba(196,146,42,.12);color:var(--qf)}
-.pri-low{background:rgba(106,103,98,.12);color:var(--text3)}
-.due{font-size:11px;color:var(--text3);white-space:nowrap}
-.due-soon{color:#e05555}
-.due-today{color:var(--qf)}
-.ta-btn{padding:5px 10px;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text3);font-family:var(--font);transition:all .15s}
-.ta-btn:hover{background:var(--surf3);color:var(--text2)}
-.ta-btn.del-btn:hover{color:#e05555;border-color:#e05555}
+        .status-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-/* MODAL */
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity .2s}
-.modal-bg.open{opacity:1;pointer-events:all}
-.modal{background:var(--surf);border:1px solid var(--border);border-radius:14px;padding:24px;width:90%;max-width:440px;max-height:90vh;overflow-y:auto}
-.mt{font-size:16px;margin-bottom:18px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase}
-.fi,.fta,.fsl{width:100%;background:var(--surf2);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;outline:none;transition:border-color .15s}
-.fi:focus,.fta:focus,.fsl:focus{border-color:var(--text3)}
-.fta{resize:vertical;min-height:70px}
-.fsl{appearance:none;cursor:pointer}
-.fr{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.fg{margin-bottom:14px}
-.fl{display:block;font-size:11px;color:var(--text3);margin-bottom:6px;font-weight:500;letter-spacing:0.04em;text-transform:uppercase}
-.ma{display:flex;gap:8px;margin-top:18px;justify-content:flex-end}
-.bc{padding:9px 16px;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:var(--font)}
-.bc:hover{background:var(--surf2)}
-.bs{padding:9px 20px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:var(--font)}
-.bs-per{background:var(--per);color:#fff}.bs-az{background:var(--az);color:#fff}
-.bs-qf{background:var(--qf);color:#1a0e00}.bs-td{background:var(--td);color:#fff}.bs-fam{background:var(--fam);color:#fff}
+        .status-label {
+            color: #8b949e;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
 
-/* NOZZLE SIZE (3D printing only) */
-.nozzle-row{display:none}
-.nozzle-row.show{display:block}
-.nozzle-group-hdr{font-size:12px;color:var(--text3);font-weight:500;letter-spacing:0.03em;padding:6px 0 2px;margin-top:8px}
+        .status-count {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #58a6ff;
+        }
 
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surf3);border:1px solid var(--border);border-radius:var(--r);padding:10px 20px;font-size:13px;color:var(--text);font-family:var(--font);z-index:200;transition:transform .3s;pointer-events:none}
-.toast.show{transform:translateX(-50%) translateY(0)}
+        .status-item.done .status-count {
+            color: #3fb950;
+        }
 
-/* EMPTY STATE */
-.empty-state{text-align:center;padding:60px 20px;color:var(--text3)}
-.empty-state .icon{font-size:36px;margin-bottom:12px}
-.empty-state p{font-size:14px}
+        .status-item.synced .status-count {
+            color: #8b949e;
+            font-size: 0.8rem;
+        }
 
-/* RESPONSIVE */
-@media(max-width:640px){
-  .hdr{padding:12px 16px}
-  .main{padding:16px}
-  .hdr-stats{display:none}
-  .tab{padding:8px 14px;font-size:12px}
-  .fr{grid-template-columns:1fr}
-}
-</style>
+        /* ===== NAVIGATION BAR ===== */
+        nav.pill-nav {
+            background-color: #0d1117;
+            border-bottom: 1px solid #30363d;
+            padding: 1rem 2rem;
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        nav.pill-nav a, nav.pill-nav button {
+            padding: 0.5rem 1rem;
+            border: 1px solid #30363d;
+            border-radius: 20px;
+            background-color: transparent;
+            color: #8b949e;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        nav.pill-nav a:hover, nav.pill-nav button:hover {
+            color: #e6edf3;
+            border-color: #58a6ff;
+        }
+
+        nav.pill-nav a.active {
+            background-color: #58a6ff;
+            color: #0d1117;
+            border-color: #58a6ff;
+            font-weight: 600;
+        }
+
+        /* ===== SUMMARY STATS ===== */
+        .summary-stats {
+            background-color: #161b22;
+            border-bottom: 1px solid #30363d;
+            padding: 1.5rem 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .stat-block {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #8b949e;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #58a6ff;
+        }
+
+        .stat-block.done .stat-value {
+            color: #3fb950;
+        }
+
+        .stat-block.synced .stat-value {
+            font-size: 0.9rem;
+            color: #8b949e;
+        }
+
+        /* ===== CATEGORY TABS ===== */
+        .category-tabs {
+            background-color: #0d1117;
+            border-bottom: 1px solid #30363d;
+            padding: 1rem 2rem;
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .category-tab {
+            padding: 0.5rem 1rem;
+            border: 2px solid #30363d;
+            border-radius: 6px;
+            background-color: transparent;
+            color: #e6edf3;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            position: relative;
+            user-select: none;
+            font-family: inherit;
+        }
+
+        .category-tab:hover {
+            border-color: #58a6ff;
+            color: #58a6ff;
+        }
+
+        .category-tab.active {
+            border-color: #990000;
+            background-color: rgba(153, 0, 0, 0.15);
+            color: #ff6b6b;
+        }
+
+        .category-count {
+            font-size: 0.8rem;
+            color: #8b949e;
+            margin-left: 0.5rem;
+        }
+
+        .category-tab.active .category-count {
+            color: #ff6b6b;
+        }
+
+        .btn-add-category {
+            padding: 0.5rem 0.75rem;
+            border: 1px dashed #30363d;
+            border-radius: 6px;
+            background-color: transparent;
+            color: #8b949e;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-add-category:hover {
+            border-color: #58a6ff;
+            color: #58a6ff;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            background-color: transparent;
+            color: #8b949e;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .filter-btn:hover {
+            color: #e6edf3;
+            border-color: #58a6ff;
+        }
+
+        .filter-btn.active {
+            background-color: #58a6ff;
+            color: #0d1117;
+            border-color: #58a6ff;
+            font-weight: 600;
+        }
+
+        .btn-add-task {
+            padding: 0.75rem 1.5rem;
+            background-color: #990000;
+            color: #e6edf3;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-add-task:hover {
+            background-color: #cc0000;
+        }
+
+        /* ===== TASK LIST ===== */
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .task-row {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 1.25rem;
+            display: grid;
+            grid-template-columns: auto 1fr auto auto auto auto;
+            gap: 1rem;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .task-row:hover {
+            border-color: #58a6ff;
+            background-color: #0d1117;
+        }
+
+        .task-row.done {
+            opacity: 0.6;
+        }
+
+        .task-row.done .task-title {
+            text-decoration: line-through;
+            color: #8b949e;
+        }
+
+        .task-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #3fb950;
+        }
+
+        .task-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .task-title {
+            font-weight: 600;
+            color: #e6edf3;
+            font-size: 0.95rem;
+        }
+
+        .task-notes {
+            font-size: 0.85rem;
+            color: #8b949e;
+            line-height: 1.5;
+        }
+
+        .task-meta {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .priority-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .priority-badge.high {
+            background-color: rgba(248, 81, 73, 0.15);
+            color: #f85149;
+        }
+
+        .priority-badge.medium {
+            background-color: rgba(240, 136, 62, 0.15);
+            color: #f0883e;
+        }
+
+        .priority-badge.low {
+            background-color: rgba(139, 148, 158, 0.15);
+            color: #8b949e;
+        }
+
+        .task-date {
+            font-size: 0.85rem;
+            color: #8b949e;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-task-action {
+            padding: 0.4rem 0.8rem;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            background-color: transparent;
+            color: #8b949e;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-task-action:hover {
+            color: #e6edf3;
+            border-color: #58a6ff;
+        }
+
+        .btn-task-action.delete:hover {
+            color: #f85149;
+            border-color: #f85149;
+        }
+
+        /* ===== EDIT FORM (INLINE) ===== */
+        .task-edit-form {
+            grid-column: 1 / -1;
+            background-color: #0d1117;
+            border: 1px solid #58a6ff;
+            border-radius: 6px;
+            padding: 1rem;
+            display: grid;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            color: #8b949e;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 0.75rem;
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            color: #e6edf3;
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #58a6ff;
+            outline: none;
+            background-color: #0d1117;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-buttons {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .btn-save, .btn-cancel {
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .btn-save {
+            background-color: #58a6ff;
+            color: #0d1117;
+        }
+
+        .btn-save:hover {
+            background-color: #79c0ff;
+        }
+
+        .btn-cancel {
+            background-color: transparent;
+            color: #8b949e;
+            border: 1px solid #30363d;
+        }
+
+        .btn-cancel:hover {
+            color: #e6edf3;
+            border-color: #58a6ff;
+        }
+
+        /* ===== MODALS ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #e6edf3;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+        }
+
+        .btn-confirm {
+            padding: 0.75rem 1.5rem;
+            background-color: #f85149;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .btn-confirm:hover {
+            background-color: #fc6d71;
+        }
+
+        .btn-secondary {
+            padding: 0.75rem 1.5rem;
+            background-color: transparent;
+            color: #8b949e;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            color: #e6edf3;
+            border-color: #58a6ff;
+        }
+
+        /* ===== ADD CATEGORY FORM ===== */
+        .category-form {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .color-picker-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .color-picker-input {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #30363d;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        /* ===== CONTEXT MENU ===== */
+        .context-menu {
+            display: none;
+            position: fixed;
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            min-width: 150px;
+        }
+
+        .context-menu.active {
+            display: block;
+        }
+
+        .context-menu-item {
+            padding: 0.75rem 1rem;
+            color: #8b949e;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 1px solid #30363d;
+        }
+
+        .context-menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .context-menu-item:hover {
+            background-color: #0d1117;
+            color: #e6edf3;
+        }
+
+        .context-menu-item.delete:hover {
+            color: #f85149;
+        }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: #8b949e;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state-text {
+            font-size: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .header-right {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .status-bar {
+                justify-content: space-around;
+                width: 100%;
+                gap: 0.75rem;
+            }
+
+            .status-item {
+                flex-direction: row;
+                gap: 0.5rem;
+            }
+
+            .status-label {
+                font-size: 0.7rem;
+            }
+
+            .task-row {
+                grid-template-columns: auto 1fr;
+                gap: 0.75rem;
+            }
+
+            .task-meta {
+                grid-column: 1 / -1;
+                gap: 0.75rem;
+            }
+
+            .task-actions {
+                grid-column: 1 / -1;
+            }
+
+            .priority-badge {
+                font-size: 0.75rem;
+                padding: 0.2rem 0.6rem;
+            }
+
+            .category-tabs {
+                padding: 1rem;
+                overflow-x: auto;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header h1 {
+                font-size: 1.5rem;
+            }
+
+            .summary-stats {
+                padding: 1rem;
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .filter-bar {
+                gap: 0.5rem;
+            }
+
+            .filter-btn {
+                font-size: 0.8rem;
+                padding: 0.4rem 0.8rem;
+            }
+
+            .btn-add-task {
+                width: 100%;
+            }
+
+            nav.pill-nav {
+                padding: 0.75rem 1rem;
+                gap: 0.5rem;
+            }
+
+            nav.pill-nav a, nav.pill-nav button {
+                font-size: 0.8rem;
+                padding: 0.4rem 0.8rem;
+            }
+        }
+        /* ===== LOGIN GATE ===== */
+        #loginGate {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #0d1117;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #loginGate.hidden { display: none; }
+        .login-box {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 16px;
+            padding: 48px 40px;
+            text-align: center;
+            max-width: 380px;
+            width: 90%;
+        }
+        .login-box h2 {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+            color: #e6edf3;
+        }
+        .login-box .login-sub {
+            font-size: 13px;
+            color: #8b949e;
+            margin-bottom: 28px;
+        }
+        .login-box input[type="password"] {
+            width: 100%;
+            padding: 14px 16px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            color: #e6edf3;
+            font-size: 16px;
+            outline: none;
+            margin-bottom: 16px;
+            text-align: center;
+            letter-spacing: 0.15em;
+        }
+        .login-box input[type="password"]:focus {
+            border-color: #990000;
+        }
+        .login-box .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: #990000;
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            letter-spacing: 0.03em;
+        }
+        .login-box .login-btn:hover { background: #b30000; }
+        .login-box .login-error {
+            color: #f85149;
+            font-size: 13px;
+            margin-top: 12px;
+            min-height: 20px;
+        }
+        .login-box .login-icon {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .login-box .login-icon svg {
+            width: 160px;
+            height: 160px;
+            filter: drop-shadow(0 0 24px rgba(153, 0, 0, 0.35));
+        }
+        /* === SIGIL ANIMATIONS === */
+
+        /* The whole sigil breathes — nothing changes but everything is in motion */
+        .sigil-core { animation: sigilBreathe 6s ease-in-out infinite; transform-origin: 50px 50px; }
+        @keyframes sigilBreathe { 0%,100%{ opacity:0.85; } 50%{ opacity:1; } }
+
+        /* Parallel paths — related but each on its own track */
+        .path-a { animation: pathDrift 28s linear infinite; transform-origin: 50px 50px; }
+        .path-b { animation: pathDrift 28s linear infinite reverse; transform-origin: 50px 50px; }
+        .path-c { animation: pathDriftC 36s linear infinite; transform-origin: 50px 50px; }
+        @keyframes pathDrift { to { transform: rotate(360deg); } }
+        @keyframes pathDriftC { to { transform: rotate(360deg); } }
+
+        /* Counter-rotating rings — attracted by the rejection */
+        .counter-ring { animation: counterSpin 35s linear infinite; transform-origin: 50px 50px; }
+        @keyframes counterSpin { to { transform: rotate(-360deg); } }
+        .counter-ring-2 { animation: counterSpin2 22s linear infinite; transform-origin: 50px 50px; }
+        @keyframes counterSpin2 { to { transform: rotate(-360deg); } }
+
+        /* Orbit pulses — each force on its own timing */
+        .orb-a { animation: orbPulse 4s ease-in-out infinite; }
+        .orb-b { animation: orbPulse 4s ease-in-out infinite 0.6s; }
+        .orb-c { animation: orbPulse 4s ease-in-out infinite 1.2s; }
+        .orb-d { animation: orbPulse 4s ease-in-out infinite 1.8s; }
+        .orb-e { animation: orbPulse 4s ease-in-out infinite 2.4s; }
+        .orb-f { animation: orbPulse 4s ease-in-out infinite 3.0s; }
+        .orb-g { animation: orbPulse 4s ease-in-out infinite 3.6s; }
+        @keyframes orbPulse { 0%,100%{ opacity:0.4; } 50%{ opacity:0.85; } }
+
+        /* Wandering particles — separated but not alone */
+        .particle-1 { animation: pSpin1 9s linear infinite; transform-origin: 50px 50px; }
+        .particle-2 { animation: pSpin2 14s linear infinite; transform-origin: 50px 50px; }
+        .particle-3 { animation: pSpin3 7s linear infinite; transform-origin: 50px 50px; }
+        .particle-4 { animation: pSpin4 11s linear infinite; transform-origin: 50px 50px; }
+        .particle-5 { animation: pSpin5 18s linear infinite; transform-origin: 50px 50px; }
+        @keyframes pSpin1 { to { transform: rotate(360deg); } }
+        @keyframes pSpin2 { to { transform: rotate(-360deg); } }
+        @keyframes pSpin3 { to { transform: rotate(360deg); } }
+        @keyframes pSpin4 { to { transform: rotate(-360deg); } }
+        @keyframes pSpin5 { to { transform: rotate(360deg); } }
+
+        /* X remains the same — the core never moves */
+        .energy-core { animation: corePulse 4s ease-in-out infinite; }
+        @keyframes corePulse { 0%,100%{ r:2.5; opacity:0.6; } 50%{ r:4; opacity:1; } }
+
+        /* Arc segments — broken circles, never complete */
+        .arc-a { animation: arcGlow 8s ease-in-out infinite; }
+        .arc-b { animation: arcGlow 8s ease-in-out infinite 2.7s; }
+        .arc-c { animation: arcGlow 8s ease-in-out infinite 5.3s; }
+        @keyframes arcGlow { 0%,100%{ stroke-opacity:0.75; } 50%{ stroke-opacity:0.95; } }
+
+        /* Inner ring pulse — withdrawn to what remains */
+        .inner-pulse { animation: innerGlow 6s ease-in-out infinite; }
+        @keyframes innerGlow { 0%,100%{ opacity:0.2; } 50%{ opacity:0.5; } }
+        #appContent { display: none; }
+        #appContent.visible { display: block; }
+    </style>
 </head>
 <body>
-<div class="app">
 
-  <!-- HEADER -->
-  <div class="hdr">
-    <div class="hdr-left">
-      <div class="brand">COMMAND CENTRE</div>
-      <div class="datelbl" id="dateLbl"></div>
+    <!-- ===== LOGIN GATE ===== -->
+    <div id="loginGate">
+        <div class="login-box">
+            <div class="login-icon">
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <radialGradient id="coreGrad" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stop-color="#ff4422" stop-opacity="0.9"/>
+                            <stop offset="35%" stop-color="#990000" stop-opacity="0.4"/>
+                            <stop offset="100%" stop-color="#990000" stop-opacity="0"/>
+                        </radialGradient>
+                        <radialGradient id="auraGrad" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stop-color="#990000" stop-opacity="0.1"/>
+                            <stop offset="100%" stop-color="#990000" stop-opacity="0"/>
+                        </radialGradient>
+                    </defs>
+
+                    <g class="sigil-core">
+
+                        <!-- ============================================
+                             "Nothing changes but everything is in motion"
+                             ============================================ -->
+
+                        <!-- L1: Aura — the field of constant -->
+                        <circle cx="50" cy="50" r="49" fill="url(#auraGrad)"/>
+
+                        <!-- L2: 7 Atom orbits — "all forces related but each on its own track" -->
+                        <ellipse class="orb-a" cx="50" cy="50" rx="47" ry="12" fill="none" stroke="#58a6ff" stroke-width="0.35" transform="rotate(0 50 50)"/>
+                        <ellipse class="orb-b" cx="50" cy="50" rx="47" ry="12" fill="none" stroke="#bc8cff" stroke-width="0.35" transform="rotate(25.7 50 50)"/>
+                        <ellipse class="orb-c" cx="50" cy="50" rx="47" ry="12" fill="none" stroke="#58a6ff" stroke-width="0.35" transform="rotate(51.4 50 50)"/>
+                        <ellipse class="orb-d" cx="50" cy="50" rx="47" ry="12" fill="none" stroke="#d4a84b" stroke-width="0.35" transform="rotate(77.1 50 50)"/>
+                        <ellipse class="orb-e" cx="50" cy="50" rx="47" ry="12" fill="none" stroke="#58a6ff" stroke-width="0.35" transform="rotate(102.8 50 50)"/>
+                        <ellipse class="orb-f" cx="50" cy="50" rx="47" ry="12" fill="none" stroke="#d4a84b" stroke-width="0.35" transform="rotate(128.5 50 50)"/>
+                        <ellipse class="orb-g" cx="50" cy="50" rx="47" ry="12" fill="none" stroke="#58a6ff" stroke-width="0.35" transform="rotate(154.2 50 50)"/>
+
+                        <!-- L3: Wandering particles — "not alone but separated" -->
+                        <g class="particle-1"><circle cx="50" cy="3" r="1.1" fill="#58a6ff" opacity="0.7"/></g>
+                        <g class="particle-2"><circle cx="97" cy="50" r="0.9" fill="#bc8cff" opacity="0.6"/></g>
+                        <g class="particle-3"><circle cx="50" cy="6" r="0.8" fill="#d4a84b" opacity="0.6"/></g>
+                        <g class="particle-4"><circle cx="3" cy="50" r="1.0" fill="#58a6ff" opacity="0.5"/></g>
+                        <g class="particle-5"><circle cx="50" cy="97" r="0.7" fill="#bc8cff" opacity="0.4"/></g>
+
+                        <!-- L4: Outermost broken ring — 3 equal arcs (100°), 3 equal gaps (20°), top centred -->
+                        <!-- Top arc: centred at 12 o'clock -->
+                        <path class="arc-a" d="M 16.3 21.7 A 44 44 0 0 1 83.7 21.7" fill="none" stroke="#990000" stroke-width="2" stroke-linecap="round" opacity="0.85"/>
+                        <!-- Bottom-right arc: centred at 4 o'clock -->
+                        <path class="arc-b" d="M 91.4 35 A 44 44 0 0 1 57.6 93.3" fill="none" stroke="#cc3300" stroke-width="2" stroke-linecap="round" opacity="0.85"/>
+                        <!-- Bottom-left arc: centred at 8 o'clock -->
+                        <path class="arc-c" d="M 42.4 93.3 A 44 44 0 0 1 8.7 35" fill="none" stroke="#990000" stroke-width="2" stroke-linecap="round" opacity="0.85"/>
+
+                        <!-- L5: Outer continuous circle — the boundary of constant -->
+                        <circle cx="50" cy="50" r="38" fill="none" stroke="#990000" stroke-width="0.5" opacity="0.3"/>
+
+                        <!-- L6: Counter-rotating dashed ring — "the parallel is undeniable" -->
+                        <g class="counter-ring">
+                            <circle cx="50" cy="50" r="34" fill="none" stroke="#bc8cff" stroke-width="0.3" stroke-dasharray="2 6" opacity="0.3"/>
+                        </g>
+
+                        <!-- L7: Second counter-rotating ring — other direction, other rhythm -->
+                        <g class="counter-ring-2">
+                            <circle cx="50" cy="50" r="30" fill="none" stroke="#58a6ff" stroke-width="0.25" stroke-dasharray="4 10" opacity="0.2"/>
+                        </g>
+
+                        <!-- =================================================
+                             "Thought and matter separated, but X remains the same"
+                             ================================================= -->
+
+                        <!-- L8: Two parallel orbital paths — NEVER touching -->
+                        <!-- Path A orbits clockwise -->
+                        <g class="path-a">
+                            <ellipse cx="50" cy="50" rx="26" ry="8" fill="none" stroke="#bc8cff" stroke-width="0.6" opacity="0.45"/>
+                            <!-- A's particle -->
+                            <circle cx="76" cy="50" r="1.5" fill="#bc8cff" opacity="0.8"/>
+                        </g>
+                        <!-- Path B orbits counter — same shape, mirrored, never meets A -->
+                        <g class="path-b">
+                            <ellipse cx="50" cy="50" rx="26" ry="8" fill="none" stroke="#58a6ff" stroke-width="0.6" opacity="0.45" transform="rotate(90 50 50)"/>
+                            <!-- B's particle -->
+                            <circle cx="50" cy="24" r="1.5" fill="#58a6ff" opacity="0.8"/>
+                        </g>
+                        <!-- Path C — the third force, its own speed, its own angle, gold -->
+                        <g class="path-c">
+                            <ellipse cx="50" cy="50" rx="26" ry="8" fill="none" stroke="#d4a84b" stroke-width="0.6" opacity="0.4" transform="rotate(45 50 50)"/>
+                            <!-- C's particle -->
+                            <circle cx="68" cy="32" r="1.5" fill="#d4a84b" opacity="0.75"/>
+                        </g>
+
+                        <!-- L9: Mid circle -->
+                        <circle cx="50" cy="50" r="22" fill="none" stroke="#e6edf3" stroke-width="0.3" opacity="0.12"/>
+
+                        <!-- L10: Diamond — halfway between old and arcs -->
+                        <path class="arc-a" d="M50 22 L78 50 L50 78 L22 50 Z" fill="none" stroke="#990000" stroke-width="1.35" opacity="0.65"/>
+
+                        <!-- L11: Interrupted crosshairs — "separated by a never incipient beginning" -->
+                        <line x1="3" y1="50" x2="35" y2="50" stroke="#e6edf3" stroke-width="0.35" opacity="0.1"/>
+                        <line x1="65" y1="50" x2="97" y2="50" stroke="#e6edf3" stroke-width="0.35" opacity="0.1"/>
+                        <line x1="50" y1="3" x2="50" y2="35" stroke="#e6edf3" stroke-width="0.35" opacity="0.1"/>
+                        <line x1="50" y1="65" x2="50" y2="97" stroke="#e6edf3" stroke-width="0.35" opacity="0.1"/>
+
+                        <!-- L12: Inner circle — "withdrawn to what remains" -->
+                        <circle class="inner-pulse" cx="50" cy="50" r="15" fill="none" stroke="#990000" stroke-width="0.6" opacity="0.35"/>
+
+                        <!-- L13: Innermost broken ring — even here, not whole — gold -->
+                        <circle cx="50" cy="50" r="10" fill="none" stroke="#d4a84b" stroke-width="0.3" stroke-dasharray="1.5 5" opacity="0.3"/>
+
+                        <!-- ==========================================
+                             "Only the not knowing confirms the loneliness"
+                             ========================================== -->
+
+                        <!-- L14: Core field — what remains when everything else orbits away -->
+                        <circle cx="50" cy="50" r="7" fill="url(#coreGrad)"/>
+
+                        <!-- L15: The still point — "X remains the same" -->
+                        <circle class="energy-core" cx="50" cy="50" r="2.5" fill="#ff4422" opacity="0.6"/>
+
+                        <!-- L16: A single ghost of light — not knowing — warm gold -->
+                        <circle cx="48.5" cy="48" r="0.8" fill="rgba(212,168,75,0.2)"/>
+                    </g>
+                </svg>
+            </div>
+            <h2>AZ COMMAND CENTRE</h2>
+            <div class="login-sub">Unlock to continue</div>
+            <form id="loginForm" onsubmit="return handleLogin(event)">
+                <input type="password" id="loginPassword" placeholder="Enter password" autofocus autocomplete="current-password">
+                <button type="submit" class="login-btn">Unlock</button>
+            </form>
+            <div class="login-error" id="loginError"></div>
+        </div>
     </div>
-    <div class="hdr-right">
-      <div class="hdr-stats" id="hdrStats"></div>
-      <div class="sync-status" id="syncStatus"><span class="sync-dot" id="syncDot"></span><span class="sync-label" id="syncLabel">Synced</span></div>
+
+    <!-- ===== APP (hidden until authenticated) ===== -->
+    <div id="appContent">
+
+    <!-- ===== HEADER ===== -->
+    <header>
+        <h1>AZ COMMAND CENTRE</h1>
+        <div class="header-right">
+            <div class="header-date" id="headerDate"></div>
+            <div class="status-bar">
+                <div class="status-item">
+                    <div class="status-label">Open</div>
+                    <div class="status-count" id="statusOpen">0</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">Today</div>
+                    <div class="status-count" id="statusToday">0</div>
+                </div>
+                <div class="status-item done">
+                    <div class="status-label">Done</div>
+                    <div class="status-count" id="statusDone">0</div>
+                </div>
+                <div class="status-item synced">
+                    <div class="status-label">Synced</div>
+                    <div class="status-count" id="statusSynced">—</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== NAVIGATION BAR ===== -->
+    <nav class="pill-nav">
+        <a href="#" class="active">Tasks</a>
+        <a href="forge.html">Forge Evolution</a>
+        <a href="azck_tech_roadmap.html">Roadmap</a>
+    </nav>
+
+    <!-- ===== SUMMARY STATS ===== -->
+    <div class="summary-stats">
+        <div class="stat-block">
+            <div class="stat-label">Total Open</div>
+            <div class="stat-value" id="statTotalOpen">0</div>
+        </div>
+        <div class="stat-block">
+            <div class="stat-label">Due This Week</div>
+            <div class="stat-value" id="statDueWeek">0</div>
+        </div>
+        <div class="stat-block done">
+            <div class="stat-label">Completed</div>
+            <div class="stat-value" id="statCompleted">0</div>
+        </div>
+        <div class="stat-block synced">
+            <div class="stat-label">Last Updated</div>
+            <div class="stat-value" id="statLastUpdated">Never</div>
+        </div>
     </div>
-  </div>
 
-  <!-- CATEGORY TABS -->
-  <div class="tabs" id="tabs"></div>
-
-  <!-- MAIN CONTENT -->
-  <div class="main">
-    <div class="ph">
-      <div class="pt" id="panelTitle"></div>
-      <button class="add-btn" id="addBtn" onclick="openAdd()">+ Add Task</button>
+    <!-- ===== CATEGORY TABS ===== -->
+    <div class="category-tabs" id="categoryTabs">
+        <!-- Generated by JS -->
     </div>
-    <div class="sr" id="statsRow"></div>
-    <div class="pb-wrap"><div class="pb" id="progBar"></div></div>
-    <div class="fb" id="filterBar"></div>
-    <div class="tg" id="taskGrid"></div>
-  </div>
-</div>
 
-<!-- ADD/EDIT MODAL -->
-<div class="modal-bg" id="modalBg" onclick="closeM(event)">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="mt" id="modalTitle">Add Task</div>
-    <div class="fg">
-      <label class="fl">Task Title</label>
-      <input class="fi" id="fTitle" placeholder="What needs to get done?">
+    <!-- ===== MAIN CONTENT ===== -->
+    <div class="container">
+        <div style="margin-bottom: 2rem;">
+            <div class="filter-bar">
+                <button class="filter-btn active" data-filter="all">All Tasks</button>
+                <button class="filter-btn" data-filter="open">Open Only</button>
+                <button class="filter-btn" data-filter="high">High Priority</button>
+                <button class="filter-btn" data-filter="done">Done Only</button>
+            </div>
+            <button class="btn-add-task" id="btnAddTask">+ Add Task</button>
+        </div>
+
+        <div class="task-list" id="taskList">
+            <!-- Generated by JS -->
+        </div>
+
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <div class="empty-state-icon">📋</div>
+            <div class="empty-state-text">No tasks in this category. Start by adding one!</div>
+        </div>
     </div>
-    <div class="fg">
-      <label class="fl">Notes (optional)</label>
-      <textarea class="fta" id="fNotes" placeholder="Details, context, next steps..."></textarea>
+
+    <!-- ===== MODALS ===== -->
+    <!-- Confirmation Modal -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal">
+            <h2 class="modal-title" id="confirmTitle">Confirm Action</h2>
+            <p id="confirmMessage"></p>
+            <div class="modal-buttons">
+                <button class="btn-secondary" id="btnConfirmCancel">Cancel</button>
+                <button class="btn-confirm" id="btnConfirmOK">Confirm</button>
+            </div>
+        </div>
     </div>
-    <div class="fr">
-      <div class="fg">
-        <label class="fl">Priority</label>
-        <select class="fsl" id="fPri">
-          <option value="high">High</option>
-          <option value="medium" selected>Medium</option>
-          <option value="low">Low</option>
-        </select>
-      </div>
-      <div class="fg">
-        <label class="fl">Due Date</label>
-        <input class="fi" id="fDue" type="date">
-      </div>
+
+    <!-- Add/Edit Category Modal -->
+    <div class="modal-overlay" id="categoryModal">
+        <div class="modal">
+            <h2 class="modal-title" id="categoryModalTitle">Add Category</h2>
+            <form class="category-form" id="categoryForm">
+                <div class="form-group">
+                    <label for="categoryName">Category Name</label>
+                    <input type="text" id="categoryName" required placeholder="e.g., Work, Personal">
+                </div>
+                <div class="form-group">
+                    <label>Color</label>
+                    <div class="color-picker-wrapper">
+                        <input type="color" id="categoryColor" class="color-picker-input" value="#58a6ff">
+                        <span id="colorValue">#58a6ff</span>
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn-secondary" id="btnCategoryCancel">Cancel</button>
+                    <button type="submit" class="btn-confirm">Create Category</button>
+                </div>
+            </form>
+        </div>
     </div>
-    <div class="fg nozzle-row" id="nozzleRow">
-      <label class="fl">Nozzle Size</label>
-      <select class="fsl" id="fNozzle">
-        <option value="0.4">0.4 mm &mdash; standard</option>
-        <option value="0.2">0.2 mm &mdash; fine detail</option>
-      </select>
+
+    <!-- Context Menu (for category actions) -->
+    <div class="context-menu" id="contextMenu">
+        <div class="context-menu-item" id="contextRename">Rename</div>
+        <div class="context-menu-item delete" id="contextDelete">Delete</div>
     </div>
-    <div class="ma">
-      <button class="bc" onclick="closeM()">Cancel</button>
-      <button class="bs" id="saveBtn" onclick="saveTask()">Save Task</button>
-    </div>
-  </div>
-</div>
 
+    <!-- ===== JAVASCRIPT ===== -->
+    <script>
+        // === SUPABASE CONFIG (uncomment when ready) ===
+        // const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        // const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        // const USE_SUPABASE = true;
 
-<!-- TOAST -->
-<div class="toast" id="toast"></div>
+        // ===== CONSTANTS & STORAGE =====
+        const STORAGE_KEY = 'azck-command-centre';
+        const DEFAULT_CATEGORIES = [
+            { id: 1, name: 'Personal', color: '#58a6ff', sortOrder: 1 },
+            { id: 2, name: 'AZ Custom Knives', color: '#990000', sortOrder: 2 },
+            { id: 3, name: 'Quad Fang', color: '#FC4C02', sortOrder: 3 },
+            { id: 4, name: '3D Printing', color: '#bc8cff', sortOrder: 4 },
+            { id: 5, name: 'Family', color: '#3fb950', sortOrder: 5 }
+        ];
 
-<script>
-/* ── GIST CONFIG ── */
-const GIST_ID='26f51aa8d43249be8cc62ee03c9df7cd',GIST_TOKEN='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',GIST_FILE='cc_tasks.json';
-/* ── DATA ── */
-const CATS = [
-  {key:'per', label:'Personal',        color:'--per'},
-  {key:'az',  label:'AZ Custom Knives', color:'--az'},
-  {key:'qf',  label:'Quad Fang',        color:'--qf'},
-  {key:'td',  label:'3D Printing',      color:'--td'},
-  {key:'fam', label:'Family',           color:'--fam'}
-];
-let cur = 'per';          // active category
-let filter = 'all';       // all | open | high | done
-let editId = null;        // task id being edited
-let data = {};            // {per:[], az:[], qf:[], td:[], fam:[]}
+        const DEFAULT_TASKS = [
+            {
+                id: 1,
+                categoryId: 1,
+                title: 'Amazon returns at Staples',
+                notes: '',
+                priority: 'high',
+                status: 'open',
+                dueDate: '2026-04-01',
+                createdAt: new Date('2026-04-01').toISOString(),
+                completedAt: null
+            },
+            {
+                id: 2,
+                categoryId: 1,
+                title: 'Home Depot returns',
+                notes: 'Return items before deadline',
+                priority: 'high',
+                status: 'open',
+                dueDate: '2026-04-02',
+                createdAt: new Date('2026-04-02').toISOString(),
+                completedAt: null
+            },
+            {
+                id: 3,
+                categoryId: 1,
+                title: 'Replace kitchen faucet / sink',
+                notes: 'Return current faucet to Costco. Buy a working replacement. May need copper soldering and shark bite',
+                priority: 'high',
+                status: 'open',
+                dueDate: null,
+                createdAt: new Date().toISOString(),
+                completedAt: null
+            }
+        ];
 
-/* ── PERSIST ── */
-const SEED = {
-  per: [
-    {id:'p1',title:'Replace kitchen faucet / sink',notes:'Return current faucet to Costco. Buy a working replacement. May need copper soldering and shark bite',pri:'high',due:null,done:false},
-    {id:'p2',title:'Basement: fix drywall',notes:'Repair wall downstairs',pri:'medium',due:null,done:false},
-    {id:'p3',title:'Basement: organize cat beds & laundry area',notes:'Better infrastructure for cat beds and laundry in the long room',pri:'medium',due:null,done:false},
-    {id:'p4',title:'Organize the long room',notes:'',pri:'medium',due:null,done:false},
-    {id:'p5',title:'Poly off the cat litter box section',notes:'Do before installing the Litter Robot',pri:'medium',due:null,done:false},
-    {id:'p6',title:'Install Litter Robot (self-cleaning cat litter box)',notes:'Going with the Litter Robot. Section needs to be polyed first.',pri:'medium',due:null,done:false},
-    {id:'p7',title:'Purchase: big cat door',notes:'',pri:'medium',due:null,done:false},
-    {id:'p8',title:'Plumbing prep: copper soldering & shark bites',notes:'Do before faucet install',pri:'medium',due:null,done:false},
-    {id:'p9',title:'Basement: paint floors',notes:'',pri:'low',due:null,done:false},
-    {id:'p10',title:'Basement: install trim',notes:'',pri:'low',due:null,done:false},
-    {id:'p11',title:'Basement: paint walls',notes:'',pri:'low',due:null,done:false},
-    {id:'p12',title:'Basement: redo ceiling',notes:'',pri:'low',due:null,done:false},
-    {id:'p13',title:'Amazon returns at Staples',notes:'',pri:'high',due:'2026-04-01',done:false},
-    {id:'p14',title:'Home Depot returns',notes:'Return items before deadline',pri:'high',due:'2026-04-02',done:false}
-  ],
-  az: [
-    {id:'a1',title:"Michelle's Culinary Crew plate \u2014 pre-order",notes:'Current batch. Pre-ordered. 3-week deadline.',pri:'high',due:'2026-04-14',done:false},
-    {id:'a2',title:"Franco's Culinary Crew plate \u2014 pre-order",notes:'Current batch. Pre-ordered. 3-week deadline.',pri:'high',due:'2026-04-14',done:false},
-    {id:'a3',title:"Mike's knife (Surri's order) \u2014 finish",notes:"Surri's last custom knife order for Mike. Same 3-week window as Culinary Crew plates.",pri:'high',due:'2026-04-14',done:false},
-    {id:'a4',title:'Warranty / restoration: rusty custom knife',notes:'Rust treatment and full restoration needed',pri:'high',due:null,done:false},
-    {id:'a5',title:"Tel's wife \u2014 new custom knife",notes:'Tel is a first client. Wife wants a full-size Raptor or Raptor Elite in Crew Wear steel. Confirm design.',pri:'medium',due:null,done:false},
-    {id:'a6',title:'Rewrite After Hours Program',notes:'',pri:'medium',due:null,done:false},
-    {id:'a7',title:'Rewrite Sharpening Seminar curriculum / booklet',notes:'',pri:'medium',due:null,done:false},
-    {id:'a8',title:'Write Advanced Sharpening Seminar curriculum / booklet',notes:'',pri:'medium',due:null,done:false},
-    {id:'a9',title:'Write Advanced After Hours Program \u2014 kitchen knife',notes:'',pri:'medium',due:null,done:false},
-    {id:'a10',title:'Write Procedures Book',notes:'Document all shop procedures: drilling, cutting, cleaning, gluing, grinding, laser engraving, safety protocols.',pri:'medium',due:null,done:false},
-    {id:'a11',title:"Norm's knife \u2014 finish",notes:'Has been in the shop a couple of years. Not a priority.',pri:'low',due:null,done:false},
-    {id:'a12',title:"Chase's Tanuki \u2014 custom order",notes:'Timeline unknown. On the list.',pri:'low',due:null,done:false},
-    {id:'a13',title:'Raptor series \u2014 future batch',notes:'No pressing timeline. Future project.',pri:'low',due:null,done:false},
-    {id:'a14',title:'Badger series \u2014 future batch',notes:'Future project. Not urgent.',pri:'low',due:null,done:false}
-  ],
-  qf: [
-    {id:'q1',title:'Finalize Quad Fang website',notes:'',pri:'high',due:null,done:false},
-    {id:'q2',title:'Follow up with foundry re: casting',notes:'Casting may not be viable \u2014 may pivot to machining.',pri:'high',due:null,done:false},
-    {id:'q3',title:'Consult Matt re: machining the Quad Fang',notes:'Matthew is the machinist advising on manufacturing details.',pri:'high',due:null,done:false},
-    {id:'q4',title:'Set up Facebook page',notes:'',pri:'medium',due:null,done:false},
-    {id:'q5',title:'Set up Instagram',notes:'',pri:'medium',due:null,done:false},
-    {id:'q6',title:'Set up Microsoft 365 account',notes:'Need Word and Excel separate from AZ Custom Knives accounts.',pri:'medium',due:null,done:false},
-    {id:'q7',title:'Product: QF 100 grain broadhead',notes:'',pri:'medium',due:null,done:false},
-    {id:'q8',title:'Product: QF 125 grain broadhead',notes:'',pri:'medium',due:null,done:false},
-    {id:'q9',title:'Product: QF 150 grain broadhead',notes:'',pri:'medium',due:null,done:false},
-    {id:'q10',title:'Consider TikTok presence',notes:'',pri:'low',due:null,done:false},
-    {id:'q11',title:'Product: Sabre Tooth broadhead',notes:'Future product line.',pri:'low',due:null,done:false},
-    {id:'q12',title:"Product: Kids' knife",notes:'Future product.',pri:'low',due:null,done:false},
-    {id:'q13',title:'Product: Exchangeable blade holder',notes:'Future product.',pri:'low',due:null,done:false},
-    {id:'q14',title:'Product: Alpha high-end folding knife',notes:'Future product.',pri:'low',due:null,done:false}
-  ],
-  td: [
-    {id:'t1',title:'Curtain rod bracket \u2014 living room',notes:'Custom bracket for living room curtain rod.',pri:'medium',due:null,done:false,nozzle:'0.4'},
-    {id:'t2',title:'AZ shopping cart key tags',notes:'Multi-part print. Must use 0.2 nozzle only.',pri:'medium',due:null,done:false,nozzle:'0.2'}
-  ],
-  fam: [
-    {id:'f1',title:'Pick up Mom from airport',notes:'Arriving from Switzerland. Flight lands 8:21 PM Thursday. Leave home by 8:00 PM. Calendar reminder set.',pri:'high',due:'2026-03-26',done:false}
-  ]
-};
+        // ===== STATE MANAGEMENT =====
+        let appState = {
+            categories: [],
+            tasks: [],
+            activeCategory: null,
+            activeFilter: 'all',
+            editingTaskId: null,
+            lastSynced: null,
+            nextId: 100
+        };
 
-/* ── GIST SYNC ── */
-function debounce(fn,d){let t;return function(...a){clearTimeout(t);t=setTimeout(()=>fn(...a),d);}}
-async function fetchFromGist(){try{const r=await fetch('https://api.github.com/gists/'+GIST_ID,{headers:{'Authorization':'token '+GIST_TOKEN}});if(!r.ok)throw new Error(r.status);const g=await r.json();const f=g.files[GIST_FILE];if(!f)throw new Error('no file');return JSON.parse(f.content);}catch(e){console.error('Gist fetch:',e);return null;}}
-async function pushToGist(){try{const r=await fetch('https://api.github.com/gists/'+GIST_ID,{method:'PATCH',headers:{'Authorization':'token '+GIST_TOKEN,'Content-Type':'application/json'},body:JSON.stringify({files:{[GIST_FILE]:{content:JSON.stringify(data)}}})});if(!r.ok)throw new Error(r.status);showSyncStatus('synced');}catch(e){console.error('Gist push:',e);showSyncStatus('error');}}
-const debouncedPush=debounce(pushToGist,500);
-async function load(){showSyncStatus('loading');const g=await fetchFromGist();if(g){data=g;try{localStorage.setItem('cc_tasks',JSON.stringify(data));}catch(e){}showSyncStatus('synced');}else{try{const raw=localStorage.getItem('cc_tasks');data=raw?JSON.parse(raw):{};}catch(e){data={};}let empty=true;CATS.forEach(c=>{if(data[c.key]&&data[c.key].length>0)empty=false;});if(empty)data=JSON.parse(JSON.stringify(SEED));showSyncStatus('synced');}CATS.forEach(c=>{if(!data[c.key])data[c.key]=[];});}
-function persist(){showSyncStatus('saving');try{localStorage.setItem('cc_tasks',JSON.stringify(data));}catch(e){showSyncStatus('error');return;}debouncedPush();}
-function showSyncStatus(state){const dot=document.getElementById('syncDot');const label=document.getElementById('syncLabel');dot.className='sync-dot';if(state==='loading'){dot.classList.add('saving');label.textContent='Loading...';}else if(state==='saving'){dot.classList.add('saving');label.textContent='Saving...';}else if(state==='synced'){label.textContent='Synced';}else if(state==='error'){dot.classList.add('error');label.textContent='Sync error';}}
-/* ── HELPERS ── */
-function fmtDate(iso){
-  if(!iso) return '';
-  const d = new Date(iso + 'T00:00:00');
-  const now = new Date(); now.setHours(0,0,0,0);
-  const diff = Math.round((d - now) / 86400000);
-  if(diff === 0) return 'Today';
-  if(diff === 1) return 'Tomorrow';
-  if(diff === -1) return 'Yesterday';
-  if(diff > 1 && diff <= 30) return 'In ' + diff + 'd';
-  if(diff < -1 && diff >= -30) return Math.abs(diff) + 'd ago';
-  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
-}
-function dueCls(iso){
-  if(!iso) return '';
-  const d = new Date(iso + 'T00:00:00');
-  const now = new Date(); now.setHours(0,0,0,0);
-  const diff = Math.round((d - now) / 86400000);
-  if(diff < 0) return 'due-soon';
-  if(diff === 0) return 'due-today';
-  return '';
-}
-function esc(s){ const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-function toast(msg){
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(()=> t.classList.remove('show'), 2200);
-}
-function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+        // ===== UTILITY FUNCTIONS =====
+        function formatDate(dateString) {
+            if (!dateString) return null;
+            const date = new Date(dateString);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
 
-/* ── DATE LABEL ── */
-function setDateLabel(){
-  const now = new Date();
-  document.getElementById('dateLbl').textContent = now.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-}
+            const dateOnly = new Date(date);
+            dateOnly.setHours(0, 0, 0, 0);
 
-/* ── HEADER STATS ── */
-function updateStats(){
-  const tasks = data[cur] || [];
-  const open = tasks.filter(t => !t.done).length;
-  const done = tasks.filter(t => t.done).length;
-  const now = new Date(); now.setHours(0,0,0,0);
-  const today = tasks.filter(t => {
-    if(!t.due || t.done) return false;
-    const d = new Date(t.due + 'T00:00:00');
-    return d.getTime() === now.getTime();
-  }).length;
-  document.getElementById('hdrStats').innerHTML =
-    `<div class="stat"><strong>${open}</strong> Open</div>` +
-    `<div class="stat"><strong>${today}</strong> Today</div>` +
-    `<div class="stat"><strong>${done}</strong> Done</div>`;
-}
+            if (dateOnly.getTime() === today.getTime()) return 'Today';
+            if (dateOnly.getTime() === yesterday.getTime()) return 'Yesterday';
+            if (dateOnly.getTime() === tomorrow.getTime()) return 'Tomorrow';
 
-/* ── TABS ── */
-function renderTabs(){
-  const el = document.getElementById('tabs');
-  el.innerHTML = CATS.map(c => {
-    const count = (data[c.key] || []).length;
-    return `<button class="tab${cur===c.key?' a-'+c.key:''}" onclick="go('${c.key}')"><span class="tc tc-${c.key}"></span>${c.label} <span style="opacity:.5;font-weight:300">(${count})</span></button>`;
-  }).join('');
-}
+            const daysAgo = Math.floor((today - dateOnly) / (1000 * 60 * 60 * 24));
+            const daysUntil = Math.floor((dateOnly - today) / (1000 * 60 * 60 * 24));
 
-/* ── GO (switch category) ── */
-function go(cat){
-  cur = cat;
-  filter = 'all';
-  render();
-}
+            if (daysAgo > 0) return `${daysAgo}d ago`;
+            if (daysUntil > 0) return `in ${daysUntil}d`;
 
-/* ── CARD HTML ── */
-function cardHTML(t){
-  const cat = CATS.find(c => c.key === cur);
-  const doneClass = t.done ? ' done-card' : '';
-  const chkClass = t.done ? ' checked' : '';
-  const chkChar = t.done ? '&#10003;' : '';
-  const dueStr = fmtDate(t.due);
-  const dueClass = !t.done ? dueCls(t.due) : '';
-  let nozzleTag = '';
-  if(cur === 'td' && t.nozzle) nozzleTag = `<span class="pri" style="background:rgba(42,158,143,.12);color:var(--td)">${t.nozzle}mm</span>`;
-  return `<div class="card bl-${cur}${doneClass}">
-    <button class="chk${chkClass}" onclick="tog('${t.id}')">${chkChar}</button>
-    <div class="tb">
-      <div class="tt">${esc(t.title)}</div>
-      ${t.notes ? `<div class="tn">${esc(t.notes)}</div>` : ''}
-    </div>
-    <div class="ta">
-      ${nozzleTag}
-      <span class="pri pri-${t.pri}">${t.pri}</span>
-      ${dueStr ? `<span class="due ${dueClass}">${dueStr}</span>` : ''}
-      <button class="ta-btn" onclick="openEdit('${t.id}')">Edit</button>
-      <button class="ta-btn del-btn" onclick="del('${t.id}')">Delete</button>
-    </div>
-  </div>`;
-}
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
 
-/* ── RENDER ── */
-function render(){
-  renderTabs();
-  updateStats();
-  setDateLabel();
+        function getRelativeDateInfo(dateString) {
+            if (!dateString) return { type: 'none', days: 0 };
+            const date = new Date(dateString);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const dateOnly = new Date(date);
+            dateOnly.setHours(0, 0, 0, 0);
 
-  const cat = CATS.find(c => c.key === cur);
-  const tasks = data[cur] || [];
-  const total = tasks.length;
-  const doneCount = tasks.filter(t => t.done).length;
-  const openCount = total - doneCount;
-  const now = new Date(); now.setHours(0,0,0,0);
-  const todayCount = tasks.filter(t => {
-    if(!t.due || t.done) return false;
-    return new Date(t.due + 'T00:00:00').getTime() === now.getTime();
-  }).length;
+            const daysOffset = Math.floor((dateOnly - today) / (1000 * 60 * 60 * 24));
 
-  // Panel title
-  document.getElementById('panelTitle').innerHTML = `${cat.label} <small>${total} tasks</small>`;
+            if (daysOffset === 0) return { type: 'today', days: 0 };
+            if (daysOffset < 0) return { type: 'overdue', days: daysOffset };
+            if (daysOffset <= 7) return { type: 'week', days: daysOffset };
+            return { type: 'future', days: daysOffset };
+        }
 
-  // Add button styling
-  const addBtn = document.getElementById('addBtn');
-  addBtn.className = 'add-btn ab-' + cur;
+        function formatTime(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        }
 
-  // Stats row
-  document.getElementById('statsRow').innerHTML =
-    `<span><strong>${openCount}</strong> open</span>` +
-    `<span><strong>${doneCount}</strong> done</span>` +
-    `<span><strong>${todayCount}</strong> due today</span>`;
+        function initializeData() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                const data = JSON.parse(stored);
+                appState.categories = data.categories || DEFAULT_CATEGORIES;
+                appState.tasks = data.tasks || [];
+                appState.lastSynced = data.lastSynced || null;
+                appState.nextId = data.nextId || 100;
+            } else {
+                appState.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+                appState.tasks = JSON.parse(JSON.stringify(DEFAULT_TASKS));
+                appState.nextId = 100;
+                saveData();
+            }
+            if (appState.categories.length > 0) {
+                appState.activeCategory = appState.categories[0].id;
+            }
+        }
 
-  // Progress bar
-  const pBar = document.getElementById('progBar');
-  pBar.className = 'pb pb-' + cur;
-  pBar.style.width = total ? ((doneCount / total) * 100) + '%' : '0%';
+        function saveData() {
+            appState.lastSynced = new Date().toISOString();
+            const data = {
+                categories: appState.categories,
+                tasks: appState.tasks,
+                lastSynced: appState.lastSynced,
+                nextId: appState.nextId
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            updateSyncDisplay();
+        }
 
-  // Filter bar
-  const fb = document.getElementById('filterBar');
-  const filters = [{k:'all',l:'All'},{k:'open',l:'Open'},{k:'high',l:'High Priority'},{k:'done',l:'Done'}];
-  fb.innerHTML = filters.map(f =>
-    `<button class="fb-${cur} fb-btn${filter===f.k?' on':''}" onclick="setF('${f.k}')">${f.l}</button>`
-  ).join('');
+        // ===== RENDER FUNCTIONS =====
+        function updateHeaderDate() {
+            const today = new Date();
+            const dateStr = today.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('headerDate').textContent = dateStr;
+        }
 
-  // Filter tasks
-  let list = tasks;
-  if(filter === 'open') list = tasks.filter(t => !t.done);
-  if(filter === 'high') list = tasks.filter(t => t.pri === 'high' && !t.done);
-  if(filter === 'done') list = tasks.filter(t => t.done);
+        function updateStatusBar() {
+            const openTasks = appState.tasks.filter(t => t.status === 'open').length;
+            const doneTasks = appState.tasks.filter(t => t.status === 'done').length;
 
-  // Sort: high > medium > low, then by due date
-  const priOrder = {high:0, medium:1, low:2};
-  list = [...list].sort((a,b) => {
-    if(a.done !== b.done) return a.done ? 1 : -1;
-    if(priOrder[a.pri] !== priOrder[b.pri]) return priOrder[a.pri] - priOrder[b.pri];
-    if(a.due && b.due) return a.due.localeCompare(b.due);
-    if(a.due) return -1;
-    if(b.due) return 1;
-    return 0;
-  });
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const todayTasks = appState.tasks.filter(t => {
+                if (!t.dueDate) return false;
+                const dueDate = new Date(t.dueDate);
+                dueDate.setHours(0, 0, 0, 0);
+                return dueDate.getTime() === today.getTime();
+            }).length;
 
-  const grid = document.getElementById('taskGrid');
-  if(list.length === 0){
-    grid.innerHTML = `<div class="empty-state"><div class="icon">&#9744;</div><p>No tasks here yet</p></div>`;
-  } else if(cur === 'td'){
-    // Group by nozzle size for 3D Printing
-    const nozzles = {'0.4':'0.4 mm \u2014 standard nozzle','0.2':'0.2 mm \u2014 fine detail nozzle'};
-    const groups = {};
-    list.forEach(t => {
-      const n = t.nozzle || '0.4';
-      if(!groups[n]) groups[n] = [];
-      groups[n].push(t);
-    });
-    let html = '';
-    ['0.4','0.2'].forEach(n => {
-      if(groups[n] && groups[n].length){
-        html += `<div class="nozzle-group-hdr">${nozzles[n]}</div>`;
-        html += groups[n].map(t => cardHTML(t)).join('');
-      }
-    });
-    grid.innerHTML = html;
-  } else {
-    grid.innerHTML = list.map(t => cardHTML(t)).join('');
-  }
+            document.getElementById('statusOpen').textContent = openTasks;
+            document.getElementById('statusToday').textContent = todayTasks;
+            document.getElementById('statusDone').textContent = doneTasks;
 
-  // Save button styling
-  document.getElementById('saveBtn').className = 'bs bs-' + cur;
+            updateSyncDisplay();
+            updateSummaryStats();
+        }
 
-  // Nozzle row
-  document.getElementById('nozzleRow').classList.toggle('show', cur === 'td');
-}
+        function updateSyncDisplay() {
+            if (!appState.lastSynced) {
+                document.getElementById('statusSynced').textContent = '—';
+                document.getElementById('statLastUpdated').textContent = 'Never';
+            } else {
+                const now = new Date();
+                const synced = new Date(appState.lastSynced);
+                const diffMinutes = Math.floor((now - synced) / 60000);
 
-/* ── FILTERS ── */
-function setF(f){ filter = f; render(); }
+                let timeStr = 'just now';
+                if (diffMinutes > 0 && diffMinutes < 60) {
+                    timeStr = `${diffMinutes}m ago`;
+                } else if (diffMinutes >= 60) {
+                    const diffHours = Math.floor(diffMinutes / 60);
+                    timeStr = `${diffHours}h ago`;
+                }
 
-/* ── ADD / EDIT ── */
-function openAdd(){
-  editId = null;
-  document.getElementById('modalTitle').textContent = 'Add Task';
-  document.getElementById('fTitle').value = '';
-  document.getElementById('fNotes').value = '';
-  document.getElementById('fPri').value = 'medium';
-  document.getElementById('fDue').value = '';
-  document.getElementById('fNozzle').value = '0.4';
-  document.getElementById('modalBg').classList.add('open');
-}
-function openEdit(id){
-  const t = data[cur].find(x => x.id === id);
-  if(!t) return;
-  editId = id;
-  document.getElementById('modalTitle').textContent = 'Edit Task';
-  document.getElementById('fTitle').value = t.title;
-  document.getElementById('fNotes').value = t.notes || '';
-  document.getElementById('fPri').value = t.pri;
-  document.getElementById('fDue').value = t.due || '';
-  document.getElementById('fNozzle').value = t.nozzle || '0.4';
-  document.getElementById('modalBg').classList.add('open');
-}
-function closeM(e){
-  if(e && e.target !== document.getElementById('modalBg')) return;
-  document.getElementById('modalBg').classList.remove('open');
-}
-function saveTask(){
-  const title = document.getElementById('fTitle').value.trim();
-  if(!title){ toast('Title is required'); return; }
-  const obj = {
-    id: editId || uid(),
-    title,
-    notes: document.getElementById('fNotes').value.trim(),
-    pri: document.getElementById('fPri').value,
-    due: document.getElementById('fDue').value || null,
-    done: false
-  };
-  if(cur === 'td') obj.nozzle = document.getElementById('fNozzle').value;
-  if(editId){
-    const idx = data[cur].findIndex(x => x.id === editId);
-    if(idx > -1){ obj.done = data[cur][idx].done; data[cur][idx] = obj; }
-  } else {
-    data[cur].push(obj);
-  }
-  persist();
-  closeM();
-  render();
-  toast(editId ? 'Task updated' : 'Task added');
-}
+                document.getElementById('statusSynced').textContent = timeStr;
+                document.getElementById('statLastUpdated').textContent = timeStr;
+            }
+        }
 
-/* ── TOGGLE / DELETE ── */
-function tog(id){
-  const t = data[cur].find(x => x.id === id);
-  if(t){ t.done = !t.done; persist(); render(); }
-}
-function del(id){
-  data[cur] = data[cur].filter(x => x.id !== id);
-  persist();
-  render();
-  toast('Task deleted');
-}
+        function updateSummaryStats() {
+            const openTasks = appState.tasks.filter(t => t.status === 'open').length;
+            const doneTasks = appState.tasks.filter(t => t.status === 'done').length;
 
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const nextWeek = new Date(today);
+            nextWeek.setDate(nextWeek.getDate() + 7);
 
-/* ── INIT ── */
-load().then(()=>{render();});
-</script>
+            const dueThisWeek = appState.tasks.filter(t => {
+                if (!t.dueDate || t.status === 'done') return false;
+                const dueDate = new Date(t.dueDate);
+                dueDate.setHours(0, 0, 0, 0);
+                return dueDate >= today && dueDate < nextWeek;
+            }).length;
+
+            document.getElementById('statTotalOpen').textContent = openTasks;
+            document.getElementById('statDueWeek').textContent = dueThisWeek;
+            document.getElementById('statCompleted').textContent = doneTasks;
+        }
+
+        function renderCategoryTabs() {
+            const container = document.getElementById('categoryTabs');
+            container.innerHTML = '';
+
+            appState.categories.forEach(cat => {
+                const button = document.createElement('button');
+                button.className = `category-tab ${cat.id === appState.activeCategory ? 'active' : ''}`;
+                button.dataset.categoryId = cat.id;
+
+                const count = appState.tasks.filter(t => t.categoryId === cat.id).length;
+                button.innerHTML = `${cat.name} <span class="category-count">(${count})</span>`;
+
+                button.addEventListener('click', () => {
+                    appState.activeCategory = cat.id;
+                    appState.activeFilter = 'all';
+                    renderCategoryTabs();
+                    renderTasks();
+                    updateFilterButtons();
+                });
+
+                button.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    showCategoryContextMenu(e, cat.id);
+                });
+
+                button.addEventListener('long', (e) => {
+                    showCategoryContextMenu(e, cat.id);
+                });
+
+                container.appendChild(button);
+            });
+
+            // Add category button
+            const addBtn = document.createElement('button');
+            addBtn.className = 'btn-add-category';
+            addBtn.textContent = '+ Category';
+            addBtn.addEventListener('click', showAddCategoryModal);
+            container.appendChild(addBtn);
+        }
+
+        function renderTasks() {
+            const container = document.getElementById('taskList');
+            const emptyState = document.getElementById('emptyState');
+            container.innerHTML = '';
+
+            let filteredTasks = appState.tasks.filter(t => t.categoryId === appState.activeCategory);
+
+            if (appState.activeFilter === 'open') {
+                filteredTasks = filteredTasks.filter(t => t.status === 'open');
+            } else if (appState.activeFilter === 'high') {
+                filteredTasks = filteredTasks.filter(t => t.priority === 'high' && t.status === 'open');
+            } else if (appState.activeFilter === 'done') {
+                filteredTasks = filteredTasks.filter(t => t.status === 'done');
+            }
+
+            if (filteredTasks.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            filteredTasks.forEach(task => {
+                const row = document.createElement('div');
+                row.className = `task-row ${task.status === 'done' ? 'done' : ''}`;
+                row.dataset.taskId = task.id;
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'task-checkbox';
+                checkbox.checked = task.status === 'done';
+                checkbox.addEventListener('change', () => {
+                    task.status = checkbox.checked ? 'done' : 'open';
+                    task.completedAt = checkbox.checked ? new Date().toISOString() : null;
+                    saveData();
+                    updateStatusBar();
+                    renderTasks();
+                });
+
+                const content = document.createElement('div');
+                content.className = 'task-content';
+
+                const title = document.createElement('div');
+                title.className = 'task-title';
+                title.textContent = task.title;
+
+                if (task.notes) {
+                    const notes = document.createElement('div');
+                    notes.className = 'task-notes';
+                    notes.textContent = task.notes;
+                    content.appendChild(title);
+                    content.appendChild(notes);
+                } else {
+                    content.appendChild(title);
+                }
+
+                const meta = document.createElement('div');
+                meta.className = 'task-meta';
+
+                const priorityBadge = document.createElement('span');
+                priorityBadge.className = `priority-badge ${task.priority}`;
+                priorityBadge.textContent = task.priority.charAt(0).toUpperCase() + task.priority.slice(1);
+                meta.appendChild(priorityBadge);
+
+                if (task.dueDate) {
+                    const dateSpan = document.createElement('span');
+                    dateSpan.className = 'task-date';
+                    dateSpan.textContent = formatDate(task.dueDate);
+                    meta.appendChild(dateSpan);
+                }
+
+                const actions = document.createElement('div');
+                actions.className = 'task-actions';
+
+                const editBtn = document.createElement('button');
+                editBtn.className = 'btn-task-action';
+                editBtn.textContent = 'Edit';
+                editBtn.addEventListener('click', () => showEditForm(task.id));
+                actions.appendChild(editBtn);
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn-task-action delete';
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.addEventListener('click', () => confirmDelete(task.id));
+                actions.appendChild(deleteBtn);
+
+                row.appendChild(checkbox);
+                row.appendChild(content);
+                row.appendChild(meta);
+                row.appendChild(actions);
+
+                container.appendChild(row);
+
+                // Show edit form if this task is being edited
+                if (appState.editingTaskId === task.id) {
+                    const editForm = createEditForm(task);
+                    const formRow = document.createElement('div');
+                    formRow.className = 'task-row';
+                    formRow.appendChild(editForm);
+                    container.appendChild(formRow);
+                }
+            });
+        }
+
+        function createEditForm(task) {
+            const form = document.createElement('div');
+            form.className = 'task-edit-form';
+
+            const titleGroup = document.createElement('div');
+            titleGroup.className = 'form-group';
+            titleGroup.innerHTML = '<label for="editTitle">Task Title</label>';
+            const titleInput = document.createElement('input');
+            titleInput.type = 'text';
+            titleInput.id = 'editTitle';
+            titleInput.value = task.title;
+            titleGroup.appendChild(titleInput);
+            form.appendChild(titleGroup);
+
+            const notesGroup = document.createElement('div');
+            notesGroup.className = 'form-group';
+            notesGroup.innerHTML = '<label for="editNotes">Notes</label>';
+            const notesInput = document.createElement('textarea');
+            notesInput.id = 'editNotes';
+            notesInput.value = task.notes || '';
+            notesGroup.appendChild(notesInput);
+            form.appendChild(notesGroup);
+
+            const priorityGroup = document.createElement('div');
+            priorityGroup.className = 'form-group';
+            priorityGroup.innerHTML = '<label for="editPriority">Priority</label>';
+            const prioritySelect = document.createElement('select');
+            prioritySelect.id = 'editPriority';
+            ['low', 'medium', 'high'].forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p;
+                opt.textContent = p.charAt(0).toUpperCase() + p.slice(1);
+                opt.selected = p === task.priority;
+                prioritySelect.appendChild(opt);
+            });
+            priorityGroup.appendChild(prioritySelect);
+            form.appendChild(priorityGroup);
+
+            const dueDateGroup = document.createElement('div');
+            dueDateGroup.className = 'form-group';
+            dueDateGroup.innerHTML = '<label for="editDueDate">Due Date (optional)</label>';
+            const dueDateInput = document.createElement('input');
+            dueDateInput.type = 'date';
+            dueDateInput.id = 'editDueDate';
+            dueDateInput.value = task.dueDate || '';
+            dueDateGroup.appendChild(dueDateInput);
+            form.appendChild(dueDateGroup);
+
+            const buttonGroup = document.createElement('div');
+            buttonGroup.className = 'form-buttons';
+
+            const saveBtn = document.createElement('button');
+            saveBtn.className = 'btn-save';
+            saveBtn.type = 'button';
+            saveBtn.textContent = 'Save';
+            saveBtn.addEventListener('click', () => {
+                task.title = titleInput.value || 'Untitled Task';
+                task.notes = notesInput.value;
+                task.priority = prioritySelect.value;
+                task.dueDate = dueDateInput.value || null;
+                appState.editingTaskId = null;
+                saveData();
+                updateStatusBar();
+                renderTasks();
+            });
+            buttonGroup.appendChild(saveBtn);
+
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = 'btn-cancel';
+            cancelBtn.type = 'button';
+            cancelBtn.textContent = 'Cancel';
+            cancelBtn.addEventListener('click', () => {
+                appState.editingTaskId = null;
+                renderTasks();
+            });
+            buttonGroup.appendChild(cancelBtn);
+
+            form.appendChild(buttonGroup);
+            return form;
+        }
+
+        function showEditForm(taskId) {
+            appState.editingTaskId = taskId;
+            renderTasks();
+        }
+
+        function confirmDelete(taskId) {
+            const task = appState.tasks.find(t => t.id === taskId);
+            if (!task) return;
+
+            showConfirmModal(
+                'Delete Task',
+                `Are you sure you want to delete "${task.title}"? This cannot be undone.`,
+                () => {
+                    appState.tasks = appState.tasks.filter(t => t.id !== taskId);
+                    saveData();
+                    updateStatusBar();
+                    renderTasks();
+                }
+            );
+        }
+
+        // ===== MODAL & FORM HANDLERS =====
+        function showConfirmModal(title, message, onConfirm) {
+            const modal = document.getElementById('confirmModal');
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmMessage').textContent = message;
+
+            document.getElementById('btnConfirmCancel').onclick = () => {
+                modal.classList.remove('active');
+            };
+
+            document.getElementById('btnConfirmOK').onclick = () => {
+                modal.classList.remove('active');
+                onConfirm();
+            };
+
+            modal.classList.add('active');
+        }
+
+        function showAddCategoryModal() {
+            const modal = document.getElementById('categoryModal');
+            document.getElementById('categoryModalTitle').textContent = 'Add Category';
+            document.getElementById('categoryName').value = '';
+            document.getElementById('categoryColor').value = '#58a6ff';
+            document.getElementById('colorValue').textContent = '#58a6ff';
+
+            const form = document.getElementById('categoryForm');
+            form.onsubmit = (e) => {
+                e.preventDefault();
+                const name = document.getElementById('categoryName').value.trim();
+                const color = document.getElementById('categoryColor').value;
+
+                if (!name) return;
+
+                const newCategory = {
+                    id: appState.nextId++,
+                    name,
+                    color,
+                    sortOrder: appState.categories.length + 1
+                };
+
+                appState.categories.push(newCategory);
+                saveData();
+                renderCategoryTabs();
+                modal.classList.remove('active');
+            };
+
+            document.getElementById('btnCategoryCancel').onclick = () => {
+                modal.classList.remove('active');
+            };
+
+            document.getElementById('categoryColor').addEventListener('input', (e) => {
+                document.getElementById('colorValue').textContent = e.target.value;
+            });
+
+            modal.classList.add('active');
+            document.getElementById('categoryName').focus();
+        }
+
+        function showCategoryContextMenu(e, categoryId) {
+            const menu = document.getElementById('contextMenu');
+            menu.style.left = e.clientX + 'px';
+            menu.style.top = e.clientY + 'px';
+            menu.classList.add('active');
+
+            const category = appState.categories.find(c => c.id === categoryId);
+            if (!category) return;
+
+            document.getElementById('contextRename').onclick = () => {
+                menu.classList.remove('active');
+                const newName = prompt('Rename category:', category.name);
+                if (newName && newName.trim()) {
+                    category.name = newName.trim();
+                    saveData();
+                    renderCategoryTabs();
+                }
+            };
+
+            document.getElementById('contextDelete').onclick = () => {
+                menu.classList.remove('active');
+                showConfirmModal(
+                    'Delete Category',
+                    `Delete "${category.name}"? All tasks in this category will be deleted.`,
+                    () => {
+                        appState.categories = appState.categories.filter(c => c.id !== categoryId);
+                        appState.tasks = appState.tasks.filter(t => t.categoryId !== categoryId);
+                        if (appState.activeCategory === categoryId) {
+                            appState.activeCategory = appState.categories[0]?.id || null;
+                        }
+                        saveData();
+                        updateStatusBar();
+                        renderCategoryTabs();
+                        renderTasks();
+                    }
+                );
+            };
+
+            document.addEventListener('click', (e) => {
+                if (e.target !== menu && !menu.contains(e.target)) {
+                    menu.classList.remove('active');
+                }
+            }, { once: true });
+        }
+
+        function updateFilterButtons() {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                const filter = btn.dataset.filter;
+                btn.classList.toggle('active', filter === appState.activeFilter);
+            });
+        }
+
+        // ===== EVENT LISTENERS =====
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeData();
+            updateHeaderDate();
+            updateStatusBar();
+            renderCategoryTabs();
+            renderTasks();
+
+            // Filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    appState.activeFilter = btn.dataset.filter;
+                    updateFilterButtons();
+                    renderTasks();
+                });
+            });
+
+            // Add task button
+            document.getElementById('btnAddTask').addEventListener('click', () => {
+                const newTask = {
+                    id: appState.nextId++,
+                    categoryId: appState.activeCategory,
+                    title: '',
+                    notes: '',
+                    priority: 'medium',
+                    status: 'open',
+                    dueDate: null,
+                    createdAt: new Date().toISOString(),
+                    completedAt: null
+                };
+
+                appState.tasks.push(newTask);
+                appState.editingTaskId = newTask.id;
+                saveData();
+                renderTasks();
+                updateStatusBar();
+            });
+
+            // Update sync display periodically
+            setInterval(updateSyncDisplay, 60000);
+        });
+
+        // Close modals on outside click
+        document.getElementById('confirmModal').addEventListener('click', (e) => {
+            if (e.target.id === 'confirmModal') {
+                e.target.classList.remove('active');
+            }
+        });
+
+        document.getElementById('categoryModal').addEventListener('click', (e) => {
+            if (e.target.id === 'categoryModal') {
+                e.target.classList.remove('active');
+            }
+        });
+
+        // Close context menu on click outside
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('contextMenu');
+            if (!menu.contains(e.target)) {
+                menu.classList.remove('active');
+            }
+        });
+    </script>
+
+    </div><!-- end #appContent -->
+
+    <!-- ===== LOGIN GATE SCRIPT ===== -->
+    <script>
+    // ============================================================
+    // PASSWORD GATE
+    // Uses SHA-256 hash — password is NOT stored in plain text.
+    // To change the password:
+    //   1. Open browser console on any page
+    //   2. Run: crypto.subtle.digest('SHA-256', new TextEncoder().encode('YOUR_NEW_PASSWORD')).then(h => console.log(Array.from(new Uint8Array(h)).map(b => b.toString(16).padStart(2,'0')).join('')))
+    //   3. Copy the hash and replace PASSWORD_HASH below
+    //
+    // Current password: azck2026
+    // (Delete this comment after you've memorised it)
+    // ============================================================
+    const PASSWORD_HASH = 'f70972e48319bfe1952e027e425600edc9e95863c84db43366fa110b7a3a4336';
+    const SESSION_KEY = 'azck-cc-auth';
+    const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+
+    async function sha256(message) {
+        const msgBuffer = new TextEncoder().encode(message);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function checkExistingSession() {
+        const session = localStorage.getItem(SESSION_KEY);
+        if (session) {
+            try {
+                const { hash, expires } = JSON.parse(session);
+                if (hash === PASSWORD_HASH && Date.now() < expires) {
+                    unlockApp();
+                    return;
+                }
+            } catch(e) {}
+            localStorage.removeItem(SESSION_KEY);
+        }
+    }
+
+    function unlockApp() {
+        document.getElementById('loginGate').classList.add('hidden');
+        document.getElementById('appContent').classList.add('visible');
+    }
+
+    async function handleLogin(e) {
+        e.preventDefault();
+        const pw = document.getElementById('loginPassword').value;
+        const hash = await sha256(pw);
+        if (hash === PASSWORD_HASH) {
+            localStorage.setItem(SESSION_KEY, JSON.stringify({
+                hash: PASSWORD_HASH,
+                expires: Date.now() + SESSION_DURATION
+            }));
+            unlockApp();
+        } else {
+            document.getElementById('loginError').textContent = 'Wrong password. Try again.';
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('loginPassword').focus();
+        }
+        return false;
+    }
+
+    // Check on page load — skip login if session is still valid
+    checkExistingSession();
+    </script>
 </body>
 </html>
