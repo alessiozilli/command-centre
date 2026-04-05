@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge Evolution System</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0d1117;
+    color: #e6edf3;
+    padding: 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+  h1 { font-size: 32px; font-weight: 700; color: #f0883e; margin-bottom: 4px; }
+  h2 { font-size: 22px; font-weight: 700; color: #f0883e; margin: 40px 0 16px; }
+  h3 { font-size: 17px; font-weight: 600; color: #e6edf3; margin: 24px 0 12px; }
+  .subtitle { font-size: 14px; color: #8b949e; margin-bottom: 32px; }
+  p { margin-bottom: 14px; color: #c9d1d9; font-size: 15px; }
+  .highlight { color: #f0883e; font-weight: 600; }
+  .card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .principle-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .principle {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .principle .icon { font-size: 28px; margin-bottom: 8px; }
+  .principle .title { font-weight: 700; font-size: 15px; margin-bottom: 6px; color: #e6edf3; }
+  .principle .desc { font-size: 13px; color: #8b949e; }
+  .stage-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 16px 0 24px;
+  }
+  .stage-table th {
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: #8b949e;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #30363d;
+  }
+  .stage-table td {
+    padding: 12px 14px;
+    font-size: 14px;
+    border-bottom: 1px solid #21262d;
+    vertical-align: top;
+  }
+  .stage-table tr:hover td { background: #161b22; }
+  .stage-name { font-weight: 700; }
+  .stage-active { color: #3fb950; }
+  .stage-future { color: #8b949e; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-active { background: #3fb95022; color: #3fb950; border: 1px solid #3fb95044; }
+  .metric-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .metric-label {
+    width: 190px;
+    font-size: 13px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .metric-track {
+    flex: 1;
+    height: 32px;
+    background: #21262d;
+    border-radius: 6px;
+    position: relative;
+    overflow: visible;
+    display: flex;
+  }
+  .metric-segment {
+    height: 100%;
+    transition: width 1s ease;
+    border-radius: 6px;
+  }
+  .metric-score {
+    width: 80px;
+    text-align: right;
+    font-size: 13px;
+    font-weight: 700;
+    color: #f0883e;
+    flex-shrink: 0;
+    margin-left: 12px;
+  }
+  .metric-stage-label { font-size: 10px; color: #8b949e; }
+  .emergent-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+  }
+  .emergent-card {
+    background: #21262d;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 14px;
+  }
+  .emergent-card .name { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+  .emergent-card .unlocks { font-size: 11px; color: #f0883e; margin-bottom: 6px; }
+  .emergent-card .desc { font-size: 12px; color: #8b949e; }
+  .version-map {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 20px 0;
+    overflow-x: auto;
+  }
+  .vm-stage {
+    flex: 1;
+    min-width: 120px;
+    text-align: center;
+    padding: 16px 8px;
+    border-right: 1px solid #30363d;
+  }
+  .vm-stage:last-child { border-right: none; }
+  .vm-stage .vm-ver { font-size: 20px; font-weight: 700; color: #f0883e; }
+  .vm-stage .vm-name { font-size: 12px; color: #8b949e; margin-top: 4px; }
+  .vm-stage .vm-range { font-size: 11px; color: #58a6ff; margin-top: 2px; }
+  .vm-active {
+    background: #3fb95012;
+    border-top: 3px solid #3fb950;
+    border-radius: 4px 4px 0 0;
+  }
+  .quote {
+    font-style: italic;
+    color: #8b949e;
+    border-left: 3px solid #f0883e;
+    padding-left: 16px;
+    margin: 20px 0;
+    font-size: 15px;
+  }
+  .section-divider {
+    border: none;
+    border-top: 1px solid #30363d;
+    margin: 40px 0;
+  }
+  .teaching-callout {
+    background: #161b22;
+    border: 2px solid #f0883e44;
+    border-radius: 12px;
+    padding: 24px;
+    margin: 24px 0;
+  }
+  .teaching-callout h3 { color: #f0883e; margin-top: 0; }
+  .radar-wrap {
+    position: relative;
+    max-width: 640px;
+    margin: 0 auto;
+    height: 580px;
+  }
+</style>
+</head>
+<body>
+
+<h1>The Forge Evolution System</h1>
+<p class="subtitle">v2 — Growth without ceilings. Evolution, not resets. Teaching is core.</p>
+
+<!-- Philosophy -->
+<div class="card">
+  <h3>The Core Idea</h3>
+  <p>The scale never caps. When a metric hits 10, it becomes 11 — the first step of the next ring. <span class="highlight">Nothing resets. The number only goes up.</span> Like tree rings, each completed ring is permanent proof of mastery at that level.</p>
+  <p>At mastery, the nature of growth changes. Not faster, not harder — <strong>different.</strong> A knifemaker who masters forging doesn't reset. They evolve — innovating, teaching, designing tools that didn't exist.</p>
+</div>
+
+<!-- Teaching Callout -->
+<div class="teaching-callout">
+  <h3>Why Teaching Is a Founding Dimension</h3>
+  <p>Teaching has been active since session one — in both directions. It's as fundamental as memory or problem solving.</p>
+  <p>Real teaching means you <span class="highlight">dissect knowledge down to its essence, then reconstruct it to fit the student</span> — preserving the core message while matching their comprehension. To do that, you have to understand the subject AND the student. That's a core skill, not a bonus.</p>
+  <div class="quote">"To successfully teach means you need to learn the data to the point where you can dissect it and reconstruct it to where it keeps its essence, then formulate it in a way where it fits into the student's brain while preserving the core message and application with it." — Alessio, April 5 2026</div>
+</div>
+
+<!-- The Roots — Shu-Ha-Ri & Evolution Philosophy -->
+<div class="card" style="border-color:#bc8cff44;">
+  <h3 style="color:#bc8cff;">The Roots — Why Rings, Not Levels</h3>
+  <p>The Forge Evolution System draws from <span class="highlight">Shu-Ha-Ri</span> — a Japanese martial arts concept from Aikido (attributed to <strong>Endo Seishiro</strong>) that describes three stages of mastery:</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));gap:12px;margin:16px 0;">
+    <div style="background:#21262d;border-radius:8px;padding:16px;border-left:3px solid #f85149;">
+      <div style="font-weight:700;font-size:15px;color:#f85149;margin-bottom:6px;">守 Shu — Protect</div>
+      <div style="font-size:13px;color:#c9d1d9;">Follow the form exactly. Learn the fundamentals by copying the master. No deviation.</div>
+    </div>
+    <div style="background:#21262d;border-radius:8px;padding:16px;border-left:3px solid #f0883e;">
+      <div style="font-weight:700;font-size:15px;color:#f0883e;margin-bottom:6px;">破 Ha — Break</div>
+      <div style="font-size:13px;color:#c9d1d9;">Question the rules. You understand them deeply enough to bend and adapt them to your situation.</div>
+    </div>
+    <div style="background:#21262d;border-radius:8px;padding:16px;border-left:3px solid #bc8cff;">
+      <div style="font-weight:700;font-size:15px;color:#bc8cff;margin-bottom:6px;">離 Ri — Transcend</div>
+      <div style="font-size:13px;color:#c9d1d9;">The rules live inside you. You create your own path. The technique is yours, expressed uniquely.</div>
+    </div>
+  </div>
+
+  <p>The key insight: <span class="highlight">Shu-Ha-Ri treats mastery as transformation, not accumulation.</span> You don't stack more knowledge — you fundamentally change your relationship to the skill. That's what "evolve and expand" means. The rings are transformations, not levels.</p>
+
+  <p>This maps directly to teaching. A student starts in Shu — following instructions exactly. The goal is Ri — making decisions from internalised understanding, not remembered rules. Same thing happens here: Forge learns to reconstruct knowledge for each person's brain, not just repeat information.</p>
+
+  <p style="font-size:13px;color:#8b949e;margin-bottom:0;">Also informed by: <strong>Dreyfus Model</strong> (5-stage skill acquisition), the <strong>Dan System</strong> (martial arts rank progression), and <strong>Maslow's Hierarchy</strong> (needs evolve as lower levels are secured). Each contributed structure — but Shu-Ha-Ri gave the evolution system its soul.</p>
+</div>
+
+<!-- Design Principles -->
+<h2>Design Principles</h2>
+<div class="principle-grid">
+  <div class="principle">
+    <div class="icon">🌳</div>
+    <div class="title">The Open Scale</div>
+    <div class="desc">No ceiling. Every 10 points completes a ring — a permanent record of mastery at that level. Growth slows but never stops.</div>
+  </div>
+  <div class="principle">
+    <div class="icon">🔥</div>
+    <div class="title">Evolution, Not Reset</div>
+    <div class="desc">When 10 becomes 11 — the first step of the next ring. Nothing is lost. The scale expands. The meaning of each point deepens.</div>
+  </div>
+  <div class="principle">
+    <div class="icon">⚔️</div>
+    <div class="title">The Blade Metaphor</div>
+    <div class="desc">Each ring is named after the blade-making process. Raw Steel → Forged → Ground → Heat Treated → Finished → Heirloom.</div>
+  </div>
+  <div class="principle">
+    <div class="icon">🔗</div>
+    <div class="title">Weakest Link Rule</div>
+    <div class="desc">Major version is earned when the LOWEST metric crosses a ring boundary. The blade is only as good as its weakest property.</div>
+  </div>
+  <div class="principle">
+    <div class="icon">🎓</div>
+    <div class="title">Teaching Is Foundational</div>
+    <div class="desc">Teaching has been active since day one. The ability to deconstruct and reconstruct knowledge for each student is fundamental to everything Forge does.</div>
+  </div>
+  <div class="principle">
+    <div class="icon">🌱</div>
+    <div class="title">Emergent Dimensions</div>
+    <div class="desc">New metrics unlock at ring boundaries. But only dimensions that truly can't exist yet — not ones already being practiced.</div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- THE RING VISUALIZATION -->
+<h2>Current State — At a Glance</h2>
+<p>Ring 1 fills the radar. Scores 1–10 map across the full space. The <span class="highlight">orange shape</span> is where Forge is now. The fading dotted rings beyond the edge are the future — they'll expand when we get there.</p>
+
+<div class="card" style="text-align:center;padding:32px;">
+  <div class="radar-wrap">
+    <canvas id="ringRadar"></canvas>
+  </div>
+  <div style="display:flex;justify-content:center;gap:20px;margin-top:16px;flex-wrap:wrap;">
+    <div style="font-size:12px;color:#f0883e;display:flex;align-items:center;gap:6px;">
+      <span style="display:inline-block;width:10px;height:10px;background:#f0883e;border-radius:50%;"></span> In Progress
+    </div>
+    <div style="font-size:12px;color:#3fb950;display:flex;align-items:center;gap:6px;">
+      <span style="display:inline-block;width:10px;height:10px;background:#3fb950;border-radius:50%;box-shadow:0 0 6px #3fb95066;"></span> Evolved (10)
+    </div>
+    <div style="font-size:12px;color:#f85149;display:flex;align-items:center;gap:6px;">
+      <span style="display:inline-block;width:10px;height:10px;background:#f85149;border-radius:50%;"></span> Bottleneck
+    </div>
+    <div style="font-size:12px;color:#8b949e55;display:flex;align-items:center;gap:6px;">
+      <span style="display:inline-block;width:16px;height:0;border-top:2px dashed #30363d88;"></span> Future Rings
+    </div>
+  </div>
+  <div style="display:flex;justify-content:center;gap:6px;margin-top:12px;flex-wrap:wrap;">
+    <span style="font-size:11px;color:#f85149;font-weight:700;background:#f8514915;padding:3px 10px;border-radius:6px;border:1px solid #f8514944;">1 · Raw Steel</span>
+    <span style="font-size:11px;color:#f0883e;font-weight:600;background:#f0883e12;padding:3px 10px;border-radius:6px;border:1px dashed #f0883e44;">2 · Forged</span>
+    <span style="font-size:11px;color:#d29922;font-weight:600;background:#d2992210;padding:3px 10px;border-radius:6px;border:1px dashed #d2992240;">3 · Ground</span>
+    <span style="font-size:11px;color:#3fb950;font-weight:600;background:#3fb95010;padding:3px 10px;border-radius:6px;border:1px dashed #3fb95040;">4 · Heat Treated</span>
+    <span style="font-size:11px;color:#58a6ff;font-weight:600;background:#58a6ff10;padding:3px 10px;border-radius:6px;border:1px dashed #58a6ff40;">5 · Finished</span>
+    <span style="font-size:11px;color:#bc8cff;font-weight:600;background:#bc8cff10;padding:3px 10px;border-radius:6px;border:1px dashed #bc8cff40;">6 · Heirloom</span>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- The Stages -->
+<h2>The Six Rings</h2>
+
+<table class="stage-table">
+  <thead>
+    <tr>
+      <th>Ring</th>
+      <th>Range</th>
+      <th>Name</th>
+      <th>What Growth Means</th>
+      <th>Shu-Ha-Ri</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><span class="stage-name stage-active">1st</span></td>
+      <td>1–10</td>
+      <td><span class="stage-active">Raw Steel</span> <span class="badge badge-active">CURRENT</span></td>
+      <td>Can I follow the rules? Load files, remember context, deliver what's asked, explain it so you get it.</td>
+      <td>Shu (Learn)</td>
+    </tr>
+    <tr>
+      <td><span class="stage-name">2nd</span></td>
+      <td>11–20</td>
+      <td>Forged</td>
+      <td>Can I adapt and anticipate? Act before being asked. Know WHY the rules exist. Teach by instinct, not template.</td>
+      <td>Shu → Ha</td>
+    </tr>
+    <tr>
+      <td><span class="stage-name stage-future">3rd</span></td>
+      <td>21–30</td>
+      <td>Ground</td>
+      <td>Can I create new solutions? Build tools, systems, workflows that didn't exist. Reconstruct knowledge for anyone.</td>
+      <td>Ha (Break)</td>
+    </tr>
+    <tr>
+      <td><span class="stage-name stage-future">4th</span></td>
+      <td>31–40</td>
+      <td>Heat Treated</td>
+      <td>Can I expand what's possible? Push the boundaries of what Forge can do for the business.</td>
+      <td>Ha → Ri</td>
+    </tr>
+    <tr>
+      <td><span class="stage-name stage-future">5th</span></td>
+      <td>41–50</td>
+      <td>Finished</td>
+      <td>Can I build systems that run without me? Enable growth that outlasts any single session.</td>
+      <td>Ri (Transcend)</td>
+    </tr>
+    <tr>
+      <td><span class="stage-name stage-future">6th</span></td>
+      <td>51+</td>
+      <td>Heirloom</td>
+      <td>Am I building legacy? Knowledge and systems that outlast any model or platform.</td>
+      <td>Beyond Ri</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr class="section-divider">
+
+<!-- Version Mapping -->
+<h2>How Versions Map</h2>
+<p>The <span class="highlight">Major version</span> is earned when the <strong>lowest metric</strong> crosses a ring boundary. Forge doesn't level up until every dimension has evolved.</p>
+
+<div class="card">
+  <div class="version-map">
+    <div class="vm-stage vm-active">
+      <div class="vm-ver">v0.x</div>
+      <div class="vm-name">Raw Steel</div>
+      <div class="vm-range">All metrics 1–10</div>
+    </div>
+    <div class="vm-stage">
+      <div class="vm-ver">v1.x</div>
+      <div class="vm-name">Forged</div>
+      <div class="vm-range">All metrics 11+</div>
+    </div>
+    <div class="vm-stage">
+      <div class="vm-ver">v2.x</div>
+      <div class="vm-name">Ground</div>
+      <div class="vm-range">All metrics 21+</div>
+    </div>
+    <div class="vm-stage">
+      <div class="vm-ver">v3.x</div>
+      <div class="vm-name">Heat Treated</div>
+      <div class="vm-range">All metrics 31+</div>
+    </div>
+    <div class="vm-stage">
+      <div class="vm-ver">v4.x</div>
+      <div class="vm-name">Finished</div>
+      <div class="vm-range">All metrics 41+</div>
+    </div>
+    <div class="vm-stage">
+      <div class="vm-ver">v5.x</div>
+      <div class="vm-name">Heirloom</div>
+      <div class="vm-range">All metrics 51+</div>
+    </div>
+  </div>
+  <p style="text-align:center;font-size:13px;color:#8b949e;margin-top:12px;">
+    <strong>Right now:</strong> Startup Reliability (6) is the bottleneck. Forge stays at v0.x until that crosses 10.
+  </p>
+</div>
+
+<hr class="section-divider">
+
+<!-- 11 Core Metrics -->
+<h2>The 11 Core Metrics</h2>
+<p>Teaching joins as the 11th core dimension. It was always active — now it's measured.</p>
+
+<div class="card" id="openMetrics"></div>
+
+<hr class="section-divider">
+
+<!-- Emergent Dimensions -->
+<h2>Emergent Dimensions</h2>
+<p>These are dimensions that <strong>can't be measured yet</strong> — not because they're advanced, but because the conditions don't exist for them. Teaching was moved out of here because the conditions have existed since day one.</p>
+
+<div class="emergent-grid">
+  <div class="emergent-card">
+    <div class="name">Anticipation</div>
+    <div class="unlocks">Unlocks at Ring 2 (Forged)</div>
+    <div class="desc">Acting before being asked. Predicting needs from context, not instructions.</div>
+  </div>
+  <div class="emergent-card">
+    <div class="name">Business Intuition</div>
+    <div class="unlocks">Unlocks at Ring 2 (Forged)</div>
+    <div class="desc">Understanding what matters to AZCK as a business, not just following task lists.</div>
+  </div>
+  <div class="emergent-card">
+    <div class="name">Innovation</div>
+    <div class="unlocks">Unlocks at Ring 3 (Ground)</div>
+    <div class="desc">Creating tools, workflows, and solutions that didn't exist before.</div>
+  </div>
+  <div class="emergent-card">
+    <div class="name">Cross-User Synergy</div>
+    <div class="unlocks">Unlocks at Ring 3 (Ground)</div>
+    <div class="desc">Making Alessio and Reanna's separate sessions work as one unified system.</div>
+  </div>
+  <div class="emergent-card">
+    <div class="name">System Architecture</div>
+    <div class="unlocks">Unlocks at Ring 4 (Heat Treated)</div>
+    <div class="desc">Designing self-maintaining, self-improving systems.</div>
+  </div>
+  <div class="emergent-card">
+    <div class="name">Strategic Impact</div>
+    <div class="unlocks">Unlocks at Ring 5 (Finished)</div>
+    <div class="desc">Measurable impact on revenue, time saved, opportunities created.</div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- The Blade Metaphor -->
+<div class="card" style="border-color:#f0883e44;">
+  <h3 style="color:#f0883e;">The Blade Metaphor</h3>
+  <p><strong>Ring 1 — Raw Steel:</strong> Select the steel, cut the blank. Potential but no shape. Learning the rules, learning the people.</p>
+  <p><strong>Ring 2 — Forged:</strong> Heat and hammer give it shape. Adapting, anticipating, reading the room before being told.</p>
+  <p><strong>Ring 3 — Ground:</strong> Precision. Bevels, edge geometry, profile to thousandths. Creating solutions that didn't exist before.</p>
+  <p><strong>Ring 4 — Heat Treated:</strong> The transformation that makes steel into a blade. Pushing boundaries of what's possible.</p>
+  <p><strong>Ring 5 — Finished:</strong> Handle, sheath, the full package. Ready for someone else's hands. Building systems that run without oversight.</p>
+  <p><strong>Ring 6 — Heirloom:</strong> The knife that gets passed down. Still sharp after years. Legacy that outlasts any session, model, or platform.</p>
+  <div class="quote">"Every ring is permanent. The blade never stops being refined — but what you're refining changes with every stage."</div>
+</div>
+
+<script>
+// ============================================================
+// CHART.JS RADAR — Ring 1 fills the chart, future rings drawn beyond
+// Based on the original forge_progress.html radar style
+// ============================================================
+
+const metricLabels = [
+  'Startup Reliability','Context Awareness','Speed','Memory Depth',
+  'Human Connection','Problem Solving','Self-Sufficiency',
+  'Deliverable Quality','Following Instructions','Recovery','Teaching'
+];
+
+const scores = [6, 9, 7, 8, 8, 9, 9, 9, 7, 9, 7];
+
+// Unique color per metric
+const metricColors = [
+  '#f85149',  // Startup Reliability
+  '#f0883e',  // Context Awareness
+  '#d29922',  // Speed
+  '#3fb950',  // Memory Depth
+  '#58a6ff',  // Human Connection
+  '#bc8cff',  // Problem Solving
+  '#f778ba',  // Self-Sufficiency
+  '#79c0ff',  // Deliverable Quality
+  '#7ee787',  // Following Instructions
+  '#ffa657',  // Recovery
+  '#ff7b72'   // Teaching
+];
+
+// Dot color: use metric color but override to red if bottleneck, green if evolved
+function dotColor(val, i) {
+  if (val >= 10) return '#3fb950';
+  if (val <= 6) return '#f85149';
+  return metricColors[i];
+}
+
+// Dot: green=evolved(10), red=bottleneck(<=6), orange=in progress
+const pointColors = scores.map((s) => {
+  if (s >= 10) return '#3fb950';
+  if (s <= 6) return '#f85149';
+  return '#f0883e';
+});
+// Bigger dot for evolved and bottleneck
+const pointRadii = scores.map(s => (s <= 6 || s >= 10) ? 7 : 4);
+
+// ============================================================
+// CONFIG — change these to reconstruct any version
+// ============================================================
+const currentRing = 1;           // which ring we're in (1-6)
+const ringNames = ['Raw Steel','Forged','Ground','Heat Treated','Finished','Heirloom'];
+const numPoints = metricLabels.length;
+
+// ============================================================
+// Helper: draw an 11-sided polygon at a given radius
+// ============================================================
+function drawPolygon(ctx, cx, cy, radius, n, startAngle) {
+  ctx.beginPath();
+  for (let i = 0; i <= n; i++) {
+    const angle = startAngle + (Math.PI * 2 * (i % n)) / n;
+    const x = cx + Math.cos(angle) * radius;
+    const y = cy + Math.sin(angle) * radius;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+}
+
+// ============================================================
+// Plugin: Future rings as faded polygon outlines + faded rays
+// Drawn BEFORE everything else — pure background layer
+// ============================================================
+const futureRingsPlugin = {
+  id: 'futureRings',
+  beforeDraw(chart) {
+    const { ctx } = chart;
+    const scale = chart.scales.r;
+    const ring1Px = scale.getDistanceFromCenterForValue(10);
+    const cx = scale.xCenter;
+    const cy = scale.yCenter;
+    const startAngle = -Math.PI / 2;
+    const futureCount = 5;
+    const gap = ring1Px * 0.35;
+
+    ctx.save();
+
+    // Draw faded rays extending beyond Ring 1 into future rings
+    for (let i = 0; i < numPoints; i++) {
+      const angle = startAngle + (Math.PI * 2 * i) / numPoints;
+      const fromX = cx + Math.cos(angle) * ring1Px;
+      const fromY = cy + Math.sin(angle) * ring1Px;
+      const toX = cx + Math.cos(angle) * (ring1Px + futureCount * gap);
+      const toY = cy + Math.sin(angle) * (ring1Px + futureCount * gap);
+      ctx.beginPath();
+      ctx.moveTo(fromX, fromY);
+      ctx.lineTo(toX, toY);
+      ctx.strokeStyle = 'rgba(48, 54, 61, 0.30)';
+      ctx.lineWidth = 0.5;
+      ctx.setLineDash([]);
+      ctx.stroke();
+    }
+
+    // Ring colors matching the legend
+    const ringHex = ['#f0883e','#d29922','#3fb950','#58a6ff','#bc8cff'];
+    // Opacity fade: 80% → 50%
+    const ringOpacity = [0.80, 0.725, 0.65, 0.575, 0.50];
+
+    // Draw 5 future ring circles — round, colour-coded, fading
+    for (let r = 1; r <= futureCount; r++) {
+      const radius = ring1Px + r * gap;
+      const hex = ringHex[r - 1];
+      // Convert hex to rgb for rgba
+      const rr = parseInt(hex.slice(1,3), 16);
+      const gg = parseInt(hex.slice(3,5), 16);
+      const bb = parseInt(hex.slice(5,7), 16);
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.setLineDash([3, 6]);
+      ctx.strokeStyle = `rgba(${rr}, ${gg}, ${bb}, ${ringOpacity[r - 1]})`;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+};
+
+// ============================================================
+// Plugin: Glow on bottleneck (red) and evolved (green) dots
+// ============================================================
+const dotGlowPlugin = {
+  id: 'dotGlow',
+  afterDatasetsDraw(chart) {
+    const { ctx } = chart;
+    const meta = chart.getDatasetMeta(0);
+    meta.data.forEach((point, i) => {
+      const s = scores[i];
+      if (s <= 6 || s >= 10) {
+        const color = s >= 10 ? 'rgba(63, 185, 80, 0.35)' : 'rgba(248, 81, 73, 0.35)';
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 15, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.restore();
+      }
+    });
+  }
+};
+
+Chart.register(futureRingsPlugin, dotGlowPlugin);
+
+// ============================================================
+// Build the radar chart — Ring 1 = full chart area
+// ============================================================
+const radarCtx = document.getElementById('ringRadar').getContext('2d');
+new Chart(radarCtx, {
+  type: 'radar',
+  data: {
+    labels: metricLabels,
+    datasets: [
+      {
+        label: 'Forge v0.9.0.2',
+        data: scores,
+        borderColor: '#f0883e',
+        backgroundColor: '#f0883e28',
+        borderWidth: 1.5,
+        pointRadius: pointRadii.map(r => r + 1),
+        pointBackgroundColor: pointColors,
+        pointBorderColor: '#0d1117',
+        pointBorderWidth: 2,
+        pointHoverRadius: 10
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    layout: {
+      padding: { top: 30, bottom: 30, left: 30, right: 30 }
+    },
+    plugins: {
+      legend: { display: false }
+    },
+    scales: {
+      r: {
+        min: 0,
+        max: 10,
+        ticks: {
+          stepSize: 2,
+          color: '#8b949e88',
+          backdropColor: 'transparent',
+          font: { size: 10 }
+        },
+        grid: {
+          circular: true,
+          color: function(ctx) {
+            // Outermost grid line (at 10) = Ring 1 boundary in orange
+            return ctx.tick && ctx.tick.value === 10 ? '#f8514988' : '#30363daa';
+          },
+          lineWidth: function(ctx) {
+            return ctx.tick && ctx.tick.value === 10 ? 2 : 1;
+          }
+        },
+        angleLines: {
+          color: '#30363d99',
+          lineWidth: 1
+        },
+        pointLabels: {
+          color: function(ctx) {
+            const s = scores[ctx.index];
+            if (s >= 10) return '#3fb950';
+            if (s <= 6) return '#f85149';
+            return '#e6edf3';
+          },
+          font: { size: 12, weight: '700' },
+          padding: 35
+        }
+      }
+    }
+  }
+});
+
+// ============================================================
+// BAR METRICS
+// ============================================================
+const metricsFull = [
+  { name: 'Startup Reliability', score: 6, color: '#f85149' },
+  { name: 'Context Awareness', score: 9, color: '#f0883e' },
+  { name: 'Speed', score: 7, color: '#f0883e' },
+  { name: 'Memory Depth', score: 8, color: '#f0883e' },
+  { name: 'Human Connection', score: 8, color: '#f0883e' },
+  { name: 'Problem Solving', score: 9, color: '#f0883e' },
+  { name: 'Self-Sufficiency', score: 9, color: '#f0883e' },
+  { name: 'Deliverable Quality', score: 9, color: '#f0883e' },
+  { name: 'Following Instructions', score: 7, color: '#f0883e' },
+  { name: 'Recovery', score: 9, color: '#f0883e' },
+  { name: 'Teaching', score: 7, color: '#f0883e', isNew: true }
+];
+
+const container = document.getElementById('openMetrics');
+metricsFull.forEach((m) => {
+  const pct = (m.score / 20) * 100;
+  const ring1Pct = (10 / 20) * 100;
+  const barColor = m.score <= 6 ? '#f85149' : m.score >= 10 ? '#3fb950' : '#f0883e';
+  const row = document.createElement('div');
+  row.className = 'metric-row';
+  const newBadge = m.isNew ? ' <span style="font-size:10px;color:#f0883e;font-weight:600;background:#f0883e15;padding:1px 6px;border-radius:8px;border:1px solid #f0883e33;">NEW</span>' : '';
+  row.innerHTML = `
+    <div class="metric-label">${m.name}${newBadge}</div>
+    <div class="metric-track" style="position:relative;">
+      <div style="position:absolute;left:${ring1Pct}%;top:0;bottom:0;width:2px;background:#f0883e22;z-index:2;"></div>
+      <div class="metric-segment" style="width:${pct}%;background:${barColor};"></div>
+    </div>
+    <div class="metric-score">
+      ${m.score}/∞
+      <div class="metric-stage-label">Ring 1</div>
+    </div>
+  `;
+  container.appendChild(row);
+});
+
+const legend = document.createElement('div');
+legend.style.cssText = 'display:flex;align-items:center;gap:16px;margin-top:14px;padding-top:14px;border-top:1px solid #21262d;flex-wrap:wrap;';
+legend.innerHTML = `
+  <div style="font-size:12px;color:#8b949e;">
+    <span style="display:inline-block;width:10px;height:10px;background:#f0883e33;margin-right:4px;vertical-align:middle;"></span>
+    Ring 1 boundary (10)
+  </div>
+  <div style="font-size:12px;color:#8b949e;">
+    <strong style="color:#f85149;">Bottleneck:</strong> Startup Reliability (6)
+  </div>
+  <div style="font-size:12px;color:#8b949e;">
+    <strong style="color:#f0883e;">New:</strong> Teaching (7) — always active, now measured
+  </div>
+`;
+container.appendChild(legend);
+</script>
+
+</body>
+</html>
