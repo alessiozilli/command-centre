@@ -1282,16 +1282,28 @@
             appState.lastSynced = null;
         }
 
-        async function loadUserProfile(userId) {
-            // Retry up to 3 times — onAuthStateChange can fire before JWT is fully registered
+        async function loadUserProfile(userId, email) {
+            // Try by ID first, then by email as fallback
             for (let attempt = 1; attempt <= 3; attempt++) {
-                const { data, error } = await sb
+                // Attempt by ID
+                let { data, error } = await sb
                     .from('profiles')
                     .select('*')
                     .eq('id', userId)
                     .single();
 
                 if (data && !error) return data;
+
+                // Fallback: try by email
+                if (email) {
+                    const res = await sb
+                        .from('profiles')
+                        .select('*')
+                        .eq('email', email)
+                        .single();
+                    if (res.data && !res.error) return res.data;
+                }
+
                 console.warn(`Profile load attempt ${attempt} failed:`, error?.message);
                 if (attempt < 3) await new Promise(r => setTimeout(r, 500 * attempt));
             }
@@ -2013,7 +2025,7 @@
             // Auth state listener — handles login, logout, and page refresh
             sb.auth.onAuthStateChange(async (event, session) => {
                 if (session?.user) {
-                    const profile = await loadUserProfile(session.user.id);
+                    const profile = await loadUserProfile(session.user.id, session.user.email);
                     currentUser = {
                         id: session.user.id,
                         email: session.user.email,
