@@ -1283,17 +1283,20 @@
         }
 
         async function loadUserProfile(userId) {
-            const { data, error } = await sb
-                .from('profiles')
-                .select('*')
-                .eq('id', userId)
-                .single();
+            // Retry up to 3 times — onAuthStateChange can fire before JWT is fully registered
+            for (let attempt = 1; attempt <= 3; attempt++) {
+                const { data, error } = await sb
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', userId)
+                    .single();
 
-            if (error) {
-                console.error('Profile load error:', error);
-                return null;
+                if (data && !error) return data;
+                console.warn(`Profile load attempt ${attempt} failed:`, error?.message);
+                if (attempt < 3) await new Promise(r => setTimeout(r, 500 * attempt));
             }
-            return data;
+            console.error('Profile load failed after 3 attempts');
+            return null;
         }
 
         function showUserInfo() {
