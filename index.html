@@ -763,6 +763,7 @@
             color: #8b949e;
             margin-bottom: 28px;
         }
+        .login-box input[type="email"],
         .login-box input[type="password"] {
             width: 100%;
             padding: 14px 16px;
@@ -772,10 +773,9 @@
             color: #e6edf3;
             font-size: 16px;
             outline: none;
-            margin-bottom: 16px;
-            text-align: center;
-            letter-spacing: 0.15em;
+            margin-bottom: 12px;
         }
+        .login-box input[type="email"]:focus,
         .login-box input[type="password"]:focus {
             border-color: #990000;
         }
@@ -864,7 +864,83 @@
         @keyframes innerGlow { 0%,100%{ opacity:0.2; } 50%{ opacity:0.5; } }
         #appContent { display: none; }
         #appContent.visible { display: block; }
+
+        /* Login form updates for email+password */
+        .login-box input[type="email"],
+        .login-box input[type="password"] {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            color: #e6edf3;
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .login-box input[type="email"]:focus,
+        .login-box input[type="password"]:focus {
+            border-color: #990000;
+        }
+        .login-toggle {
+            color: #8b949e;
+            font-size: 0.85rem;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            text-align: center;
+        }
+        .login-toggle:hover { color: #e6edf3; }
+        .login-info {
+            color: #8b949e;
+            font-size: 0.8rem;
+            text-align: center;
+            margin-top: 0.5rem;
+        }
+
+        /* User bar in header */
+        .user-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .user-name {
+            color: #8b949e;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .user-role {
+            color: #990000;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .btn-logout {
+            background: transparent;
+            border: 1px solid #30363d;
+            color: #8b949e;
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+        .btn-logout:hover {
+            border-color: #990000;
+            color: #e6edf3;
+        }
+
+        /* Loading spinner */
+        .login-loading {
+            display: none;
+            color: #8b949e;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 0.5rem;
+        }
+        .login-loading.active { display: block; }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 
@@ -989,11 +1065,13 @@
                 </svg>
             </div>
             <h2>AZ COMMAND CENTRE</h2>
-            <div class="login-sub">Unlock to continue</div>
+            <div class="login-sub">Sign in to continue</div>
             <form id="loginForm" onsubmit="return handleLogin(event)">
-                <input type="password" id="loginPassword" placeholder="Enter password" autofocus autocomplete="current-password">
-                <button type="submit" class="login-btn">Unlock</button>
+                <input type="email" id="loginEmail" placeholder="Email" autofocus autocomplete="email">
+                <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+                <button type="submit" class="login-btn">Sign In</button>
             </form>
+            <div class="login-loading" id="loginLoading">Signing in...</div>
             <div class="login-error" id="loginError"></div>
         </div>
     </div>
@@ -1005,6 +1083,11 @@
     <header>
         <h1>AZ COMMAND CENTRE</h1>
         <div class="header-right">
+            <div class="user-bar">
+                <span class="user-name" id="userName"></span>
+                <span class="user-role" id="userRole"></span>
+                <button class="btn-logout" id="btnLogout" onclick="handleLogout()">Sign Out</button>
+            </div>
             <div class="header-date" id="headerDate"></div>
             <div class="status-bar">
                 <div class="status-item">
@@ -1129,7 +1212,13 @@
         // === SUPABASE CONFIG ===
         const SUPABASE_URL = 'https://twrlvnfszohyrmivdhre.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3cmx2bmZzem9oeXJtaXZkaHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NjkxMTMsImV4cCI6MjA5MDE0NTExM30.o96DFNbBObst0EAmX51rnRFXzu8oTN1o-HNAxN7MY8A';
-        const USE_SUPABASE = false; // Set to true when auth is configured
+        const USE_SUPABASE = true;
+
+        // Supabase client (named 'sb' to avoid collision with the CDN global)
+        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Current user
+        let currentUser = null;  // { id, email, display_name, role }
 
         // ===== CONSTANTS & STORAGE =====
         const STORAGE_KEY = 'azck-command-centre';
@@ -1139,42 +1228,6 @@
             { id: 3, name: 'Quad Fang', color: '#FC4C02', sortOrder: 3 },
             { id: 4, name: '3D Printing', color: '#bc8cff', sortOrder: 4 },
             { id: 5, name: 'Family', color: '#3fb950', sortOrder: 5 }
-        ];
-
-        const DEFAULT_TASKS = [
-            {
-                id: 1,
-                categoryId: 1,
-                title: 'Amazon returns at Staples',
-                notes: '',
-                priority: 'high',
-                status: 'open',
-                dueDate: '2026-04-01',
-                createdAt: new Date('2026-04-01').toISOString(),
-                completedAt: null
-            },
-            {
-                id: 2,
-                categoryId: 1,
-                title: 'Home Depot returns',
-                notes: 'Return items before deadline',
-                priority: 'high',
-                status: 'open',
-                dueDate: '2026-04-02',
-                createdAt: new Date('2026-04-02').toISOString(),
-                completedAt: null
-            },
-            {
-                id: 3,
-                categoryId: 1,
-                title: 'Replace kitchen faucet / sink',
-                notes: 'Return current faucet to Costco. Buy a working replacement. May need copper soldering and shark bite',
-                priority: 'high',
-                status: 'open',
-                dueDate: null,
-                createdAt: new Date().toISOString(),
-                completedAt: null
-            }
         ];
 
         // ===== STATE MANAGEMENT =====
@@ -1188,82 +1241,295 @@
             nextId: 100
         };
 
-        // ===== UTILITY FUNCTIONS =====
-        function formatDate(dateString) {
-            if (!dateString) return null;
-            const date = new Date(dateString);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const yesterday = new Date(today);
-            yesterday.setDate(yesterday.getDate() - 1);
-            const tomorrow = new Date(today);
-            tomorrow.setDate(tomorrow.getDate() + 1);
+        // ===== SUPABASE AUTH =====
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            const pw = document.getElementById('loginPassword').value;
+            const errorEl = document.getElementById('loginError');
+            const loadingEl = document.getElementById('loginLoading');
 
-            const dateOnly = new Date(date);
-            dateOnly.setHours(0, 0, 0, 0);
+            errorEl.textContent = '';
+            loadingEl.classList.add('active');
 
-            if (dateOnly.getTime() === today.getTime()) return 'Today';
-            if (dateOnly.getTime() === yesterday.getTime()) return 'Yesterday';
-            if (dateOnly.getTime() === tomorrow.getTime()) return 'Tomorrow';
+            const { data, error } = await sb.auth.signInWithPassword({
+                email: email,
+                password: pw
+            });
 
-            const daysAgo = Math.floor((today - dateOnly) / (1000 * 60 * 60 * 24));
-            const daysUntil = Math.floor((dateOnly - today) / (1000 * 60 * 60 * 24));
+            loadingEl.classList.remove('active');
 
-            if (daysAgo > 0) return `${daysAgo}d ago`;
-            if (daysUntil > 0) return `in ${daysUntil}d`;
-
-            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            if (error) {
+                errorEl.textContent = error.message || 'Sign in failed. Check your email and password.';
+                document.getElementById('loginPassword').value = '';
+                document.getElementById('loginPassword').focus();
+            }
+            // Auth state change listener handles the rest
+            return false;
         }
 
-        function getRelativeDateInfo(dateString) {
-            if (!dateString) return { type: 'none', days: 0 };
-            const date = new Date(dateString);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const dateOnly = new Date(date);
-            dateOnly.setHours(0, 0, 0, 0);
-
-            const daysOffset = Math.floor((dateOnly - today) / (1000 * 60 * 60 * 24));
-
-            if (daysOffset === 0) return { type: 'today', days: 0 };
-            if (daysOffset < 0) return { type: 'overdue', days: daysOffset };
-            if (daysOffset <= 7) return { type: 'week', days: daysOffset };
-            return { type: 'future', days: daysOffset };
+        async function handleLogout() {
+            await sb.auth.signOut();
+            currentUser = null;
+            document.getElementById('loginGate').classList.remove('hidden');
+            document.getElementById('appContent').classList.remove('visible');
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('loginError').textContent = '';
+            // Clear state
+            appState.categories = [];
+            appState.tasks = [];
+            appState.lastSynced = null;
         }
 
-        function formatTime(isoString) {
-            const date = new Date(isoString);
-            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        async function loadUserProfile(userId) {
+            const { data, error } = await sb
+                .from('profiles')
+                .select('*')
+                .eq('id', userId)
+                .single();
+
+            if (error) {
+                console.error('Profile load error:', error);
+                return null;
+            }
+            return data;
         }
 
-        function initializeData() {
-            const stored = localStorage.getItem(STORAGE_KEY);
-            if (stored) {
-                const data = JSON.parse(stored);
-                appState.categories = data.categories || DEFAULT_CATEGORIES;
-                appState.tasks = data.tasks || [];
-                appState.lastSynced = data.lastSynced || null;
-                appState.nextId = data.nextId || 100;
+        function showUserInfo() {
+            if (!currentUser) return;
+            document.getElementById('userName').textContent = currentUser.display_name || currentUser.email;
+            document.getElementById('userRole').textContent = currentUser.role || '';
+        }
+
+        function unlockApp() {
+            document.getElementById('loginGate').classList.add('hidden');
+            document.getElementById('appContent').classList.add('visible');
+        }
+
+        // ===== SUPABASE DATA =====
+        async function loadFromSupabase() {
+            // Load categories
+            const { data: cats, error: catErr } = await sb
+                .from('categories')
+                .select('*')
+                .order('sort_order', { ascending: true });
+
+            if (catErr) {
+                console.error('Category load error:', catErr);
+            } else if (cats && cats.length > 0) {
+                appState.categories = cats.map(c => ({
+                    id: c.id,
+                    name: c.name,
+                    color: c.color || '#f0883e',
+                    sortOrder: c.sort_order,
+                    ownerId: c.owner_id
+                }));
             } else {
                 appState.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
-                appState.tasks = JSON.parse(JSON.stringify(DEFAULT_TASKS));
-                appState.nextId = 100;
-                saveData();
             }
-            if (appState.categories.length > 0) {
+
+            // Load tasks
+            const { data: tasks, error: taskErr } = await sb
+                .from('tasks')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (taskErr) {
+                console.error('Task load error:', taskErr);
+            } else {
+                appState.tasks = (tasks || []).map(t => ({
+                    id: t.id,
+                    categoryId: t.category_id,
+                    title: t.title,
+                    notes: t.notes || '',
+                    priority: t.priority || 'medium',
+                    status: t.status || 'open',
+                    dueDate: t.due_date,
+                    createdAt: t.created_at,
+                    completedAt: t.completed_at,
+                    ownerId: t.owner_id,
+                    sortOrder: t.sort_order
+                }));
+            }
+
+            appState.lastSynced = new Date().toISOString();
+
+            // Also save to localStorage as offline backup
+            saveToLocalStorage();
+
+            if (appState.categories.length > 0 && !appState.activeCategory) {
                 appState.activeCategory = appState.categories[0].id;
             }
         }
 
-        function saveData() {
-            appState.lastSynced = new Date().toISOString();
+        async function saveTaskToSupabase(task) {
+            const payload = {
+                category_id: task.categoryId,
+                owner_id: currentUser?.id || null,
+                title: task.title || 'Untitled Task',
+                notes: task.notes || null,
+                priority: task.priority || 'medium',
+                status: task.status || 'open',
+                due_date: task.dueDate || null,
+                sort_order: task.sortOrder || 0,
+                completed_at: task.completedAt || null
+            };
+
+            if (task._isNew) {
+                // INSERT
+                const { data, error } = await sb
+                    .from('tasks')
+                    .insert(payload)
+                    .select()
+                    .single();
+
+                if (error) {
+                    console.error('Task insert error:', error);
+                    return null;
+                }
+                return data;
+            } else {
+                // UPDATE
+                const { data, error } = await sb
+                    .from('tasks')
+                    .update(payload)
+                    .eq('id', task.id)
+                    .select()
+                    .single();
+
+                if (error) {
+                    console.error('Task update error:', error);
+                    return null;
+                }
+                return data;
+            }
+        }
+
+        async function deleteTaskFromSupabase(taskId) {
+            const { error } = await sb
+                .from('tasks')
+                .delete()
+                .eq('id', taskId);
+
+            if (error) console.error('Task delete error:', error);
+        }
+
+        async function saveCategoryToSupabase(cat) {
+            const payload = {
+                name: cat.name,
+                color: cat.color || '#f0883e',
+                sort_order: cat.sortOrder || 0,
+                owner_id: currentUser?.id || null
+            };
+
+            if (cat._isNew) {
+                const { data, error } = await sb
+                    .from('categories')
+                    .insert(payload)
+                    .select()
+                    .single();
+
+                if (error) {
+                    console.error('Category insert error:', error);
+                    return null;
+                }
+                return data;
+            } else {
+                const { data, error } = await sb
+                    .from('categories')
+                    .update(payload)
+                    .eq('id', cat.id)
+                    .select()
+                    .single();
+
+                if (error) console.error('Category update error:', error);
+                return data;
+            }
+        }
+
+        async function deleteCategoryFromSupabase(catId) {
+            const { error } = await sb
+                .from('categories')
+                .delete()
+                .eq('id', catId);
+
+            if (error) console.error('Category delete error:', error);
+        }
+
+        // ===== REALTIME SUBSCRIPTIONS =====
+        function subscribeToRealtime() {
+            sb
+                .channel('tasks-changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => {
+                    loadFromSupabase().then(() => {
+                        updateStatusBar();
+                        renderCategoryTabs();
+                        renderTasks();
+                    });
+                })
+                .subscribe();
+
+            sb
+                .channel('categories-changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => {
+                    loadFromSupabase().then(() => {
+                        renderCategoryTabs();
+                        renderTasks();
+                        updateStatusBar();
+                    });
+                })
+                .subscribe();
+        }
+
+        // ===== LOCALSTORAGE FALLBACK =====
+        function saveToLocalStorage() {
             const data = {
                 categories: appState.categories,
                 tasks: appState.tasks,
                 lastSynced: appState.lastSynced,
                 nextId: appState.nextId
             };
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+        }
+
+        function loadFromLocalStorage() {
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    const data = JSON.parse(stored);
+                    appState.categories = data.categories || DEFAULT_CATEGORIES;
+                    appState.tasks = data.tasks || [];
+                    appState.lastSynced = data.lastSynced || null;
+                    appState.nextId = data.nextId || 100;
+                } else {
+                    appState.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+                    appState.tasks = [];
+                    appState.nextId = 100;
+                }
+            } catch(e) {
+                appState.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+                appState.tasks = [];
+            }
+            if (appState.categories.length > 0) {
+                appState.activeCategory = appState.categories[0].id;
+            }
+        }
+
+        async function initializeData() {
+            if (USE_SUPABASE && currentUser) {
+                await loadFromSupabase();
+            } else {
+                loadFromLocalStorage();
+            }
+            if (appState.categories.length > 0 && !appState.activeCategory) {
+                appState.activeCategory = appState.categories[0].id;
+            }
+        }
+
+        function saveData() {
+            appState.lastSynced = new Date().toISOString();
+            saveToLocalStorage();
             updateSyncDisplay();
         }
 
@@ -1414,9 +1680,12 @@
                 checkbox.type = 'checkbox';
                 checkbox.className = 'task-checkbox';
                 checkbox.checked = task.status === 'done';
-                checkbox.addEventListener('change', () => {
+                checkbox.addEventListener('change', async () => {
                     task.status = checkbox.checked ? 'done' : 'open';
                     task.completedAt = checkbox.checked ? new Date().toISOString() : null;
+                    if (USE_SUPABASE && currentUser) {
+                        await saveTaskToSupabase(task);
+                    }
                     saveData();
                     updateStatusBar();
                     renderTasks();
@@ -1542,12 +1811,25 @@
             saveBtn.className = 'btn-save';
             saveBtn.type = 'button';
             saveBtn.textContent = 'Save';
-            saveBtn.addEventListener('click', () => {
+            saveBtn.addEventListener('click', async () => {
                 task.title = titleInput.value || 'Untitled Task';
                 task.notes = notesInput.value;
                 task.priority = prioritySelect.value;
                 task.dueDate = dueDateInput.value || null;
                 appState.editingTaskId = null;
+
+                if (USE_SUPABASE && currentUser) {
+                    const saved = await saveTaskToSupabase(task);
+                    if (saved && task._isNew) {
+                        // Replace local temp ID with Supabase ID
+                        const idx = appState.tasks.findIndex(t => t.id === task.id);
+                        if (idx >= 0) {
+                            appState.tasks[idx].id = saved.id;
+                            appState.tasks[idx]._isNew = false;
+                        }
+                    }
+                }
+
                 saveData();
                 updateStatusBar();
                 renderTasks();
@@ -1580,7 +1862,10 @@
             showConfirmModal(
                 'Delete Task',
                 `Are you sure you want to delete "${task.title}"? This cannot be undone.`,
-                () => {
+                async () => {
+                    if (USE_SUPABASE && currentUser) {
+                        await deleteTaskFromSupabase(taskId);
+                    }
                     appState.tasks = appState.tasks.filter(t => t.id !== taskId);
                     saveData();
                     updateStatusBar();
@@ -1615,7 +1900,7 @@
             document.getElementById('colorValue').textContent = '#58a6ff';
 
             const form = document.getElementById('categoryForm');
-            form.onsubmit = (e) => {
+            form.onsubmit = async (e) => {
                 e.preventDefault();
                 const name = document.getElementById('categoryName').value.trim();
                 const color = document.getElementById('categoryColor').value;
@@ -1623,13 +1908,28 @@
                 if (!name) return;
 
                 const newCategory = {
-                    id: appState.nextId++,
                     name,
                     color,
-                    sortOrder: appState.categories.length + 1
+                    sortOrder: appState.categories.length + 1,
+                    _isNew: true
                 };
 
-                appState.categories.push(newCategory);
+                if (USE_SUPABASE && currentUser) {
+                    const saved = await saveCategoryToSupabase(newCategory);
+                    if (saved) {
+                        appState.categories.push({
+                            id: saved.id,
+                            name: saved.name,
+                            color: saved.color,
+                            sortOrder: saved.sort_order,
+                            ownerId: saved.owner_id
+                        });
+                    }
+                } else {
+                    newCategory.id = appState.nextId++;
+                    appState.categories.push(newCategory);
+                }
+
                 saveData();
                 renderCategoryTabs();
                 modal.classList.remove('active');
@@ -1656,11 +1956,14 @@
             const category = appState.categories.find(c => c.id === categoryId);
             if (!category) return;
 
-            document.getElementById('contextRename').onclick = () => {
+            document.getElementById('contextRename').onclick = async () => {
                 menu.classList.remove('active');
                 const newName = prompt('Rename category:', category.name);
                 if (newName && newName.trim()) {
                     category.name = newName.trim();
+                    if (USE_SUPABASE && currentUser) {
+                        await saveCategoryToSupabase(category);
+                    }
                     saveData();
                     renderCategoryTabs();
                 }
@@ -1671,7 +1974,10 @@
                 showConfirmModal(
                     'Delete Category',
                     `Delete "${category.name}"? All tasks in this category will be deleted.`,
-                    () => {
+                    async () => {
+                        if (USE_SUPABASE && currentUser) {
+                            await deleteCategoryFromSupabase(categoryId);
+                        }
                         appState.categories = appState.categories.filter(c => c.id !== categoryId);
                         appState.tasks = appState.tasks.filter(t => t.categoryId !== categoryId);
                         if (appState.activeCategory === categoryId) {
@@ -1700,12 +2006,34 @@
         }
 
         // ===== EVENT LISTENERS =====
-        document.addEventListener('DOMContentLoaded', () => {
-            initializeData();
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Auth state listener — handles login, logout, and page refresh
+            sb.auth.onAuthStateChange(async (event, session) => {
+                if (session?.user) {
+                    const profile = await loadUserProfile(session.user.id);
+                    currentUser = {
+                        id: session.user.id,
+                        email: session.user.email,
+                        display_name: profile?.display_name || session.user.email.split('@')[0],
+                        role: profile?.role || 'viewer'
+                    };
+                    showUserInfo();
+                    unlockApp();
+                    await initializeData();
+                    updateHeaderDate();
+                    updateStatusBar();
+                    renderCategoryTabs();
+                    renderTasks();
+                    subscribeToRealtime();
+                } else {
+                    // Not logged in — show login gate
+                    currentUser = null;
+                    document.getElementById('loginGate').classList.remove('hidden');
+                    document.getElementById('appContent').classList.remove('visible');
+                }
+            });
+
             updateHeaderDate();
-            updateStatusBar();
-            renderCategoryTabs();
-            renderTasks();
 
             // Filter buttons
             document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -1718,8 +2046,9 @@
 
             // Add task button
             document.getElementById('btnAddTask').addEventListener('click', () => {
+                const tempId = 'temp-' + Date.now();
                 const newTask = {
-                    id: appState.nextId++,
+                    id: tempId,
                     categoryId: appState.activeCategory,
                     title: '',
                     notes: '',
@@ -1727,11 +2056,12 @@
                     status: 'open',
                     dueDate: null,
                     createdAt: new Date().toISOString(),
-                    completedAt: null
+                    completedAt: null,
+                    _isNew: true
                 };
 
                 appState.tasks.push(newTask);
-                appState.editingTaskId = newTask.id;
+                appState.editingTaskId = tempId;
                 saveData();
                 renderTasks();
                 updateStatusBar();
@@ -1765,69 +2095,6 @@
 
     </div><!-- end #appContent -->
 
-    <!-- ===== LOGIN GATE SCRIPT ===== -->
-    <script>
-    // ============================================================
-    // PASSWORD GATE
-    // Uses SHA-256 hash — password is NOT stored in plain text.
-    // To change the password:
-    //   1. Open browser console on any page
-    //   2. Run: crypto.subtle.digest('SHA-256', new TextEncoder().encode('YOUR_NEW_PASSWORD')).then(h => console.log(Array.from(new Uint8Array(h)).map(b => b.toString(16).padStart(2,'0')).join('')))
-    //   3. Copy the hash and replace PASSWORD_HASH below
-    //
-    // Current password: azck2026
-    // (Delete this comment after you've memorised it)
-    // ============================================================
-    const PASSWORD_HASH = 'f70972e48319bfe1952e027e425600edc9e95863c84db43366fa110b7a3a4336';
-    const SESSION_KEY = 'azck-cc-auth';
-    const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
-
-    async function sha256(message) {
-        const msgBuffer = new TextEncoder().encode(message);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    }
-
-    function checkExistingSession() {
-        const session = localStorage.getItem(SESSION_KEY);
-        if (session) {
-            try {
-                const { hash, expires } = JSON.parse(session);
-                if (hash === PASSWORD_HASH && Date.now() < expires) {
-                    unlockApp();
-                    return;
-                }
-            } catch(e) {}
-            localStorage.removeItem(SESSION_KEY);
-        }
-    }
-
-    function unlockApp() {
-        document.getElementById('loginGate').classList.add('hidden');
-        document.getElementById('appContent').classList.add('visible');
-    }
-
-    async function handleLogin(e) {
-        e.preventDefault();
-        const pw = document.getElementById('loginPassword').value;
-        const hash = await sha256(pw);
-        if (hash === PASSWORD_HASH) {
-            localStorage.setItem(SESSION_KEY, JSON.stringify({
-                hash: PASSWORD_HASH,
-                expires: Date.now() + SESSION_DURATION
-            }));
-            unlockApp();
-        } else {
-            document.getElementById('loginError').textContent = 'Wrong password. Try again.';
-            document.getElementById('loginPassword').value = '';
-            document.getElementById('loginPassword').focus();
-        }
-        return false;
-    }
-
-    // Check on page load — skip login if session is still valid
-    checkExistingSession();
-    </script>
+    <!-- Auth is handled by Supabase in the main script block above -->
 </body>
 </html>
