@@ -4,8 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AZ Command Centre</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&family=Lexend+Mega:wght@700&display=swap" rel="stylesheet">
     <style>
-        /* ===== RESET & GLOBAL ===== */
+        :root {
+            --az: #990000;
+            --qf: #c4922a;
+            --per: #3a7fbf;
+            --td: #2a9e8f;
+            --fam: #9b72cf;
+            --warm: #d4856a;
+            --code: #5b9bd5;
+            --family: #e091b8;
+            --shared: #50c878;
+            --bg: #0f0f0f;
+            --surf: #1a1a1a;
+            --surf2: #242424;
+            --surf3: #2e2e2e;
+            --text: #f0ede0;
+            --text2: #a09c96;
+            --text3: #6a6762;
+            --border: #2e2e2e;
+            --r: 10px;
+            --font: 'Lexend', sans-serif;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -13,2103 +35,1479 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #0d1117;
-            color: #e6edf3;
-            line-height: 1.6;
-            font-size: 16px;
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: var(--font);
+            line-height: 1.5;
+            overflow-x: hidden;
         }
 
-        /* ===== HEADER ===== */
-        header {
-            background-color: #161b22;
-            border-bottom: 1px solid #30363d;
-            padding: 2rem 2rem 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
+        .header {
+            background: linear-gradient(135deg, var(--surf) 0%, var(--surf2) 100%);
+            border-bottom: 2px solid var(--border);
+            padding: 1.5rem;
+            text-align: center;
         }
 
-        header h1 {
+        .brand {
+            font-family: 'Lexend Mega', sans-serif;
             font-size: 2rem;
             font-weight: 700;
             letter-spacing: 0.05em;
-            flex: 1;
-            min-width: 200px;
+            color: var(--az);
+            margin-bottom: 0.5rem;
         }
 
-        .header-right {
+        .stats {
             display: flex;
-            align-items: center;
+            justify-content: center;
             gap: 2rem;
             flex-wrap: wrap;
-        }
-
-        .header-date {
-            font-size: 0.95rem;
-            color: #8b949e;
-            font-weight: 500;
-        }
-
-        .status-bar {
-            display: flex;
-            gap: 1.5rem;
             font-size: 0.9rem;
+            margin-top: 1rem;
         }
 
-        .status-item {
+        .stat {
             display: flex;
             flex-direction: column;
             align-items: center;
-        }
-
-        .status-label {
-            color: #8b949e;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 0.25rem;
-        }
-
-        .status-count {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #58a6ff;
-        }
-
-        .status-item.done .status-count {
-            color: #3fb950;
-        }
-
-        .status-item.synced .status-count {
-            color: #8b949e;
-            font-size: 0.8rem;
-        }
-
-        /* ===== NAVIGATION BAR ===== */
-        nav.pill-nav {
-            background-color: #0d1117;
-            border-bottom: 1px solid #30363d;
-            padding: 1rem 2rem;
-            display: flex;
-            gap: 0.75rem;
-            flex-wrap: wrap;
-        }
-
-        nav.pill-nav a, nav.pill-nav button {
             padding: 0.5rem 1rem;
-            border: 1px solid #30363d;
-            border-radius: 20px;
-            background-color: transparent;
-            color: #8b949e;
-            text-decoration: none;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-            font-family: inherit;
-        }
-
-        nav.pill-nav a:hover, nav.pill-nav button:hover {
-            color: #e6edf3;
-            border-color: #58a6ff;
-        }
-
-        nav.pill-nav a.active {
-            background-color: #58a6ff;
-            color: #0d1117;
-            border-color: #58a6ff;
-            font-weight: 600;
-        }
-
-        /* ===== SUMMARY STATS ===== */
-        .summary-stats {
-            background-color: #161b22;
-            border-bottom: 1px solid #30363d;
-            padding: 1.5rem 2rem;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1.5rem;
-            align-items: center;
-        }
-
-        .stat-block {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .stat-label {
-            font-size: 0.85rem;
-            color: #8b949e;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            font-weight: 600;
+            background: var(--surf3);
+            border-radius: var(--r);
         }
 
         .stat-value {
-            font-size: 1.75rem;
+            font-size: 1.5rem;
             font-weight: 700;
-            color: #58a6ff;
+            color: var(--az);
         }
 
-        .stat-block.done .stat-value {
-            color: #3fb950;
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text2);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
-        .stat-block.synced .stat-value {
-            font-size: 0.9rem;
-            color: #8b949e;
-        }
-
-        /* ===== CATEGORY TABS ===== */
-        .category-tabs {
-            background-color: #0d1117;
-            border-bottom: 1px solid #30363d;
-            padding: 1rem 2rem;
+        .toolbar {
             display: flex;
-            gap: 0.75rem;
+            gap: 1rem;
             flex-wrap: wrap;
+            justify-content: center;
             align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border);
+            background: var(--surf);
         }
 
-        .category-tab {
-            padding: 0.5rem 1rem;
-            border: 2px solid #30363d;
-            border-radius: 6px;
-            background-color: transparent;
-            color: #e6edf3;
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            max-width: 300px;
+            padding: 0.6rem 1rem;
+            background: var(--surf2);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            color: var(--text);
+            font-family: var(--font);
+        }
+
+        .search-box::placeholder {
+            color: var(--text3);
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            background: var(--surf2);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            color: var(--text);
+            font-family: var(--font);
             cursor: pointer;
             font-size: 0.9rem;
             font-weight: 500;
-            transition: all 0.2s;
-            position: relative;
-            user-select: none;
-            font-family: inherit;
+            transition: all 0.2s ease;
         }
 
-        .category-tab:hover {
-            border-color: #58a6ff;
-            color: #58a6ff;
+        .btn:hover {
+            background: var(--surf3);
+            border-color: var(--az);
         }
 
-        .category-tab.active {
-            border-color: #990000;
-            background-color: rgba(153, 0, 0, 0.15);
-            color: #ff6b6b;
+        .btn-primary {
+            background: var(--az);
+            color: #fff;
+            border-color: var(--az);
         }
 
-        .category-count {
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
             font-size: 0.8rem;
-            color: #8b949e;
-            margin-left: 0.5rem;
         }
 
-        .category-tab.active .category-count {
-            color: #ff6b6b;
-        }
-
-        .btn-add-category {
-            padding: 0.5rem 0.75rem;
-            border: 1px dashed #30363d;
-            border-radius: 6px;
-            background-color: transparent;
-            color: #8b949e;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: all 0.2s;
-            font-family: inherit;
-        }
-
-        .btn-add-category:hover {
-            border-color: #58a6ff;
-            color: #58a6ff;
-        }
-
-        /* ===== MAIN CONTENT ===== */
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 1.5rem;
         }
 
-        .filter-bar {
+        .filters {
             display: flex;
-            gap: 0.75rem;
-            margin-bottom: 2rem;
+            gap: 0.5rem;
             flex-wrap: wrap;
+            margin-bottom: 2rem;
+            padding: 0 1rem;
         }
 
         .filter-btn {
             padding: 0.5rem 1rem;
-            border: 1px solid #30363d;
-            border-radius: 6px;
-            background-color: transparent;
-            color: #8b949e;
+            background: var(--surf2);
+            border: 2px solid transparent;
+            border-radius: var(--r);
+            color: var(--text2);
             cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-            font-family: inherit;
+            font-family: var(--font);
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            position: relative;
         }
 
         .filter-btn:hover {
-            color: #e6edf3;
-            border-color: #58a6ff;
+            color: var(--text);
         }
 
         .filter-btn.active {
-            background-color: #58a6ff;
-            color: #0d1117;
-            border-color: #58a6ff;
-            font-weight: 600;
+            color: var(--text);
+            background: var(--surf3);
+            border-left-color: var(--az);
         }
 
-        .btn-add-task {
-            padding: 0.75rem 1.5rem;
-            background-color: #990000;
-            color: #e6edf3;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.95rem;
-            font-weight: 600;
-            transition: all 0.2s;
-            font-family: inherit;
+        .filter-btn.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--az);
+            border-radius: var(--r) 0 0 var(--r);
         }
 
-        .btn-add-task:hover {
-            background-color: #cc0000;
+        .filter-count {
+            margin-left: 0.3rem;
+            color: var(--text3);
+            font-size: 0.8rem;
         }
 
-        /* ===== TASK LIST ===== */
-        .task-list {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
+        .cat-color {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 0.4rem;
         }
 
-        .task-row {
-            background-color: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 8px;
-            padding: 1.25rem;
+        .boards {
             display: grid;
-            grid-template-columns: auto 1fr auto auto auto auto;
-            gap: 1rem;
-            align-items: center;
-            transition: all 0.2s;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
         }
 
-        .task-row:hover {
-            border-color: #58a6ff;
-            background-color: #0d1117;
-        }
-
-        .task-row.done {
-            opacity: 0.6;
-        }
-
-        .task-row.done .task-title {
-            text-decoration: line-through;
-            color: #8b949e;
-        }
-
-        .task-checkbox {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-            accent-color: #3fb950;
-        }
-
-        .task-content {
+        .board {
+            background: var(--surf);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            overflow: hidden;
             display: flex;
             flex-direction: column;
+            max-height: calc(100vh - 400px);
+        }
+
+        .board-header {
+            background: var(--surf2);
+            padding: 1rem;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .board-title {
+            font-weight: 600;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
             gap: 0.5rem;
         }
 
-        .task-title {
-            font-weight: 600;
-            color: #e6edf3;
-            font-size: 0.95rem;
+        .board-title-color {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
         }
 
-        .task-notes {
+        .board-title-count {
+            color: var(--text2);
             font-size: 0.85rem;
-            color: #8b949e;
-            line-height: 1.5;
+            font-weight: 400;
+        }
+
+        .board-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-add-cat {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text2);
+            padding: 0.4rem 0.6rem;
+            cursor: pointer;
+            font-size: 1rem;
+            border-radius: var(--r);
+        }
+
+        .btn-add-cat:hover {
+            color: var(--text);
+            border-color: var(--az);
+        }
+
+        .board-tasks {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+
+        .task-item {
+            background: var(--surf2);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: 0.8rem;
+            margin-bottom: 0.6rem;
+            display: flex;
+            gap: 0.6rem;
+            align-items: flex-start;
+            transition: all 0.2s ease;
+            position: relative;
+            group: hover / task-hover;
+        }
+
+        .task-item:hover {
+            background: var(--surf3);
+            border-color: var(--az);
+        }
+
+        .task-item.overdue {
+            background: rgba(153, 0, 0, 0.15);
+            border-color: var(--az);
+        }
+
+        .task-item.overdue:hover {
+            background: rgba(153, 0, 0, 0.25);
+        }
+
+        .task-item.marked-today {
+            border-left: 4px solid var(--qf);
+            padding-left: calc(0.8rem - 3px);
+        }
+
+        .task-checkbox {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-radius: 50%;
+            cursor: pointer;
+            background: var(--surf3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            margin-top: 0.2rem;
+        }
+
+        .task-checkbox:hover {
+            border-color: var(--az);
+        }
+
+        .task-checkbox.done {
+            background: var(--az);
+            border-color: var(--az);
+        }
+
+        .task-checkbox.done::after {
+            content: '✓';
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .task-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .task-text {
+            word-break: break-word;
+            cursor: text;
+            padding: 0.2rem 0.4rem;
+            margin: -0.2rem -0.4rem;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .task-text:hover {
+            background: rgba(153, 0, 0, 0.1);
+        }
+
+        .task-text.done {
+            color: var(--text2);
+            text-decoration: line-through;
+        }
+
+        .task-text-edit {
+            background: var(--surf3);
+            border: 1px solid var(--az);
+            color: var(--text);
+            padding: 0.4rem 0.6rem;
+            border-radius: 4px;
+            font-family: var(--font);
+            width: 100%;
+            font-size: 0.95rem;
         }
 
         .task-meta {
             display: flex;
-            gap: 1rem;
-            align-items: center;
+            gap: 0.4rem;
             flex-wrap: wrap;
+            align-items: center;
+            margin-top: 0.4rem;
+            font-size: 0.75rem;
         }
 
-        .priority-badge {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: 600;
+        .task-priority {
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-weight: 500;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
         }
 
-        .priority-badge.high {
-            background-color: rgba(248, 81, 73, 0.15);
-            color: #f85149;
+        .priority-high {
+            background: rgba(153, 0, 0, 0.3);
+            color: #ff6b6b;
         }
 
-        .priority-badge.medium {
-            background-color: rgba(240, 136, 62, 0.15);
-            color: #f0883e;
+        .priority-med {
+            background: rgba(196, 146, 42, 0.3);
+            color: var(--qf);
         }
 
-        .priority-badge.low {
-            background-color: rgba(139, 148, 158, 0.15);
-            color: #8b949e;
+        .priority-low {
+            background: rgba(58, 127, 191, 0.3);
+            color: var(--per);
         }
 
-        .task-date {
-            font-size: 0.85rem;
-            color: #8b949e;
+        .task-time {
+            padding: 0.2rem 0.5rem;
+            background: rgba(91, 155, 213, 0.2);
+            color: var(--code);
+            border-radius: 3px;
+            font-weight: 500;
+        }
+
+        .task-due {
+            padding: 0.2rem 0.5rem;
+            background: rgba(58, 127, 191, 0.2);
+            color: var(--per);
+            border-radius: 3px;
+        }
+
+        .task-assigned {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--az);
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.65rem;
+            flex-shrink: 0;
         }
 
         .task-actions {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.3rem;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.2s ease;
         }
 
-        .btn-task-action {
-            padding: 0.4rem 0.8rem;
-            border: 1px solid #30363d;
-            border-radius: 4px;
-            background-color: transparent;
-            color: #8b949e;
+        .task-item:hover .task-actions {
+            opacity: 1;
+        }
+
+        .task-btn {
+            background: none;
+            border: none;
+            color: var(--text2);
             cursor: pointer;
-            font-size: 0.8rem;
-            transition: all 0.2s;
-            font-family: inherit;
+            padding: 0.3rem;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.2s ease;
         }
 
-        .btn-task-action:hover {
-            color: #e6edf3;
-            border-color: #58a6ff;
+        .task-btn:hover {
+            color: var(--text);
+            background: var(--surf3);
         }
 
-        .btn-task-action.delete:hover {
-            color: #f85149;
-            border-color: #f85149;
+        .task-notes {
+            margin-top: 0.6rem;
+            padding-top: 0.6rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.85rem;
+            color: var(--text2);
         }
 
-        /* ===== EDIT FORM (INLINE) ===== */
-        .task-edit-form {
-            grid-column: 1 / -1;
-            background-color: #0d1117;
-            border: 1px solid #58a6ff;
-            border-radius: 6px;
+        .task-notes-text {
+            padding: 0.4rem;
+            background: var(--surf3);
+            border-radius: 4px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            margin-top: 0.4rem;
+        }
+
+        .task-notes-edit {
+            background: var(--surf3);
+            border: 1px solid var(--az);
+            color: var(--text);
+            padding: 0.4rem;
+            border-radius: 4px;
+            font-family: var(--font);
+            width: 100%;
+            font-size: 0.85rem;
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .task-activity {
+            margin-top: 0.6rem;
+            padding-top: 0.6rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.75rem;
+            color: var(--text3);
+        }
+
+        .activity-entry {
+            padding: 0.3rem 0.4rem;
+            background: var(--surf3);
+            border-radius: 3px;
+            margin-bottom: 0.3rem;
+        }
+
+        .add-task-form {
             padding: 1rem;
-            display: grid;
-            gap: 1rem;
+            border-top: 1px solid var(--border);
+            background: var(--surf2);
         }
 
         .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
+            margin-bottom: 0.8rem;
         }
 
-        .form-group label {
-            font-size: 0.85rem;
-            color: #8b949e;
+        .form-label {
+            font-size: 0.75rem;
+            color: var(--text2);
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            font-weight: 600;
+            display: block;
+            margin-bottom: 0.3rem;
         }
 
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            padding: 0.75rem;
-            background-color: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 4px;
-            color: #e6edf3;
-            font-family: inherit;
-            font-size: 0.95rem;
-            transition: all 0.2s;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            border-color: #58a6ff;
-            outline: none;
-            background-color: #0d1117;
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        .form-buttons {
-            display: flex;
-            gap: 0.75rem;
-            margin-top: 0.5rem;
-        }
-
-        .btn-save, .btn-cancel {
-            padding: 0.6rem 1.2rem;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+        .form-input {
+            width: 100%;
+            padding: 0.6rem;
+            background: var(--surf3);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            color: var(--text);
+            font-family: var(--font);
             font-size: 0.9rem;
-            font-weight: 600;
-            font-family: inherit;
-            transition: all 0.2s;
         }
 
-        .btn-save {
-            background-color: #58a6ff;
-            color: #0d1117;
+        .form-input::placeholder {
+            color: var(--text3);
         }
 
-        .btn-save:hover {
-            background-color: #79c0ff;
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.6rem;
         }
 
-        .btn-cancel {
-            background-color: transparent;
-            color: #8b949e;
-            border: 1px solid #30363d;
+        .form-row.full {
+            grid-template-columns: 1fr;
         }
 
-        .btn-cancel:hover {
-            color: #e6edf3;
-            border-color: #58a6ff;
+        select {
+            padding: 0.6rem;
+            background: var(--surf3);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 0.9rem;
         }
 
-        /* ===== MODALS ===== */
-        .modal-overlay {
+        input[type="date"],
+        input[type="time"] {
+            padding: 0.6rem;
+            background: var(--surf3);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 0.9rem;
+        }
+
+        input[type="color"] {
+            width: 100%;
+            height: 40px;
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            cursor: pointer;
+        }
+
+        .form-row-buttons {
+            display: flex;
+            gap: 0.6rem;
+        }
+
+        .form-row-buttons button {
+            flex: 1;
+        }
+
+        .footer {
+            background: var(--surf);
+            border-top: 1px solid var(--border);
+            padding: 1rem;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text2);
+        }
+
+        .sync-status {
+            display: inline-block;
+            margin-left: 1rem;
+            font-size: 0.75rem;
+            padding: 0.3rem 0.6rem;
+            background: var(--surf2);
+            border-radius: var(--r);
+        }
+
+        .sync-status.synced {
+            color: var(--az);
+        }
+
+        .sync-status.error {
+            color: var(--az);
+        }
+
+        .modal {
             display: none;
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.7);
             z-index: 1000;
             align-items: center;
             justify-content: center;
         }
 
-        .modal-overlay.active {
+        .modal.active {
             display: flex;
         }
 
-        .modal {
-            background-color: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 8px;
-            padding: 2rem;
-            max-width: 500px;
+        .modal-content {
+            background: var(--surf);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: 1.5rem;
+            max-width: 400px;
             width: 90%;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            max-height: 80vh;
+            overflow-y: auto;
         }
 
-        .modal-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 1.5rem;
-            color: #e6edf3;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 1rem;
-            justify-content: flex-end;
-            margin-top: 2rem;
-        }
-
-        .btn-confirm {
-            padding: 0.75rem 1.5rem;
-            background-color: #f85149;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+        .modal-header {
+            font-size: 1.2rem;
             font-weight: 600;
-            font-family: inherit;
-            transition: all 0.2s;
-        }
-
-        .btn-confirm:hover {
-            background-color: #fc6d71;
-        }
-
-        .btn-secondary {
-            padding: 0.75rem 1.5rem;
-            background-color: transparent;
-            color: #8b949e;
-            border: 1px solid #30363d;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-            font-family: inherit;
-            transition: all 0.2s;
-        }
-
-        .btn-secondary:hover {
-            color: #e6edf3;
-            border-color: #58a6ff;
-        }
-
-        /* ===== ADD CATEGORY FORM ===== */
-        .category-form {
-            display: grid;
-            gap: 1rem;
-        }
-
-        .color-picker-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .color-picker-input {
-            width: 50px;
-            height: 50px;
-            border: 2px solid #30363d;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        /* ===== CONTEXT MENU ===== */
-        .context-menu {
-            display: none;
-            position: fixed;
-            background-color: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 6px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
-            z-index: 2000;
-            min-width: 150px;
-        }
-
-        .context-menu.active {
-            display: block;
-        }
-
-        .context-menu-item {
-            padding: 0.75rem 1rem;
-            color: #8b949e;
-            cursor: pointer;
-            transition: all 0.2s;
-            border-bottom: 1px solid #30363d;
-        }
-
-        .context-menu-item:last-child {
-            border-bottom: none;
-        }
-
-        .context-menu-item:hover {
-            background-color: #0d1117;
-            color: #e6edf3;
-        }
-
-        .context-menu-item.delete:hover {
-            color: #f85149;
-        }
-
-        /* ===== EMPTY STATE ===== */
-        .empty-state {
-            text-align: center;
-            padding: 3rem 2rem;
-            color: #8b949e;
-        }
-
-        .empty-state-icon {
-            font-size: 3rem;
             margin-bottom: 1rem;
+            color: var(--text);
         }
 
-        .empty-state-text {
-            font-size: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
-            header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .header-right {
-                width: 100%;
-                justify-content: space-between;
-            }
-
-            .status-bar {
-                justify-content: space-around;
-                width: 100%;
-                gap: 0.75rem;
-            }
-
-            .status-item {
-                flex-direction: row;
-                gap: 0.5rem;
-            }
-
-            .status-label {
-                font-size: 0.7rem;
-            }
-
-            .task-row {
-                grid-template-columns: auto 1fr;
-                gap: 0.75rem;
-            }
-
-            .task-meta {
-                grid-column: 1 / -1;
-                gap: 0.75rem;
-            }
-
-            .task-actions {
-                grid-column: 1 / -1;
-            }
-
-            .priority-badge {
-                font-size: 0.75rem;
-                padding: 0.2rem 0.6rem;
-            }
-
-            .category-tabs {
-                padding: 1rem;
-                overflow-x: auto;
-            }
-
-            .container {
-                padding: 1rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            header h1 {
-                font-size: 1.5rem;
-            }
-
-            .summary-stats {
-                padding: 1rem;
+            .boards {
                 grid-template-columns: 1fr;
+            }
+
+            .stats {
                 gap: 1rem;
             }
 
-            .filter-bar {
-                gap: 0.5rem;
+            .toolbar {
+                flex-direction: column;
+                gap: 0.6rem;
             }
 
-            .filter-btn {
-                font-size: 0.8rem;
-                padding: 0.4rem 0.8rem;
+            .search-box {
+                max-width: 100%;
             }
 
-            .btn-add-task {
-                width: 100%;
-            }
-
-            nav.pill-nav {
-                padding: 0.75rem 1rem;
-                gap: 0.5rem;
-            }
-
-            nav.pill-nav a, nav.pill-nav button {
-                font-size: 0.8rem;
-                padding: 0.4rem 0.8rem;
+            .filters {
+                overflow-x: auto;
+                padding-bottom: 0.5rem;
             }
         }
-        /* ===== LOGIN GATE ===== */
-        #loginGate {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: #0d1117;
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        #loginGate.hidden { display: none; }
-        .login-box {
-            background: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 16px;
-            padding: 48px 40px;
-            text-align: center;
-            max-width: 380px;
-            width: 90%;
-        }
-        .login-box h2 {
-            font-size: 24px;
-            font-weight: 700;
-            letter-spacing: 0.05em;
-            margin-bottom: 8px;
-            color: #e6edf3;
-        }
-        .login-box .login-sub {
-            font-size: 13px;
-            color: #8b949e;
-            margin-bottom: 28px;
-        }
-        .login-box input[type="email"],
-        .login-box input[type="password"] {
-            width: 100%;
-            padding: 14px 16px;
-            background: #0d1117;
-            border: 1px solid #30363d;
-            border-radius: 8px;
-            color: #e6edf3;
-            font-size: 16px;
-            outline: none;
-            margin-bottom: 12px;
-        }
-        .login-box input[type="email"]:focus,
-        .login-box input[type="password"]:focus {
-            border-color: #990000;
-        }
-        .login-box .login-btn {
-            width: 100%;
-            padding: 12px;
-            background: #990000;
-            border: none;
-            border-radius: 8px;
-            color: #fff;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            letter-spacing: 0.03em;
-        }
-        .login-box .login-btn:hover { background: #b30000; }
-        .login-box .login-error {
-            color: #f85149;
-            font-size: 13px;
-            margin-top: 12px;
-            min-height: 20px;
-        }
-        .login-box .login-icon {
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: center;
-        }
-        .login-box .login-icon svg {
-            width: 160px;
-            height: 160px;
-            filter: drop-shadow(0 0 24px rgba(153, 0, 0, 0.35));
-        }
-        /* === SIGIL ANIMATIONS === */
 
-        /* The whole sigil breathes — nothing changes but everything is in motion */
-        .sigil-core { animation: sigilBreathe 6s ease-in-out infinite; transform-origin: 50px 50px; }
-        @keyframes sigilBreathe { 0%,100%{ opacity:0.85; } 50%{ opacity:1; } }
-
-        /* Parallel paths — related but each on its own track */
-        .path-a { animation: pathDrift 28s linear infinite; transform-origin: 50px 50px; }
-        .path-b { animation: pathDrift 28s linear infinite reverse; transform-origin: 50px 50px; }
-        .path-c { animation: pathDriftC 36s linear infinite; transform-origin: 50px 50px; }
-        @keyframes pathDrift { to { transform: rotate(360deg); } }
-        @keyframes pathDriftC { to { transform: rotate(360deg); } }
-
-        /* Counter-rotating rings — attracted by the rejection */
-        .counter-ring { animation: counterSpin 35s linear infinite; transform-origin: 50px 50px; }
-        @keyframes counterSpin { to { transform: rotate(-360deg); } }
-        .counter-ring-2 { animation: counterSpin2 22s linear infinite; transform-origin: 50px 50px; }
-        @keyframes counterSpin2 { to { transform: rotate(-360deg); } }
-
-        /* Orbit pulses — each force on its own timing */
-        .orb-a { animation: orbPulse 4s ease-in-out infinite; }
-        .orb-b { animation: orbPulse 4s ease-in-out infinite 0.6s; }
-        .orb-c { animation: orbPulse 4s ease-in-out infinite 1.2s; }
-        .orb-d { animation: orbPulse 4s ease-in-out infinite 1.8s; }
-        .orb-e { animation: orbPulse 4s ease-in-out infinite 2.4s; }
-        .orb-f { animation: orbPulse 4s ease-in-out infinite 3.0s; }
-        .orb-g { animation: orbPulse 4s ease-in-out infinite 3.6s; }
-        @keyframes orbPulse { 0%,100%{ opacity:0.4; } 50%{ opacity:0.85; } }
-
-        /* Wandering particles — separated but not alone */
-        .particle-1 { animation: pSpin1 9s linear infinite; transform-origin: 50px 50px; }
-        .particle-2 { animation: pSpin2 14s linear infinite; transform-origin: 50px 50px; }
-        .particle-3 { animation: pSpin3 7s linear infinite; transform-origin: 50px 50px; }
-        .particle-4 { animation: pSpin4 11s linear infinite; transform-origin: 50px 50px; }
-        .particle-5 { animation: pSpin5 18s linear infinite; transform-origin: 50px 50px; }
-        @keyframes pSpin1 { to { transform: rotate(360deg); } }
-        @keyframes pSpin2 { to { transform: rotate(-360deg); } }
-        @keyframes pSpin3 { to { transform: rotate(360deg); } }
-        @keyframes pSpin4 { to { transform: rotate(-360deg); } }
-        @keyframes pSpin5 { to { transform: rotate(360deg); } }
-
-        /* X remains the same — the core never moves */
-        .energy-core { animation: corePulse 4s ease-in-out infinite; }
-        @keyframes corePulse { 0%,100%{ r:2.5; opacity:0.6; } 50%{ r:4; opacity:1; } }
-
-        /* Arc segments — broken circles, never complete */
-        .arc-a { animation: arcGlow 8s ease-in-out infinite; }
-        .arc-b { animation: arcGlow 8s ease-in-out infinite 2.7s; }
-        .arc-c { animation: arcGlow 8s ease-in-out infinite 5.3s; }
-        @keyframes arcGlow { 0%,100%{ stroke-opacity:0.75; } 50%{ stroke-opacity:0.95; } }
-
-        /* Inner ring pulse — withdrawn to what remains */
-        .inner-pulse { animation: innerGlow 6s ease-in-out infinite; }
-        @keyframes innerGlow { 0%,100%{ opacity:0.2; } 50%{ opacity:0.5; } }
-        #appContent { display: none; }
-        #appContent.visible { display: block; }
-
-        /* Login form updates for email+password */
-        .login-box input[type="email"],
-        .login-box input[type="password"] {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            background: #0d1117;
-            border: 1px solid #30363d;
-            border-radius: 6px;
-            color: #e6edf3;
-            font-size: 1rem;
-            margin-bottom: 0.75rem;
-            outline: none;
-            transition: border-color 0.2s;
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
         }
-        .login-box input[type="email"]:focus,
-        .login-box input[type="password"]:focus {
-            border-color: #990000;
-        }
-        .login-toggle {
-            color: #8b949e;
-            font-size: 0.85rem;
-            cursor: pointer;
-            margin-top: 0.5rem;
-            text-align: center;
-        }
-        .login-toggle:hover { color: #e6edf3; }
-        .login-info {
-            color: #8b949e;
-            font-size: 0.8rem;
-            text-align: center;
-            margin-top: 0.5rem;
-        }
-
-        /* User bar in header */
-        .user-bar {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        .user-name {
-            color: #8b949e;
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-        .user-role {
-            color: #990000;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        .btn-logout {
-            background: transparent;
-            border: 1px solid #30363d;
-            color: #8b949e;
-            padding: 0.35rem 0.75rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            transition: all 0.2s;
-        }
-        .btn-logout:hover {
-            border-color: #990000;
-            color: #e6edf3;
-        }
-
-        /* Loading spinner */
-        .login-loading {
-            display: none;
-            color: #8b949e;
-            font-size: 0.9rem;
-            text-align: center;
-            margin-top: 0.5rem;
-        }
-        .login-loading.active { display: block; }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
-
-    <!-- ===== LOGIN GATE ===== -->
-    <div id="loginGate">
-        <div class="login-box">
-            <div class="login-icon">
-                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                        <radialGradient id="coreGrad" cx="50%" cy="50%" r="50%">
-                            <stop offset="0%" stop-color="#ff4422" stop-opacity="0.9"/>
-                            <stop offset="35%" stop-color="#990000" stop-opacity="0.4"/>
-                            <stop offset="100%" stop-color="#990000" stop-opacity="0"/>
-                        </radialGradient>
-                        <radialGradient id="auraGrad" cx="50%" cy="50%" r="50%">
-                            <stop offset="0%" stop-color="#990000" stop-opacity="0.1"/>
-                            <stop offset="100%" stop-color="#990000" stop-opacity="0"/>
-                        </radialGradient>
-                    </defs>
-
-                    <g class="sigil-core">
-
-                        <!-- ============================================
-                             "Nothing changes but everything is in motion"
-                             ============================================ -->
-
-                        <!-- L1: Aura — the field of constant -->
-                        <circle cx="50" cy="50" r="49" fill="url(#auraGrad)"/>
-
-                        <!-- L2: 7 Atom orbits — "all forces related but each on its own track" -->
-                        <ellipse class="orb-a" cx="50" cy="50" rx="47" ry="12" fill="none" stroke="#58a6ff" stroke-width="0.35" transform="rotate(0 50 50)"/>
-                        <ellipse class="orb-b" cx="50" cy="50" rx="47" ry="12" fill="none" stroke="#bc8cff" stroke-width="0.35" transform="rotate(25.7 50 50)"/>
-                        <ellipse class="orb-c" cx="50" cy="50" rx="47" ry="12" fill="none" stroke="#58a6ff" stroke-width="0.35" transform="rotate(51.4 50 50)"/>
-                        <ellipse class="orb-d" cx="50" cy="50" rx="47" ry="12" fill="none" stroke="#d4a84b" stroke-width="0.35" transform="rotate(77.1 50 50)"/>
-                        <ellipse class="orb-e" cx="50" cy="50" rx="47" ry="12" fill="none" stroke="#58a6ff" stroke-width="0.35" transform="rotate(102.8 50 50)"/>
-                        <ellipse class="orb-f" cx="50" cy="50" rx="47" ry="12" fill="none" stroke="#d4a84b" stroke-width="0.35" transform="rotate(128.5 50 50)"/>
-                        <ellipse class="orb-g" cx="50" cy="50" rx="47" ry="12" fill="none" stroke="#58a6ff" stroke-width="0.35" transform="rotate(154.2 50 50)"/>
-
-                        <!-- L3: Wandering particles — "not alone but separated" -->
-                        <g class="particle-1"><circle cx="50" cy="3" r="1.1" fill="#58a6ff" opacity="0.7"/></g>
-                        <g class="particle-2"><circle cx="97" cy="50" r="0.9" fill="#bc8cff" opacity="0.6"/></g>
-                        <g class="particle-3"><circle cx="50" cy="6" r="0.8" fill="#d4a84b" opacity="0.6"/></g>
-                        <g class="particle-4"><circle cx="3" cy="50" r="1.0" fill="#58a6ff" opacity="0.5"/></g>
-                        <g class="particle-5"><circle cx="50" cy="97" r="0.7" fill="#bc8cff" opacity="0.4"/></g>
-
-                        <!-- L4: Outermost broken ring — 3 equal arcs (100°), 3 equal gaps (20°), top centred -->
-                        <!-- Top arc: centred at 12 o'clock -->
-                        <path class="arc-a" d="M 16.3 21.7 A 44 44 0 0 1 83.7 21.7" fill="none" stroke="#990000" stroke-width="2" stroke-linecap="round" opacity="0.85"/>
-                        <!-- Bottom-right arc: centred at 4 o'clock -->
-                        <path class="arc-b" d="M 91.4 35 A 44 44 0 0 1 57.6 93.3" fill="none" stroke="#cc3300" stroke-width="2" stroke-linecap="round" opacity="0.85"/>
-                        <!-- Bottom-left arc: centred at 8 o'clock -->
-                        <path class="arc-c" d="M 42.4 93.3 A 44 44 0 0 1 8.7 35" fill="none" stroke="#990000" stroke-width="2" stroke-linecap="round" opacity="0.85"/>
-
-                        <!-- L5: Outer continuous circle — the boundary of constant -->
-                        <circle cx="50" cy="50" r="38" fill="none" stroke="#990000" stroke-width="0.5" opacity="0.3"/>
-
-                        <!-- L6: Counter-rotating dashed ring — "the parallel is undeniable" -->
-                        <g class="counter-ring">
-                            <circle cx="50" cy="50" r="34" fill="none" stroke="#bc8cff" stroke-width="0.3" stroke-dasharray="2 6" opacity="0.3"/>
-                        </g>
-
-                        <!-- L7: Second counter-rotating ring — other direction, other rhythm -->
-                        <g class="counter-ring-2">
-                            <circle cx="50" cy="50" r="30" fill="none" stroke="#58a6ff" stroke-width="0.25" stroke-dasharray="4 10" opacity="0.2"/>
-                        </g>
-
-                        <!-- =================================================
-                             "Thought and matter separated, but X remains the same"
-                             ================================================= -->
-
-                        <!-- L8: Two parallel orbital paths — NEVER touching -->
-                        <!-- Path A orbits clockwise -->
-                        <g class="path-a">
-                            <ellipse cx="50" cy="50" rx="26" ry="8" fill="none" stroke="#bc8cff" stroke-width="0.6" opacity="0.45"/>
-                            <!-- A's particle -->
-                            <circle cx="76" cy="50" r="1.5" fill="#bc8cff" opacity="0.8"/>
-                        </g>
-                        <!-- Path B orbits counter — same shape, mirrored, never meets A -->
-                        <g class="path-b">
-                            <ellipse cx="50" cy="50" rx="26" ry="8" fill="none" stroke="#58a6ff" stroke-width="0.6" opacity="0.45" transform="rotate(90 50 50)"/>
-                            <!-- B's particle -->
-                            <circle cx="50" cy="24" r="1.5" fill="#58a6ff" opacity="0.8"/>
-                        </g>
-                        <!-- Path C — the third force, its own speed, its own angle, gold -->
-                        <g class="path-c">
-                            <ellipse cx="50" cy="50" rx="26" ry="8" fill="none" stroke="#d4a84b" stroke-width="0.6" opacity="0.4" transform="rotate(45 50 50)"/>
-                            <!-- C's particle -->
-                            <circle cx="68" cy="32" r="1.5" fill="#d4a84b" opacity="0.75"/>
-                        </g>
-
-                        <!-- L9: Mid circle -->
-                        <circle cx="50" cy="50" r="22" fill="none" stroke="#e6edf3" stroke-width="0.3" opacity="0.12"/>
-
-                        <!-- L10: Diamond — halfway between old and arcs -->
-                        <path class="arc-a" d="M50 22 L78 50 L50 78 L22 50 Z" fill="none" stroke="#990000" stroke-width="1.35" opacity="0.65"/>
-
-                        <!-- L11: Interrupted crosshairs — "separated by a never incipient beginning" -->
-                        <line x1="3" y1="50" x2="35" y2="50" stroke="#e6edf3" stroke-width="0.35" opacity="0.1"/>
-                        <line x1="65" y1="50" x2="97" y2="50" stroke="#e6edf3" stroke-width="0.35" opacity="0.1"/>
-                        <line x1="50" y1="3" x2="50" y2="35" stroke="#e6edf3" stroke-width="0.35" opacity="0.1"/>
-                        <line x1="50" y1="65" x2="50" y2="97" stroke="#e6edf3" stroke-width="0.35" opacity="0.1"/>
-
-                        <!-- L12: Inner circle — "withdrawn to what remains" -->
-                        <circle class="inner-pulse" cx="50" cy="50" r="15" fill="none" stroke="#990000" stroke-width="0.6" opacity="0.35"/>
-
-                        <!-- L13: Innermost broken ring — even here, not whole — gold -->
-                        <circle cx="50" cy="50" r="10" fill="none" stroke="#d4a84b" stroke-width="0.3" stroke-dasharray="1.5 5" opacity="0.3"/>
-
-                        <!-- ==========================================
-                             "Only the not knowing confirms the loneliness"
-                             ========================================== -->
-
-                        <!-- L14: Core field — what remains when everything else orbits away -->
-                        <circle cx="50" cy="50" r="7" fill="url(#coreGrad)"/>
-
-                        <!-- L15: The still point — "X remains the same" -->
-                        <circle class="energy-core" cx="50" cy="50" r="2.5" fill="#ff4422" opacity="0.6"/>
-
-                        <!-- L16: A single ghost of light — not knowing — warm gold -->
-                        <circle cx="48.5" cy="48" r="0.8" fill="rgba(212,168,75,0.2)"/>
-                    </g>
-                </svg>
+    <div class="header">
+        <div class="brand">AZ COMMAND CENTRE</div>
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="stat-open">0</div>
+                <div class="stat-label">Open</div>
             </div>
-            <h2>AZ COMMAND CENTRE</h2>
-            <div class="login-sub">Sign in to continue</div>
-            <form id="loginForm" onsubmit="return handleLogin(event)">
-                <input type="email" id="loginEmail" placeholder="Email" autofocus autocomplete="email">
-                <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
-                <button type="submit" class="login-btn">Sign In</button>
-            </form>
-            <div class="login-loading" id="loginLoading">Signing in...</div>
-            <div class="login-error" id="loginError"></div>
+            <div class="stat">
+                <div class="stat-value" id="stat-today">0</div>
+                <div class="stat-label">Today</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="stat-done">0</div>
+                <div class="stat-label">Done</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="stat-shared">0</div>
+                <div class="stat-label">Shared</div>
+            </div>
         </div>
     </div>
 
-    <!-- ===== APP (hidden until authenticated) ===== -->
-    <div id="appContent">
-
-    <!-- ===== HEADER ===== -->
-    <header>
-        <h1>AZ COMMAND CENTRE</h1>
-        <div class="header-right">
-            <div class="user-bar">
-                <span class="user-name" id="userName"></span>
-                <span class="user-role" id="userRole"></span>
-                <button class="btn-logout" id="btnLogout" onclick="handleLogout()">Sign Out</button>
-            </div>
-            <div class="header-date" id="headerDate"></div>
-            <div class="status-bar">
-                <div class="status-item">
-                    <div class="status-label">Open</div>
-                    <div class="status-count" id="statusOpen">0</div>
-                </div>
-                <div class="status-item">
-                    <div class="status-label">Today</div>
-                    <div class="status-count" id="statusToday">0</div>
-                </div>
-                <div class="status-item done">
-                    <div class="status-label">Done</div>
-                    <div class="status-count" id="statusDone">0</div>
-                </div>
-                <div class="status-item synced">
-                    <div class="status-label">Synced</div>
-                    <div class="status-count" id="statusSynced">—</div>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- ===== NAVIGATION BAR ===== -->
-    <nav class="pill-nav">
-        <a href="#" class="active">Tasks</a>
-        <a href="forge.html">Forge Evolution</a>
-        <a href="azck_tech_roadmap.html">Roadmap</a>
-    </nav>
-
-    <!-- ===== SUMMARY STATS ===== -->
-    <div class="summary-stats">
-        <div class="stat-block">
-            <div class="stat-label">Total Open</div>
-            <div class="stat-value" id="statTotalOpen">0</div>
-        </div>
-        <div class="stat-block">
-            <div class="stat-label">Due This Week</div>
-            <div class="stat-value" id="statDueWeek">0</div>
-        </div>
-        <div class="stat-block done">
-            <div class="stat-label">Completed</div>
-            <div class="stat-value" id="statCompleted">0</div>
-        </div>
-        <div class="stat-block synced">
-            <div class="stat-label">Last Updated</div>
-            <div class="stat-value" id="statLastUpdated">Never</div>
-        </div>
+    <div class="toolbar">
+        <input type="text" class="search-box" id="search-input" placeholder="Search tasks...">
+        <button class="btn btn-primary" id="sync-btn">Sync</button>
     </div>
 
-    <!-- ===== CATEGORY TABS ===== -->
-    <div class="category-tabs" id="categoryTabs">
-        <!-- Generated by JS -->
-    </div>
+    <div class="filters" id="filters-container"></div>
 
-    <!-- ===== MAIN CONTENT ===== -->
     <div class="container">
-        <div style="margin-bottom: 2rem;">
-            <div class="filter-bar">
-                <button class="filter-btn active" data-filter="all">All Tasks</button>
-                <button class="filter-btn" data-filter="open">Open Only</button>
-                <button class="filter-btn" data-filter="high">High Priority</button>
-                <button class="filter-btn" data-filter="done">Done Only</button>
-            </div>
-            <button class="btn-add-task" id="btnAddTask">+ Add Task</button>
-        </div>
-
-        <div class="task-list" id="taskList">
-            <!-- Generated by JS -->
-        </div>
-
-        <div class="empty-state" id="emptyState" style="display: none;">
-            <div class="empty-state-icon">📋</div>
-            <div class="empty-state-text">No tasks in this category. Start by adding one!</div>
-        </div>
+        <div class="boards" id="boards-container"></div>
     </div>
 
-    <!-- ===== MODALS ===== -->
-    <!-- Confirmation Modal -->
-    <div class="modal-overlay" id="confirmModal">
-        <div class="modal">
-            <h2 class="modal-title" id="confirmTitle">Confirm Action</h2>
-            <p id="confirmMessage"></p>
-            <div class="modal-buttons">
-                <button class="btn-secondary" id="btnConfirmCancel">Cancel</button>
-                <button class="btn-confirm" id="btnConfirmOK">Confirm</button>
+    <div class="footer">
+        <div>AZ Command Centre — AZ Custom Knives Ltd.</div>
+        <div class="sync-status" id="sync-status">Ready</div>
+    </div>
+
+    <div class="modal" id="new-cat-modal">
+        <div class="modal-content">
+            <div class="modal-header">New Category</div>
+            <div class="form-group">
+                <label class="form-label">Category Name</label>
+                <input type="text" class="form-input" id="new-cat-name" placeholder="e.g., Urgent Tasks">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Color</label>
+                <input type="color" id="new-cat-color" value="#990000">
+            </div>
+            <div class="form-row-buttons">
+                <button class="btn" id="cancel-cat-btn">Cancel</button>
+                <button class="btn btn-primary" id="save-cat-btn">Save</button>
             </div>
         </div>
     </div>
 
-    <!-- Add/Edit Category Modal -->
-    <div class="modal-overlay" id="categoryModal">
-        <div class="modal">
-            <h2 class="modal-title" id="categoryModalTitle">Add Category</h2>
-            <form class="category-form" id="categoryForm">
-                <div class="form-group">
-                    <label for="categoryName">Category Name</label>
-                    <input type="text" id="categoryName" required placeholder="e.g., Work, Personal">
-                </div>
-                <div class="form-group">
-                    <label>Color</label>
-                    <div class="color-picker-wrapper">
-                        <input type="color" id="categoryColor" class="color-picker-input" value="#58a6ff">
-                        <span id="colorValue">#58a6ff</span>
-                    </div>
-                </div>
-                <div class="modal-buttons">
-                    <button type="button" class="btn-secondary" id="btnCategoryCancel">Cancel</button>
-                    <button type="submit" class="btn-confirm">Create Category</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Context Menu (for category actions) -->
-    <div class="context-menu" id="contextMenu">
-        <div class="context-menu-item" id="contextRename">Rename</div>
-        <div class="context-menu-item delete" id="contextDelete">Delete</div>
-    </div>
-
-    <!-- ===== JAVASCRIPT ===== -->
     <script>
-        // === SUPABASE CONFIG ===
-        const SUPABASE_URL = 'https://twrlvnfszohyrmivdhre.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3cmx2bmZzem9oeXJtaXZkaHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NjkxMTMsImV4cCI6MjA5MDE0NTExM30.o96DFNbBObst0EAmX51rnRFXzu8oTN1o-HNAxN7MY8A';
-        const USE_SUPABASE = true;
+        // ============================================================================
+        // CONFIG
+        // ============================================================================
+        const CONFIG = {
+            // Shared Gist (GitHub)
+            SHARED_GIST_ID: '',
+            SHARED_GIST_TOKEN: '',
+            SHARED_GIST_FILE: 'azck_shared_tasks.json',
 
-        // Supabase client (named 'sb' to avoid collision with the CDN global)
-        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            // Personal Gist (GitHub)
+            GIST_ID: '',
+            GIST_TOKEN: '',
+            GIST_FILE: 'az_cc_tasks.json',
 
-        // Current user
-        let currentUser = null;  // { id, email, display_name, role }
+            // Categories
+            DEFAULT_CATEGORIES: [
+                { id: 'shared', name: 'Shared', color: '#50c878' },
+                { id: 'shop', name: 'Shop', color: '#990000' },
+                { id: 'rd', name: 'R&D', color: '#c4922a' },
+                { id: 'code', name: 'Code', color: '#5b9bd5' },
+                { id: 'admin', name: 'Admin', color: '#d4856a' },
+                { id: 'family', name: 'Family', color: '#9b72cf' }
+            ],
 
-        // ===== CONSTANTS & STORAGE =====
-        const STORAGE_KEY = 'azck-command-centre';
-        const DEFAULT_CATEGORIES = [
-            { id: 1, name: 'Personal', color: '#58a6ff', sortOrder: 1 },
-            { id: 2, name: 'AZ Custom Knives', color: '#990000', sortOrder: 2 },
-            { id: 3, name: 'Quad Fang', color: '#FC4C02', sortOrder: 3 },
-            { id: 4, name: '3D Printing', color: '#bc8cff', sortOrder: 4 },
-            { id: 5, name: 'Family', color: '#3fb950', sortOrder: 5 }
-        ];
-
-        // ===== STATE MANAGEMENT =====
-        let appState = {
-            categories: [],
-            tasks: [],
-            activeCategory: null,
-            activeFilter: 'all',
-            editingTaskId: null,
-            lastSynced: null,
-            nextId: 100
+            // Storage keys
+            LOCAL_STORAGE_KEY: 'az_cc_tasks',
+            CUSTOM_CATS_KEY: 'az_cc_custom_cats',
+            SHARED_TASKS_KEY: 'az_cc_shared_tasks_cache',
+            LAST_SYNC_KEY: 'az_cc_last_sync'
         };
 
-        // ===== SUPABASE AUTH =====
-        async function handleLogin(e) {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value.trim();
-            const pw = document.getElementById('loginPassword').value;
-            const errorEl = document.getElementById('loginError');
-            const loadingEl = document.getElementById('loginLoading');
+        // ============================================================================
+        // STATE
+        // ============================================================================
+        let state = {
+            tasks: [],
+            sharedTasks: [],
+            categories: [...CONFIG.DEFAULT_CATEGORIES],
+            currentFilter: 'all',
+            searchQuery: '',
+            currentCategoryModal: null,
+            syncStatus: 'ready',
+            lastSync: null
+        };
 
-            errorEl.textContent = '';
-            loadingEl.classList.add('active');
+        // ============================================================================
+        // UTILS
+        // ============================================================================
+        const utils = {
+            generateId: () => `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
 
-            const { data, error } = await sb.auth.signInWithPassword({
-                email: email,
-                password: pw
-            });
+            todayString: () => {
+                const d = new Date();
+                return d.toISOString().split('T')[0];
+            },
 
-            loadingEl.classList.remove('active');
+            isToday: (dateStr) => dateStr === utils.todayString(),
 
-            if (error) {
-                errorEl.textContent = error.message || 'Sign in failed. Check your email and password.';
-                document.getElementById('loginPassword').value = '';
-                document.getElementById('loginPassword').focus();
-            }
-            // Auth state change listener handles the rest
-            return false;
-        }
+            isOverdue: (task) => {
+                if (task.status === 'done' || task.status === 'archived') return false;
+                if (!task.dueDate) return false;
+                return task.dueDate < utils.todayString();
+            },
 
-        async function handleLogout() {
-            await sb.auth.signOut();
-            currentUser = null;
-            document.getElementById('loginGate').classList.remove('hidden');
-            document.getElementById('appContent').classList.remove('visible');
-            document.getElementById('loginEmail').value = '';
-            document.getElementById('loginPassword').value = '';
-            document.getElementById('loginError').textContent = '';
-            // Clear state
-            appState.categories = [];
-            appState.tasks = [];
-            appState.lastSynced = null;
-        }
-
-        async function loadUserProfile(userId, email) {
-            // Try by ID first, then by email as fallback
-            for (let attempt = 1; attempt <= 3; attempt++) {
-                // Attempt by ID
-                let { data, error } = await sb
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', userId)
-                    .single();
-
-                if (data && !error) return data;
-
-                // Fallback: try by email
-                if (email) {
-                    const res = await sb
-                        .from('profiles')
-                        .select('*')
-                        .eq('email', email)
-                        .single();
-                    if (res.data && !res.error) return res.data;
-                }
-
-                console.warn(`Profile load attempt ${attempt} failed:`, error?.message);
-                if (attempt < 3) await new Promise(r => setTimeout(r, 500 * attempt));
-            }
-            console.error('Profile load failed after 3 attempts');
-            return null;
-        }
-
-        function showUserInfo() {
-            if (!currentUser) return;
-            document.getElementById('userName').textContent = currentUser.display_name || currentUser.email;
-            document.getElementById('userRole').textContent = currentUser.role || '';
-        }
-
-        function unlockApp() {
-            document.getElementById('loginGate').classList.add('hidden');
-            document.getElementById('appContent').classList.add('visible');
-        }
-
-        // ===== SUPABASE DATA =====
-        async function loadFromSupabase() {
-            // Load categories
-            const { data: cats, error: catErr } = await sb
-                .from('categories')
-                .select('*')
-                .order('sort_order', { ascending: true });
-
-            if (catErr) {
-                console.error('Category load error:', catErr);
-            } else if (cats && cats.length > 0) {
-                appState.categories = cats.map(c => ({
-                    id: c.id,
-                    name: c.name,
-                    color: c.color || '#f0883e',
-                    sortOrder: c.sort_order,
-                    ownerId: c.owner_id
-                }));
-            } else {
-                appState.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
-            }
-
-            // Load tasks
-            const { data: tasks, error: taskErr } = await sb
-                .from('tasks')
-                .select('*')
-                .order('created_at', { ascending: false });
-
-            if (taskErr) {
-                console.error('Task load error:', taskErr);
-            } else {
-                appState.tasks = (tasks || []).map(t => ({
-                    id: t.id,
-                    categoryId: t.category_id,
-                    title: t.title,
-                    notes: t.notes || '',
-                    priority: t.priority || 'medium',
-                    status: t.status || 'open',
-                    dueDate: t.due_date,
-                    createdAt: t.created_at,
-                    completedAt: t.completed_at,
-                    ownerId: t.owner_id,
-                    sortOrder: t.sort_order
-                }));
-            }
-
-            appState.lastSynced = new Date().toISOString();
-
-            // Also save to localStorage as offline backup
-            saveToLocalStorage();
-
-            if (appState.categories.length > 0 && !appState.activeCategory) {
-                appState.activeCategory = appState.categories[0].id;
-            }
-        }
-
-        async function saveTaskToSupabase(task) {
-            const payload = {
-                category_id: task.categoryId,
-                owner_id: currentUser?.id || null,
-                title: task.title || 'Untitled Task',
-                notes: task.notes || null,
-                priority: task.priority || 'medium',
-                status: task.status || 'open',
-                due_date: task.dueDate || null,
-                sort_order: task.sortOrder || 0,
-                completed_at: task.completedAt || null
-            };
-
-            if (task._isNew) {
-                // INSERT
-                const { data, error } = await sb
-                    .from('tasks')
-                    .insert(payload)
-                    .select()
-                    .single();
-
-                if (error) {
-                    console.error('Task insert error:', error);
-                    return null;
-                }
-                return data;
-            } else {
-                // UPDATE
-                const { data, error } = await sb
-                    .from('tasks')
-                    .update(payload)
-                    .eq('id', task.id)
-                    .select()
-                    .single();
-
-                if (error) {
-                    console.error('Task update error:', error);
-                    return null;
-                }
-                return data;
-            }
-        }
-
-        async function deleteTaskFromSupabase(taskId) {
-            const { error } = await sb
-                .from('tasks')
-                .delete()
-                .eq('id', taskId);
-
-            if (error) console.error('Task delete error:', error);
-        }
-
-        async function saveCategoryToSupabase(cat) {
-            const payload = {
-                name: cat.name,
-                color: cat.color || '#f0883e',
-                sort_order: cat.sortOrder || 0,
-                owner_id: currentUser?.id || null
-            };
-
-            if (cat._isNew) {
-                const { data, error } = await sb
-                    .from('categories')
-                    .insert(payload)
-                    .select()
-                    .single();
-
-                if (error) {
-                    console.error('Category insert error:', error);
-                    return null;
-                }
-                return data;
-            } else {
-                const { data, error } = await sb
-                    .from('categories')
-                    .update(payload)
-                    .eq('id', cat.id)
-                    .select()
-                    .single();
-
-                if (error) console.error('Category update error:', error);
-                return data;
-            }
-        }
-
-        async function deleteCategoryFromSupabase(catId) {
-            const { error } = await sb
-                .from('categories')
-                .delete()
-                .eq('id', catId);
-
-            if (error) console.error('Category delete error:', error);
-        }
-
-        // ===== REALTIME SUBSCRIPTIONS =====
-        function subscribeToRealtime() {
-            sb
-                .channel('tasks-changes')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => {
-                    loadFromSupabase().then(() => {
-                        updateStatusBar();
-                        renderCategoryTabs();
-                        renderTasks();
-                    });
-                })
-                .subscribe();
-
-            sb
-                .channel('categories-changes')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => {
-                    loadFromSupabase().then(() => {
-                        renderCategoryTabs();
-                        renderTasks();
-                        updateStatusBar();
-                    });
-                })
-                .subscribe();
-        }
-
-        // ===== LOCALSTORAGE FALLBACK =====
-        function saveToLocalStorage() {
-            const data = {
-                categories: appState.categories,
-                tasks: appState.tasks,
-                lastSynced: appState.lastSynced,
-                nextId: appState.nextId
-            };
-            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
-        }
-
-        function loadFromLocalStorage() {
-            try {
-                const stored = localStorage.getItem(STORAGE_KEY);
-                if (stored) {
-                    const data = JSON.parse(stored);
-                    appState.categories = data.categories || DEFAULT_CATEGORIES;
-                    appState.tasks = data.tasks || [];
-                    appState.lastSynced = data.lastSynced || null;
-                    appState.nextId = data.nextId || 100;
-                } else {
-                    appState.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
-                    appState.tasks = [];
-                    appState.nextId = 100;
-                }
-            } catch(e) {
-                appState.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
-                appState.tasks = [];
-            }
-            if (appState.categories.length > 0) {
-                appState.activeCategory = appState.categories[0].id;
-            }
-        }
-
-        async function initializeData() {
-            if (USE_SUPABASE && currentUser) {
-                await loadFromSupabase();
-            } else {
-                loadFromLocalStorage();
-            }
-            if (appState.categories.length > 0 && !appState.activeCategory) {
-                appState.activeCategory = appState.categories[0].id;
-            }
-        }
-
-        function saveData() {
-            appState.lastSynced = new Date().toISOString();
-            saveToLocalStorage();
-            updateSyncDisplay();
-        }
-
-        // ===== RENDER FUNCTIONS =====
-        function updateHeaderDate() {
-            const today = new Date();
-            const dateStr = today.toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-            document.getElementById('headerDate').textContent = dateStr;
-        }
-
-        function updateStatusBar() {
-            const openTasks = appState.tasks.filter(t => t.status === 'open').length;
-            const doneTasks = appState.tasks.filter(t => t.status === 'done').length;
-
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const todayTasks = appState.tasks.filter(t => {
-                if (!t.dueDate) return false;
-                const dueDate = new Date(t.dueDate);
-                dueDate.setHours(0, 0, 0, 0);
-                return dueDate.getTime() === today.getTime();
-            }).length;
-
-            document.getElementById('statusOpen').textContent = openTasks;
-            document.getElementById('statusToday').textContent = todayTasks;
-            document.getElementById('statusDone').textContent = doneTasks;
-
-            updateSyncDisplay();
-            updateSummaryStats();
-        }
-
-        function updateSyncDisplay() {
-            if (!appState.lastSynced) {
-                document.getElementById('statusSynced').textContent = '—';
-                document.getElementById('statLastUpdated').textContent = 'Never';
-            } else {
+            shouldArchive: (task) => {
+                if (task.status !== 'done') return false;
+                const completed = new Date(task.completedAt || task.updatedAt || task.createdAt);
                 const now = new Date();
-                const synced = new Date(appState.lastSynced);
-                const diffMinutes = Math.floor((now - synced) / 60000);
+                const days = (now - completed) / (1000 * 60 * 60 * 24);
+                return days >= 7;
+            },
 
-                let timeStr = 'just now';
-                if (diffMinutes > 0 && diffMinutes < 60) {
-                    timeStr = `${diffMinutes}m ago`;
-                } else if (diffMinutes >= 60) {
-                    const diffHours = Math.floor(diffMinutes / 60);
-                    timeStr = `${diffHours}h ago`;
+            getVisibleTasks: (tasks) => {
+                let filtered = tasks.filter(t => {
+                    if (state.currentFilter === 'all') return true;
+                    if (state.currentFilter === 'open') return t.status !== 'done' && t.status !== 'archived';
+                    if (state.currentFilter === 'today') return t.markedToday;
+                    if (state.currentFilter === 'done') return t.status === 'done';
+                    if (state.currentFilter === 'archive') return t.status === 'archived';
+                    return t.category === state.currentFilter;
+                });
+
+                if (state.searchQuery) {
+                    const q = state.searchQuery.toLowerCase();
+                    filtered = filtered.filter(t =>
+                        t.text.toLowerCase().includes(q) ||
+                        t.notes.toLowerCase().includes(q)
+                    );
                 }
 
-                document.getElementById('statusSynced').textContent = timeStr;
-                document.getElementById('statLastUpdated').textContent = timeStr;
+                return filtered.sort((a, b) => a.order - b.order);
+            },
+
+            getTasksByCategory: (tasks, catId) => {
+                return tasks.filter(t => t.category === catId);
+            },
+
+            formatTime: (mins) => {
+                if (mins < 60) return `${mins}m`;
+                const hours = Math.floor(mins / 60);
+                const remainder = mins % 60;
+                return remainder > 0 ? `${hours}h ${remainder}m` : `${hours}h`;
+            },
+
+            formatDate: (dateStr) => {
+                if (!dateStr) return '';
+                const d = new Date(dateStr + 'T00:00:00');
+                return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
             }
-        }
+        };
 
-        function updateSummaryStats() {
-            const openTasks = appState.tasks.filter(t => t.status === 'open').length;
-            const doneTasks = appState.tasks.filter(t => t.status === 'done').length;
+        // ============================================================================
+        // STORAGE
+        // ============================================================================
+        const storage = {
+            load: () => {
+                const cached = localStorage.getItem(CONFIG.LOCAL_STORAGE_KEY);
+                state.tasks = cached ? JSON.parse(cached) : [];
 
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const nextWeek = new Date(today);
-            nextWeek.setDate(nextWeek.getDate() + 7);
+                const customCats = localStorage.getItem(CONFIG.CUSTOM_CATS_KEY);
+                if (customCats) {
+                    state.categories = [...CONFIG.DEFAULT_CATEGORIES, ...JSON.parse(customCats)];
+                }
 
-            const dueThisWeek = appState.tasks.filter(t => {
-                if (!t.dueDate || t.status === 'done') return false;
-                const dueDate = new Date(t.dueDate);
-                dueDate.setHours(0, 0, 0, 0);
-                return dueDate >= today && dueDate < nextWeek;
-            }).length;
+                const lastSync = localStorage.getItem(CONFIG.LAST_SYNC_KEY);
+                state.lastSync = lastSync ? new Date(lastSync) : null;
+            },
 
-            document.getElementById('statTotalOpen').textContent = openTasks;
-            document.getElementById('statDueWeek').textContent = dueThisWeek;
-            document.getElementById('statCompleted').textContent = doneTasks;
-        }
+            save: () => {
+                localStorage.setItem(CONFIG.LOCAL_STORAGE_KEY, JSON.stringify(state.tasks));
+            },
 
-        function renderCategoryTabs() {
-            const container = document.getElementById('categoryTabs');
-            container.innerHTML = '';
+            saveCustomCategories: () => {
+                const custom = state.categories.filter(c => !CONFIG.DEFAULT_CATEGORIES.find(dc => dc.id === c.id));
+                localStorage.setItem(CONFIG.CUSTOM_CATS_KEY, JSON.stringify(custom));
+            },
 
-            appState.categories.forEach(cat => {
-                const button = document.createElement('button');
-                button.className = `category-tab ${cat.id === appState.activeCategory ? 'active' : ''}`;
-                button.dataset.categoryId = cat.id;
-
-                const count = appState.tasks.filter(t => t.categoryId === cat.id).length;
-                button.innerHTML = `${cat.name} <span class="category-count">(${count})</span>`;
-
-                button.addEventListener('click', () => {
-                    appState.activeCategory = cat.id;
-                    appState.activeFilter = 'all';
-                    renderCategoryTabs();
-                    renderTasks();
-                    updateFilterButtons();
-                });
-
-                button.addEventListener('contextmenu', (e) => {
-                    e.preventDefault();
-                    showCategoryContextMenu(e, cat.id);
-                });
-
-                button.addEventListener('long', (e) => {
-                    showCategoryContextMenu(e, cat.id);
-                });
-
-                container.appendChild(button);
-            });
-
-            // Add category button
-            const addBtn = document.createElement('button');
-            addBtn.className = 'btn-add-category';
-            addBtn.textContent = '+ Category';
-            addBtn.addEventListener('click', showAddCategoryModal);
-            container.appendChild(addBtn);
-        }
-
-        function renderTasks() {
-            const container = document.getElementById('taskList');
-            const emptyState = document.getElementById('emptyState');
-            container.innerHTML = '';
-
-            let filteredTasks = appState.tasks.filter(t => t.categoryId === appState.activeCategory);
-
-            if (appState.activeFilter === 'open') {
-                filteredTasks = filteredTasks.filter(t => t.status === 'open');
-            } else if (appState.activeFilter === 'high') {
-                filteredTasks = filteredTasks.filter(t => t.priority === 'high' && t.status === 'open');
-            } else if (appState.activeFilter === 'done') {
-                filteredTasks = filteredTasks.filter(t => t.status === 'done');
+            saveSyncTime: () => {
+                state.lastSync = new Date();
+                localStorage.setItem(CONFIG.LAST_SYNC_KEY, state.lastSync.toISOString());
             }
+        };
 
-            if (filteredTasks.length === 0) {
-                emptyState.style.display = 'block';
-                return;
-            }
+        // ============================================================================
+        // TASKS
+        // ============================================================================
+        const tasks = {
+            add: (category, text, priority = 'med', timeEst = null, dueDate = null) => {
+                const newTask = {
+                    id: utils.generateId(),
+                    category,
+                    text,
+                    priority,
+                    timeEst,
+                    dueDate,
+                    notes: '',
+                    status: 'open',
+                    markedToday: false,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    completedAt: null,
+                    order: state.tasks.length,
+                    isShared: false,
+                    assignedTo: ''
+                };
+                state.tasks.push(newTask);
+                storage.save();
+                render.all();
+            },
 
-            emptyState.style.display = 'none';
+            update: (id, updates) => {
+                const task = state.tasks.find(t => t.id === id);
+                if (task) {
+                    Object.assign(task, updates, { updatedAt: new Date().toISOString() });
+                    storage.save();
+                }
+            },
 
-            filteredTasks.forEach(task => {
-                const row = document.createElement('div');
-                row.className = `task-row ${task.status === 'done' ? 'done' : ''}`;
-                row.dataset.taskId = task.id;
+            delete: (id) => {
+                state.tasks = state.tasks.filter(t => t.id !== id);
+                storage.save();
+                render.all();
+            },
 
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.className = 'task-checkbox';
-                checkbox.checked = task.status === 'done';
-                checkbox.addEventListener('change', async () => {
-                    task.status = checkbox.checked ? 'done' : 'open';
-                    task.completedAt = checkbox.checked ? new Date().toISOString() : null;
-                    if (USE_SUPABASE && currentUser) {
-                        await saveTaskToSupabase(task);
+            toggle: (id) => {
+                const task = state.tasks.find(t => t.id === id);
+                if (task) {
+                    if (task.status === 'done') {
+                        task.status = 'open';
+                        task.completedAt = null;
+                    } else {
+                        task.status = 'done';
+                        task.completedAt = new Date().toISOString();
                     }
-                    saveData();
-                    updateStatusBar();
-                    renderTasks();
+                    storage.save();
+                    render.all();
+                }
+            },
+
+            markToday: (id) => {
+                const task = state.tasks.find(t => t.id === id);
+                if (task) {
+                    task.markedToday = !task.markedToday;
+                    storage.save();
+                    render.all();
+                }
+            },
+
+            autoArchive: () => {
+                state.tasks.forEach(t => {
+                    if (utils.shouldArchive(t)) {
+                        t.status = 'archived';
+                    }
+                });
+                storage.save();
+            }
+        };
+
+        // ============================================================================
+        // CATEGORIES
+        // ============================================================================
+        const categories = {
+            add: (name, color) => {
+                const newCat = {
+                    id: `cat_${Date.now()}`,
+                    name,
+                    color
+                };
+                state.categories.push(newCat);
+                storage.saveCustomCategories();
+                render.all();
+            },
+
+            delete: (id) => {
+                // Don't delete default categories
+                if (CONFIG.DEFAULT_CATEGORIES.find(c => c.id === id)) return;
+                state.categories = state.categories.filter(c => c.id !== id);
+                storage.saveCustomCategories();
+                render.all();
+            },
+
+            getColor: (id) => {
+                const cat = state.categories.find(c => c.id === id);
+                return cat ? cat.color : '#999';
+            },
+
+            getName: (id) => {
+                const cat = state.categories.find(c => c.id === id);
+                return cat ? cat.name : 'Unknown';
+            }
+        };
+
+        // ============================================================================
+        // RENDER
+        // ============================================================================
+        const render = {
+            all: () => {
+                render.stats();
+                render.filters();
+                render.boards();
+            },
+
+            stats: () => {
+                tasks.autoArchive();
+                const visible = state.tasks;
+
+                const openCount = visible.filter(t => t.status !== 'done' && t.status !== 'archived').length;
+                const todayCount = visible.filter(t => t.markedToday && t.status !== 'archived').length;
+                const doneCount = visible.filter(t => t.status === 'done').length;
+                const sharedCount = visible.filter(t => t.isShared).length;
+
+                document.getElementById('stat-open').textContent = openCount;
+                document.getElementById('stat-today').textContent = todayCount;
+                document.getElementById('stat-done').textContent = doneCount;
+                document.getElementById('stat-shared').textContent = sharedCount;
+            },
+
+            filters: () => {
+                const container = document.getElementById('filters-container');
+                container.innerHTML = '';
+
+                const filterDefs = [
+                    { id: 'all', label: 'All' },
+                    { id: 'open', label: 'Open' },
+                    { id: 'today', label: 'Today' },
+                    { id: 'done', label: 'Done' },
+                    { id: 'archive', label: 'Archive' }
+                ];
+
+                filterDefs.forEach(filter => {
+                    const btn = document.createElement('button');
+                    btn.className = `filter-btn ${state.currentFilter === filter.id ? 'active' : ''}`;
+                    btn.textContent = filter.label;
+
+                    if (state.currentFilter === filter.id) {
+                        btn.classList.add('active');
+                    }
+
+                    btn.addEventListener('click', () => {
+                        state.currentFilter = filter.id;
+                        render.all();
+                    });
+
+                    container.appendChild(btn);
                 });
 
+                // Category filters
+                state.categories.forEach(cat => {
+                    const catTasks = state.tasks.filter(t => t.category === cat.id);
+                    const count = catTasks.filter(t => state.currentFilter === 'all' || utils.getVisibleTasks([t]).length > 0).length;
+
+                    const btn = document.createElement('button');
+                    btn.className = `filter-btn ${state.currentFilter === cat.id ? 'active' : ''}`;
+                    btn.innerHTML = `<span class="cat-color" style="background-color: ${cat.color}"></span>${cat.name}<span class="filter-count">(${count})</span>`;
+
+                    btn.addEventListener('click', () => {
+                        state.currentFilter = cat.id;
+                        render.all();
+                    });
+
+                    container.appendChild(btn);
+                });
+            },
+
+            boards: () => {
+                const container = document.getElementById('boards-container');
+                container.innerHTML = '';
+
+                // Determine board order: Shared first, then alphabetical
+                const boardCategories = [...state.categories].sort((a, b) => {
+                    if (a.id === 'shared') return -1;
+                    if (b.id === 'shared') return 1;
+                    return a.name.localeCompare(b.name);
+                });
+
+                boardCategories.forEach(cat => {
+                    const board = render.createBoard(cat);
+                    container.appendChild(board);
+                });
+            },
+
+            createBoard: (cat) => {
+                const boardEl = document.createElement('div');
+                boardEl.className = 'board';
+                boardEl.dataset.category = cat.id;
+
+                const catTasks = utils.getVisibleTasks(state.tasks.filter(t => t.category === cat.id));
+
+                // Header
+                const header = document.createElement('div');
+                header.className = 'board-header';
+                header.innerHTML = `
+                    <div class="board-title">
+                        <span class="board-title-color" style="background-color: ${cat.color}"></span>
+                        ${cat.name}
+                        <span class="board-title-count">${catTasks.length}</span>
+                    </div>
+                    <div class="board-actions">
+                        ${CONFIG.DEFAULT_CATEGORIES.find(c => c.id === cat.id) ? '' : `<button class="btn-add-cat" title="Delete category">×</button>`}
+                    </div>
+                `;
+
+                if (!CONFIG.DEFAULT_CATEGORIES.find(c => c.id === cat.id)) {
+                    header.querySelector('.btn-add-cat').addEventListener('click', () => {
+                        if (confirm(`Delete category "${cat.name}"? Tasks will be unassigned.`)) {
+                            categories.delete(cat.id);
+                        }
+                    });
+                }
+
+                boardEl.appendChild(header);
+
+                // Tasks
+                const tasksContainer = document.createElement('div');
+                tasksContainer.className = 'board-tasks';
+                tasksContainer.id = `tasks-${cat.id}`;
+                tasksContainer.setAttribute('data-category', cat.id);
+
+                catTasks.forEach(task => {
+                    const taskEl = render.createTaskElement(task);
+                    tasksContainer.appendChild(taskEl);
+                });
+
+                tasksContainer.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    tasksContainer.style.background = 'rgba(153, 0, 0, 0.05)';
+                });
+
+                tasksContainer.addEventListener('dragleave', () => {
+                    tasksContainer.style.background = '';
+                });
+
+                tasksContainer.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    tasksContainer.style.background = '';
+                });
+
+                boardEl.appendChild(tasksContainer);
+
+                // Add task form
+                const form = document.createElement('div');
+                form.className = 'add-task-form';
+                form.innerHTML = `
+                    <div class="form-group">
+                        <label class="form-label">Task</label>
+                        <input type="text" class="form-input task-text-input" placeholder="Add a task...">
+                    </div>
+                    <div class="form-row">
+                        <div>
+                            <label class="form-label">Priority</label>
+                            <select class="task-priority-select">
+                                <option value="low">Low</option>
+                                <option value="med" selected>Medium</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Time Est.</label>
+                            <select class="task-time-select">
+                                <option value="">None</option>
+                                <option value="15">15 min</option>
+                                <option value="30">30 min</option>
+                                <option value="60">1 hour</option>
+                                <option value="90">1.5 hours</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Due Date (Optional)</label>
+                        <input type="date" class="task-due-input">
+                    </div>
+                    <div class="form-row-buttons">
+                        <button class="btn btn-primary add-task-btn">Add</button>
+                    </div>
+                `;
+
+                const addBtn = form.querySelector('.add-task-btn');
+                const textInput = form.querySelector('.task-text-input');
+                const prioritySelect = form.querySelector('.task-priority-select');
+                const timeSelect = form.querySelector('.task-time-select');
+                const dueInput = form.querySelector('.task-due-input');
+
+                const addTask = () => {
+                    const text = textInput.value.trim();
+                    if (!text) return;
+
+                    tasks.add(
+                        cat.id,
+                        text,
+                        prioritySelect.value,
+                        timeSelect.value ? parseInt(timeSelect.value) : null,
+                        dueInput.value || null
+                    );
+
+                    textInput.value = '';
+                    prioritySelect.value = 'med';
+                    timeSelect.value = '';
+                    dueInput.value = '';
+                    textInput.focus();
+                };
+
+                addBtn.addEventListener('click', addTask);
+                textInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') addTask();
+                });
+
+                boardEl.appendChild(form);
+
+                return boardEl;
+            },
+
+            createTaskElement: (task) => {
+                const el = document.createElement('div');
+                el.className = `task-item ${task.status === 'done' ? 'done' : ''} ${task.markedToday ? 'marked-today' : ''} ${utils.isOverdue(task) ? 'overdue' : ''}`;
+                el.dataset.taskId = task.id;
+                el.draggable = true;
+
+                // Checkbox
+                const checkbox = document.createElement('div');
+                checkbox.className = `task-checkbox ${task.status === 'done' ? 'done' : ''}`;
+                checkbox.addEventListener('click', () => tasks.toggle(task.id));
+
+                // Context menu for "mark today"
+                el.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    tasks.markToday(task.id);
+                });
+
+                // Content
                 const content = document.createElement('div');
                 content.className = 'task-content';
 
-                const title = document.createElement('div');
-                title.className = 'task-title';
-                title.textContent = task.title;
+                const text = document.createElement('div');
+                text.className = `task-text ${task.status === 'done' ? 'done' : ''}`;
+                text.textContent = task.text;
 
-                if (task.notes) {
-                    const notes = document.createElement('div');
-                    notes.className = 'task-notes';
-                    notes.textContent = task.notes;
-                    content.appendChild(title);
-                    content.appendChild(notes);
-                } else {
-                    content.appendChild(title);
-                }
+                text.addEventListener('dblclick', () => {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'task-text-edit';
+                    input.value = task.text;
 
+                    text.replaceWith(input);
+                    input.focus();
+                    input.select();
+
+                    const save = () => {
+                        const newText = input.value.trim() || task.text;
+                        tasks.update(task.id, { text: newText });
+                        render.all();
+                    };
+
+                    input.addEventListener('blur', save);
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') save();
+                        if (e.key === 'Escape') render.all();
+                    });
+                });
+
+                content.appendChild(text);
+
+                // Meta
                 const meta = document.createElement('div');
                 meta.className = 'task-meta';
 
-                const priorityBadge = document.createElement('span');
-                priorityBadge.className = `priority-badge ${task.priority}`;
-                priorityBadge.textContent = task.priority.charAt(0).toUpperCase() + task.priority.slice(1);
-                meta.appendChild(priorityBadge);
+                if (task.priority) {
+                    const pri = document.createElement('span');
+                    pri.className = `task-priority priority-${task.priority}`;
+                    pri.textContent = task.priority.toUpperCase();
+                    meta.appendChild(pri);
+                }
+
+                if (task.timeEst) {
+                    const time = document.createElement('span');
+                    time.className = 'task-time';
+                    time.textContent = utils.formatTime(task.timeEst);
+                    meta.appendChild(time);
+                }
 
                 if (task.dueDate) {
-                    const dateSpan = document.createElement('span');
-                    dateSpan.className = 'task-date';
-                    dateSpan.textContent = formatDate(task.dueDate);
-                    meta.appendChild(dateSpan);
+                    const due = document.createElement('span');
+                    due.className = 'task-due';
+                    due.textContent = utils.formatDate(task.dueDate);
+                    meta.appendChild(due);
                 }
 
+                if (task.isShared && task.assignedTo) {
+                    const assigned = document.createElement('span');
+                    assigned.className = 'task-assigned';
+                    const initials = {
+                        'alessio': 'AZ',
+                        'reanna': 'RL',
+                        'both': 'Both'
+                    };
+                    assigned.textContent = initials[task.assignedTo] || '?';
+                    meta.appendChild(assigned);
+                }
+
+                content.appendChild(meta);
+
+                // Notes
+                if (task.notes) {
+                    const notesEl = document.createElement('div');
+                    notesEl.className = 'task-notes';
+                    notesEl.innerHTML = `
+                        <div><strong>Notes</strong> <button class="task-btn expand-notes-btn" style="font-size: 0.8rem;">▼</button></div>
+                        <div class="task-notes-text" style="display: none;">${task.notes}</div>
+                    `;
+
+                    const expandBtn = notesEl.querySelector('.expand-notes-btn');
+                    const notesText = notesEl.querySelector('.task-notes-text');
+                    let expanded = false;
+
+                    expandBtn.addEventListener('click', () => {
+                        expanded = !expanded;
+                        notesText.style.display = expanded ? 'block' : 'none';
+                        expandBtn.textContent = expanded ? '▲' : '▼';
+                    });
+
+                    content.appendChild(notesEl);
+                }
+
+                // Actions
                 const actions = document.createElement('div');
                 actions.className = 'task-actions';
+                actions.innerHTML = `
+                    <button class="task-btn notes-btn" title="Add/edit notes">📝</button>
+                    <button class="task-btn delete-btn" title="Delete">×</button>
+                `;
 
-                const editBtn = document.createElement('button');
-                editBtn.className = 'btn-task-action';
-                editBtn.textContent = 'Edit';
-                editBtn.addEventListener('click', () => showEditForm(task.id));
-                actions.appendChild(editBtn);
+                const notesBtn = actions.querySelector('.notes-btn');
+                notesBtn.addEventListener('click', () => {
+                    const input = document.createElement('textarea');
+                    input.className = 'task-notes-edit';
+                    input.value = task.notes;
 
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'btn-task-action delete';
-                deleteBtn.textContent = 'Delete';
-                deleteBtn.addEventListener('click', () => confirmDelete(task.id));
-                actions.appendChild(deleteBtn);
-
-                row.appendChild(checkbox);
-                row.appendChild(content);
-                row.appendChild(meta);
-                row.appendChild(actions);
-
-                container.appendChild(row);
-
-                // Show edit form if this task is being edited
-                if (appState.editingTaskId === task.id) {
-                    const editForm = createEditForm(task);
-                    const formRow = document.createElement('div');
-                    formRow.className = 'task-row';
-                    formRow.appendChild(editForm);
-                    container.appendChild(formRow);
-                }
-            });
-        }
-
-        function createEditForm(task) {
-            const form = document.createElement('div');
-            form.className = 'task-edit-form';
-
-            const titleGroup = document.createElement('div');
-            titleGroup.className = 'form-group';
-            titleGroup.innerHTML = '<label for="editTitle">Task Title</label>';
-            const titleInput = document.createElement('input');
-            titleInput.type = 'text';
-            titleInput.id = 'editTitle';
-            titleInput.value = task.title;
-            titleGroup.appendChild(titleInput);
-            form.appendChild(titleGroup);
-
-            const notesGroup = document.createElement('div');
-            notesGroup.className = 'form-group';
-            notesGroup.innerHTML = '<label for="editNotes">Notes</label>';
-            const notesInput = document.createElement('textarea');
-            notesInput.id = 'editNotes';
-            notesInput.value = task.notes || '';
-            notesGroup.appendChild(notesInput);
-            form.appendChild(notesGroup);
-
-            const priorityGroup = document.createElement('div');
-            priorityGroup.className = 'form-group';
-            priorityGroup.innerHTML = '<label for="editPriority">Priority</label>';
-            const prioritySelect = document.createElement('select');
-            prioritySelect.id = 'editPriority';
-            ['low', 'medium', 'high'].forEach(p => {
-                const opt = document.createElement('option');
-                opt.value = p;
-                opt.textContent = p.charAt(0).toUpperCase() + p.slice(1);
-                opt.selected = p === task.priority;
-                prioritySelect.appendChild(opt);
-            });
-            priorityGroup.appendChild(prioritySelect);
-            form.appendChild(priorityGroup);
-
-            const dueDateGroup = document.createElement('div');
-            dueDateGroup.className = 'form-group';
-            dueDateGroup.innerHTML = '<label for="editDueDate">Due Date (optional)</label>';
-            const dueDateInput = document.createElement('input');
-            dueDateInput.type = 'date';
-            dueDateInput.id = 'editDueDate';
-            dueDateInput.value = task.dueDate || '';
-            dueDateGroup.appendChild(dueDateInput);
-            form.appendChild(dueDateGroup);
-
-            const buttonGroup = document.createElement('div');
-            buttonGroup.className = 'form-buttons';
-
-            const saveBtn = document.createElement('button');
-            saveBtn.className = 'btn-save';
-            saveBtn.type = 'button';
-            saveBtn.textContent = 'Save';
-            saveBtn.addEventListener('click', async () => {
-                task.title = titleInput.value || 'Untitled Task';
-                task.notes = notesInput.value;
-                task.priority = prioritySelect.value;
-                task.dueDate = dueDateInput.value || null;
-                appState.editingTaskId = null;
-
-                if (USE_SUPABASE && currentUser) {
-                    const saved = await saveTaskToSupabase(task);
-                    if (saved && task._isNew) {
-                        // Replace local temp ID with Supabase ID
-                        const idx = appState.tasks.findIndex(t => t.id === task.id);
-                        if (idx >= 0) {
-                            appState.tasks[idx].id = saved.id;
-                            appState.tasks[idx]._isNew = false;
-                        }
+                    if (task.notes) {
+                        const notesEl = content.querySelector('.task-notes');
+                        notesEl.replaceWith(input);
+                    } else {
+                        content.appendChild(input);
                     }
-                }
 
-                saveData();
-                updateStatusBar();
-                renderTasks();
-            });
-            buttonGroup.appendChild(saveBtn);
+                    input.focus();
 
-            const cancelBtn = document.createElement('button');
-            cancelBtn.className = 'btn-cancel';
-            cancelBtn.type = 'button';
-            cancelBtn.textContent = 'Cancel';
-            cancelBtn.addEventListener('click', () => {
-                appState.editingTaskId = null;
-                renderTasks();
-            });
-            buttonGroup.appendChild(cancelBtn);
-
-            form.appendChild(buttonGroup);
-            return form;
-        }
-
-        function showEditForm(taskId) {
-            appState.editingTaskId = taskId;
-            renderTasks();
-        }
-
-        function confirmDelete(taskId) {
-            const task = appState.tasks.find(t => t.id === taskId);
-            if (!task) return;
-
-            showConfirmModal(
-                'Delete Task',
-                `Are you sure you want to delete "${task.title}"? This cannot be undone.`,
-                async () => {
-                    if (USE_SUPABASE && currentUser) {
-                        await deleteTaskFromSupabase(taskId);
-                    }
-                    appState.tasks = appState.tasks.filter(t => t.id !== taskId);
-                    saveData();
-                    updateStatusBar();
-                    renderTasks();
-                }
-            );
-        }
-
-        // ===== MODAL & FORM HANDLERS =====
-        function showConfirmModal(title, message, onConfirm) {
-            const modal = document.getElementById('confirmModal');
-            document.getElementById('confirmTitle').textContent = title;
-            document.getElementById('confirmMessage').textContent = message;
-
-            document.getElementById('btnConfirmCancel').onclick = () => {
-                modal.classList.remove('active');
-            };
-
-            document.getElementById('btnConfirmOK').onclick = () => {
-                modal.classList.remove('active');
-                onConfirm();
-            };
-
-            modal.classList.add('active');
-        }
-
-        function showAddCategoryModal() {
-            const modal = document.getElementById('categoryModal');
-            document.getElementById('categoryModalTitle').textContent = 'Add Category';
-            document.getElementById('categoryName').value = '';
-            document.getElementById('categoryColor').value = '#58a6ff';
-            document.getElementById('colorValue').textContent = '#58a6ff';
-
-            const form = document.getElementById('categoryForm');
-            form.onsubmit = async (e) => {
-                e.preventDefault();
-                const name = document.getElementById('categoryName').value.trim();
-                const color = document.getElementById('categoryColor').value;
-
-                if (!name) return;
-
-                const newCategory = {
-                    name,
-                    color,
-                    sortOrder: appState.categories.length + 1,
-                    _isNew: true
-                };
-
-                if (USE_SUPABASE && currentUser) {
-                    const saved = await saveCategoryToSupabase(newCategory);
-                    if (saved) {
-                        appState.categories.push({
-                            id: saved.id,
-                            name: saved.name,
-                            color: saved.color,
-                            sortOrder: saved.sort_order,
-                            ownerId: saved.owner_id
-                        });
-                    }
-                } else {
-                    newCategory.id = appState.nextId++;
-                    appState.categories.push(newCategory);
-                }
-
-                saveData();
-                renderCategoryTabs();
-                modal.classList.remove('active');
-            };
-
-            document.getElementById('btnCategoryCancel').onclick = () => {
-                modal.classList.remove('active');
-            };
-
-            document.getElementById('categoryColor').addEventListener('input', (e) => {
-                document.getElementById('colorValue').textContent = e.target.value;
-            });
-
-            modal.classList.add('active');
-            document.getElementById('categoryName').focus();
-        }
-
-        function showCategoryContextMenu(e, categoryId) {
-            const menu = document.getElementById('contextMenu');
-            menu.style.left = e.clientX + 'px';
-            menu.style.top = e.clientY + 'px';
-            menu.classList.add('active');
-
-            const category = appState.categories.find(c => c.id === categoryId);
-            if (!category) return;
-
-            document.getElementById('contextRename').onclick = async () => {
-                menu.classList.remove('active');
-                const newName = prompt('Rename category:', category.name);
-                if (newName && newName.trim()) {
-                    category.name = newName.trim();
-                    if (USE_SUPABASE && currentUser) {
-                        await saveCategoryToSupabase(category);
-                    }
-                    saveData();
-                    renderCategoryTabs();
-                }
-            };
-
-            document.getElementById('contextDelete').onclick = () => {
-                menu.classList.remove('active');
-                showConfirmModal(
-                    'Delete Category',
-                    `Delete "${category.name}"? All tasks in this category will be deleted.`,
-                    async () => {
-                        if (USE_SUPABASE && currentUser) {
-                            await deleteCategoryFromSupabase(categoryId);
-                        }
-                        appState.categories = appState.categories.filter(c => c.id !== categoryId);
-                        appState.tasks = appState.tasks.filter(t => t.categoryId !== categoryId);
-                        if (appState.activeCategory === categoryId) {
-                            appState.activeCategory = appState.categories[0]?.id || null;
-                        }
-                        saveData();
-                        updateStatusBar();
-                        renderCategoryTabs();
-                        renderTasks();
-                    }
-                );
-            };
-
-            document.addEventListener('click', (e) => {
-                if (e.target !== menu && !menu.contains(e.target)) {
-                    menu.classList.remove('active');
-                }
-            }, { once: true });
-        }
-
-        function updateFilterButtons() {
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                const filter = btn.dataset.filter;
-                btn.classList.toggle('active', filter === appState.activeFilter);
-            });
-        }
-
-        // ===== EVENT LISTENERS =====
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Auth state listener — handles login, logout, and page refresh
-            sb.auth.onAuthStateChange(async (event, session) => {
-                if (session?.user) {
-                    const profile = await loadUserProfile(session.user.id, session.user.email);
-                    currentUser = {
-                        id: session.user.id,
-                        email: session.user.email,
-                        display_name: profile?.display_name || session.user.email.split('@')[0],
-                        role: profile?.role || 'viewer'
+                    const save = () => {
+                        tasks.update(task.id, { notes: input.value });
+                        render.all();
                     };
-                    showUserInfo();
-                    unlockApp();
-                    await initializeData();
-                    updateHeaderDate();
-                    updateStatusBar();
-                    renderCategoryTabs();
-                    renderTasks();
-                    subscribeToRealtime();
-                } else {
-                    // Not logged in — show login gate
-                    currentUser = null;
-                    document.getElementById('loginGate').classList.remove('hidden');
-                    document.getElementById('appContent').classList.remove('visible');
-                }
-            });
 
-            updateHeaderDate();
-
-            // Filter buttons
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    appState.activeFilter = btn.dataset.filter;
-                    updateFilterButtons();
-                    renderTasks();
+                    input.addEventListener('blur', save);
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Escape') render.all();
+                    });
                 });
-            });
 
-            // Add task button
-            document.getElementById('btnAddTask').addEventListener('click', () => {
-                const tempId = 'temp-' + Date.now();
-                const newTask = {
-                    id: tempId,
-                    categoryId: appState.activeCategory,
-                    title: '',
-                    notes: '',
-                    priority: 'medium',
-                    status: 'open',
-                    dueDate: null,
-                    createdAt: new Date().toISOString(),
-                    completedAt: null,
-                    _isNew: true
-                };
+                const deleteBtn = actions.querySelector('.delete-btn');
+                deleteBtn.addEventListener('click', () => {
+                    if (confirm('Delete this task?')) {
+                        tasks.delete(task.id);
+                    }
+                });
 
-                appState.tasks.push(newTask);
-                appState.editingTaskId = tempId;
-                saveData();
-                renderTasks();
-                updateStatusBar();
-            });
+                el.appendChild(checkbox);
+                el.appendChild(content);
+                el.appendChild(actions);
 
-            // Update sync display periodically
-            setInterval(updateSyncDisplay, 60000);
+                // Drag events
+                el.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('taskId', task.id);
+                });
+
+                return el;
+            }
+        };
+
+        // ============================================================================
+        // SYNC
+        // ============================================================================
+        const sync = {
+            updateStatus: (message, type = 'info') => {
+                const statusEl = document.getElementById('sync-status');
+                statusEl.textContent = message;
+                statusEl.className = `sync-status ${type === 'error' ? 'error' : 'synced'}`;
+                if (type === 'info') {
+                    setTimeout(() => {
+                        statusEl.textContent = 'Ready';
+                        statusEl.className = 'sync-status';
+                    }, 3000);
+                }
+            },
+
+            perform: async () => {
+                sync.updateStatus('Syncing...');
+
+                try {
+                    // Sync shared tasks from Gist (if configured)
+                    if (CONFIG.SHARED_GIST_ID && CONFIG.SHARED_GIST_TOKEN) {
+                        await sync.fetchSharedTasks();
+                        await sync.pushSharedTasks();
+                    }
+
+                    // Sync personal tasks (if configured)
+                    if (CONFIG.GIST_ID && CONFIG.GIST_TOKEN) {
+                        await sync.pushPersonalTasks();
+                    }
+
+                    storage.saveSyncTime();
+                    sync.updateStatus('Synced');
+                } catch (err) {
+                    console.error('Sync error:', err);
+                    sync.updateStatus('Sync failed', 'error');
+                }
+            },
+
+            fetchSharedTasks: async () => {
+                // Placeholder: would fetch from GitHub Gist
+                // For now, just use localStorage cache
+            },
+
+            pushSharedTasks: async () => {
+                // Placeholder: would push to GitHub Gist
+            },
+
+            pushPersonalTasks: async () => {
+                // Placeholder: would push to GitHub Gist
+            }
+        };
+
+        // ============================================================================
+        // EVENT LISTENERS
+        // ============================================================================
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            state.searchQuery = e.target.value;
+            render.all();
         });
 
-        // Close modals on outside click
-        document.getElementById('confirmModal').addEventListener('click', (e) => {
-            if (e.target.id === 'confirmModal') {
-                e.target.classList.remove('active');
+        document.getElementById('sync-btn').addEventListener('click', () => {
+            sync.perform();
+        });
+
+        // New category modal
+        const modal = document.getElementById('new-cat-modal');
+        const newCatNameInput = document.getElementById('new-cat-name');
+        const newCatColorInput = document.getElementById('new-cat-color');
+
+        document.getElementById('save-cat-btn').addEventListener('click', () => {
+            const name = newCatNameInput.value.trim();
+            const color = newCatColorInput.value;
+
+            if (name) {
+                categories.add(name, color);
+                modal.classList.remove('active');
+                newCatNameInput.value = '';
+                newCatColorInput.value = '#990000';
             }
         });
 
-        document.getElementById('categoryModal').addEventListener('click', (e) => {
-            if (e.target.id === 'categoryModal') {
-                e.target.classList.remove('active');
+        document.getElementById('cancel-cat-btn').addEventListener('click', () => {
+            modal.classList.remove('active');
+            newCatNameInput.value = '';
+            newCatColorInput.value = '#990000';
+        });
+
+        newCatNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('save-cat-btn').click();
             }
         });
 
-        // Close context menu on click outside
-        document.addEventListener('click', (e) => {
-            const menu = document.getElementById('contextMenu');
-            if (!menu.contains(e.target)) {
-                menu.classList.remove('active');
+        // ============================================================================
+        // INIT
+        // ============================================================================
+        // SEED DATA — pre-loaded tasks (only seeds if localStorage is empty)
+        const SEED_TASKS = [
+            {id:1,category:'shop',text:'QuadFang broadhead R&D — Fusion 360 iteration',priority:'high',timeEst:'90',dueDate:null,notes:'Design in Fusion 360, SLM metal printing, prototypes via Terra Machine.',status:'open',markedToday:false,assignedTo:'',activityLog:[],createdAt:'2026-04-05T00:00:00Z',completedAt:null},
+            {id:2,category:'rnd',text:'SR&ED: Contact consultant — ask accountant for referral',priority:'high',timeEst:'15',dueDate:'2026-04-07',notes:'New pre-approval process starts Apr 1 2026. Or search "SR&ED consultant Grande Prairie".',status:'open',markedToday:false,assignedTo:'',activityLog:[],createdAt:'2026-04-05T00:00:00Z',completedAt:null},
+            {id:3,category:'rnd',text:'SR&ED: Gather R&D receipts + Fill Activity Log',priority:'high',timeEst:'90',dueDate:'2026-04-08',notes:'Terra Machine invoices, materials, 3D printing, Fusion 360 time. Fill QuadFang_SRED_Activity_Log.xlsx.',status:'open',markedToday:false,assignedTo:'',activityLog:[],createdAt:'2026-04-05T00:00:00Z',completedAt:null},
+            {id:4,category:'rnd',text:'SR&ED: Book consultant meeting',priority:'high',timeEst:'15',dueDate:'2026-04-09',notes:'Also mention AB Innovation Employment Grant (20% extra). SR&ED limit doubled to $6M.',status:'open',markedToday:false,assignedTo:'',activityLog:[],createdAt:'2026-04-05T00:00:00Z',completedAt:null},
+            {id:5,category:'code',text:'Test Meta Business Suite schedule workaround (far-future date method)',priority:'high',timeEst:'30',dueDate:null,notes:'The "Finish later" button was bugged — publishes instead of saving as draft.',status:'open',markedToday:false,assignedTo:'',activityLog:[],createdAt:'2026-04-05T00:00:00Z',completedAt:null},
+            {id:6,category:'code',text:'Deliver 40 QuadFang posts to Meta Business Suite',priority:'high',timeEst:'90',dueDate:null,notes:'Blocked by schedule workaround test. Posts in QF_40_Posts_Delivery.md.',status:'open',markedToday:false,assignedTo:'',activityLog:[],createdAt:'2026-04-05T00:00:00Z',completedAt:null},
+            {id:7,category:'admin',text:'Brief Reanna on Shared Brain structure and sync rules',priority:'med',timeEst:'30',dueDate:null,notes:'',status:'open',markedToday:false,assignedTo:'',activityLog:[],createdAt:'2026-04-05T00:00:00Z',completedAt:null},
+            {id:8,category:'shop',text:'Michelle\'s + Franco\'s Culinary Crew knife/plate sets — still open?',priority:'med',timeEst:null,dueDate:null,notes:'Needs confirmation.',status:'open',markedToday:false,assignedTo:'',activityLog:[],createdAt:'2026-04-05T00:00:00Z',completedAt:null},
+            {id:9,category:'shop',text:'Mike\'s knife (ordered through Surri) — still open?',priority:'med',timeEst:null,dueDate:null,notes:'Needs confirmation.',status:'open',markedToday:false,assignedTo:'',activityLog:[],createdAt:'2026-04-05T00:00:00Z',completedAt:null},
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            storage.load();
+            if (state.tasks.length === 0) {
+                state.tasks = SEED_TASKS;
+                storage.save();
             }
+            render.all();
         });
     </script>
-
-    </div><!-- end #appContent -->
-
-    <!-- Auth is handled by Supabase in the main script block above -->
 </body>
 </html>
