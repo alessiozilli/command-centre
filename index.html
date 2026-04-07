@@ -223,13 +223,7 @@
         };
         const DEFAULT_ROUTE = 'alessio.html';
 
-        sb.auth.getSession().then(({ data: { session } }) => {
-            if (session) {
-                const email = session.user.email.toLowerCase();
-                const dest = ROUTES[email] || DEFAULT_ROUTE;
-                window.location.href = dest;
-            }
-        });
+        // No auto-redirect — always show login screen
 
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
