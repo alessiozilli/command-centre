@@ -1,4 +1,3 @@
-<!-- v2 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -136,6 +135,21 @@
         }
 
         .login-loading.active { display: block; }
+
+        .stay-logged {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            color: #8b949e;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+        }
+
+        .stay-logged input[type="checkbox"] {
+            accent-color: #990000;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -207,6 +221,7 @@
         <form id="loginForm">
             <input type="email" id="loginEmail" placeholder="Email" required autocomplete="email">
             <input type="password" id="loginPassword" placeholder="Password" required autocomplete="current-password">
+            <label class="stay-logged"><input type="checkbox" id="stayLogged" checked> Stay logged in</label>
             <button type="submit" class="login-btn">Sign In</button>
         </form>
         <div class="login-error" id="loginError"></div>
@@ -230,26 +245,38 @@
             e.preventDefault();
             const email = document.getElementById('loginEmail').value.trim();
             const pw = document.getElementById('loginPassword').value;
+            const stayLogged = document.getElementById('stayLogged').checked;
             const errorEl = document.getElementById('loginError');
             const loadingEl = document.getElementById('loginLoading');
 
             errorEl.textContent = '';
             loadingEl.classList.add('active');
 
-            const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
+            try {
+                const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Connection timed out. Try again.')), 15000));
+                const login = sb.auth.signInWithPassword({ email, password: pw });
+                const { data, error } = await Promise.race([login, timeout]);
 
-            loadingEl.classList.remove('active');
+                loadingEl.classList.remove('active');
 
-            if (error) {
-                errorEl.textContent = error.message || 'Sign in failed.';
-                document.getElementById('loginPassword').value = '';
-                document.getElementById('loginPassword').focus();
-                return;
+                if (error) {
+                    errorEl.textContent = error.message || 'Sign in failed.';
+                    document.getElementById('loginPassword').value = '';
+                    document.getElementById('loginPassword').focus();
+                    return;
+                }
+
+                if (!stayLogged) {
+                    sessionStorage.setItem('azck_session_only', 'true');
+                }
+
+                const userEmail = data.user.email.toLowerCase();
+                const dest = ROUTES[userEmail] || DEFAULT_ROUTE;
+                window.location.href = dest;
+            } catch (err) {
+                loadingEl.classList.remove('active');
+                errorEl.textContent = err.message || 'Something went wrong. Try again.';
             }
-
-            const userEmail = data.user.email.toLowerCase();
-            const dest = ROUTES[userEmail] || DEFAULT_ROUTE;
-            window.location.href = dest;
         });
     </script>
 
