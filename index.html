@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AZCK Admin</title>
+    <title>AZCK Command Centre</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -18,142 +18,150 @@
             justify-content: center;
         }
 
-        .login-box {
+        .portal-box {
             background: #161b22;
             border: 1px solid #30363d;
             border-radius: 16px;
             padding: 48px 40px;
             text-align: center;
-            max-width: 380px;
+            max-width: 420px;
             width: 90%;
         }
 
-        .login-logo {
-            margin-bottom: 24px;
+        .portal-sigil {
+            margin-bottom: 12px;
             font-size: 2.5rem;
             font-weight: 800;
             letter-spacing: 0.08em;
             color: #990000;
         }
 
-        .login-sub {
-            font-size: 13px;
+        .portal-title {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
             color: #8b949e;
-            margin-bottom: 28px;
+            margin-bottom: 36px;
         }
 
-        .login-box input[type="email"],
-        .login-box input[type="password"] {
-            width: 100%;
-            padding: 0.75rem 1rem;
+        .portal-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .portal-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
             background: #0d1117;
             border: 1px solid #30363d;
-            border-radius: 6px;
+            border-radius: 10px;
+            text-decoration: none;
             color: #e6edf3;
-            font-size: 1rem;
-            margin-bottom: 0.75rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .login-box input:focus {
-            border-color: #990000;
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 12px;
-            background: #990000;
-            border: none;
-            border-radius: 8px;
-            color: #fff;
-            font-size: 15px;
-            font-weight: 600;
+            transition: border-color 0.2s, background 0.2s;
             cursor: pointer;
-            letter-spacing: 0.03em;
-            transition: background 0.2s;
         }
 
-        .login-btn:hover { background: #b30000; }
-
-        .login-error {
-            color: #f85149;
-            font-size: 13px;
-            margin-top: 12px;
-            min-height: 20px;
+        .portal-card:hover {
+            border-color: #990000;
+            background: #1a1f27;
         }
 
-        .login-loading {
-            display: none;
+        .portal-card .icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .portal-card.alessio .icon {
+            background: #990000;
+            color: #fff;
+        }
+
+        .portal-card.reanna .icon {
+            background: #f0883e;
+            color: #fff;
+        }
+
+        .portal-card .info {
+            text-align: left;
+        }
+
+        .portal-card .name {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .portal-card .role {
+            font-size: 0.8rem;
             color: #8b949e;
-            font-size: 0.9rem;
-            text-align: center;
-            margin-top: 0.5rem;
         }
 
-        .login-loading.active { display: block; }
+        .portal-card .arrow {
+            margin-left: auto;
+            color: #8b949e;
+            font-size: 1.2rem;
+            transition: color 0.2s;
+        }
+
+        .portal-card:hover .arrow {
+            color: #e6edf3;
+        }
     </style>
 </head>
 <body>
 
-    <div class="login-box">
-        <div class="login-logo">AZCK</div>
-        <p class="login-sub">Login to continue</p>
-        <form id="loginForm">
-            <input type="email" id="loginEmail" placeholder="Email" required autocomplete="email">
-            <input type="password" id="loginPassword" placeholder="Password" required autocomplete="current-password">
-            <button type="submit" class="login-btn">Sign In</button>
-        </form>
-        <div class="login-error" id="loginError"></div>
-        <div class="login-loading" id="loginLoading">Signing in...</div>
+    <div class="portal-box">
+        <div class="portal-sigil">AZCK</div>
+        <div class="portal-title">Command Centre</div>
+
+        <div class="portal-cards">
+            <a href="alessio.html" class="portal-card alessio">
+                <div class="icon">AZ</div>
+                <div class="info">
+                    <div class="name">Alessio</div>
+                    <div class="role">Operations &amp; Forge</div>
+                </div>
+                <div class="arrow">&rarr;</div>
+            </a>
+            <a href="reanna.html" class="portal-card reanna">
+                <div class="icon">RG</div>
+                <div class="info">
+                    <div class="name">Reanna</div>
+                    <div class="role">Office &amp; Grants</div>
+                </div>
+                <div class="arrow">&rarr;</div>
+            </a>
+        </div>
     </div>
 
     <script>
+        // Auto-redirect if already logged in
         const SUPABASE_URL = 'https://twrlvnfszohyrmivdhre.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3cmx2bmZzem9oeXJtaXZkaHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NjkxMTMsImV4cCI6MjA5MDE0NTExM30.o96DFNbBObst0EAmX51rnRFXzu8oTN1o-HNAxN7MY8A';
         const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // Route map: email → command centre page
         const ROUTES = {
             'admin@azcustomknives.com': 'reanna.html',
             'alessio.zilli@azcustomknives.com': 'alessio.html'
         };
-        const DEFAULT_ROUTE = 'alessio.html';
 
-        // Check if already logged in
         sb.auth.getSession().then(({ data: { session } }) => {
             if (session) {
                 const email = session.user.email.toLowerCase();
-                const dest = ROUTES[email] || DEFAULT_ROUTE;
+                const dest = ROUTES[email] || 'alessio.html';
                 window.location.href = dest;
             }
-        });
-
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value.trim();
-            const pw = document.getElementById('loginPassword').value;
-            const errorEl = document.getElementById('loginError');
-            const loadingEl = document.getElementById('loginLoading');
-
-            errorEl.textContent = '';
-            loadingEl.classList.add('active');
-
-            const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
-
-            loadingEl.classList.remove('active');
-
-            if (error) {
-                errorEl.textContent = error.message || 'Sign in failed.';
-                document.getElementById('loginPassword').value = '';
-                document.getElementById('loginPassword').focus();
-                return;
-            }
-
-            // Route to the right command centre
-            const userEmail = data.user.email.toLowerCase();
-            const dest = ROUTES[userEmail] || DEFAULT_ROUTE;
-            window.location.href = dest;
         });
     </script>
 
