@@ -750,86 +750,7 @@
             }
         }
 
-        /* ===== LOGIN GATE ===== */
-        #loginGate {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: #0d1117;
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        #loginGate.hidden { display: none; }
-        .login-box {
-            background: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 16px;
-            padding: 48px 40px;
-            text-align: center;
-            max-width: 380px;
-            width: 90%;
-        }
-        .login-box h2 {
-            font-size: 24px;
-            font-weight: 700;
-            letter-spacing: 0.05em;
-            margin-bottom: 8px;
-            color: #e6edf3;
-        }
-        .login-box .login-sub {
-            font-size: 13px;
-            color: #8b949e;
-            margin-bottom: 28px;
-        }
-        .login-box input[type="email"],
-        .login-box input[type="password"] {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            background: #0d1117;
-            border: 1px solid #30363d;
-            border-radius: 6px;
-            color: #e6edf3;
-            font-size: 1rem;
-            margin-bottom: 0.75rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        .login-box input[type="email"]:focus,
-        .login-box input[type="password"]:focus {
-            border-color: #f0883e;
-        }
-        .login-box .login-btn {
-            width: 100%;
-            padding: 12px;
-            background: #f0883e;
-            border: none;
-            border-radius: 8px;
-            color: #0d1117;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            letter-spacing: 0.03em;
-        }
-        .login-box .login-btn:hover { background: #f4a261; }
-        .login-box .login-error {
-            color: #f85149;
-            font-size: 13px;
-            margin-top: 12px;
-            min-height: 20px;
-        }
-        .login-box .login-icon {
-            margin-bottom: 20px;
-            font-size: 3rem;
-        }
-        .login-loading {
-            display: none;
-            color: #8b949e;
-            font-size: 0.9rem;
-            text-align: center;
-            margin-top: 0.5rem;
-        }
-        .login-loading.active { display: block; }
+        /* Login gate removed — gateway handles all auth */
 
         /* User bar in header */
         .user-bar {
@@ -863,8 +784,7 @@
             color: #e6edf3;
         }
 
-        #appContent { display: none; }
-        #appContent.visible { display: block; }
+        #appContent { display: block; }
 
         /* Week label badges */
         .week-badge {
@@ -883,22 +803,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
-
-    <!-- ===== LOGIN GATE ===== -->
-    <div id="loginGate">
-        <div class="login-box">
-            <div class="login-icon">&#9733;</div>
-            <h2>Reanna's Command Centre</h2>
-            <p class="login-sub">Login to continue</p>
-            <form onsubmit="return handleLogin(event)">
-                <input type="email" id="loginEmail" placeholder="Email" required autocomplete="email">
-                <input type="password" id="loginPassword" placeholder="Password" required autocomplete="current-password">
-                <button type="submit" class="login-btn">Sign In</button>
-            </form>
-            <div class="login-error" id="loginError"></div>
-            <div class="login-loading" id="loginLoading">Signing in...</div>
-        </div>
-    </div>
 
     <!-- ===== APP CONTENT ===== -->
     <div id="appContent">
@@ -1050,7 +954,12 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3cmx2bmZzem9oeXJtaXZkaHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NjkxMTMsImV4cCI6MjA5MDE0NTExM30.o96DFNbBObst0EAmX51rnRFXzu8oTN1o-HNAxN7MY8A';
         const USE_SUPABASE = true;
 
-        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+            auth: {
+                storageKey: 'sb-twrlvnfszohyrmivdhre-auth-token',
+                lock: { acquireTimeout: 2000 }
+            }
+        });
 
         let currentUser = null;
 
@@ -1141,39 +1050,16 @@
         }
 
         // ===== SUPABASE AUTH =====
-        async function handleLogin(e) {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value.trim();
-            const pw = document.getElementById('loginPassword').value;
-            const errorEl = document.getElementById('loginError');
-            const loadingEl = document.getElementById('loginLoading');
-
-            errorEl.textContent = '';
-            loadingEl.classList.add('active');
-
-            const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
-
-            loadingEl.classList.remove('active');
-
-            if (error) {
-                errorEl.textContent = error.message || 'Sign in failed.';
-                document.getElementById('loginPassword').value = '';
-                document.getElementById('loginPassword').focus();
-            }
-            return false;
-        }
+        // handleLogin removed — gateway handles all auth
 
         async function handleLogout() {
             await sb.auth.signOut();
             currentUser = null;
-            document.getElementById('loginGate').classList.remove('hidden');
-            document.getElementById('appContent').classList.remove('visible');
-            document.getElementById('loginEmail').value = '';
-            document.getElementById('loginPassword').value = '';
-            document.getElementById('loginError').textContent = '';
             appState.categories = [];
             appState.tasks = [];
             appState.lastSynced = null;
+            // Redirect to gateway
+            window.location.href = 'index.html';
         }
 
         async function loadUserProfile(userId, email) {
@@ -1196,8 +1082,7 @@
         }
 
         function unlockApp() {
-            document.getElementById('loginGate').classList.add('hidden');
-            document.getElementById('appContent').classList.add('visible');
+            // App is visible by default — nothing to unlock
         }
 
         // ===== SUPABASE DATA =====
@@ -1867,9 +1752,8 @@
                     renderTasks();
                     subscribeToRealtime();
                 } else {
-                    currentUser = null;
-                    document.getElementById('loginGate').classList.remove('hidden');
-                    document.getElementById('appContent').classList.remove('visible');
+                    // Not logged in — redirect to gateway
+                    window.location.href = 'index.html';
                 }
             });
 
