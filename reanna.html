@@ -956,7 +956,8 @@
 
         const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
             auth: {
-                storageKey: 'sb-twrlvnfszohyrmivdhre-auth-token'
+                storageKey: 'sb-twrlvnfszohyrmivdhre-auth-token',
+                lock: async (name, acquireTimeout, fn) => await fn()
             }
         });
 
