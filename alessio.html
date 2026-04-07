@@ -969,11 +969,9 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3cmx2bmZzem9oeXJtaXZkaHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NjkxMTMsImV4cCI6MjA5MDE0NTExM30.o96DFNbBObst0EAmX51rnRFXzu8oTN1o-HNAxN7MY8A';
         const USE_SUPABASE = true;
 
-        // Supabase client — lock config prevents auth token deadlock when gateway + CC share session
         const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
             auth: {
-                storageKey: 'sb-twrlvnfszohyrmivdhre-auth-token',
-                lock: { acquireTimeout: 2000 }
+                storageKey: 'sb-twrlvnfszohyrmivdhre-auth-token'
             }
         });
 
