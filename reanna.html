@@ -671,6 +671,17 @@
             border-color: #f0883e;
             color: #e6edf3;
         }
+        /* ===== PILL NAV ===== */
+        nav.pill-nav { background-color: #0d1117; border-bottom: 1px solid #30363d; padding: 1rem 2rem; display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
+        nav.pill-nav a, nav.pill-nav button { padding: 0.5rem 1rem; border: 1px solid #30363d; border-radius: 20px; background-color: transparent; color: #8b949e; text-decoration: none; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; font-family: inherit; }
+        nav.pill-nav a:hover, nav.pill-nav button:hover { color: #e6edf3; border-color: #f0883e; }
+        nav.pill-nav a.active { background-color: #f0883e; color: #0d1117; border-color: #f0883e; font-weight: 600; }
+        .nav-add-form { display: none; align-items: center; gap: 0.5rem; }
+        .nav-add-form.active { display: inline-flex; }
+        .nav-add-form input { padding: 0.4rem 0.6rem; background: #0d1117; border: 1px solid #30363d; border-radius: 20px; color: #e6edf3; font-size: 0.85rem; width: 120px; font-family: inherit; }
+        .nav-add-form input:focus { border-color: #f0883e; outline: none; }
+        .nav-add-form button { padding: 0.4rem 0.7rem; border-radius: 20px; border: 1px solid #30363d; background: transparent; color: #8b949e; cursor: pointer; font-size: 0.8rem; font-family: inherit; }
+        .nav-add-form .btn-nav-save { border-color: #3fb950; color: #3fb950; }
         #appContent { display: block; }
         /* Week label badges */
         .week-badge {
@@ -720,6 +731,16 @@
             </div>
         </div>
     </header>
+
+    <nav class="pill-nav" id="pillNav">
+        <a href="#" class="active">Tasks</a>
+        <!-- dynamic nav links rendered here -->
+    </nav>
+
+    <div class="context-menu" id="navContextMenu">
+        <div class="context-menu-item delete" id="navContextDelete">Delete</div>
+    </div>
+
     <!-- ===== GRANT TRACKER BAR ===== -->
     <div class="grant-tracker" id="grantTracker">
         <div class="grant-tracker-title">Grant Tracker</div>
@@ -842,42 +863,7 @@
             { id: 3, name: 'Baby & Family', color: '#3fb950', sortOrder: 3 },
             { id: 4, name: 'AZCK Admin', color: '#990000', sortOrder: 4 }
         ];
-        // ===== GRANT SEED DATA =====
-        const GRANT_SEED_TASKS = [
-            // Week 1
-            { title: "SR&ED Tax Credit", notes: "Federal tax credit, ~35-64% refundable. Contact accountant for SR&ED consultant referral.", priority: "high", dueDate: "2026-04-09", category: "Grants" },
-            { title: "Alberta Innovation Employment Grant", notes: "Provincial tax credit, 20%. Stacks with SR&ED. Tell consultant about this one.", priority: "high", dueDate: "2026-04-09", category: "Grants" },
-            { title: "Gather all QuadFang R&D receipts & invoices", notes: "Need for SR&ED and other grant applications.", priority: "high", dueDate: "2026-04-08", category: "Grants" },
-            { title: "Book meeting with SR&ED consultant", notes: "After getting referral from accountant.", priority: "high", dueDate: "2026-04-09", category: "Grants" },
-            // Week 2
-            { title: "NRC IRAP", notes: "$75K-$200K grant. Call 1-877-994-4727. Covers 75-80% of wages for R&D employees.", priority: "high", dueDate: "2026-04-16", category: "Grants" },
-            { title: "Alberta Innovates Micro-Voucher", notes: "$10K grant. Quick win for prototyping costs.", priority: "medium", dueDate: "2026-04-16", category: "Grants" },
-            { title: "Alberta Innovates Voucher Program", notes: "$100K. For larger R&D projects. Needs project plan.", priority: "medium", dueDate: "2026-04-16", category: "Grants" },
-            { title: "Community Futures GP", notes: "Free coaching + loans up to $150K. Local, easy to start.", priority: "medium", dueDate: "2026-04-16", category: "Grants" },
-            // Week 3
-            { title: "AWE BRIDGE Grant", notes: "$5K, women-led businesses. Quick application.", priority: "medium", dueDate: "2026-04-23", category: "Grants" },
-            { title: "AWE Loan Program", notes: "Up to $150K, women-led. Email info@awebusiness.com.", priority: "medium", dueDate: "2026-04-23", category: "Grants" },
-            { title: "Women Entrepreneurship Loan Fund", notes: "Up to $50K from WES.", priority: "medium", dueDate: "2026-04-23", category: "Grants" },
-            { title: "Women Entrepreneurship Fund", notes: "$100K federal grant for women-led businesses.", priority: "medium", dueDate: "2026-04-23", category: "Grants" },
-            // Week 4
-            { title: "CDAP - Canada Digital Adoption", notes: "$15K grant. Check eligibility at canada.ca/cdap.", priority: "medium", dueDate: "2026-04-29", category: "Grants" },
-            { title: "AMPG - Alberta Manufacturing Productivity", notes: "$30K, 50% matching. Confirm 5+ FTE requirement.", priority: "medium", dueDate: "2026-04-29", category: "Grants" },
-            { title: "Canada-Alberta Job Grant", notes: "$10K per trainee. For training employees.", priority: "low", dueDate: "2026-04-29", category: "Grants" },
-            { title: "Futurpreneur Canada", notes: "$60K collateral-free loan. Confirm age eligibility.", priority: "low", dueDate: "2026-04-29", category: "Grants" },
-            // Loans (no due date)
-            { title: "CSBFP - Canada Small Business Financing", notes: "Up to $1M. Ask bank about this program.", priority: "low", dueDate: null, category: "Grants" },
-            { title: "PrairiesCan BSP", notes: "Up to $5M, 50% interest-free. Larger scale.", priority: "low", dueDate: null, category: "Grants" },
-            { title: "BDC Small Business Loan", notes: "Up to $350K. Business Development Bank of Canada.", priority: "low", dueDate: null, category: "Grants" },
-            // Check later
-            { title: "CanExport SMEs", notes: "$50K. Requires $300K revenue + 3 FTEs. Deadline: May 29, 2026.", priority: "low", dueDate: "2026-05-29", category: "Grants" },
-            { title: "GPRIN Innovation Network", notes: "Free signup. Connects to IRAP and other programs.", priority: "low", dueDate: null, category: "Grants" },
-            // AZCK Admin tasks
-            { title: "Review QuadFang deliverables", notes: "Business Plan, Budget, Pitch Deck, Tracker. All in Claude Files. Update financials with real numbers.", priority: "high", dueDate: "2026-04-11", category: "AZCK Admin" },
-            { title: "Read AI Security Risk Assessment", notes: "PDF in AZCK Ltd root + Shared Brain. Understand what data Claude can see.", priority: "high", dueDate: "2026-04-09", category: "AZCK Admin" },
-            { title: "Disconnect Gmail from Cowork", notes: "Part of data security restructure. Do AFTER reading security report.", priority: "high", dueDate: "2026-04-09", category: "AZCK Admin" },
-            { title: "Move sensitive folders off shared Drive", notes: "Receipts, Forms/UPS Payment, Student Intake Forms, DO NOT BOOK.", priority: "high", dueDate: "2026-04-09", category: "AZCK Admin" },
-            { title: "Uninstall Productivity plugin", notes: "On your device. Alessio already did his.", priority: "low", dueDate: null, category: "AZCK Admin" }
-        ];
+        // (Grant seed data removed — tasks now live in Supabase)
         // ===== STATE MANAGEMENT =====
         let appState = {
             categories: [],
@@ -942,8 +928,11 @@
         }
         // ===== SUPABASE DATA =====
         async function loadFromSupabase() {
+            // Only load this user's categories + shared (owner_id is NULL)
             const { data: cats, error: catErr } = await sb
-                .from('categories').select('*').order('sort_order', { ascending: true });
+                .from('categories').select('*')
+                .or('owner_id.eq.' + currentUser.id + ',owner_id.is.null')
+                .order('sort_order', { ascending: true });
             if (catErr) {
                 console.error('Category load error:', catErr);
             } else if (cats && cats.length > 0) {
@@ -952,13 +941,14 @@
                     sortOrder: c.sort_order, ownerId: c.owner_id
                 }));
             } else {
-                // First login — seed categories
-                appState.categories = [];
-                await seedDefaultData();
-                return;
+                appState.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
             }
+            // Only load tasks in visible categories
+            const visibleCatIds = appState.categories.map(c => c.id);
             const { data: tasks, error: taskErr } = await sb
-                .from('tasks').select('*').order('created_at', { ascending: false });
+                .from('tasks').select('*')
+                .in('category_id', visibleCatIds)
+                .order('created_at', { ascending: false });
             if (taskErr) {
                 console.error('Task load error:', taskErr);
             } else {
@@ -976,46 +966,7 @@
                 appState.activeCategory = appState.categories[0].id;
             }
         }
-        async function seedDefaultData() {
-            const catMap = {};
-            for (const cat of DEFAULT_CATEGORIES) {
-                const { data, error } = await sb.from('categories').insert({
-                    name: cat.name, color: cat.color,
-                    sort_order: cat.sortOrder, owner_id: currentUser?.id || null
-                }).select().single();
-                if (data) {
-                    catMap[cat.name] = data.id;
-                    appState.categories.push({
-                        id: data.id, name: data.name, color: data.color,
-                        sortOrder: data.sort_order, ownerId: data.owner_id
-                    });
-                }
-            }
-            for (const task of GRANT_SEED_TASKS) {
-                const categoryId = catMap[task.category];
-                if (!categoryId) continue;
-                const { data } = await sb.from('tasks').insert({
-                    category_id: categoryId, owner_id: currentUser?.id || null,
-                    title: task.title, notes: task.notes,
-                    priority: task.priority, status: 'open',
-                    due_date: task.dueDate, sort_order: 0
-                }).select().single();
-                if (data) {
-                    appState.tasks.push({
-                        id: data.id, categoryId: data.category_id, title: data.title,
-                        notes: data.notes || '', priority: data.priority || 'medium',
-                        status: data.status || 'open', dueDate: data.due_date,
-                        createdAt: data.created_at, completedAt: data.completed_at,
-                        ownerId: data.owner_id, sortOrder: data.sort_order
-                    });
-                }
-            }
-            appState.lastSynced = new Date().toISOString();
-            saveToLocalStorage();
-            if (appState.categories.length > 0 && !appState.activeCategory) {
-                appState.activeCategory = appState.categories[0].id;
-            }
-        }
+        // (seedDefaultData removed — tasks now live in Supabase)
         async function saveTaskToSupabase(task) {
             const payload = {
                 category_id: task.categoryId, owner_id: currentUser?.id || null,
@@ -1067,7 +1018,96 @@
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => {
                     loadFromSupabase().then(() => { renderCategoryTabs(); renderTasks(); updateStatusBar(); });
                 }).subscribe();
+            sb.channel('nav-links-changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'nav_links' }, () => {
+                    loadNavLinks().then(renderNavLinks);
+                }).subscribe();
         }
+
+        // ===== NAV LINKS (dynamic) =====
+        let navLinks = [];
+        let navContextTarget = null;
+
+        async function loadNavLinks() {
+            const { data, error } = await sb
+                .from('nav_links')
+                .select('*')
+                .or('owner_id.eq.' + currentUser.id + ',owner_id.is.null')
+                .order('sort_order', { ascending: true });
+            if (!error && data) navLinks = data;
+        }
+
+        function renderNavLinks() {
+            const nav = document.getElementById('pillNav');
+            const tasksLink = nav.querySelector('a');
+            nav.innerHTML = '';
+            nav.appendChild(tasksLink);
+
+            navLinks.forEach(link => {
+                const a = document.createElement('a');
+                a.href = link.url;
+                a.textContent = link.label;
+                a.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    navContextTarget = link.id;
+                    const menu = document.getElementById('navContextMenu');
+                    menu.style.left = e.clientX + 'px';
+                    menu.style.top = e.clientY + 'px';
+                    menu.classList.add('active');
+                });
+                nav.appendChild(a);
+            });
+
+            const addBtn = document.createElement('button');
+            addBtn.textContent = '+ Link';
+            addBtn.addEventListener('click', () => {
+                const form = document.getElementById('navAddForm');
+                form.classList.toggle('active');
+                if (form.classList.contains('active')) form.querySelector('#navLabelInput').focus();
+            });
+            nav.appendChild(addBtn);
+
+            const form = document.createElement('div');
+            form.className = 'nav-add-form';
+            form.id = 'navAddForm';
+            form.innerHTML = '<input id="navLabelInput" placeholder="Label" />'
+                + '<input id="navUrlInput" placeholder="URL (e.g. page.html)" />'
+                + '<button class="btn-nav-save" onclick="saveNavLink()">Save</button>'
+                + '<button onclick="document.getElementById(\'navAddForm\').classList.remove(\'active\')">Cancel</button>';
+            nav.appendChild(form);
+        }
+
+        async function saveNavLink() {
+            const label = document.getElementById('navLabelInput').value.trim();
+            const url = document.getElementById('navUrlInput').value.trim();
+            if (!label || !url) return;
+            const maxSort = navLinks.length > 0 ? Math.max(...navLinks.map(l => l.sort_order)) : 0;
+            await sb.from('nav_links').insert({
+                owner_id: currentUser.id, label: label, url: url, sort_order: maxSort + 1
+            });
+            document.getElementById('navAddForm').classList.remove('active');
+            await loadNavLinks();
+            renderNavLinks();
+        }
+
+        async function deleteNavLink(id) {
+            await sb.from('nav_links').delete().eq('id', id);
+            await loadNavLinks();
+            renderNavLinks();
+        }
+
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('navContextMenu');
+            if (menu && !menu.contains(e.target)) menu.classList.remove('active');
+        });
+        document.getElementById('navContextDelete')?.addEventListener('click', () => {
+            if (navContextTarget) {
+                deleteNavLink(navContextTarget);
+                navContextTarget = null;
+            }
+            document.getElementById('navContextMenu').classList.remove('active');
+        });
+
         // ===== LOCALSTORAGE FALLBACK =====
         function saveToLocalStorage() {
             try {
@@ -1503,10 +1543,12 @@
             showUserInfo();
             unlockApp();
             await initializeData();
+            await loadNavLinks();
             updateHeaderDate();
             updateStatusBar();
             renderCategoryTabs();
             renderTasks();
+            renderNavLinks();
             subscribeToRealtime();
         }
 
