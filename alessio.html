@@ -86,6 +86,12 @@
     .category-form { display: grid; gap: 1rem; }
     .color-picker-wrapper { display: flex; align-items: center; gap: 1rem; }
     .color-picker-input { width: 50px; height: 50px; border: 2px solid #30363d; border-radius: 4px; cursor: pointer; }
+    .nav-add-form { display: none; align-items: center; gap: 0.5rem; }
+    .nav-add-form.active { display: inline-flex; }
+    .nav-add-form input { padding: 0.4rem 0.6rem; background: #0d1117; border: 1px solid #30363d; border-radius: 20px; color: #e6edf3; font-size: 0.85rem; width: 120px; font-family: inherit; }
+    .nav-add-form input:focus { border-color: #58a6ff; outline: none; }
+    .nav-add-form button { padding: 0.4rem 0.7rem; border-radius: 20px; border: 1px solid #30363d; background: transparent; color: #8b949e; cursor: pointer; font-size: 0.8rem; font-family: inherit; }
+    .nav-add-form .btn-nav-save { border-color: #3fb950; color: #3fb950; }
     .context-menu { display: none; position: fixed; background-color: #161b22; border: 1px solid #30363d; border-radius: 6px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5); z-index: 2000; min-width: 150px; }
     .context-menu.active { display: block; }
     .context-menu-item { padding: 0.75rem 1rem; color: #8b949e; cursor: pointer; transition: all 0.2s; border-bottom: 1px solid #30363d; }
@@ -158,11 +164,14 @@
     </div>
   </header>
 
-  <nav class="pill-nav">
+  <nav class="pill-nav" id="pillNav">
     <a href="#" class="active">Tasks</a>
-    <a href="forge.html">Forge Evolution</a>
-    <a href="azck_tech_roadmap.html">Roadmap</a>
+    <!-- dynamic nav links rendered here -->
   </nav>
+
+  <div class="context-menu" id="navContextMenu">
+    <div class="context-menu-item delete" id="navContextDelete">Delete</div>
+  </div>
 
   <div class="summary-stats">
     <div class="stat-block">
@@ -241,6 +250,7 @@
     <div class="context-menu-item delete" id="contextDelete">Delete</div>
   </div>
 </div>
+
 <script>
 // === SUPABASE CONFIG ===
 const SUPABASE_URL = 'https://twrlvnfszohyrmivdhre.supabase.co';
@@ -326,9 +336,11 @@ function unlockApp() {
 
 // ===== SUPABASE DATA =====
 async function loadFromSupabase() {
+  // Only load this user's categories + shared (owner_id is NULL)
   const { data: cats, error: catErr } = await sb
     .from('categories')
     .select('*')
+    .or('owner_id.eq.' + currentUser.id + ',owner_id.is.null')
     .order('sort_order', { ascending: true });
 
   if (catErr) {
@@ -342,9 +354,12 @@ async function loadFromSupabase() {
     appState.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
   }
 
+  // Only load tasks in visible categories
+  const visibleCatIds = appState.categories.map(c => c.id);
   const { data: tasks, error: taskErr } = await sb
     .from('tasks')
     .select('*')
+    .in('category_id', visibleCatIds)
     .order('created_at', { ascending: false });
 
   if (taskErr) {
@@ -425,7 +440,102 @@ function subscribeToRealtime() {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => {
       loadFromSupabase().then(() => { renderCategoryTabs(); renderTasks(); updateStatusBar(); });
     }).subscribe();
+
+  sb.channel('nav-links-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'nav_links' }, () => {
+      loadNavLinks().then(renderNavLinks);
+    }).subscribe();
 }
+
+// ===== NAV LINKS (dynamic) =====
+let navLinks = [];
+let navContextTarget = null;
+
+async function loadNavLinks() {
+  const { data, error } = await sb
+    .from('nav_links')
+    .select('*')
+    .or('owner_id.eq.' + currentUser.id + ',owner_id.is.null')
+    .order('sort_order', { ascending: true });
+  if (!error && data) navLinks = data;
+}
+
+function renderNavLinks() {
+  const nav = document.getElementById('pillNav');
+  // Keep the Tasks link (first child), remove the rest
+  const tasksLink = nav.querySelector('a');
+  nav.innerHTML = '';
+  nav.appendChild(tasksLink);
+
+  navLinks.forEach(link => {
+    const a = document.createElement('a');
+    a.href = link.url;
+    a.textContent = link.label;
+    a.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      navContextTarget = link.id;
+      const menu = document.getElementById('navContextMenu');
+      menu.style.left = e.clientX + 'px';
+      menu.style.top = e.clientY + 'px';
+      menu.classList.add('active');
+    });
+    nav.appendChild(a);
+  });
+
+  // "+ Link" button
+  const addBtn = document.createElement('button');
+  addBtn.textContent = '+ Link';
+  addBtn.addEventListener('click', () => {
+    const form = document.getElementById('navAddForm');
+    form.classList.toggle('active');
+    if (form.classList.contains('active')) {
+      form.querySelector('#navLabelInput').focus();
+    }
+  });
+  nav.appendChild(addBtn);
+
+  // Add form (inline)
+  const form = document.createElement('div');
+  form.className = 'nav-add-form';
+  form.id = 'navAddForm';
+  form.innerHTML = '<input id="navLabelInput" placeholder="Label" />'
+    + '<input id="navUrlInput" placeholder="URL (e.g. page.html)" />'
+    + '<button class="btn-nav-save" onclick="saveNavLink()">Save</button>'
+    + '<button onclick="document.getElementById(\'navAddForm\').classList.remove(\'active\')">Cancel</button>';
+  nav.appendChild(form);
+}
+
+async function saveNavLink() {
+  const label = document.getElementById('navLabelInput').value.trim();
+  const url = document.getElementById('navUrlInput').value.trim();
+  if (!label || !url) return;
+  const maxSort = navLinks.length > 0 ? Math.max(...navLinks.map(l => l.sort_order)) : 0;
+  await sb.from('nav_links').insert({
+    owner_id: currentUser.id, label: label, url: url, sort_order: maxSort + 1
+  });
+  document.getElementById('navAddForm').classList.remove('active');
+  await loadNavLinks();
+  renderNavLinks();
+}
+
+async function deleteNavLink(id) {
+  await sb.from('nav_links').delete().eq('id', id);
+  await loadNavLinks();
+  renderNavLinks();
+}
+
+// Nav context menu handler
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('navContextMenu');
+  if (menu && !menu.contains(e.target)) menu.classList.remove('active');
+});
+document.getElementById('navContextDelete')?.addEventListener('click', () => {
+  if (navContextTarget) {
+    deleteNavLink(navContextTarget);
+    navContextTarget = null;
+  }
+  document.getElementById('navContextMenu').classList.remove('active');
+});
 
 // ===== LOCALSTORAGE FALLBACK =====
 function saveToLocalStorage() {
@@ -895,10 +1005,12 @@ async function bootDashboard(session) {
   showUserInfo();
   unlockApp();
   await initializeData();
+  await loadNavLinks();
   updateHeaderDate();
   updateStatusBar();
   renderCategoryTabs();
   renderTasks();
+  renderNavLinks();
   subscribeToRealtime();
 }
 
