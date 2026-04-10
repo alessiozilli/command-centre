@@ -241,3 +241,739 @@
     <div class="context-menu-item delete" id="contextDelete">Delete</div>
   </div>
 </div>
+<script>
+// === SUPABASE CONFIG ===
+const SUPABASE_URL = 'https://twrlvnfszohyrmivdhre.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3cmx2bmZzem9oeXJtaXZkaHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NjkxMTMsImV4cCI6MjA5MDE0NTExM30.o96DFNbBObst0EAmX51rnRFXzu8oTN1o-HNAxN7MY8A';
+const USE_SUPABASE = true;
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    storageKey: 'sb-twrlvnfszohyrmivdhre-auth-token',
+    lock: async (name, acquireTimeout, fn) => await fn()
+  }
+});
+
+// Current user
+let currentUser = null;
+
+// ===== CONSTANTS & STORAGE =====
+const STORAGE_KEY = 'azck-command-centre';
+const DEFAULT_CATEGORIES = [
+  { id: 1, name: 'Personal', color: '#58a6ff', sortOrder: 1 },
+  { id: 2, name: 'AZ Custom Knives', color: '#990000', sortOrder: 2 },
+  { id: 3, name: 'Quad Fang', color: '#FC4C02', sortOrder: 3 },
+  { id: 4, name: '3D Printing', color: '#bc8cff', sortOrder: 4 },
+  { id: 5, name: 'Family', color: '#3fb950', sortOrder: 5 }
+];
+
+// ===== STATE MANAGEMENT =====
+let appState = {
+  categories: [],
+  tasks: [],
+  activeCategory: null,
+  activeFilter: 'all',
+  editingTaskId: null,
+  lastSynced: null,
+  nextId: 100
+};
+
+// ===== SUPABASE AUTH =====
+async function handleLogout() {
+  await sb.auth.signOut();
+  currentUser = null;
+  appState.categories = [];
+  appState.tasks = [];
+  appState.lastSynced = null;
+  window.location.href = 'index.html';
+}
+
+async function loadUserProfile(userId, email) {
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    let { data, error } = await sb
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (data && !error) return data;
+
+    if (email) {
+      const res = await sb
+        .from('profiles')
+        .select('*')
+        .eq('email', email)
+        .single();
+      if (res.data && !res.error) return res.data;
+    }
+
+    console.warn(`Profile load attempt ${attempt} failed:`, error?.message);
+    if (attempt < 3) await new Promise(r => setTimeout(r, 500 * attempt));
+  }
+  console.error('Profile load failed after 3 attempts');
+  return null;
+}
+
+function showUserInfo() {
+  if (!currentUser) return;
+  document.getElementById('userName').textContent = currentUser.display_name || currentUser.email;
+  document.getElementById('userRole').textContent = currentUser.role || '';
+}
+
+function unlockApp() {
+  // App is visible by default
+}
+
+// ===== SUPABASE DATA =====
+async function loadFromSupabase() {
+  const { data: cats, error: catErr } = await sb
+    .from('categories')
+    .select('*')
+    .order('sort_order', { ascending: true });
+
+  if (catErr) {
+    console.error('Category load error:', catErr);
+  } else if (cats && cats.length > 0) {
+    appState.categories = cats.map(c => ({
+      id: c.id, name: c.name, color: c.color || '#f0883e',
+      sortOrder: c.sort_order, ownerId: c.owner_id
+    }));
+  } else {
+    appState.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+  }
+
+  const { data: tasks, error: taskErr } = await sb
+    .from('tasks')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (taskErr) {
+    console.error('Task load error:', taskErr);
+  } else {
+    appState.tasks = (tasks || []).map(t => ({
+      id: t.id, categoryId: t.category_id, title: t.title,
+      notes: t.notes || '', priority: t.priority || 'medium',
+      status: t.status || 'open', dueDate: t.due_date,
+      createdAt: t.created_at, completedAt: t.completed_at,
+      ownerId: t.owner_id, sortOrder: t.sort_order
+    }));
+  }
+
+  appState.lastSynced = new Date().toISOString();
+  saveToLocalStorage();
+
+  if (appState.categories.length > 0 && !appState.activeCategory) {
+    appState.activeCategory = appState.categories[0].id;
+  }
+}
+
+async function saveTaskToSupabase(task) {
+  const payload = {
+    category_id: task.categoryId, owner_id: currentUser?.id || null,
+    title: task.title || 'Untitled Task', notes: task.notes || null,
+    priority: task.priority || 'medium', status: task.status || 'open',
+    due_date: task.dueDate || null, sort_order: task.sortOrder || 0,
+    completed_at: task.completedAt || null
+  };
+
+  if (task._isNew) {
+    const { data, error } = await sb.from('tasks').insert(payload).select().single();
+    if (error) { console.error('Task insert error:', error); return null; }
+    return data;
+  } else {
+    const { data, error } = await sb.from('tasks').update(payload).eq('id', task.id).select().single();
+    if (error) { console.error('Task update error:', error); return null; }
+    return data;
+  }
+}
+
+async function deleteTaskFromSupabase(taskId) {
+  const { error } = await sb.from('tasks').delete().eq('id', taskId);
+  if (error) console.error('Task delete error:', error);
+}
+
+async function saveCategoryToSupabase(cat) {
+  const payload = {
+    name: cat.name, color: cat.color || '#f0883e',
+    sort_order: cat.sortOrder || 0, owner_id: currentUser?.id || null
+  };
+
+  if (cat._isNew) {
+    const { data, error } = await sb.from('categories').insert(payload).select().single();
+    if (error) { console.error('Category insert error:', error); return null; }
+    return data;
+  } else {
+    const { data, error } = await sb.from('categories').update(payload).eq('id', cat.id).select().single();
+    if (error) console.error('Category update error:', error);
+    return data;
+  }
+}
+
+async function deleteCategoryFromSupabase(catId) {
+  const { error } = await sb.from('categories').delete().eq('id', catId);
+  if (error) console.error('Category delete error:', error);
+}
+
+// ===== REALTIME SUBSCRIPTIONS =====
+function subscribeToRealtime() {
+  sb.channel('tasks-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => {
+      loadFromSupabase().then(() => { updateStatusBar(); renderCategoryTabs(); renderTasks(); });
+    }).subscribe();
+
+  sb.channel('categories-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => {
+      loadFromSupabase().then(() => { renderCategoryTabs(); renderTasks(); updateStatusBar(); });
+    }).subscribe();
+}
+
+// ===== LOCALSTORAGE FALLBACK =====
+function saveToLocalStorage() {
+  const data = { categories: appState.categories, tasks: appState.tasks,
+    lastSynced: appState.lastSynced, nextId: appState.nextId };
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+}
+
+function loadFromLocalStorage() {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const data = JSON.parse(stored);
+      appState.categories = data.categories || DEFAULT_CATEGORIES;
+      appState.tasks = data.tasks || [];
+      appState.lastSynced = data.lastSynced || null;
+      appState.nextId = data.nextId || 100;
+    } else {
+      appState.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+      appState.tasks = [];
+      appState.nextId = 100;
+    }
+  } catch(e) {
+    appState.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+    appState.tasks = [];
+  }
+  if (appState.categories.length > 0) {
+    appState.activeCategory = appState.categories[0].id;
+  }
+}
+
+async function initializeData() {
+  if (USE_SUPABASE && currentUser) {
+    await loadFromSupabase();
+  } else {
+    loadFromLocalStorage();
+  }
+  if (appState.categories.length > 0 && !appState.activeCategory) {
+    appState.activeCategory = appState.categories[0].id;
+  }
+}
+
+function saveData() {
+  appState.lastSynced = new Date().toISOString();
+  saveToLocalStorage();
+  updateSyncDisplay();
+}
+
+// ===== HELPERS =====
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// ===== RENDER FUNCTIONS =====
+function updateHeaderDate() {
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('en-US', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  });
+  document.getElementById('headerDate').textContent = dateStr;
+}
+
+function updateStatusBar() {
+  const openTasks = appState.tasks.filter(t => t.status === 'open').length;
+  const doneTasks = appState.tasks.filter(t => t.status === 'done').length;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayTasks = appState.tasks.filter(t => {
+    if (!t.dueDate) return false;
+    const dueDate = new Date(t.dueDate);
+    dueDate.setHours(0, 0, 0, 0);
+    return dueDate.getTime() === today.getTime();
+  }).length;
+
+  document.getElementById('statusOpen').textContent = openTasks;
+  document.getElementById('statusToday').textContent = todayTasks;
+  document.getElementById('statusDone').textContent = doneTasks;
+
+  updateSyncDisplay();
+  updateSummaryStats();
+}
+
+function updateSyncDisplay() {
+  if (!appState.lastSynced) {
+    document.getElementById('statusSynced').textContent = '—';
+    document.getElementById('statLastUpdated').textContent = 'Never';
+  } else {
+    const now = new Date();
+    const synced = new Date(appState.lastSynced);
+    const diffMinutes = Math.floor((now - synced) / 60000);
+
+    let timeStr = 'just now';
+    if (diffMinutes > 0 && diffMinutes < 60) {
+      timeStr = `${diffMinutes}m ago`;
+    } else if (diffMinutes >= 60) {
+      const diffHours = Math.floor(diffMinutes / 60);
+      timeStr = `${diffHours}h ago`;
+    }
+
+    document.getElementById('statusSynced').textContent = timeStr;
+    document.getElementById('statLastUpdated').textContent = timeStr;
+  }
+}
+
+function updateSummaryStats() {
+  const openTasks = appState.tasks.filter(t => t.status === 'open').length;
+  const doneTasks = appState.tasks.filter(t => t.status === 'done').length;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const nextWeek = new Date(today);
+  nextWeek.setDate(nextWeek.getDate() + 7);
+
+  const dueThisWeek = appState.tasks.filter(t => {
+    if (!t.dueDate || t.status === 'done') return false;
+    const dueDate = new Date(t.dueDate);
+    dueDate.setHours(0, 0, 0, 0);
+    return dueDate >= today && dueDate < nextWeek;
+  }).length;
+
+  document.getElementById('statTotalOpen').textContent = openTasks;
+  document.getElementById('statDueWeek').textContent = dueThisWeek;
+  document.getElementById('statCompleted').textContent = doneTasks;
+}
+
+function renderCategoryTabs() {
+  const container = document.getElementById('categoryTabs');
+  container.innerHTML = '';
+
+  appState.categories.forEach(cat => {
+    const button = document.createElement('button');
+    button.className = `category-tab ${cat.id === appState.activeCategory ? 'active' : ''}`;
+    button.dataset.categoryId = cat.id;
+
+    const count = appState.tasks.filter(t => t.categoryId === cat.id).length;
+    button.innerHTML = `${cat.name} <span class="category-count">(${count})</span>`;
+
+    button.addEventListener('click', () => {
+      appState.activeCategory = cat.id;
+      appState.activeFilter = 'all';
+      renderCategoryTabs();
+      renderTasks();
+      updateFilterButtons();
+    });
+
+    button.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      showCategoryContextMenu(e, cat.id);
+    });
+
+    container.appendChild(button);
+  });
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'btn-add-category';
+  addBtn.textContent = '+ Category';
+  addBtn.addEventListener('click', showAddCategoryModal);
+  container.appendChild(addBtn);
+}
+
+function renderTasks() {
+  const container = document.getElementById('taskList');
+  const emptyState = document.getElementById('emptyState');
+  container.innerHTML = '';
+
+  let filteredTasks = appState.tasks.filter(t => t.categoryId === appState.activeCategory);
+
+  if (appState.activeFilter === 'open') {
+    filteredTasks = filteredTasks.filter(t => t.status === 'open');
+  } else if (appState.activeFilter === 'high') {
+    filteredTasks = filteredTasks.filter(t => t.priority === 'high' && t.status === 'open');
+  } else if (appState.activeFilter === 'done') {
+    filteredTasks = filteredTasks.filter(t => t.status === 'done');
+  }
+
+  if (filteredTasks.length === 0) {
+    emptyState.style.display = 'block';
+    return;
+  }
+
+  emptyState.style.display = 'none';
+
+  filteredTasks.forEach(task => {
+    const row = document.createElement('div');
+    row.className = `task-row ${task.status === 'done' ? 'done' : ''}`;
+    row.dataset.taskId = task.id;
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'task-checkbox';
+    checkbox.checked = task.status === 'done';
+    checkbox.addEventListener('change', async () => {
+      task.status = checkbox.checked ? 'done' : 'open';
+      task.completedAt = checkbox.checked ? new Date().toISOString() : null;
+      if (USE_SUPABASE && currentUser) { await saveTaskToSupabase(task); }
+      saveData();
+      updateStatusBar();
+      renderTasks();
+    });
+
+    const content = document.createElement('div');
+    content.className = 'task-content';
+
+    const title = document.createElement('div');
+    title.className = 'task-title';
+    title.textContent = task.title;
+
+    content.appendChild(title);
+    if (task.notes) {
+      const notes = document.createElement('div');
+      notes.className = 'task-notes';
+      notes.textContent = task.notes;
+      content.appendChild(notes);
+    }
+
+    const meta = document.createElement('div');
+    meta.className = 'task-meta';
+
+    const priorityBadge = document.createElement('span');
+    priorityBadge.className = `priority-badge ${task.priority}`;
+    priorityBadge.textContent = task.priority.charAt(0).toUpperCase() + task.priority.slice(1);
+    meta.appendChild(priorityBadge);
+
+    if (task.dueDate) {
+      const dateSpan = document.createElement('span');
+      dateSpan.className = 'task-date';
+      dateSpan.textContent = formatDate(task.dueDate);
+      meta.appendChild(dateSpan);
+    }
+
+    const actions = document.createElement('div');
+    actions.className = 'task-actions';
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn-task-action';
+    editBtn.textContent = 'Edit';
+    editBtn.addEventListener('click', () => showEditForm(task.id));
+    actions.appendChild(editBtn);
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn-task-action delete';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.addEventListener('click', () => confirmDelete(task.id));
+    actions.appendChild(deleteBtn);
+
+    row.appendChild(checkbox);
+    row.appendChild(content);
+    row.appendChild(meta);
+    row.appendChild(actions);
+    container.appendChild(row);
+
+    if (appState.editingTaskId === task.id) {
+      const editForm = createEditForm(task);
+      const formRow = document.createElement('div');
+      formRow.className = 'task-row';
+      formRow.appendChild(editForm);
+      container.appendChild(formRow);
+    }
+  });
+}
+
+function createEditForm(task) {
+  const form = document.createElement('div');
+  form.className = 'task-edit-form';
+
+  const titleGroup = document.createElement('div');
+  titleGroup.className = 'form-group';
+  titleGroup.innerHTML = '<label for="editTitle">Task Title</label>';
+  const titleInput = document.createElement('input');
+  titleInput.type = 'text'; titleInput.id = 'editTitle'; titleInput.value = task.title;
+  titleGroup.appendChild(titleInput);
+  form.appendChild(titleGroup);
+
+  const notesGroup = document.createElement('div');
+  notesGroup.className = 'form-group';
+  notesGroup.innerHTML = '<label for="editNotes">Notes</label>';
+  const notesInput = document.createElement('textarea');
+  notesInput.id = 'editNotes'; notesInput.value = task.notes || '';
+  notesGroup.appendChild(notesInput);
+  form.appendChild(notesGroup);
+
+  const priorityGroup = document.createElement('div');
+  priorityGroup.className = 'form-group';
+  priorityGroup.innerHTML = '<label for="editPriority">Priority</label>';
+  const prioritySelect = document.createElement('select');
+  prioritySelect.id = 'editPriority';
+  ['low', 'medium', 'high'].forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p; opt.textContent = p.charAt(0).toUpperCase() + p.slice(1);
+    opt.selected = p === task.priority;
+    prioritySelect.appendChild(opt);
+  });
+  priorityGroup.appendChild(prioritySelect);
+  form.appendChild(priorityGroup);
+
+  const dueDateGroup = document.createElement('div');
+  dueDateGroup.className = 'form-group';
+  dueDateGroup.innerHTML = '<label for="editDueDate">Due Date (optional)</label>';
+  const dueDateInput = document.createElement('input');
+  dueDateInput.type = 'date'; dueDateInput.id = 'editDueDate'; dueDateInput.value = task.dueDate || '';
+  dueDateGroup.appendChild(dueDateInput);
+  form.appendChild(dueDateGroup);
+
+  const buttonGroup = document.createElement('div');
+  buttonGroup.className = 'form-buttons';
+
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'btn-save'; saveBtn.type = 'button'; saveBtn.textContent = 'Save';
+  saveBtn.addEventListener('click', async () => {
+    task.title = titleInput.value || 'Untitled Task';
+    task.notes = notesInput.value;
+    task.priority = prioritySelect.value;
+    task.dueDate = dueDateInput.value || null;
+    appState.editingTaskId = null;
+
+    if (USE_SUPABASE && currentUser) {
+      const saved = await saveTaskToSupabase(task);
+      if (saved && task._isNew) {
+        const idx = appState.tasks.findIndex(t => t.id === task.id);
+        if (idx >= 0) { appState.tasks[idx].id = saved.id; appState.tasks[idx]._isNew = false; }
+      }
+    }
+
+    saveData(); updateStatusBar(); renderTasks();
+  });
+  buttonGroup.appendChild(saveBtn);
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'btn-cancel'; cancelBtn.type = 'button'; cancelBtn.textContent = 'Cancel';
+  cancelBtn.addEventListener('click', () => { appState.editingTaskId = null; renderTasks(); });
+  buttonGroup.appendChild(cancelBtn);
+
+  form.appendChild(buttonGroup);
+  return form;
+}
+
+function showEditForm(taskId) { appState.editingTaskId = taskId; renderTasks(); }
+
+function confirmDelete(taskId) {
+  const task = appState.tasks.find(t => t.id === taskId);
+  if (!task) return;
+  showConfirmModal('Delete Task',
+    `Are you sure you want to delete "${task.title}"? This cannot be undone.`,
+    async () => {
+      if (USE_SUPABASE && currentUser) { await deleteTaskFromSupabase(taskId); }
+      appState.tasks = appState.tasks.filter(t => t.id !== taskId);
+      saveData(); updateStatusBar(); renderTasks();
+    }
+  );
+}
+
+// ===== MODAL & FORM HANDLERS =====
+function showConfirmModal(title, message, onConfirm) {
+  const modal = document.getElementById('confirmModal');
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMessage').textContent = message;
+  document.getElementById('btnConfirmCancel').onclick = () => { modal.classList.remove('active'); };
+  document.getElementById('btnConfirmOK').onclick = () => { modal.classList.remove('active'); onConfirm(); };
+  modal.classList.add('active');
+}
+
+function showAddCategoryModal() {
+  const modal = document.getElementById('categoryModal');
+  document.getElementById('categoryModalTitle').textContent = 'Add Category';
+  document.getElementById('categoryName').value = '';
+  document.getElementById('categoryColor').value = '#58a6ff';
+  document.getElementById('colorValue').textContent = '#58a6ff';
+
+  const form = document.getElementById('categoryForm');
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('categoryName').value.trim();
+    const color = document.getElementById('categoryColor').value;
+    if (!name) return;
+
+    const newCategory = { name, color, sortOrder: appState.categories.length + 1, _isNew: true };
+
+    if (USE_SUPABASE && currentUser) {
+      const saved = await saveCategoryToSupabase(newCategory);
+      if (saved) {
+        appState.categories.push({
+          id: saved.id, name: saved.name, color: saved.color,
+          sortOrder: saved.sort_order, ownerId: saved.owner_id
+        });
+      }
+    } else {
+      newCategory.id = appState.nextId++;
+      appState.categories.push(newCategory);
+    }
+
+    saveData(); renderCategoryTabs(); modal.classList.remove('active');
+  };
+
+  document.getElementById('btnCategoryCancel').onclick = () => { modal.classList.remove('active'); };
+  document.getElementById('categoryColor').addEventListener('input', (e) => {
+    document.getElementById('colorValue').textContent = e.target.value;
+  });
+
+  modal.classList.add('active');
+  document.getElementById('categoryName').focus();
+}
+
+function showCategoryContextMenu(e, categoryId) {
+  const menu = document.getElementById('contextMenu');
+  menu.style.left = e.clientX + 'px';
+  menu.style.top = e.clientY + 'px';
+  menu.classList.add('active');
+
+  const category = appState.categories.find(c => c.id === categoryId);
+  if (!category) return;
+
+  document.getElementById('contextRename').onclick = async () => {
+    menu.classList.remove('active');
+    const newName = prompt('Rename category:', category.name);
+    if (newName && newName.trim()) {
+      category.name = newName.trim();
+      if (USE_SUPABASE && currentUser) { await saveCategoryToSupabase(category); }
+      saveData(); renderCategoryTabs();
+    }
+  };
+
+  document.getElementById('contextDelete').onclick = () => {
+    menu.classList.remove('active');
+    showConfirmModal('Delete Category',
+      `Delete "${category.name}"? All tasks in this category will be deleted.`,
+      async () => {
+        if (USE_SUPABASE && currentUser) { await deleteCategoryFromSupabase(categoryId); }
+        appState.categories = appState.categories.filter(c => c.id !== categoryId);
+        appState.tasks = appState.tasks.filter(t => t.categoryId !== categoryId);
+        if (appState.activeCategory === categoryId) {
+          appState.activeCategory = appState.categories[0]?.id || null;
+        }
+        saveData(); updateStatusBar(); renderCategoryTabs(); renderTasks();
+      }
+    );
+  };
+
+  document.addEventListener('click', (e) => {
+    if (e.target !== menu && !menu.contains(e.target)) { menu.classList.remove('active'); }
+  }, { once: true });
+}
+
+function updateFilterButtons() {
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    const filter = btn.dataset.filter;
+    btn.classList.toggle('active', filter === appState.activeFilter);
+  });
+}
+
+// ===== AUTH-GUARDED BOOT =====
+let authResolved = false;
+
+async function bootDashboard(session) {
+  if (authResolved) return;
+  authResolved = true;
+
+  const profile = await loadUserProfile(session.user.id, session.user.email);
+  currentUser = {
+    id: session.user.id,
+    email: session.user.email,
+    display_name: profile?.display_name || session.user.email.split('@')[0],
+    role: profile?.role || 'viewer'
+  };
+  showUserInfo();
+  unlockApp();
+  await initializeData();
+  updateHeaderDate();
+  updateStatusBar();
+  renderCategoryTabs();
+  renderTasks();
+  subscribeToRealtime();
+}
+
+// ===== EVENT LISTENERS =====
+document.addEventListener('DOMContentLoaded', async () => {
+  updateHeaderDate();
+
+  // FIX: Don't redirect on first null session — Supabase needs time to restore from localStorage
+  // Don't use await inside onAuthStateChange (can deadlock with Supabase internal locks)
+  sb.auth.onAuthStateChange((event, session) => {
+    if (session?.user) {
+      bootDashboard(session);  // no await — prevents deadlock
+    } else if (event === 'SIGNED_OUT') {
+      window.location.href = 'index.html';
+    }
+    // INITIAL_SESSION with null session = not logged in yet, but don't redirect immediately
+  });
+
+  // Actively check for existing session (belt-and-suspenders with onAuthStateChange)
+  const { data: { session: existingSession } } = await sb.auth.getSession();
+  if (existingSession?.user) {
+    bootDashboard(existingSession);
+  } else {
+    // No session found yet — give Supabase 2 seconds to restore, then redirect if still nothing
+    setTimeout(async () => {
+      if (authResolved) return;
+      const { data: { session: retrySession } } = await sb.auth.getSession();
+      if (retrySession?.user) {
+        bootDashboard(retrySession);
+      } else {
+        window.location.href = 'index.html';
+      }
+    }, 2000);
+  }
+
+  // Filter buttons
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      appState.activeFilter = btn.dataset.filter;
+      updateFilterButtons();
+      renderTasks();
+    });
+  });
+
+  // Add task button
+  document.getElementById('btnAddTask').addEventListener('click', () => {
+    const tempId = 'temp-' + Date.now();
+    const newTask = {
+      id: tempId, categoryId: appState.activeCategory,
+      title: '', notes: '', priority: 'medium', status: 'open',
+      dueDate: null, createdAt: new Date().toISOString(),
+      completedAt: null, _isNew: true
+    };
+    appState.tasks.push(newTask);
+    appState.editingTaskId = tempId;
+    saveData(); renderTasks(); updateStatusBar();
+  });
+
+  // Update sync display periodically
+  setInterval(updateSyncDisplay, 60000);
+});
+
+// Close modals on outside click
+document.getElementById('confirmModal').addEventListener('click', (e) => {
+  if (e.target.id === 'confirmModal') { e.target.classList.remove('active'); }
+});
+
+document.getElementById('categoryModal').addEventListener('click', (e) => {
+  if (e.target.id === 'categoryModal') { e.target.classList.remove('active'); }
+});
+
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('contextMenu');
+  if (!menu.contains(e.target)) { menu.classList.remove('active'); }
+});
+</script>
+</body>
+</html>
