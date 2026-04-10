@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reanna's Roadmap — AZCK Operations & Growth</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0d1117;
+    color: #e6edf3;
+    padding: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+  h1 { font-size: 32px; font-weight: 700; color: #f0883e; margin-bottom: 4px; }
+  h2 { font-size: 22px; font-weight: 700; margin: 40px 0 16px; }
+  h3 { font-size: 17px; font-weight: 600; color: #e6edf3; margin: 20px 0 10px; }
+  .subtitle { font-size: 14px; color: #8b949e; margin-bottom: 32px; }
+  p { margin-bottom: 14px; color: #c9d1d9; font-size: 15px; }
+  .hl { color: #f0883e; font-weight: 600; }
+  .hl-green { color: #3fb950; font-weight: 600; }
+  .hl-blue { color: #58a6ff; font-weight: 600; }
+  .hl-red { color: #990000; font-weight: 600; }
+  .card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .phase-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .phase-badge {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+  .badge-now { background: #3fb95022; color: #3fb950; border: 1px solid #3fb95044; }
+  .badge-next { background: #f0883e22; color: #f0883e; border: 1px solid #f0883e44; }
+  .badge-later { background: #58a6ff22; color: #58a6ff; border: 1px solid #58a6ff44; }
+  .badge-future { background: #bc8cff22; color: #bc8cff; border: 1px solid #bc8cff44; }
+  .badge-done { background: #3fb95022; color: #3fb950; border: 1px solid #3fb95044; }
+  .project-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .project {
+    background: #21262d;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 20px;
+    border-top: 3px solid #30363d;
+  }
+  .project.active { border-top-color: #3fb950; }
+  .project.next { border-top-color: #f0883e; }
+  .project.later { border-top-color: #58a6ff; }
+  .project h4 { font-size: 15px; font-weight: 700; margin-bottom: 8px; color: #e6edf3; }
+  .project p { font-size: 13px; margin-bottom: 8px; }
+  .project .meta { font-size: 12px; color: #8b949e; }
+  .project .meta span { margin-right: 12px; }
+  .tag {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    margin: 2px 4px 2px 0;
+  }
+  .tag-grants { background: #f0883e15; color: #f0883e; border: 1px solid #f0883e33; }
+  .tag-social { background: #bc8cff15; color: #bc8cff; border: 1px solid #bc8cff33; }
+  .tag-office { background: #58a6ff15; color: #58a6ff; border: 1px solid #58a6ff33; }
+  .tag-family { background: #3fb95015; color: #3fb950; border: 1px solid #3fb95033; }
+  .tag-admin { background: #99000015; color: #ff6b6b; border: 1px solid #99000033; }
+  .tag-done { background: #3fb95015; color: #3fb950; border: 1px solid #3fb95033; }
+  .existing-callout {
+    background: #161b22;
+    border: 2px solid #3fb95033;
+    border-radius: 12px;
+    padding: 24px;
+    margin: 24px 0;
+  }
+  .existing-callout h3 { color: #3fb950; margin-top: 0; }
+  .quote {
+    background: #161b22;
+    border-left: 4px solid #f0883e;
+    padding: 16px 24px;
+    margin: 24px 0;
+    border-radius: 0 8px 8px 0;
+    font-style: italic;
+    color: #c9d1d9;
+    font-size: 15px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 13px;
+  }
+  th {
+    background: #21262d;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    color: #8b949e;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #21262d;
+    color: #c9d1d9;
+  }
+  table tr:hover td { background: #161b22; }
+  .step-list {
+    list-style: none;
+    counter-reset: step;
+    margin: 12px 0;
+  }
+  .step-list li {
+    counter-increment: step;
+    padding: 10px 0 10px 40px;
+    position: relative;
+    font-size: 14px;
+    color: #c9d1d9;
+    border-bottom: 1px solid #21262d;
+  }
+  .step-list li:last-child { border-bottom: none; }
+  .step-list li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 10px;
+    width: 28px;
+    height: 28px;
+    background: #21262d;
+    border: 1px solid #30363d;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 28px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #8b949e;
+  }
+  .step-list li.done::before { background: #3fb95022; border-color: #3fb95044; color: #3fb950; }
+  .step-list li.active::before { background: #f0883e22; border-color: #f0883e44; color: #f0883e; }
+  .divider {
+    border: none;
+    border-top: 1px solid #30363d;
+    margin: 40px 0;
+  }
+  .timeline {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 24px 0;
+  }
+  .timeline-item {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+    border-top: 3px solid #30363d;
+  }
+  .timeline-item.t-now { border-top-color: #3fb950; }
+  .timeline-item.t-next { border-top-color: #f0883e; }
+  .timeline-item.t-later { border-top-color: #58a6ff; }
+  .timeline-item.t-future { border-top-color: #bc8cff; }
+  .timeline-item h4 { font-size: 14px; margin-bottom: 4px; }
+  .timeline-item p { font-size: 12px; color: #8b949e; margin: 0; }
+  .back-link {
+    display: inline-block;
+    margin-bottom: 20px;
+    color: #f0883e;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .back-link:hover { text-decoration: underline; }
+  .revenue-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+    margin: 16px 0;
+  }
+  .revenue-card {
+    background: #21262d;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+  }
+  .revenue-card .amount { font-size: 24px; font-weight: 700; color: #3fb950; }
+  .revenue-card .source { font-size: 13px; color: #c9d1d9; margin-top: 4px; }
+  .revenue-card .how { font-size: 11px; color: #8b949e; margin-top: 6px; }
+  @media (max-width: 768px) {
+    .timeline { grid-template-columns: 1fr 1fr; }
+    .project-grid { grid-template-columns: 1fr; }
+    .revenue-grid { grid-template-columns: 1fr; }
+    body { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<a href="reanna.html" class="back-link">← Back to Command Centre</a>
+
+<h1>Reanna's Roadmap</h1>
+<div class="subtitle">Operations, Grants & Growth — Strategic plan for AZCK Ltd. | April 2026</div>
+
+<!-- BIG PICTURE -->
+<div class="card">
+  <h2 style="margin-top:0;">The Big Picture</h2>
+  <p>Reanna runs the operational backbone of AZCK — grants, communications, social media, office logistics, and client relations. While Alessio builds knives and tech, Reanna makes sure the business side is funded, organized, and growing.</p>
+  <p>The grant pipeline alone could bring in <span class="hl">$50K–$200K+</span> in funding. Social media and client communications drive the customer relationships that keep orders flowing. This roadmap organizes it all into clear phases.</p>
+</div>
+
+<div class="quote">"Alessio makes the blades. Reanna makes the business run."</div>
+
+<!-- WHAT'S ALREADY IN MOTION -->
+<div class="existing-callout">
+  <h3>What's Already In Motion</h3>
+  <p>These are active and tracked in the Command Centre.</p>
+  <div class="project-grid">
+    <div class="project active">
+      <h4>Grant Pipeline</h4>
+      <p>20 programs tracked — SR&ED, IRAP, Alberta Innovates, AWE, CDAP, and more. Active applications and research underway.</p>
+      <div class="meta"><span class="tag tag-grants">Grants</span> <span>20 programs</span></div>
+    </div>
+    <div class="project active">
+      <h4>Office & Orders</h4>
+      <p>Shipping logistics, supply runs, returns — keeping the shop stocked and orders moving.</p>
+      <div class="meta"><span class="tag tag-office">Office</span> <span>Ongoing</span></div>
+    </div>
+    <div class="project active">
+      <h4>AZCK Admin</h4>
+      <p>QuadFang paperwork review, GPRTA onboarding, prospect calls, Google Drive organization.</p>
+      <div class="meta"><span class="tag tag-admin">Admin</span> <span>6 active tasks</span></div>
+    </div>
+    <div class="project active">
+      <h4>Baby & Family</h4>
+      <p>PR application, daily check-ins with Alessio, weekly reviews — balancing family and business.</p>
+      <div class="meta"><span class="tag tag-family">Family</span> <span>3 active tasks</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- TIMELINE -->
+<h2>The Four Phases</h2>
+<div class="timeline">
+  <div class="timeline-item t-now">
+    <h4>Phase 1</h4>
+    <p><strong>Grants & Foundation</strong></p>
+    <p>April 2026 (NOW)</p>
+  </div>
+  <div class="timeline-item t-next">
+    <h4>Phase 2</h4>
+    <p><strong>Communications</strong></p>
+    <p>May–Jun 2026</p>
+  </div>
+  <div class="timeline-item t-later">
+    <h4>Phase 3</h4>
+    <p><strong>Social & Marketing</strong></p>
+    <p>Jul–Sep 2026</p>
+  </div>
+  <div class="timeline-item t-future">
+    <h4>Phase 4</h4>
+    <p><strong>Scale & Automate</strong></p>
+    <p>Q4 2026+</p>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- PHASE 1 -->
+<div class="phase-header">
+  <h2 style="margin:0;">Phase 1 — Grants & Foundation</h2>
+  <span class="phase-badge badge-now">NOW</span>
+</div>
+<p>Secure funding that pays for the tech roadmap and business growth. Several applications are already in progress.</p>
+
+<div class="card">
+  <h3>1A. Priority Grant Applications</h3>
+  <p>These are the highest-value, most accessible grants. Focus here first.</p>
+  <table>
+    <tr><th>Program</th><th>Max $</th><th>Status</th><th>Action</th></tr>
+    <tr><td><span class="hl">SR&ED Tax Credit</span></td><td>35–64% refund</td><td>In progress</td><td>Contact consultant, gather R&D receipts, fill activity log</td></tr>
+    <tr><td><span class="hl">NRC IRAP</span></td><td>$75K–$200K</td><td>In progress</td><td>Read prep guide, call 1-877-994-4727</td></tr>
+    <tr><td><span class="hl-blue">Alberta Innovates Micro-Voucher</span></td><td>$10K</td><td>Ready to apply</td><td>Email intake@albertainnovates.ca</td></tr>
+    <tr><td><span class="hl-blue">Alberta Innovates Voucher</span></td><td>$100K</td><td>Ready to apply</td><td>Ask in same email</td></tr>
+    <tr><td><span class="hl-blue">CDAP</span></td><td>$15K</td><td>Ready to apply</td><td>Apply at canada.ca/cdap</td></tr>
+  </table>
+</div>
+
+<div class="card">
+  <h3>1B. Women-Led Business Grants</h3>
+  <p>AZCK qualifies for several women-focused funding programs.</p>
+  <table>
+    <tr><th>Program</th><th>Max $</th><th>Action</th></tr>
+    <tr><td>AWE BRIDGE Grant + Loan</td><td>$5K grant + $150K loan</td><td>Contact awebusiness.com</td></tr>
+    <tr><td>Women Entrepreneurship Loan Fund</td><td>$50K</td><td>Find AB lender</td></tr>
+    <tr><td>WES Fund</td><td>$100K</td><td>Check ISED for intake windows</td></tr>
+  </table>
+</div>
+
+<div class="card">
+  <h3>1C. Local & Secondary Programs</h3>
+  <table>
+    <tr><th>Program</th><th>Max $</th><th>Action</th></tr>
+    <tr><td>Community Futures GP</td><td>$150K loan + coaching</td><td>Call (780) 814-5340</td></tr>
+    <tr><td>County of GP Infrastructure Grant</td><td>Varies</td><td>Check tech incentives</td></tr>
+    <tr><td>GPRIN Innovation Network</td><td>Free</td><td>Sign up — connects to IRAP</td></tr>
+    <tr><td>ATB Entrepreneur Centre GP</td><td>Free coaching</td><td>Visit in person</td></tr>
+    <tr><td>Canada-Alberta Job Grant</td><td>$10K/trainee</td><td>Apply for employee training</td></tr>
+    <tr><td>Futurpreneur</td><td>$60K loan</td><td>Check eligibility</td></tr>
+    <tr><td>AMPG</td><td>$30K (50% match)</td><td>Check alberta.ca for intake</td></tr>
+  </table>
+</div>
+
+<div class="card">
+  <h3>1D. Office & Admin Foundation</h3>
+  <p>Get the operational base solid so Phases 2–4 run smoothly.</p>
+  <ul class="step-list">
+    <li class="active">Complete GPRTA onboarding package</li>
+    <li class="active">Review QuadFang paperwork from Alessio</li>
+    <li>Organize Google Drive — sync check, folder structure</li>
+    <li>Set up shipping workflows — Click Ship pricing confirmed</li>
+    <li>Establish weekly review rhythm with Alessio (Sunday/Monday)</li>
+  </ul>
+</div>
+
+<hr class="divider">
+
+<!-- PHASE 2 -->
+<div class="phase-header">
+  <h2 style="margin:0;">Phase 2 — Communications</h2>
+  <span class="phase-badge badge-next">May–Jun</span>
+</div>
+<p>Build the client communication systems. Reanna handles all customer-facing messaging.</p>
+
+<div class="project-grid">
+  <div class="project next">
+    <h4>Client Email Templates</h4>
+    <p>Standardize responses for inquiries, order confirmations, progress updates, pickup notifications, and follow-ups. Use the Correspondence App already built.</p>
+    <div class="meta"><span>Stack:</span> Correspondence App + templates</div>
+  </div>
+  <div class="project next">
+    <h4>After-Hours Program Outreach</h4>
+    <p>Contact prospects for knife-making programs. Build a call/email script. Track responses.</p>
+    <div class="meta"><span>Goal:</span> Fill upcoming sessions</div>
+  </div>
+  <div class="project next">
+    <h4>Sharpening Seminar Bookings</h4>
+    <p>Promote sharpening workshops. Manage registrations and materials prep (containers, supplies).</p>
+    <div class="meta"><span>Goal:</span> Consistent bookings</div>
+  </div>
+  <div class="project next">
+    <h4>Customer Follow-Up System</h4>
+    <p>Track who needs follow-up: quotes pending, orders in progress, post-delivery check-ins. No customer falls through the cracks.</p>
+    <div class="meta"><span>Tool:</span> Command Centre + Supabase</div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- PHASE 3 -->
+<div class="phase-header">
+  <h2 style="margin:0;">Phase 3 — Social Media & Marketing</h2>
+  <span class="phase-badge badge-later">Jul–Sep</span>
+</div>
+<p>Build AZCK's online presence. Showcase Alessio's work, drive traffic, build community.</p>
+
+<div class="project-grid">
+  <div class="project later">
+    <h4>Instagram Strategy</h4>
+    <p>Behind-the-scenes forge content, finished knife reveals, customer stories. Consistent posting schedule.</p>
+    <div class="meta"><span class="tag tag-social">Social</span> <span>Goal: 3x/week</span></div>
+  </div>
+  <div class="project later">
+    <h4>Facebook Page Management</h4>
+    <p>Business page for AZCK — events, workshops, customer reviews, community engagement.</p>
+    <div class="meta"><span class="tag tag-social">Social</span> <span>Goal: 2x/week</span></div>
+  </div>
+  <div class="project later">
+    <h4>QuadFang Social Launch</h4>
+    <p>Coordinate with Alessio on QuadFang social presence — product reveals, hunting community engagement, pre-launch hype.</p>
+    <div class="meta"><span class="tag tag-social">Social</span> <span>Aligned with QF launch Q3–Q4</span></div>
+  </div>
+  <div class="project later">
+    <h4>Email List Building</h4>
+    <p>Collect emails from website, events, workshops. Monthly newsletter with shop updates, new work, upcoming events.</p>
+    <div class="meta"><span>Platform:</span> Mailchimp (free up to 500) or Brevo</div>
+  </div>
+  <div class="project later">
+    <h4>Content Calendar</h4>
+    <p>Plan posts, newsletters, and promotions on a monthly calendar. Coordinate with Alessio's build schedule for content timing.</p>
+    <div class="meta"><span>Tool:</span> Shared Google Sheet or Command Centre</div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- PHASE 4 -->
+<div class="phase-header">
+  <h2 style="margin:0;">Phase 4 — Scale & Automate</h2>
+  <span class="phase-badge badge-future">Q4 2026+</span>
+</div>
+<p>Systems that run themselves. Less manual work, more growth.</p>
+
+<div class="project-grid">
+  <div class="project">
+    <h4>Automated Email Sequences</h4>
+    <p>Auto-send order confirmations, progress updates, pickup notifications, review requests. Set it and forget it.</p>
+    <div class="meta"><span>Stack:</span> Supabase triggers + SendGrid</div>
+  </div>
+  <div class="project">
+    <h4>Grant Tracking Dashboard</h4>
+    <p>Visual dashboard: applications submitted, pending, approved, amounts. See the full pipeline at a glance.</p>
+    <div class="meta"><span>Stack:</span> Command Centre upgrade</div>
+  </div>
+  <div class="project">
+    <h4>Customer Portal Communications</h4>
+    <p>When Alessio's order portal is live, manage the communication layer — auto-updates at each stage, personalized messages.</p>
+    <div class="meta"><span>Depends on:</span> Alessio's Phase 2</div>
+  </div>
+  <div class="project">
+    <h4>Social Media Scheduling</h4>
+    <p>Batch-create content, schedule weeks ahead. Buffer or Later (free tiers) for automated posting.</p>
+    <div class="meta"><span>Goal:</span> 2 hours/week for all platforms</div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- GRANT ALIGNMENT -->
+<h2>Grant–Roadmap Alignment</h2>
+<p>The grants Reanna is applying for directly fund the work on both roadmaps.</p>
+
+<div class="card">
+  <table>
+    <tr><th>Grant</th><th>Max $</th><th>What It Funds</th></tr>
+    <tr><td><span class="hl">SR&ED</span></td><td>35% of R&D</td><td>QuadFang R&D + tech development — covers Alessio's engineering work</td></tr>
+    <tr><td><span class="hl">IRAP</span></td><td>$200K</td><td>75–80% of R&D wages — biggest single opportunity</td></tr>
+    <tr><td><span class="hl-blue">CDAP</span></td><td>$15K</td><td>Digital tools — Supabase, email marketing, course platform</td></tr>
+    <tr><td><span class="hl-blue">AI Micro-Voucher</span></td><td>$10K</td><td>AI tools — Forge/Cowork usage, automation</td></tr>
+    <tr><td><span class="hl-blue">AI Voucher</span></td><td>$100K</td><td>Full AI-powered platform — analytics, automation, workflows</td></tr>
+    <tr><td>AWE BRIDGE</td><td>$5K</td><td>Quick win — women-led business grant</td></tr>
+    <tr><td>County of GP</td><td>$2K/yr</td><td>Infrastructure — covers Supabase Pro annual cost</td></tr>
+  </table>
+  <p style="margin-top:12px;font-size:13px;color:#8b949e;"><strong>Key insight:</strong> Every phase of work generates evidence for grant applications. The operational work and the grant work reinforce each other.</p>
+</div>
+
+<hr class="divider">
+
+<!-- IMMEDIATE ACTIONS -->
+<h2>Immediate Actions — This Week</h2>
+<div class="card">
+  <ul class="step-list">
+    <li class="active">SR&ED — Contact consultant, gather R&D receipts, fill activity log</li>
+    <li class="active">IRAP — Read prep guide, call 1-877-994-4727</li>
+    <li class="active">Alberta Innovates — Email intake@albertainnovates.ca for Micro-Voucher + Voucher</li>
+    <li>Complete GPRTA onboarding package</li>
+    <li>Review QuadFang paperwork from Alessio</li>
+    <li>Buy containers for sharpening workshop</li>
+    <li>Confirm shipping price with Click Ship</li>
+  </ul>
+</div>
+
+<hr class="divider">
+
+<!-- SUMMARY -->
+<h2>Summary</h2>
+<div class="card">
+  <p><span class="hl">Phase 1 (April):</span> Submit priority grant applications — SR&ED, IRAP, Alberta Innovates, CDAP. Solidify office operations. Potential funding: <span class="hl-green">$50K–$300K+</span></p>
+  <p><span class="hl">Phase 2 (May–Jun):</span> Build client communication systems — email templates, prospect outreach, follow-up tracking. Fill workshops and programs.</p>
+  <p><span class="hl">Phase 3 (Jul–Sep):</span> Launch social media presence — Instagram, Facebook, email list. Coordinate QuadFang social launch with Alessio.</p>
+  <p><span class="hl">Phase 4 (Q4+):</span> Automate everything — email sequences, grant tracking dashboard, social scheduling. Less manual work, more growth.</p>
+</div>
+
+<div class="quote">"The grants fund the tech. The tech powers the business. The business earns the revenue. It's a flywheel."</div>
+
+<p style="text-align:center; color:#8b949e; font-size:13px; margin-top:40px;">Reanna's Roadmap v1.0 — April 2026 — Built by Forge for Reanna</p>
+
+</body>
+</html>
