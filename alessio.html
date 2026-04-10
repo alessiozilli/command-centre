@@ -92,6 +92,12 @@
     .nav-add-form input:focus { border-color: #58a6ff; outline: none; }
     .nav-add-form button { padding: 0.4rem 0.7rem; border-radius: 20px; border: 1px solid #30363d; background: transparent; color: #8b949e; cursor: pointer; font-size: 0.8rem; font-family: inherit; }
     .nav-add-form .btn-nav-save { border-color: #3fb950; color: #3fb950; }
+    /* Drag-and-drop */
+    .category-tab[draggable="true"], nav.pill-nav a[draggable="true"] { cursor: grab; }
+    .category-tab[draggable="true"]:active, nav.pill-nav a[draggable="true"]:active { cursor: grabbing; }
+    .category-tab.drag-over { border-color: #58a6ff; border-style: dashed; background-color: rgba(88,166,255,0.1); }
+    nav.pill-nav a.drag-over { border-color: #58a6ff; border-style: dashed; background-color: rgba(88,166,255,0.1); }
+    .category-tab.dragging, nav.pill-nav a.dragging { opacity: 0.4; }
     .context-menu { display: none; position: fixed; background-color: #161b22; border: 1px solid #30363d; border-radius: 6px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5); z-index: 2000; min-width: 150px; }
     .context-menu.active { display: block; }
     .context-menu-item { padding: 0.75rem 1rem; color: #8b949e; cursor: pointer; transition: all 0.2s; border-bottom: 1px solid #30363d; }
@@ -170,6 +176,7 @@
   </nav>
 
   <div class="context-menu" id="navContextMenu">
+    <div class="context-menu-item" id="navContextEdit">Edit</div>
     <div class="context-menu-item delete" id="navContextDelete">Delete</div>
   </div>
 
@@ -247,6 +254,7 @@
 
   <div class="context-menu" id="contextMenu">
     <div class="context-menu-item" id="contextRename">Rename</div>
+    <div class="context-menu-item" id="contextColor">Change Color</div>
     <div class="context-menu-item delete" id="contextDelete">Delete</div>
   </div>
 </div>
@@ -447,9 +455,10 @@ function subscribeToRealtime() {
     }).subscribe();
 }
 
-// ===== NAV LINKS (dynamic) =====
+// ===== NAV LINKS (dynamic, draggable) =====
 let navLinks = [];
 let navContextTarget = null;
+let dragNavIndex = null;
 
 async function loadNavLinks() {
   const { data, error } = await sb
@@ -462,15 +471,16 @@ async function loadNavLinks() {
 
 function renderNavLinks() {
   const nav = document.getElementById('pillNav');
-  // Keep the Tasks link (first child), remove the rest
   const tasksLink = nav.querySelector('a');
   nav.innerHTML = '';
   nav.appendChild(tasksLink);
 
-  navLinks.forEach(link => {
+  navLinks.forEach((link, idx) => {
     const a = document.createElement('a');
     a.href = link.url;
     a.textContent = link.label;
+    a.draggable = true;
+
     a.addEventListener('contextmenu', (e) => {
       e.preventDefault();
       navContextTarget = link.id;
@@ -479,22 +489,47 @@ function renderNavLinks() {
       menu.style.top = e.clientY + 'px';
       menu.classList.add('active');
     });
+
+    // Drag-and-drop
+    a.addEventListener('dragstart', (e) => {
+      dragNavIndex = idx;
+      a.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    a.addEventListener('dragend', () => { a.classList.remove('dragging'); dragNavIndex = null; });
+    a.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      a.classList.add('drag-over');
+    });
+    a.addEventListener('dragleave', () => a.classList.remove('drag-over'));
+    a.addEventListener('drop', (e) => {
+      e.preventDefault();
+      a.classList.remove('drag-over');
+      if (dragNavIndex === null || dragNavIndex === idx) return;
+      const moved = navLinks.splice(dragNavIndex, 1)[0];
+      navLinks.splice(idx, 0, moved);
+      saveNavLinkOrder();
+      renderNavLinks();
+    });
+
     nav.appendChild(a);
   });
 
-  // "+ Link" button
   const addBtn = document.createElement('button');
   addBtn.textContent = '+ Link';
   addBtn.addEventListener('click', () => {
     const form = document.getElementById('navAddForm');
     form.classList.toggle('active');
     if (form.classList.contains('active')) {
+      form.querySelector('#navLabelInput').value = '';
+      form.querySelector('#navUrlInput').value = '';
       form.querySelector('#navLabelInput').focus();
+      delete form.dataset.editId;
     }
   });
   nav.appendChild(addBtn);
 
-  // Add form (inline)
   const form = document.createElement('div');
   form.className = 'nav-add-form';
   form.id = 'navAddForm';
@@ -509,13 +544,28 @@ async function saveNavLink() {
   const label = document.getElementById('navLabelInput').value.trim();
   const url = document.getElementById('navUrlInput').value.trim();
   if (!label || !url) return;
-  const maxSort = navLinks.length > 0 ? Math.max(...navLinks.map(l => l.sort_order)) : 0;
-  await sb.from('nav_links').insert({
-    owner_id: currentUser.id, label: label, url: url, sort_order: maxSort + 1
-  });
-  document.getElementById('navAddForm').classList.remove('active');
+  const form = document.getElementById('navAddForm');
+  const editId = form.dataset.editId;
+
+  if (editId) {
+    await sb.from('nav_links').update({ label: label, url: url }).eq('id', parseInt(editId));
+    delete form.dataset.editId;
+  } else {
+    const maxSort = navLinks.length > 0 ? Math.max(...navLinks.map(l => l.sort_order)) : 0;
+    await sb.from('nav_links').insert({
+      owner_id: currentUser.id, label: label, url: url, sort_order: maxSort + 1
+    });
+  }
+  form.classList.remove('active');
   await loadNavLinks();
   renderNavLinks();
+}
+
+async function saveNavLinkOrder() {
+  for (let i = 0; i < navLinks.length; i++) {
+    navLinks[i].sort_order = i;
+    await sb.from('nav_links').update({ sort_order: i }).eq('id', navLinks[i].id);
+  }
 }
 
 async function deleteNavLink(id) {
@@ -524,10 +574,25 @@ async function deleteNavLink(id) {
   renderNavLinks();
 }
 
-// Nav context menu handler
+function editNavLink(id) {
+  const link = navLinks.find(l => l.id === id);
+  if (!link) return;
+  const form = document.getElementById('navAddForm');
+  form.classList.add('active');
+  form.dataset.editId = id;
+  document.getElementById('navLabelInput').value = link.label;
+  document.getElementById('navUrlInput').value = link.url;
+  document.getElementById('navLabelInput').focus();
+}
+
+// Nav context menu handlers
 document.addEventListener('click', (e) => {
   const menu = document.getElementById('navContextMenu');
   if (menu && !menu.contains(e.target)) menu.classList.remove('active');
+});
+document.getElementById('navContextEdit')?.addEventListener('click', () => {
+  if (navContextTarget) editNavLink(navContextTarget);
+  document.getElementById('navContextMenu').classList.remove('active');
 });
 document.getElementById('navContextDelete')?.addEventListener('click', () => {
   if (navContextTarget) {
@@ -664,14 +729,17 @@ function updateSummaryStats() {
   document.getElementById('statCompleted').textContent = doneTasks;
 }
 
+let dragCatIndex = null;
+
 function renderCategoryTabs() {
   const container = document.getElementById('categoryTabs');
   container.innerHTML = '';
 
-  appState.categories.forEach(cat => {
+  appState.categories.forEach((cat, idx) => {
     const button = document.createElement('button');
     button.className = `category-tab ${cat.id === appState.activeCategory ? 'active' : ''}`;
     button.dataset.categoryId = cat.id;
+    button.draggable = true;
 
     const count = appState.tasks.filter(t => t.categoryId === cat.id).length;
     button.innerHTML = `${cat.name} <span class="category-count">(${count})</span>`;
@@ -689,6 +757,32 @@ function renderCategoryTabs() {
       showCategoryContextMenu(e, cat.id);
     });
 
+    // Drag-and-drop
+    button.addEventListener('dragstart', (e) => {
+      dragCatIndex = idx;
+      button.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    button.addEventListener('dragend', () => {
+      button.classList.remove('dragging');
+      dragCatIndex = null;
+    });
+    button.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      button.classList.add('drag-over');
+    });
+    button.addEventListener('dragleave', () => button.classList.remove('drag-over'));
+    button.addEventListener('drop', (e) => {
+      e.preventDefault();
+      button.classList.remove('drag-over');
+      if (dragCatIndex === null || dragCatIndex === idx) return;
+      const moved = appState.categories.splice(dragCatIndex, 1)[0];
+      appState.categories.splice(idx, 0, moved);
+      saveCategoryOrder();
+      renderCategoryTabs();
+    });
+
     container.appendChild(button);
   });
 
@@ -697,6 +791,14 @@ function renderCategoryTabs() {
   addBtn.textContent = '+ Category';
   addBtn.addEventListener('click', showAddCategoryModal);
   container.appendChild(addBtn);
+}
+
+async function saveCategoryOrder() {
+  for (let i = 0; i < appState.categories.length; i++) {
+    appState.categories[i].sortOrder = i;
+    await sb.from('categories').update({ sort_order: i }).eq('id', appState.categories[i].id);
+  }
+  saveData();
 }
 
 function renderTasks() {
@@ -958,6 +1060,23 @@ function showCategoryContextMenu(e, categoryId) {
       if (USE_SUPABASE && currentUser) { await saveCategoryToSupabase(category); }
       saveData(); renderCategoryTabs();
     }
+  };
+
+  document.getElementById('contextColor').onclick = async () => {
+    menu.classList.remove('active');
+    const picker = document.createElement('input');
+    picker.type = 'color';
+    picker.value = category.color || '#58a6ff';
+    picker.style.position = 'fixed';
+    picker.style.opacity = '0';
+    document.body.appendChild(picker);
+    picker.addEventListener('input', async () => {
+      category.color = picker.value;
+      if (USE_SUPABASE && currentUser) { await saveCategoryToSupabase(category); }
+      saveData(); renderCategoryTabs();
+    });
+    picker.addEventListener('change', () => picker.remove());
+    picker.click();
   };
 
   document.getElementById('contextDelete').onclick = () => {
