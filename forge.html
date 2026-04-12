@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge Evolution System</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #0d1117; color: #e6edf3;
+  padding: 24px; max-width: 900px; margin: 0 auto;
+}
+h1 { font-size: 28px; font-weight: 700; color: #58a6ff; margin-bottom: 4px; }
+.subtitle { font-size: 14px; color: #8b949e; margin-bottom: 24px; }
+.card {
+  background: #161b22; border: 1px solid #30363d;
+  border-radius: 12px; padding: 24px; margin-bottom: 20px;
+}
+
+/* Radar container */
+.radar-wrap { width: 100%; max-width: 640px; margin: 0 auto; position: relative; }
+.radar-wrap canvas { width: 100% !important; }
+
+/* Ring legend strip under radar */
+.ring-legend {
+  display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;
+  margin-top: 16px; padding-top: 12px; border-top: 1px solid #21262d;
+}
+.ring-legend-item {
+  display: flex; align-items: center; gap: 5px; font-size: 12px; color: #8b949e;
+}
+.ring-legend-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+}
+
+/* Dataset legend */
+.dataset-legend {
+  display: flex; justify-content: center; gap: 20px; margin-top: 10px;
+}
+.dataset-legend-item {
+  display: flex; align-items: center; gap: 6px; font-size: 13px; color: #8b949e;
+}
+.ds-line { width: 20px; height: 2px; }
+.ds-line-dashed { border-top: 2px dashed; width: 20px; height: 0; }
+
+/* Slider */
+.slider-wrap { margin: 20px 0 0; text-align: center; }
+.slider-wrap input[type=range] {
+  -webkit-appearance: none; width: 100%; height: 6px;
+  background: #21262d; border-radius: 3px; outline: none;
+  cursor: pointer;
+}
+.slider-wrap input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 18px; height: 18px;
+  background: #58a6ff; border-radius: 50%; cursor: pointer;
+}
+.slider-wrap input[type=range]::-moz-range-thumb {
+  width: 18px; height: 18px; background: #58a6ff;
+  border-radius: 50%; border: none; cursor: pointer;
+}
+.slider-label {
+  font-size: 15px; color: #e6edf3; font-weight: 600; margin-top: 8px;
+}
+.slider-sub {
+  font-size: 13px; color: #8b949e; margin-top: 2px;
+}
+
+/* Bottleneck */
+.bottleneck {
+  text-align: center; margin-top: 12px;
+  font-size: 13px; color: #f0883e; font-weight: 600;
+}
+
+/* Status dots legend */
+.status-legend {
+  display: flex; justify-content: center; gap: 16px; margin-bottom: 14px; flex-wrap: wrap;
+}
+.status-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #8b949e; }
+.status-dot { width: 9px; height: 9px; border-radius: 50%; }
+
+/* Loading */
+.loading { text-align: center; padding: 60px; color: #8b949e; font-size: 15px; }
+</style>
+</head>
+<body>
+
+<h1>The Forge Evolution System</h1>
+<p class="subtitle">Tracking growth across every dimension — no ceiling, no reset, no shortcuts.</p>
+
+<div class="card" id="radarCard">
+  <div class="loading" id="loadingMsg">Loading forge data...</div>
+
+  <!-- Status dot legend -->
+  <div class="status-legend" id="statusLegend" style="display:none;">
+    <div class="status-item"><div class="status-dot" style="background:#58a6ff;"></div> In Progress</div>
+    <div class="status-item"><div class="status-dot" style="background:#3fb950;"></div> Evolved (10+)</div>
+    <div class="status-item"><div class="status-dot" style="background:#f85149;"></div> Bottleneck</div>
+  </div>
+
+  <!-- Radar -->
+  <div class="radar-wrap" id="radarWrap" style="display:none;">
+    <canvas id="ringRadar"></canvas>
+  </div>
+
+  <!-- Ring colour legend -->
+  <div class="ring-legend" id="ringLegend" style="display:none;"></div>
+
+  <!-- Dataset legend (current vs previous) -->
+  <div class="dataset-legend" id="dsLegend" style="display:none;">
+    <div class="dataset-legend-item"><div class="ds-line" style="background:#58a6ff;"></div> Current</div>
+    <div class="dataset-legend-item"><div class="ds-line-dashed" style="border-color:rgba(88,166,255,0.4);"></div> Previous</div>
+  </div>
+
+  <!-- Bottleneck -->
+  <div class="bottleneck" id="bottleneck" style="display:none;"></div>
+
+  <!-- Slider -->
+  <div class="slider-wrap" id="sliderWrap" style="display:none;">
+    <input type="range" id="versionSlider" min="0" step="1">
+    <div class="slider-label" id="sliderLabel"></div>
+    <div class="slider-sub" id="sliderSub"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     REST OF PAGE GOES HERE LATER
+     (ledger, timeline, rings table, principles, emergent)
+     Add sections below this comment without touching above.
+     ═══════════════════════════════════════════════════════ -->
+
+<script>
+(async function() {
+  // ─── LOAD EXTERNAL DATA ───
+  let DATA;
+  try {
+    const resp = await fetch('forge-data.json');
+    if (!resp.ok) throw new Error('Failed to load forge-data.json');
+    DATA = await resp.json();
+  } catch (e) {
+    document.getElementById('loadingMsg').textContent = 'Error: Could not load forge-data.json — ' + e.message;
+    return;
+  }
+
+  const { metrics, metricColors, rings, versions } = DATA;
+  const latest = versions.length - 1;
+  const RING_SIZE = 10; // points per ring
+
+  // ─── HELPERS ───
+  const getRing = (s) => s <= 0 ? 0 : Math.min(Math.floor((s - 1) / RING_SIZE) + 1, rings.length);
+  const getRingName = (s) => {
+    const r = getRing(s);
+    return r > 0 ? rings[r - 1].name : '—';
+  };
+  const getRingColor = (s) => {
+    const r = getRing(s);
+    return r > 0 ? rings[r - 1].color : '#30363d';
+  };
+  const getBottleneck = (scores) => {
+    const active = scores.filter(s => s > 0);
+    if (active.length === 0) return { min: 0, names: [] };
+    const min = Math.min(...active);
+    const names = metrics.filter((m, i) => scores[i] === min && scores[i] > 0);
+    return { min, names };
+  };
+
+  // ─── SHOW UI ───
+  document.getElementById('loadingMsg').style.display = 'none';
+  document.getElementById('radarWrap').style.display = 'block';
+  document.getElementById('statusLegend').style.display = 'flex';
+  document.getElementById('ringLegend').style.display = 'flex';
+  document.getElementById('dsLegend').style.display = 'flex';
+  document.getElementById('bottleneck').style.display = 'block';
+  document.getElementById('sliderWrap').style.display = 'block';
+
+  // ─── RING LEGEND ───
+  const rl = document.getElementById('ringLegend');
+  rings.forEach(r => {
+    rl.innerHTML += `<div class="ring-legend-item"><div class="ring-legend-dot" style="background:${r.color};"></div>${r.ring}. ${r.name} (${r.range})</div>`;
+  });
+
+  // ─── RADAR MAX — always show all 6 rings ───
+  const radarMax = rings.length * RING_SIZE; // 60
+
+  // ─── CUSTOM PLUGINS ───
+
+  // Plugin 1: Draw 6 coloured ring circles with labels
+  const ringCirclesPlugin = {
+    id: 'ringCircles',
+    beforeDraw(chart) {
+      const { ctx, scales: { r } } = chart;
+      const cx = r.xCenter, cy = r.yCenter;
+
+      rings.forEach((ring, i) => {
+        const val = (i + 1) * RING_SIZE;
+        const radius = r.getDistanceFromCenterForValue(val);
+
+        // Dashed ring circle
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.strokeStyle = ring.color;
+        ctx.globalAlpha = i < 1 ? 0.6 : 0.35;
+        ctx.lineWidth = i < 1 ? 1.5 : 1;
+        ctx.setLineDash(i < 1 ? [] : [5, 4]);
+        ctx.stroke();
+        ctx.restore();
+
+        // Ring label (top-right of circle)
+        ctx.save();
+        const labelAngle = -Math.PI / 4; // 45° up-right
+        const lx = cx + Math.cos(labelAngle) * (radius + 4);
+        const ly = cy + Math.sin(labelAngle) * (radius + 4);
+        ctx.font = '10px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.fillStyle = ring.color;
+        ctx.globalAlpha = i < 1 ? 0.8 : 0.5;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(ring.name, lx, ly);
+        ctx.restore();
+      });
+    }
+  };
+
+  // Plugin 2: Glow on data points
+  const dotGlowPlugin = {
+    id: 'dotGlow',
+    afterDatasetsDraw(chart) {
+      const meta = chart.getDatasetMeta(1); // "Current" dataset
+      if (!meta || !meta.data) return;
+      const { ctx } = chart;
+      const scores = chart.data.datasets[1].data;
+      const bn = getBottleneck(scores);
+
+      meta.data.forEach((pt, i) => {
+        const s = scores[i];
+        if (s <= 0) return;
+        let col = '#58a6ff';
+        if (s >= RING_SIZE) col = '#3fb950';
+        else if (s === bn.min) col = '#f85149';
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, 12, 0, Math.PI * 2);
+        ctx.fillStyle = col;
+        ctx.globalAlpha = 0.2;
+        ctx.fill();
+        ctx.restore();
+      });
+    }
+  };
+
+  // ─── BUILD CHART ───
+  const now = versions[latest];
+  const prev = latest > 0 ? versions[latest - 1] : now;
+  const bn = getBottleneck(now.scores);
+
+  const pointColors = (scores) => {
+    const b = getBottleneck(scores);
+    return scores.map(s => {
+      if (s <= 0) return '#30363d';
+      if (s >= RING_SIZE) return '#3fb950';
+      if (s === b.min) return '#f85149';
+      return '#58a6ff';
+    });
+  };
+
+  const ctx = document.getElementById('ringRadar').getContext('2d');
+  const chart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: metrics,
+      datasets: [
+        {
+          label: 'Previous',
+          data: prev.scores,
+          borderColor: 'rgba(88,166,255,0.35)',
+          backgroundColor: 'rgba(88,166,255,0.03)',
+          borderWidth: 1.5,
+          pointRadius: 0,
+          borderDash: [5, 4],
+          order: 2
+        },
+        {
+          label: 'Current',
+          data: now.scores,
+          borderColor: '#58a6ff',
+          backgroundColor: 'rgba(88,166,255,0.08)',
+          borderWidth: 2.5,
+          pointBackgroundColor: pointColors(now.scores),
+          pointRadius: now.scores.map(s => s >= RING_SIZE ? 7 : s <= 0 ? 0 : 5),
+          pointBorderColor: 'transparent',
+          pointHoverRadius: 8,
+          order: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      aspectRatio: 1,
+      layout: { padding: { top: 14, bottom: 14, left: 14, right: 14 } },
+      scales: {
+        r: {
+          min: 0,
+          max: radarMax,
+          ticks: { display: false, stepSize: RING_SIZE },
+          grid: { color: 'rgba(48,54,61,0.25)', lineWidth: 0.5 },
+          angleLines: { color: 'rgba(48,54,61,0.2)', lineWidth: 0.5 },
+          pointLabels: {
+            color: '#8b949e',
+            font: { size: 11, weight: '600' },
+            padding: 16
+          }
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#161b22',
+          titleColor: '#e6edf3',
+          bodyColor: '#c9d1d9',
+          borderColor: '#30363d',
+          borderWidth: 1,
+          callbacks: {
+            label: (tip) => {
+              const s = tip.raw;
+              return `${tip.dataset.label}: ${s}  •  ${getRingName(s)}`;
+            }
+          }
+        }
+      },
+      animation: { duration: 500, easing: 'easeOutQuart' }
+    },
+    plugins: [ringCirclesPlugin, dotGlowPlugin]
+  });
+
+  // ─── BOTTLENECK TEXT ───
+  function updateBottleneck(scores) {
+    const b = getBottleneck(scores);
+    const el = document.getElementById('bottleneck');
+    if (b.names.length > 0) {
+      el.textContent = `Bottleneck: ${b.names.join(', ')} (${b.min})`;
+    } else {
+      el.textContent = '';
+    }
+  }
+  updateBottleneck(now.scores);
+
+  // ─── SLIDER ───
+  const slider = document.getElementById('versionSlider');
+  const sliderLabel = document.getElementById('sliderLabel');
+  const sliderSub = document.getElementById('sliderSub');
+  slider.max = latest;
+  slider.value = latest;
+  sliderLabel.textContent = `${now.version} — ${now.name}`;
+  sliderSub.textContent = now.desc;
+
+  function updateRadar(idx) {
+    const v = versions[idx];
+    const p = idx > 0 ? versions[idx - 1] : v;
+
+    chart.data.datasets[0].data = p.scores;
+    chart.data.datasets[1].data = v.scores;
+    chart.data.datasets[1].pointBackgroundColor = pointColors(v.scores);
+    chart.data.datasets[1].pointRadius = v.scores.map(s => s >= RING_SIZE ? 7 : s <= 0 ? 0 : 5);
+    chart.update();
+
+    sliderLabel.textContent = `${v.version} — ${v.name}`;
+    sliderSub.textContent = v.desc;
+    updateBottleneck(v.scores);
+  }
+
+  slider.addEventListener('input', (e) => updateRadar(parseInt(e.target.value)));
+
+  // ─── EXPOSE FOR FUTURE SECTIONS ───
+  window.FORGE_DATA = DATA;
+  window.FORGE_CHART = chart;
+  window.FORGE_UPDATE = updateRadar;
+  window.FORGE_HELPERS = { getRing, getRingName, getRingColor, getBottleneck, pointColors, RING_SIZE };
+
+})();
+</script>
+</body>
+</html>
