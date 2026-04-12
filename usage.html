@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Usage Tracker — AZCK Command Centre</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #0d1117; color: #e6edf3;
+  padding: 24px; max-width: 1100px; margin: 0 auto;
+}
+h1 { font-size: 32px; font-weight: 700; color: #58a6ff; margin-bottom: 4px; }
+h2 { font-size: 22px; font-weight: 700; color: #58a6ff; margin: 40px 0 16px; }
+h3 { font-size: 17px; font-weight: 600; color: #e6edf3; margin-bottom: 10px; }
+.subtitle { font-size: 14px; color: #8b949e; margin-bottom: 32px; }
+p { margin-bottom: 14px; color: #c9d1d9; font-size: 15px; }
+.highlight { color: #58a6ff; font-weight: 600; }
+.warn { color: #d29922; font-weight: 600; }
+.danger { color: #f85149; font-weight: 600; }
+.green { color: #3fb950; font-weight: 600; }
+.card {
+  background: #161b22; border: 1px solid #30363d;
+  border-radius: 12px; padding: 24px; margin-bottom: 20px;
+}
+.section-divider { border: none; border-top: 1px solid #21262d; margin: 32px 0; }
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.stat-box {
+  background: #0d1117; border: 1px solid #30363d; border-radius: 8px;
+  padding: 16px; text-align: center;
+}
+.stat-value { font-size: 28px; font-weight: 700; color: #58a6ff; }
+.stat-label { font-size: 12px; color: #8b949e; margin-top: 4px; }
+.progress-track {
+  width: 100%; height: 28px; background: #21262d; border-radius: 14px;
+  overflow: hidden; position: relative; margin: 12px 0;
+}
+.progress-fill {
+  height: 100%; border-radius: 14px; transition: width 1s ease;
+  background: linear-gradient(90deg, #3fb950, #58a6ff);
+}
+.progress-fill.warn { background: linear-gradient(90deg, #d29922, #f0883e); }
+.progress-fill.danger { background: linear-gradient(90deg, #f85149, #da3633); }
+.progress-label {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  font-size: 13px; font-weight: 700; color: #e6edf3; text-shadow: 0 1px 3px #000;
+}
+table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+th { text-align: left; font-size: 12px; color: #8b949e; padding: 8px 10px; border-bottom: 1px solid #30363d; }
+td { font-size: 14px; color: #c9d1d9; padding: 8px 10px; border-bottom: 1px solid #21262d; }
+tr:hover td { background: #1c2128; }
+.tag {
+  display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px;
+  border-radius: 10px; margin-right: 4px;
+}
+.tag-website { background: #58a6ff22; color: #58a6ff; }
+.tag-forge { background: #bc8cff22; color: #bc8cff; }
+.tag-grants { background: #3fb95022; color: #3fb950; }
+.tag-ops { background: #f0883e22; color: #f0883e; }
+.tag-brand { background: #f778ba22; color: #f778ba; }
+.chart-wrap { position: relative; max-width: 600px; margin: 0 auto; }
+.tip-box {
+  background: #0d1117; border-left: 3px solid #58a6ff; padding: 12px 16px;
+  margin: 12px 0; border-radius: 0 8px 8px 0; font-size: 14px;
+}
+.updated-label { font-size: 12px; color: #8b949e; text-align: right; margin-top: 8px; }
+@media (max-width: 600px) {
+  body { padding: 12px; }
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+  h1 { font-size: 24px; }
+}
+</style>
+</head>
+<body>
+
+<h1>Usage Tracker</h1>
+<p class="subtitle">Self-reported session data — updated every Save All. All costs in CAD ($280/month Max 20x plan).</p>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     DATA BLOCK — UPDATE THIS SECTION ONLY
+     Forge appends a new SESSION entry during every Save All.
+     Monthly allowance resets based on rolling usage window.
+     Engine below auto-generates all charts and stats.
+     ═══════════════════════════════════════════════════════════════ -->
+<script>
+/* --- PLAN --- */
+var PLAN = {
+  name: 'Max 20x',
+  costCAD: 280,
+  costUSD: 200,
+  cycleDays: 30,        // billing cycle
+  windowHours: 5,       // rolling reset window
+  rateInputMTok: 5,     // $/MTok input (Opus)
+  rateOutputMTok: 25,   // $/MTok output (Opus)
+  rateCachedMTok: 0.50  // $/MTok cached system prompt
+};
+
+/* --- SESSIONS — Forge appends here during Save All --- */
+var SESSIONS = [
+  // { date, user, project, tags[], turns, durationMin, estTokensK, estCostCAD, notes }
+  { date:'2026-04-10', user:'Alessio', project:'Website',     tags:['website'],        turns:35, durationMin:180, estTokensK:850,  estCostCAD:12.50, notes:'Tech plan delivered, booking page planning' },
+  { date:'2026-04-10', user:'Alessio', project:'Website',     tags:['website'],        turns:85, durationMin:480, estTokensK:2800, estCostCAD:38.00, notes:'All 6 booking pages built, Family Events, knife details' },
+  { date:'2026-04-11', user:'Alessio', project:'Website',     tags:['website','ops'],  turns:20, durationMin:60,  estTokensK:400,  estCostCAD:5.50,  notes:'Instructions doc, folder cleanup, final save' },
+  { date:'2026-04-11', user:'Alessio', project:'Website',     tags:['website'],        turns:45, durationMin:180, estTokensK:1200, estCostCAD:16.00, notes:'Booking published live, repo cleanup, deep-links verified' },
+  { date:'2026-04-11', user:'Alessio', project:'Website',     tags:['website'],        turns:50, durationMin:240, estTokensK:1500, estCostCAD:20.00, notes:'Wix gift card, architecture audit, headless checkout research' },
+  { date:'2026-04-12', user:'Alessio', project:'Website',     tags:['website'],        turns:40, durationMin:180, estTokensK:1100, estCostCAD:15.00, notes:'Shared nav/footer deployed to all 18 pages, CMS parked' },
+  { date:'2026-04-12', user:'Alessio', project:'Command Centre', tags:['forge','ops'], turns:60, durationMin:300, estTokensK:2000, estCostCAD:28.00, notes:'Forge chart updated, usage guide created, usage tracker + CLAUDE.md rebuild' },
+];
+
+/* --- PROTOCOL COSTS (per execution, CAD) --- */
+var PROTOCOLS = {
+  startup:      { tokens: 7843,  costCAD: 0.20, label: 'Startup Sequence' },
+  sharedBrain:  { tokens: 60320, costCAD: 1.50, label: 'Load Shared Brain' },
+  superBrain:   { tokens: 22567, costCAD: 3.38, label: 'Load Super Brain' },
+  forge:        { tokens: 21343, costCAD: 0.53, label: 'Load Forge Identity' },
+  saveAll:      { tokens: 15000, costCAD: 5.25, label: 'Save All (avg)' },
+};
+</script>
+<!-- ═══ END DATA BLOCK ═══ -->
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     ENGINE — DO NOT EDIT BELOW (auto-generates from data above)
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div id="app"></div>
+
+<script>
+(function(){
+  /* ---------- helpers ---------- */
+  function $(id){ return document.getElementById(id); }
+  function sum(arr, key){ return arr.reduce(function(a,b){ return a + (b[key]||0); }, 0); }
+  function fmt(n){ return n.toLocaleString('en-CA', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+  function fmtK(n){ return n >= 1000 ? (n/1000).toFixed(1)+'M' : n+'K'; }
+
+  /* ---------- compute stats ---------- */
+  var totalSessions = SESSIONS.length;
+  var totalTurns = sum(SESSIONS, 'turns');
+  var totalMin = sum(SESSIONS, 'durationMin');
+  var totalTokensK = sum(SESSIONS, 'estTokensK');
+  var totalCostCAD = sum(SESSIONS, 'estCostCAD');
+  var pctUsed = Math.min((totalCostCAD / PLAN.costCAD) * 100, 100);
+
+  /* per-project */
+  var projects = {};
+  SESSIONS.forEach(function(s){
+    if(!projects[s.project]) projects[s.project] = { sessions:0, turns:0, min:0, tokensK:0, costCAD:0 };
+    var p = projects[s.project];
+    p.sessions++; p.turns += s.turns; p.min += s.durationMin;
+    p.tokensK += s.estTokensK; p.costCAD += s.estCostCAD;
+  });
+
+  /* per-day for chart */
+  var dailyMap = {};
+  SESSIONS.forEach(function(s){
+    if(!dailyMap[s.date]) dailyMap[s.date] = 0;
+    dailyMap[s.date] += s.estCostCAD;
+  });
+  var dailyDates = Object.keys(dailyMap).sort();
+  var dailyCosts = dailyDates.map(function(d){ return dailyMap[d]; });
+  var cumCosts = []; var running = 0;
+  dailyCosts.forEach(function(c){ running += c; cumCosts.push(running); });
+
+  /* progress class */
+  var progressClass = pctUsed < 60 ? '' : pctUsed < 85 ? 'warn' : 'danger';
+
+  /* ---------- render ---------- */
+  var app = $('app');
+
+  /* --- Monthly Allowance --- */
+  var html = '<h2>Monthly Allowance</h2>';
+  html += '<div class="card">';
+  html += '<div class="stat-grid">';
+  html += '<div class="stat-box"><div class="stat-value">$'+fmt(totalCostCAD)+'</div><div class="stat-label">Estimated Spent (CAD)</div></div>';
+  html += '<div class="stat-box"><div class="stat-value">$'+fmt(PLAN.costCAD - totalCostCAD)+'</div><div class="stat-label">Remaining (CAD)</div></div>';
+  html += '<div class="stat-box"><div class="stat-value">'+totalSessions+'</div><div class="stat-label">Sessions Logged</div></div>';
+  html += '<div class="stat-box"><div class="stat-value">'+totalTurns+'</div><div class="stat-label">Total Turns</div></div>';
+  html += '</div>';
+  html += '<div class="progress-track"><div class="progress-fill '+progressClass+'" style="width:'+pctUsed+'%"></div>';
+  html += '<div class="progress-label">'+pctUsed.toFixed(1)+'% of $'+PLAN.costCAD+' CAD</div></div>';
+  html += '<p style="font-size:13px;color:#8b949e;margin:8px 0 0;">Rolling 5-hour reset window. Usage is approximate — Anthropic doesn\'t expose exact numbers.</p>';
+  html += '</div>';
+
+  /* --- Spending Trend --- */
+  html += '<h2>Spending Trend</h2>';
+  html += '<div class="card"><div class="chart-wrap" style="max-width:700px;height:300px;">';
+  html += '<canvas id="trendChart"></canvas></div></div>';
+
+  /* --- Sessions Table --- */
+  html += '<h2>Session Log</h2>';
+  html += '<div class="card" style="overflow-x:auto;">';
+  html += '<table><thead><tr><th>Date</th><th>User</th><th>Project</th><th>Turns</th><th>Duration</th><th>~Tokens</th><th>~Cost CAD</th><th>Notes</th></tr></thead><tbody>';
+  SESSIONS.slice().reverse().forEach(function(s){
+    var durH = (s.durationMin/60).toFixed(1)+'h';
+    var tagHtml = '';
+    s.tags.forEach(function(t){ tagHtml += '<span class="tag tag-'+t+'">'+t+'</span>'; });
+    html += '<tr><td>'+s.date+'</td><td>'+s.user+'</td><td>'+tagHtml+' '+s.project+'</td>';
+    html += '<td>'+s.turns+'</td><td>'+durH+'</td><td>'+fmtK(s.estTokensK)+'</td>';
+    html += '<td>$'+fmt(s.estCostCAD)+'</td><td style="font-size:13px;color:#8b949e;">'+s.notes+'</td></tr>';
+  });
+  html += '</tbody></table></div>';
+
+  /* --- Project Breakdown --- */
+  html += '<h2>By Project</h2>';
+  html += '<div class="card"><div class="chart-wrap" style="max-width:400px;height:320px;">';
+  html += '<canvas id="projectChart"></canvas></div>';
+  html += '<table style="margin-top:16px;"><thead><tr><th>Project</th><th>Sessions</th><th>Turns</th><th>Hours</th><th>~Cost CAD</th><th>% of Total</th></tr></thead><tbody>';
+  Object.keys(projects).forEach(function(name){
+    var p = projects[name];
+    var pct = ((p.costCAD/totalCostCAD)*100).toFixed(1);
+    html += '<tr><td style="font-weight:600;">'+name+'</td><td>'+p.sessions+'</td><td>'+p.turns+'</td>';
+    html += '<td>'+(p.min/60).toFixed(1)+'</td><td>$'+fmt(p.costCAD)+'</td><td>'+pct+'%</td></tr>';
+  });
+  html += '</tbody></table></div>';
+
+  /* --- Protocol Costs --- */
+  html += '<h2>Protocol Costs</h2>';
+  html += '<div class="card">';
+  html += '<p style="font-size:14px;color:#8b949e;margin-bottom:12px;">What each standard operation costs per execution.</p>';
+  html += '<table><thead><tr><th>Protocol</th><th>~Tokens</th><th>~Cost CAD</th></tr></thead><tbody>';
+  Object.keys(PROTOCOLS).forEach(function(k){
+    var p = PROTOCOLS[k];
+    html += '<tr><td style="font-weight:600;">'+p.label+'</td><td>'+p.tokens.toLocaleString()+'</td><td>$'+fmt(p.costCAD)+'</td></tr>';
+  });
+  html += '</tbody></table>';
+  html += '<div class="tip-box" style="margin-top:16px;"><strong>Tip:</strong> The rebuilt CLAUDE.md loads via prompt caching at <span class="highlight">10% cost</span> per turn. ' +
+          'Loading knowledge upfront is cheaper than corrections mid-session.</div>';
+  html += '</div>';
+
+  /* --- Efficiency Tips --- */
+  html += '<h2>Efficiency Rules</h2>';
+  html += '<div class="card">';
+  html += '<div class="tip-box"><strong>Keep sessions under 30 turns.</strong> Context replay means turn 50 costs ~10x more than turn 1.</div>';
+  html += '<div class="tip-box"><strong>Start fresh when work shifts.</strong> New session = clean context = cheaper turns.</div>';
+  html += '<div class="tip-box"><strong>Be specific.</strong> A precise 2-sentence request costs less than a vague paragraph that needs clarification.</div>';
+  html += '<div class="tip-box"><strong>Don\'t load Super Brain unless needed.</strong> ~$3.38 CAD per load. The CLAUDE.md cache covers 90% of daily work.</div>';
+  html += '<div class="tip-box"><strong>Output costs 5x more than input.</strong> Ask for concise answers. Don\'t request explanations you already understand.</div>';
+  html += '</div>';
+
+  /* --- Footer --- */
+  html += '<hr class="section-divider">';
+  html += '<p style="font-size:12px;color:#8b949e;text-align:center;">AZCK Command Centre — Usage Tracker — Self-reported data, updated every Save All<br>';
+  html += 'Plan: '+PLAN.name+' ($'+PLAN.costCAD+' CAD/month) — Opus 4.6 — Rolling '+PLAN.windowHours+'-hour window</p>';
+
+  app.innerHTML = html;
+
+  /* ---------- Charts ---------- */
+
+  /* Trend chart */
+  new Chart($('trendChart'), {
+    type: 'bar',
+    data: {
+      labels: dailyDates.map(function(d){ return d.replace('2026-','')}),
+      datasets: [
+        { type:'bar', label:'Daily Cost (CAD)', data: dailyCosts, backgroundColor:'#58a6ff44', borderColor:'#58a6ff', borderWidth:1, borderRadius:4, order:2 },
+        { type:'line', label:'Cumulative (CAD)', data: cumCosts, borderColor:'#3fb950', backgroundColor:'#3fb95022', pointRadius:4, pointBackgroundColor:'#3fb950', tension:0.3, fill:true, order:1 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color:'#8b949e', font:{size:12} } },
+        tooltip: { callbacks: { label: function(ctx){ return ctx.dataset.label+': $'+fmt(ctx.parsed.y); } } }
+      },
+      scales: {
+        x: { ticks:{color:'#8b949e'}, grid:{color:'#21262d'} },
+        y: { ticks:{color:'#8b949e', callback:function(v){return '$'+v;}}, grid:{color:'#21262d'} }
+      }
+    }
+  });
+
+  /* Project doughnut */
+  var projNames = Object.keys(projects);
+  var projCosts = projNames.map(function(n){ return projects[n].costCAD; });
+  var projColors = ['#58a6ff','#bc8cff','#3fb950','#f0883e','#f778ba','#d29922'];
+  new Chart($('projectChart'), {
+    type: 'doughnut',
+    data: {
+      labels: projNames,
+      datasets: [{ data: projCosts, backgroundColor: projColors.slice(0, projNames.length), borderColor:'#161b22', borderWidth:3 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position:'bottom', labels:{color:'#8b949e', padding:16, font:{size:13}} },
+        tooltip: { callbacks: { label:function(ctx){ return ctx.label+': $'+fmt(ctx.parsed)+' CAD'; } } }
+      }
+    }
+  });
+
+})();
+</script>
+
+</body>
+</html>
