@@ -180,41 +180,90 @@ h1 { font-size: 28px; font-weight: 700; color: #58a6ff; margin-bottom: 4px; }
     rl.innerHTML += `<div class="ring-legend-item"><div class="ring-legend-dot" style="background:${r.color};"></div>${r.ring}. ${r.name} (${r.range})</div>`;
   });
 
-  // ─── RADAR MAX — always show all 6 rings ───
-  const radarMax = rings.length * RING_SIZE; // 60
+  // ─── ACTIVE RING DETECTION ───
+  // The current ring = the ring the HIGHEST score is in.
+  // That ring fills the whole radar. Future rings fade out beyond.
+  function getActiveRing(scores) {
+    const maxScore = Math.max(...scores.filter(s => s > 0), 0);
+    return Math.max(getRing(maxScore), 1);
+  }
+
+  // Radar max = current ring ceiling. Future rings drawn BEYOND the chart area.
+  function getRadarMax(scores) {
+    return getActiveRing(scores) * RING_SIZE;
+  }
+
+  let currentRadarMax = getRadarMax(versions[latest].scores);
 
   // ─── CUSTOM PLUGINS ───
 
-  // Plugin 1: Draw 6 coloured ring circles with labels
+  // Plugin 1: Draw all 6 coloured ring circles
+  // Current ring = solid, full opacity, fills the chart edge
+  // Future rings = dashed, fading out, drawn beyond the chart area
   const ringCirclesPlugin = {
     id: 'ringCircles',
     beforeDraw(chart) {
       const { ctx, scales: { r } } = chart;
       const cx = r.xCenter, cy = r.yCenter;
+      const rMax = chart.options.scales.r.max;
+      const activeRing = rMax / RING_SIZE;
+
+      // The outer radius of the chart area (where the active ring boundary sits)
+      const outerRadius = r.getDistanceFromCenterForValue(rMax);
 
       rings.forEach((ring, i) => {
-        const val = (i + 1) * RING_SIZE;
-        const radius = r.getDistanceFromCenterForValue(val);
+        const ringNum = i + 1;
+        const val = ringNum * RING_SIZE;
+        const isActive = ringNum <= activeRing;
+        const isFuture = ringNum > activeRing;
 
-        // Dashed ring circle
+        let radius;
+        if (isActive) {
+          // Active rings: drawn inside the chart using normal scale
+          radius = r.getDistanceFromCenterForValue(val);
+        } else {
+          // Future rings: drawn BEYOND the chart edge, evenly spaced
+          const stepsOut = ringNum - activeRing;
+          const spacing = 28; // pixels between future ring circles
+          radius = outerRadius + (stepsOut * spacing);
+        }
+
+        // Ring circle
         ctx.save();
         ctx.beginPath();
         ctx.arc(cx, cy, radius, 0, Math.PI * 2);
         ctx.strokeStyle = ring.color;
-        ctx.globalAlpha = i < 1 ? 0.6 : 0.35;
-        ctx.lineWidth = i < 1 ? 1.5 : 1;
-        ctx.setLineDash(i < 1 ? [] : [5, 4]);
+
+        if (ringNum === activeRing) {
+          // Current ring boundary = solid, prominent
+          ctx.globalAlpha = 0.7;
+          ctx.lineWidth = 2;
+          ctx.setLineDash([]);
+        } else if (isActive) {
+          // Inner completed rings
+          ctx.globalAlpha = 0.4;
+          ctx.lineWidth = 1;
+          ctx.setLineDash([]);
+        } else {
+          // Future rings = dashed, progressively fading
+          const fadeStep = 0.08;
+          ctx.globalAlpha = Math.max(0.35 - ((stepsOut - 1) * fadeStep), 0.1);
+          ctx.lineWidth = 1;
+          ctx.setLineDash([5, 4]);
+        }
         ctx.stroke();
         ctx.restore();
 
-        // Ring label (top-right of circle)
+        // Ring label
         ctx.save();
         const labelAngle = -Math.PI / 4; // 45° up-right
-        const lx = cx + Math.cos(labelAngle) * (radius + 4);
-        const ly = cy + Math.sin(labelAngle) * (radius + 4);
-        ctx.font = '10px -apple-system, BlinkMacSystemFont, sans-serif';
+        const lx = cx + Math.cos(labelAngle) * (radius + 5);
+        const ly = cy + Math.sin(labelAngle) * (radius + 5);
+        ctx.font = ringNum === activeRing
+          ? 'bold 11px -apple-system, BlinkMacSystemFont, sans-serif'
+          : '10px -apple-system, BlinkMacSystemFont, sans-serif';
         ctx.fillStyle = ring.color;
-        ctx.globalAlpha = i < 1 ? 0.8 : 0.5;
+        ctx.globalAlpha = ringNum === activeRing ? 0.9 : isFuture ? Math.max(0.4 - ((ringNum - activeRing - 1) * 0.06), 0.12) : 0.6;
         ctx.textAlign = 'left';
         ctx.textBaseline = 'bottom';
         ctx.fillText(ring.name, lx, ly);
@@ -258,9 +307,10 @@ h1 { font-size: 28px; font-weight: 700; color: #58a6ff; margin-bottom: 4px; }
 
   const pointColors = (scores) => {
     const b = getBottleneck(scores);
+    const activeMax = getRadarMax(scores); // current ring ceiling
     return scores.map(s => {
       if (s <= 0) return '#30363d';
-      if (s >= RING_SIZE) return '#3fb950';
+      if (s >= activeMax) return '#3fb950'; // hit the ring boundary = evolved
       if (s === b.min) return '#f85149';
       return '#58a6ff';
     });
@@ -304,7 +354,7 @@ h1 { font-size: 28px; font-weight: 700; color: #58a6ff; margin-bottom: 4px; }
       scales: {
         r: {
           min: 0,
-          max: radarMax,
+          max: currentRadarMax,
           ticks: { display: false, stepSize: RING_SIZE },
           grid: { color: 'rgba(48,54,61,0.25)', lineWidth: 0.5 },
           angleLines: { color: 'rgba(48,54,61,0.2)', lineWidth: 0.5 },
@@ -360,6 +410,10 @@ h1 { font-size: 28px; font-weight: 700; color: #58a6ff; margin-bottom: 4px; }
   function updateRadar(idx) {
     const v = versions[idx];
     const p = idx > 0 ? versions[idx - 1] : v;
+
+    // Recalculate radar max based on this version's scores
+    currentRadarMax = getRadarMax(v.scores);
+    chart.options.scales.r.max = currentRadarMax;
 
     chart.data.datasets[0].data = p.scores;
     chart.data.datasets[1].data = v.scores;
