@@ -10,7 +10,7 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: #0d1117; color: #e6edf3;
-  padding: 24px; max-width: 1100px; margin: 0 auto;
+  padding: 24px; max-width: 1200px; margin: 0 auto;
 }
 h1 { font-size: 32px; font-weight: 700; color: #58a6ff; margin-bottom: 4px; }
 h2 { font-size: 22px; font-weight: 700; color: #58a6ff; margin: 40px 0 16px; }
@@ -26,12 +26,15 @@ p { margin-bottom: 14px; color: #c9d1d9; font-size: 15px; }
   border-radius: 12px; padding: 24px; margin-bottom: 20px;
 }
 .section-divider { border: none; border-top: 1px solid #21262d; margin: 32px 0; }
-.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 20px; }
 .stat-box {
   background: #0d1117; border: 1px solid #30363d; border-radius: 8px;
   padding: 16px; text-align: center;
 }
 .stat-value { font-size: 28px; font-weight: 700; color: #58a6ff; }
+.stat-value.green { color: #3fb950; }
+.stat-value.warn { color: #d29922; }
+.stat-value.danger { color: #f85149; }
 .stat-label { font-size: 12px; color: #8b949e; margin-top: 4px; }
 .progress-track {
   width: 100%; height: 28px; background: #21262d; border-radius: 14px;
@@ -41,8 +44,8 @@ p { margin-bottom: 14px; color: #c9d1d9; font-size: 15px; }
   height: 100%; border-radius: 14px; transition: width 1s ease;
   background: linear-gradient(90deg, #3fb950, #58a6ff);
 }
-.progress-fill.warn { background: linear-gradient(90deg, #d29922, #f0883e); }
-.progress-fill.danger { background: linear-gradient(90deg, #f85149, #da3633); }
+.progress-fill.warn-bg { background: linear-gradient(90deg, #d29922, #f0883e); }
+.progress-fill.danger-bg { background: linear-gradient(90deg, #f85149, #da3633); }
 .progress-label {
   position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
   font-size: 13px; font-weight: 700; color: #e6edf3; text-shadow: 0 1px 3px #000;
@@ -60,237 +63,816 @@ tr:hover td { background: #1c2128; }
 .tag-grants { background: #3fb95022; color: #3fb950; }
 .tag-ops { background: #f0883e22; color: #f0883e; }
 .tag-brand { background: #f778ba22; color: #f778ba; }
-.chart-wrap { position: relative; max-width: 600px; margin: 0 auto; }
+.tag-quadfang { background: #d2992222; color: #d29922; }
+.tag-opus { background: #bc8cff22; color: #bc8cff; }
+.tag-sonnet { background: #58a6ff22; color: #58a6ff; }
+.tag-haiku { background: #3fb95022; color: #3fb950; }
+.chart-wrap { position: relative; max-width: 700px; margin: 0 auto; }
 .tip-box {
   background: #0d1117; border-left: 3px solid #58a6ff; padding: 12px 16px;
-  margin: 12px 0; border-radius: 0 8px 8px 0; font-size: 14px;
+  margin: 10px 0; border-radius: 0 8px 8px 0; font-size: 14px;
 }
+.version-badge {
+  display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 10px;
+  border-radius: 12px; background: #58a6ff22; color: #58a6ff; margin-right: 6px;
+}
+.status-dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px;
+}
+.status-active { background: #3fb950; }
+.status-parked { background: #d29922; }
+.status-free { background: #58a6ff; }
+.platform-card {
+  background: #0d1117; border: 1px solid #30363d; border-radius: 8px;
+  padding: 16px; margin-bottom: 12px;
+}
+.platform-card h4 { font-size: 15px; color: #e6edf3; margin-bottom: 6px; }
+.platform-card .meta { font-size: 12px; color: #8b949e; }
+.platform-card .limits { font-size: 13px; color: #c9d1d9; margin-top: 8px; }
+.platform-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.tab-bar { display: flex; gap: 4px; margin-bottom: 24px; flex-wrap: wrap; }
+.tab-btn {
+  background: #21262d; border: 1px solid #30363d; color: #8b949e;
+  padding: 8px 18px; border-radius: 8px 8px 0 0; cursor: pointer;
+  font-size: 14px; font-weight: 600; transition: all 0.2s;
+}
+.tab-btn:hover { color: #e6edf3; background: #161b22; }
+.tab-btn.active { background: #161b22; color: #58a6ff; border-bottom-color: #161b22; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.ceiling-line { border-top: 2px dashed #f85149; position: relative; margin: 8px 0; }
 .updated-label { font-size: 12px; color: #8b949e; text-align: right; margin-top: 8px; }
 @media (max-width: 600px) {
   body { padding: 12px; }
   .stat-grid { grid-template-columns: 1fr 1fr; }
+  .platform-grid { grid-template-columns: 1fr; }
   h1 { font-size: 24px; }
+  .tab-btn { padding: 6px 12px; font-size: 13px; }
 }
 </style>
 </head>
 <body>
 
 <h1>Usage Tracker</h1>
-<p class="subtitle">Self-reported session data — updated every Save All. All costs in CAD ($280/month Max 20x plan).</p>
+<p class="subtitle">Self-reported session data — updated every Save All. All costs in CAD.</p>
 
 <!-- ═══════════════════════════════════════════════════════════════
      DATA BLOCK — UPDATE THIS SECTION ONLY
-     Forge appends a new SESSION entry during every Save All.
-     Monthly allowance resets based on rolling usage window.
-     Engine below auto-generates all charts and stats.
+     Forge updates this JSON during Save All or deploy sessions.
+     Engine below auto-generates all tabs, charts, tables, and stats.
+     To add a new section: add a JSON key. Engine renders if not null.
      ═══════════════════════════════════════════════════════════════ -->
 <script>
-/* --- PLAN --- */
-var PLAN = {
-  name: 'Max 20x',
-  costCAD: 280,
-  costUSD: 200,
-  cycleDays: 30,        // billing cycle
-  windowHours: 5,       // rolling reset window
-  rateInputMTok: 5,     // $/MTok input (Opus)
-  rateOutputMTok: 25,   // $/MTok output (Opus)
-  rateCachedMTok: 0.50  // $/MTok cached system prompt
-};
+var DATA = {
 
-/* --- SESSIONS — Forge appends here during Save All --- */
-var SESSIONS = [
-  // { date, user, project, tags[], turns, durationMin, estTokensK, estCostCAD, notes }
-  { date:'2026-04-10', user:'Alessio', project:'Website',     tags:['website'],        turns:35, durationMin:180, estTokensK:850,  estCostCAD:12.50, notes:'Tech plan delivered, booking page planning' },
-  { date:'2026-04-10', user:'Alessio', project:'Website',     tags:['website'],        turns:85, durationMin:480, estTokensK:2800, estCostCAD:38.00, notes:'All 6 booking pages built, Family Events, knife details' },
-  { date:'2026-04-11', user:'Alessio', project:'Website',     tags:['website','ops'],  turns:20, durationMin:60,  estTokensK:400,  estCostCAD:5.50,  notes:'Instructions doc, folder cleanup, final save' },
-  { date:'2026-04-11', user:'Alessio', project:'Website',     tags:['website'],        turns:45, durationMin:180, estTokensK:1200, estCostCAD:16.00, notes:'Booking published live, repo cleanup, deep-links verified' },
-  { date:'2026-04-11', user:'Alessio', project:'Website',     tags:['website'],        turns:50, durationMin:240, estTokensK:1500, estCostCAD:20.00, notes:'Wix gift card, architecture audit, headless checkout research' },
-  { date:'2026-04-12', user:'Alessio', project:'Website',     tags:['website'],        turns:40, durationMin:180, estTokensK:1100, estCostCAD:15.00, notes:'Shared nav/footer deployed to all 18 pages, CMS parked' },
-  { date:'2026-04-12', user:'Alessio', project:'Command Centre', tags:['forge','ops'], turns:60, durationMin:300, estTokensK:2000, estCostCAD:28.00, notes:'Forge chart updated, usage guide created, usage tracker + CLAUDE.md rebuild' },
-];
+  /* ─── PLAN ─── */
+  plan: {
+    name: 'Max 20x',
+    costCAD: 280,
+    costUSD: 200,
+    cycleDays: 30,
+    billingDay: 1,
+    models: {
+      opus:   { label:'Opus 4.6',   input:5.00, output:25.00, cached:0.50 },
+      sonnet: { label:'Sonnet 4.6', input:3.00, output:15.00, cached:0.30 },
+      haiku:  { label:'Haiku 4.5',  input:1.00, output:5.00,  cached:0.10 }
+    }
+  },
 
-/* --- PROTOCOL COSTS (per execution, CAD) --- */
-var PROTOCOLS = {
-  startup:      { tokens: 7843,  costCAD: 0.20, label: 'Startup Sequence' },
-  sharedBrain:  { tokens: 60320, costCAD: 1.50, label: 'Load Shared Brain' },
-  superBrain:   { tokens: 22567, costCAD: 3.38, label: 'Load Super Brain' },
-  forge:        { tokens: 21343, costCAD: 0.53, label: 'Load Forge Identity' },
-  saveAll:      { tokens: 15000, costCAD: 5.25, label: 'Save All (avg)' },
+  /* ─── CONDENSED BRAIN VERSIONS ─── */
+  versions: [
+    { version:'v0.0', date:'2026-04-10', codename:'Trigger Only',
+      tokens:332, bytes:2000, lines:15,
+      startupReads:6, startupCostCAD:0.55, saveCostCAD:0.08,
+      changes:'Original — just a startup trigger file' },
+    { version:'v1.0', date:'2026-04-12', codename:'Condensed Brain',
+      tokens:3200, bytes:13055, lines:263,
+      startupReads:6, startupCostCAD:0.50, saveCostCAD:0.08,
+      changes:'Full knowledge cached — identity, business, brand, rules, instincts, protocols' },
+    { version:'v1.1', date:'2026-04-12', codename:'Zero-Read Startup',
+      tokens:5200, bytes:17234, lines:328,
+      startupReads:0, startupCostCAD:0.01, saveCostCAD:0.10,
+      changes:'Greeting rules + session snapshot folded in. All startup reads eliminated.' }
+  ],
+
+  /* ─── FILE SIZE REGISTRY ─── */
+  fileSizes: {
+    asOf: '2026-04-12',
+    maxRecommendedTokens: 8000,
+    cached: [
+      { name:'CLAUDE.md', lines:328, bytes:17234, tokens:5200, role:'Condensed Brain — everything Forge needs from turn 1' }
+    ],
+    onDemand: [
+      { name:'SuperBrain.md',    lines:1388, bytes:91499, tokens:22000, role:'Full session history + deliverable log' },
+      { name:'Forge.md',         lines:641,  bytes:36493, tokens:9000,  role:'Identity + version log' },
+      { name:'Forge_Lessons.md', lines:224,  bytes:20373, tokens:5000,  role:'Earned lessons archive' },
+      { name:'handoff.md',       lines:141,  bytes:6542,  tokens:1600,  role:'Session continuity (detailed)' },
+      { name:'tasks.md',         lines:89,   bytes:5190,  tokens:1300,  role:'Full task list + history' },
+      { name:'greetings.md',     lines:216,  bytes:8234,  tokens:2000,  role:'Archive — folded into CLAUDE.md v1.1' },
+      { name:'messages.md',      lines:58,   bytes:1899,  tokens:500,   role:'Cross-user messages' },
+      { name:'usage-log.md',     lines:95,   bytes:5500,  tokens:1400,  role:'Session log + version tracking' }
+    ],
+    workers: [
+      { name:'office-manager.md',    tokens:5200, role:'Tasks, scheduling, SOPs, client comms' },
+      { name:'grant-writer.md',      tokens:5200, role:'Grants, SR&ED, IRAP, funding' },
+      { name:'brand-strategist.md',  tokens:5100, role:'Marketing, social media, content' },
+      { name:'workshop-manager.md',  tokens:4900, role:'Shop, safety, equipment, courses' },
+      { name:'web-developer.md',     tokens:3700, role:'Website, GitHub, code, deploy' },
+      { name:'bookkeeper.md',        tokens:2900, role:'Invoices, tax, GST, finance' },
+      { name:'forge-architect.md',   tokens:2500, role:'AI system, MCP, Forge itself' },
+      { name:'quadfang-lead.md',     tokens:2200, role:'Broadheads, SLM, hunting' },
+      { name:'sales-partnerships.md',tokens:2000, role:'Events, referrals, corporate' }
+    ]
+  },
+
+  /* ─── SESSIONS ─── */
+  sessions: [
+    { date:'2026-04-10', user:'Alessio', model:'opus', project:'Website', tags:['website'],
+      turns:35, durationMin:180, tokensInK:650, tokensCachedK:100, tokensOutK:100,
+      estCostCAD:12.50, cbVersion:'v0.0',
+      notes:'Tech plan delivered, booking page planning' },
+    { date:'2026-04-10', user:'Alessio', model:'opus', project:'Website', tags:['website'],
+      turns:85, durationMin:480, tokensInK:2000, tokensCachedK:400, tokensOutK:400,
+      estCostCAD:38.00, cbVersion:'v0.0',
+      notes:'All 6 booking pages built, Family Events, knife details' },
+    { date:'2026-04-11', user:'Alessio', model:'opus', project:'Website', tags:['website','ops'],
+      turns:20, durationMin:60, tokensInK:300, tokensCachedK:50, tokensOutK:50,
+      estCostCAD:5.50, cbVersion:'v0.0',
+      notes:'Instructions doc, folder cleanup, final save' },
+    { date:'2026-04-11', user:'Alessio', model:'opus', project:'Website', tags:['website'],
+      turns:45, durationMin:180, tokensInK:900, tokensCachedK:150, tokensOutK:150,
+      estCostCAD:16.00, cbVersion:'v0.0',
+      notes:'Booking published live, repo cleanup, deep-links verified' },
+    { date:'2026-04-11', user:'Alessio', model:'opus', project:'Website', tags:['website'],
+      turns:50, durationMin:240, tokensInK:1100, tokensCachedK:200, tokensOutK:200,
+      estCostCAD:20.00, cbVersion:'v0.0',
+      notes:'Wix gift card, architecture audit, headless checkout research' },
+    { date:'2026-04-12', user:'Alessio', model:'opus', project:'Website', tags:['website'],
+      turns:40, durationMin:180, tokensInK:800, tokensCachedK:150, tokensOutK:150,
+      estCostCAD:15.00, cbVersion:'v0.0',
+      notes:'Shared nav/footer deployed to all 18 pages, CMS parked' },
+    { date:'2026-04-12', user:'Alessio', model:'opus', project:'Command Centre', tags:['forge','ops'],
+      turns:60, durationMin:300, tokensInK:1500, tokensCachedK:300, tokensOutK:200,
+      estCostCAD:28.00, cbVersion:'v0.0',
+      notes:'Forge chart updated, usage guide, usage tracker + CLAUDE.md rebuild to v1.0' },
+    { date:'2026-04-12', user:'Alessio', model:'opus', project:'Command Centre', tags:['forge','ops'],
+      turns:15, durationMin:60, tokensInK:300, tokensCachedK:50, tokensOutK:50,
+      estCostCAD:5.50, cbVersion:'v1.0',
+      notes:'usage.html built, Condensed Brain v1.0, Save All' },
+    { date:'2026-04-12', user:'Alessio', model:'opus', project:'Forge System', tags:['forge','ops'],
+      turns:12, durationMin:90, tokensInK:250, tokensCachedK:150, tokensOutK:80,
+      estCostCAD:3.50, cbVersion:'v1.0',
+      notes:'Zero-Read Startup rebuild (v1.1), usage tracker redesign, master dashboard plan + build' }
+  ],
+
+  /* ─── PROTOCOL COSTS BY VERSION ─── */
+  protocols: [
+    { cbVersion:'v0.0',
+      startup:     { tokens:7843,  costCAD:0.55, notes:'6 file reads at full price' },
+      saveAll:     { tokens:15000, costCAD:5.25, notes:'Write 6+ files' },
+      sharedBrain: { tokens:60320, costCAD:1.50, notes:'Full Shared Brain load' },
+      superBrain:  { tokens:22567, costCAD:3.38, notes:'Full Super Brain load' },
+      forgeLoad:   { tokens:21343, costCAD:0.53, notes:'Full Forge.md load' }
+    },
+    { cbVersion:'v1.0',
+      startup:     { tokens:7843,  costCAD:0.50, notes:'6 file reads, CLAUDE.md cached' },
+      saveAll:     { tokens:15000, costCAD:5.25, notes:'Write 6+ files' },
+      sharedBrain: { tokens:60320, costCAD:1.50, notes:'Full Shared Brain load' },
+      superBrain:  { tokens:22567, costCAD:3.38, notes:'Full Super Brain load' },
+      forgeLoad:   { tokens:21343, costCAD:0.53, notes:'Full Forge.md load' }
+    },
+    { cbVersion:'v1.1',
+      startup:     { tokens:5200,  costCAD:0.01, notes:'Zero reads — all cached in CLAUDE.md' },
+      saveAll:     { tokens:16000, costCAD:5.50, notes:'Write 6+ files + update CLAUDE.md snapshot' },
+      sharedBrain: { tokens:60320, costCAD:1.50, notes:'Full Shared Brain load' },
+      superBrain:  { tokens:22567, costCAD:3.38, notes:'Full Super Brain load' },
+      forgeLoad:   { tokens:21343, costCAD:0.53, notes:'Full Forge.md load' }
+    }
+  ],
+
+  /* ─── PLATFORMS & INTEGRATIONS ─── */
+  platforms: [
+    { name:'GitHub', status:'active', url:'https://github.com/alessiozilli', plan:'Free',
+      monthlyCostCAD:0,
+      repos: [
+        { name:'azck-site', pages:true, purpose:'Main website (18 pages)' },
+        { name:'command-centre', pages:true, purpose:'Forge dashboard (forge.html, usage.html)' }
+      ],
+      limits: { storage:'1GB/repo', pagesBandwidth:'100GB/month', actionsMin:'2,000/month' },
+      connectedTo:['GitHub Pages','Netlify'],
+      notes:'Free tier. No API token for Forge push — Alessio deploys manually.' },
+    { name:'GitHub Pages', status:'active', url:'https://azcustomknives.com', plan:'Free (via GitHub)',
+      monthlyCostCAD:0,
+      sites:['azcustomknives.com','command.azcustomknives.com'],
+      limits: { bandwidth:'100GB/month', repos:'Public or Pro' },
+      connectedTo:['GitHub','Wix (checkout redirect)','Formspree','Supabase'],
+      notes:'Hosts main site + Command Centre. 18 pages with shared header/footer.' },
+    { name:'Supabase', status:'active', url:'https://supabase.com/dashboard', plan:'Free',
+      monthlyCostCAD:0,
+      limits: { database:'500MB', bandwidth:'5GB/month', edgeFunctions:'500K/month', storage:'1GB' },
+      connectedTo:['cron-job.org (keep-alive)','GitHub Pages (future CMS)'],
+      notes:'Keep-alive active via cron-job.org. CMS plan ready, parked. MCP connected.' },
+    { name:'Wix', status:'active', url:'https://manage.wix.com', plan:'Business',
+      monthlyCostCAD:null,
+      sites: [
+        { name:'AZCK Shop', id:'30b03c22-64e5-4c42-a962-62e3ce6560e3', url:'shop.azcustomknives.com', products:183 },
+        { name:'QuadFang', id:'6875339e-6367-474a-be66-1c00a6499e07', url:'alessiozilli.wixsite.com/quadfang' }
+      ],
+      limits: { products:'Unlimited', storage:'50GB', bandwidth:'Unlimited' },
+      connectedTo:['GitHub Pages (headless checkout — parked)'],
+      notes:'Headless checkout viable via Cart API + Redirect Session API. MCP connected.' },
+    { name:'Formspree', status:'active', url:'https://formspree.io', plan:'Free',
+      monthlyCostCAD:0,
+      limits: { submissions:'50/month' },
+      connectedTo:['GitHub Pages (contact forms)'],
+      notes:'Handles form submissions from main site.' },
+    { name:'Netlify', status:'active', url:'https://app.netlify.com', plan:'Free',
+      monthlyCostCAD:0,
+      sites:['az-command-centre.netlify.app','rl-command-centre.netlify.app'],
+      limits: { bandwidth:'100GB/month', builds:'300 min/month' },
+      connectedTo:['GitHub'],
+      notes:'Personal command centres for Alessio and Reanna.' },
+    { name:'cron-job.org', status:'active', url:'https://cron-job.org', plan:'Free',
+      monthlyCostCAD:0,
+      limits: { jobs:'Unlimited', minInterval:'1 min' },
+      connectedTo:['Supabase (keep-alive ping)'],
+      notes:'Pings Supabase edge function to prevent free-tier sleep.' },
+    { name:'Anthropic (Claude)', status:'active', url:'https://claude.ai', plan:'Max 20x',
+      monthlyCostCAD:280,
+      mcpConnections:['Google Calendar','Gmail','Google Drive','Wix','Supabase','Filesystem'],
+      connectedTo:['All platforms via MCP'],
+      notes:'Cowork mode. Forge v0.9.4. Condensed Brain v1.1.' },
+    { name:'Google Workspace', status:'active', url:'https://drive.google.com', plan:'Business Starter',
+      monthlyCostCAD:null,
+      services:['Gmail','Calendar','Drive'],
+      connectedTo:['Claude (MCP)','All comms'],
+      notes:'admin@azcustomknives.com — primary business account.' }
+  ],
+
+  /* ─── FUTURE PLACEHOLDERS — engine skips null keys ─── */
+  modelDistribution: null,    // pie: % sessions by model
+  userDistribution: null,     // pie: Alessio vs Reanna
+  workerUsage: null,          // bar: which workers loaded, frequency, cost
+  costPerTurn: null,          // line: avg $/turn trend over time
+  claudeMdGrowth: null,       // line: CLAUDE.md tokens over time with 8K ceiling
+  savingsTracker: null,       // cumulative $ saved by version improvements
+  grantHours: null,           // SR&ED time tracking summary
+  customSections: null        // array of {title, type, data} for anything we haven't thought of
 };
 </script>
 <!-- ═══ END DATA BLOCK ═══ -->
 
 
 <!-- ═══════════════════════════════════════════════════════════════
-     ENGINE — DO NOT EDIT BELOW (auto-generates from data above)
+     ENGINE — DO NOT EDIT BELOW
+     Reads DATA object. Renders all tabs, charts, tables, stats.
+     Skips any DATA key that is null. Add new data = new visuals.
      ═══════════════════════════════════════════════════════════════ -->
 
 <div id="app"></div>
 
 <script>
 (function(){
-  /* ---------- helpers ---------- */
+  /* === HELPERS === */
   function $(id){ return document.getElementById(id); }
-  function sum(arr, key){ return arr.reduce(function(a,b){ return a + (b[key]||0); }, 0); }
-  function fmt(n){ return n.toLocaleString('en-CA', {minimumFractionDigits:2, maximumFractionDigits:2}); }
-  function fmtK(n){ return n >= 1000 ? (n/1000).toFixed(1)+'M' : n+'K'; }
+  function sum(a,k){ return a.reduce(function(s,x){ return s+(x[k]||0); },0); }
+  function fmt(n){ return n.toLocaleString('en-CA',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function fmtK(n){ return n>=1000?(n/1000).toFixed(1)+'M':n+'K'; }
+  function pctClass(p){ return p<60?'':p<85?'warn':'danger'; }
+  function pctBgClass(p){ return p<60?'':p<85?'warn-bg':'danger-bg'; }
+  function valClass(p){ return p<60?'green':p<85?'warn':'danger'; }
+  function tagHTML(tags){
+    return (tags||[]).map(function(t){ return '<span class="tag tag-'+t+'">'+t+'</span>'; }).join('');
+  }
+  function statusDot(s){
+    var c=s==='active'?'status-active':s==='parked'?'status-parked':'status-free';
+    return '<span class="status-dot '+c+'"></span>';
+  }
 
-  /* ---------- compute stats ---------- */
-  var totalSessions = SESSIONS.length;
-  var totalTurns = sum(SESSIONS, 'turns');
-  var totalMin = sum(SESSIONS, 'durationMin');
-  var totalTokensK = sum(SESSIONS, 'estTokensK');
-  var totalCostCAD = sum(SESSIONS, 'estCostCAD');
-  var pctUsed = Math.min((totalCostCAD / PLAN.costCAD) * 100, 100);
+  var D = DATA;
+  var P = D.plan;
+  var S = D.sessions;
+  var V = D.versions;
+
+  /* === COMPUTED === */
+  var totalCost = sum(S,'estCostCAD');
+  var totalTurns = sum(S,'turns');
+  var totalTokensInK = sum(S,'tokensInK');
+  var totalTokensOutK = sum(S,'tokensOutK');
+  var totalTokensCachedK = sum(S,'tokensCachedK');
+  var totalSessions = S.length;
+  var pctUsed = Math.min((totalCost/P.costCAD)*100,100);
+  var remaining = P.costCAD - totalCost;
+
+  /* days in month calc */
+  var now = new Date();
+  var daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+  var dayOfMonth = now.getDate();
+  var daysLeft = daysInMonth - dayOfMonth;
+  var dailyBudget = daysLeft > 0 ? remaining / daysLeft : 0;
 
   /* per-project */
   var projects = {};
-  SESSIONS.forEach(function(s){
-    if(!projects[s.project]) projects[s.project] = { sessions:0, turns:0, min:0, tokensK:0, costCAD:0 };
-    var p = projects[s.project];
-    p.sessions++; p.turns += s.turns; p.min += s.durationMin;
-    p.tokensK += s.estTokensK; p.costCAD += s.estCostCAD;
+  S.forEach(function(s){
+    if(!projects[s.project]) projects[s.project]={sessions:0,turns:0,costCAD:0,tokensK:0};
+    var p=projects[s.project];
+    p.sessions++; p.turns+=s.turns; p.costCAD+=s.estCostCAD;
+    p.tokensK+=(s.tokensInK||0)+(s.tokensOutK||0)+(s.tokensCachedK||0);
   });
 
-  /* per-day for chart */
+  /* per-model */
+  var models = {};
+  S.forEach(function(s){
+    if(!models[s.model]) models[s.model]={sessions:0,costCAD:0};
+    models[s.model].sessions++; models[s.model].costCAD+=s.estCostCAD;
+  });
+
+  /* per-day */
   var dailyMap = {};
-  SESSIONS.forEach(function(s){
-    if(!dailyMap[s.date]) dailyMap[s.date] = 0;
-    dailyMap[s.date] += s.estCostCAD;
+  S.forEach(function(s){
+    if(!dailyMap[s.date]) dailyMap[s.date]=0;
+    dailyMap[s.date]+=s.estCostCAD;
   });
   var dailyDates = Object.keys(dailyMap).sort();
   var dailyCosts = dailyDates.map(function(d){ return dailyMap[d]; });
-  var cumCosts = []; var running = 0;
-  dailyCosts.forEach(function(c){ running += c; cumCosts.push(running); });
+  var cumCosts=[]; var run=0;
+  dailyCosts.forEach(function(c){ run+=c; cumCosts.push(run); });
 
-  /* progress class */
-  var progressClass = pctUsed < 60 ? '' : pctUsed < 85 ? 'warn' : 'danger';
-
-  /* ---------- render ---------- */
-  var app = $('app');
-
-  /* --- Monthly Allowance --- */
-  var html = '<h2>Monthly Allowance</h2>';
-  html += '<div class="card">';
-  html += '<div class="stat-grid">';
-  html += '<div class="stat-box"><div class="stat-value">$'+fmt(totalCostCAD)+'</div><div class="stat-label">Estimated Spent (CAD)</div></div>';
-  html += '<div class="stat-box"><div class="stat-value">$'+fmt(PLAN.costCAD - totalCostCAD)+'</div><div class="stat-label">Remaining (CAD)</div></div>';
-  html += '<div class="stat-box"><div class="stat-value">'+totalSessions+'</div><div class="stat-label">Sessions Logged</div></div>';
-  html += '<div class="stat-box"><div class="stat-value">'+totalTurns+'</div><div class="stat-label">Total Turns</div></div>';
-  html += '</div>';
-  html += '<div class="progress-track"><div class="progress-fill '+progressClass+'" style="width:'+pctUsed+'%"></div>';
-  html += '<div class="progress-label">'+pctUsed.toFixed(1)+'% of $'+PLAN.costCAD+' CAD</div></div>';
-  html += '<p style="font-size:13px;color:#8b949e;margin:8px 0 0;">Rolling 5-hour reset window. Usage is approximate — Anthropic doesn\'t expose exact numbers.</p>';
-  html += '</div>';
-
-  /* --- Spending Trend --- */
-  html += '<h2>Spending Trend</h2>';
-  html += '<div class="card"><div class="chart-wrap" style="max-width:700px;height:300px;">';
-  html += '<canvas id="trendChart"></canvas></div></div>';
-
-  /* --- Sessions Table --- */
-  html += '<h2>Session Log</h2>';
-  html += '<div class="card" style="overflow-x:auto;">';
-  html += '<table><thead><tr><th>Date</th><th>User</th><th>Project</th><th>Turns</th><th>Duration</th><th>~Tokens</th><th>~Cost CAD</th><th>Notes</th></tr></thead><tbody>';
-  SESSIONS.slice().reverse().forEach(function(s){
-    var durH = (s.durationMin/60).toFixed(1)+'h';
-    var tagHtml = '';
-    s.tags.forEach(function(t){ tagHtml += '<span class="tag tag-'+t+'">'+t+'</span>'; });
-    html += '<tr><td>'+s.date+'</td><td>'+s.user+'</td><td>'+tagHtml+' '+s.project+'</td>';
-    html += '<td>'+s.turns+'</td><td>'+durH+'</td><td>'+fmtK(s.estTokensK)+'</td>';
-    html += '<td>$'+fmt(s.estCostCAD)+'</td><td style="font-size:13px;color:#8b949e;">'+s.notes+'</td></tr>';
+  /* weekly grouping */
+  function getWeek(dateStr){
+    var d=new Date(dateStr+'T12:00:00');
+    var jan1=new Date(d.getFullYear(),0,1);
+    return 'W'+Math.ceil(((d-jan1)/86400000+jan1.getDay()+1)/7);
+  }
+  var weeklyMap={};
+  S.forEach(function(s){
+    var w=getWeek(s.date);
+    if(!weeklyMap[w]) weeklyMap[w]={cost:0,turns:0,sessions:0,tokensK:0};
+    weeklyMap[w].cost+=s.estCostCAD; weeklyMap[w].turns+=s.turns;
+    weeklyMap[w].sessions++; weeklyMap[w].tokensK+=(s.tokensInK||0)+(s.tokensOutK||0);
   });
-  html += '</tbody></table></div>';
+  var weeks=Object.keys(weeklyMap).sort();
 
-  /* --- Project Breakdown --- */
-  html += '<h2>By Project</h2>';
-  html += '<div class="card"><div class="chart-wrap" style="max-width:400px;height:320px;">';
-  html += '<canvas id="projectChart"></canvas></div>';
-  html += '<table style="margin-top:16px;"><thead><tr><th>Project</th><th>Sessions</th><th>Turns</th><th>Hours</th><th>~Cost CAD</th><th>% of Total</th></tr></thead><tbody>';
-  Object.keys(projects).forEach(function(name){
-    var p = projects[name];
-    var pct = ((p.costCAD/totalCostCAD)*100).toFixed(1);
-    html += '<tr><td style="font-weight:600;">'+name+'</td><td>'+p.sessions+'</td><td>'+p.turns+'</td>';
-    html += '<td>'+(p.min/60).toFixed(1)+'</td><td>$'+fmt(p.costCAD)+'</td><td>'+pct+'%</td></tr>';
+  /* projection: avg daily spend → projected month-end */
+  var activeDays = dailyDates.length || 1;
+  var avgDailySpend = totalCost / activeDays;
+  var projectedMonthEnd = totalCost + (avgDailySpend * daysLeft);
+  var projOnTrack = projectedMonthEnd <= P.costCAD;
+
+  /* CB version: current */
+  var currentCB = V[V.length-1];
+
+  /* === BUILD HTML === */
+  var H = '';
+
+  /* --- TABS --- */
+  H += '<div class="tab-bar">';
+  H += '<button class="tab-btn active" onclick="showTab(\'usage\')">Usage</button>';
+  H += '<button class="tab-btn" onclick="showTab(\'versions\')">Brain Versions</button>';
+  H += '<button class="tab-btn" onclick="showTab(\'files\')">File Registry</button>';
+  H += '<button class="tab-btn" onclick="showTab(\'platforms\')">Platforms</button>';
+  H += '<button class="tab-btn" onclick="showTab(\'protocols\')">Protocol Costs</button>';
+  H += '<button class="tab-btn" onclick="showTab(\'tips\')">Efficiency</button>';
+  H += '</div>';
+
+  /* ============================================================
+     TAB 1: USAGE
+     ============================================================ */
+  H += '<div id="tab-usage" class="tab-content active">';
+
+  /* Monthly Allowance */
+  H += '<h2>Monthly Allowance</h2><div class="card">';
+  H += '<div class="stat-grid">';
+  H += '<div class="stat-box"><div class="stat-value">$'+fmt(totalCost)+'</div><div class="stat-label">Spent (CAD)</div></div>';
+  H += '<div class="stat-box"><div class="stat-value '+valClass(pctUsed)+'">$'+fmt(remaining)+'</div><div class="stat-label">Remaining</div></div>';
+  H += '<div class="stat-box"><div class="stat-value">'+totalSessions+'</div><div class="stat-label">Sessions</div></div>';
+  H += '<div class="stat-box"><div class="stat-value">'+totalTurns+'</div><div class="stat-label">Turns</div></div>';
+  H += '<div class="stat-box"><div class="stat-value">'+fmtK(totalTokensInK+totalTokensOutK+totalTokensCachedK)+'</div><div class="stat-label">Total Tokens</div></div>';
+  H += '<div class="stat-box"><div class="stat-value">$'+fmt(dailyBudget)+'</div><div class="stat-label">Daily Budget ('+daysLeft+' days left)</div></div>';
+  H += '</div>';
+  H += '<div class="progress-track"><div class="progress-fill '+pctBgClass(pctUsed)+'" style="width:'+pctUsed+'%"></div>';
+  H += '<div class="progress-label">'+pctUsed.toFixed(1)+'% of $'+P.costCAD+' CAD</div></div>';
+
+  /* Projection */
+  H += '<p style="font-size:14px;margin-top:12px;">';
+  H += '<strong>Projection:</strong> At current pace ($'+fmt(avgDailySpend)+'/day over '+activeDays+' active days), ';
+  H += 'month-end estimate is <span class="'+(projOnTrack?'green':'danger')+'">$'+fmt(projectedMonthEnd)+' CAD</span>. ';
+  H += projOnTrack ? 'On track.' : 'Over budget — reduce session length or switch to Sonnet/Haiku.';
+  H += '</p></div>';
+
+  /* Spending Trend */
+  H += '<h2>Spending Trend</h2><div class="card"><div class="chart-wrap" style="height:300px;">';
+  H += '<canvas id="trendChart"></canvas></div></div>';
+
+  /* Weekly Trend */
+  if(weeks.length > 0){
+    H += '<h2>Weekly Trend</h2><div class="card"><div class="chart-wrap" style="height:260px;">';
+    H += '<canvas id="weeklyChart"></canvas></div></div>';
+  }
+
+  /* Model Distribution */
+  var modelNames = Object.keys(models);
+  if(modelNames.length > 0){
+    H += '<h2>Model Usage</h2><div class="card">';
+    H += '<div class="stat-grid">';
+    modelNames.forEach(function(m){
+      var md = models[m];
+      var ml = P.models[m] ? P.models[m].label : m;
+      H += '<div class="stat-box"><div class="stat-value">'+md.sessions+'</div>';
+      H += '<div class="stat-label"><span class="tag tag-'+m+'">'+ml+'</span> sessions — $'+fmt(md.costCAD)+' CAD</div></div>';
+    });
+    H += '</div>';
+    if(modelNames.length > 1){
+      H += '<div class="chart-wrap" style="max-width:300px;height:240px;"><canvas id="modelChart"></canvas></div>';
+    }
+    H += '</div>';
+  }
+
+  /* Session Log */
+  H += '<h2>Session Log</h2><div class="card" style="overflow-x:auto;">';
+  H += '<table><thead><tr><th>Date</th><th>User</th><th>Model</th><th>CB</th><th>Project</th>';
+  H += '<th>Turns</th><th>In (K)</th><th>Cached (K)</th><th>Out (K)</th><th>~CAD</th><th>Notes</th></tr></thead><tbody>';
+  S.slice().reverse().forEach(function(s){
+    var ml = P.models[s.model] ? P.models[s.model].label : s.model;
+    H += '<tr><td>'+s.date+'</td><td>'+s.user+'</td>';
+    H += '<td><span class="tag tag-'+s.model+'">'+ml+'</span></td>';
+    H += '<td><span class="version-badge">'+s.cbVersion+'</span></td>';
+    H += '<td>'+tagHTML(s.tags)+' '+s.project+'</td>';
+    H += '<td>'+s.turns+'</td>';
+    H += '<td>'+(s.tokensInK||'—')+'</td>';
+    H += '<td>'+(s.tokensCachedK||'—')+'</td>';
+    H += '<td>'+(s.tokensOutK||'—')+'</td>';
+    H += '<td>$'+fmt(s.estCostCAD)+'</td>';
+    H += '<td style="font-size:13px;color:#8b949e;">'+s.notes+'</td></tr>';
   });
-  html += '</tbody></table></div>';
+  H += '</tbody></table></div>';
 
-  /* --- Protocol Costs --- */
-  html += '<h2>Protocol Costs</h2>';
-  html += '<div class="card">';
-  html += '<p style="font-size:14px;color:#8b949e;margin-bottom:12px;">What each standard operation costs per execution.</p>';
-  html += '<table><thead><tr><th>Protocol</th><th>~Tokens</th><th>~Cost CAD</th></tr></thead><tbody>';
-  Object.keys(PROTOCOLS).forEach(function(k){
-    var p = PROTOCOLS[k];
-    html += '<tr><td style="font-weight:600;">'+p.label+'</td><td>'+p.tokens.toLocaleString()+'</td><td>$'+fmt(p.costCAD)+'</td></tr>';
+  /* By Project */
+  H += '<h2>By Project</h2><div class="card">';
+  H += '<div class="chart-wrap" style="max-width:350px;height:280px;"><canvas id="projectChart"></canvas></div>';
+  H += '<table style="margin-top:16px;"><thead><tr><th>Project</th><th>Sessions</th><th>Turns</th><th>~Tokens</th><th>~CAD</th><th>%</th></tr></thead><tbody>';
+  Object.keys(projects).forEach(function(n){
+    var p=projects[n]; var pc=((p.costCAD/totalCost)*100).toFixed(1);
+    H += '<tr><td style="font-weight:600;">'+n+'</td><td>'+p.sessions+'</td><td>'+p.turns+'</td>';
+    H += '<td>'+fmtK(p.tokensK)+'</td><td>$'+fmt(p.costCAD)+'</td><td>'+pc+'%</td></tr>';
   });
-  html += '</tbody></table>';
-  html += '<div class="tip-box" style="margin-top:16px;"><strong>Tip:</strong> The rebuilt CLAUDE.md loads via prompt caching at <span class="highlight">10% cost</span> per turn. ' +
-          'Loading knowledge upfront is cheaper than corrections mid-session.</div>';
-  html += '</div>';
+  H += '</tbody></table></div>';
+  H += '</div>'; // end tab-usage
 
-  /* --- Efficiency Tips --- */
-  html += '<h2>Efficiency Rules</h2>';
-  html += '<div class="card">';
-  html += '<div class="tip-box"><strong>Keep sessions under 30 turns.</strong> Context replay means turn 50 costs ~10x more than turn 1.</div>';
-  html += '<div class="tip-box"><strong>Start fresh when work shifts.</strong> New session = clean context = cheaper turns.</div>';
-  html += '<div class="tip-box"><strong>Be specific.</strong> A precise 2-sentence request costs less than a vague paragraph that needs clarification.</div>';
-  html += '<div class="tip-box"><strong>Don\'t load Super Brain unless needed.</strong> ~$3.38 CAD per load. The CLAUDE.md cache covers 90% of daily work.</div>';
-  html += '<div class="tip-box"><strong>Output costs 5x more than input.</strong> Ask for concise answers. Don\'t request explanations you already understand.</div>';
-  html += '</div>';
+  /* ============================================================
+     TAB 2: BRAIN VERSIONS
+     ============================================================ */
+  H += '<div id="tab-versions" class="tab-content">';
+  H += '<h2>Condensed Brain Evolution</h2>';
+  H += '<div class="card">';
+  H += '<p style="margin-bottom:16px;">Each version represents a structural change to CLAUDE.md — tracked like Forge versions. Shows cost impact of each evolution.</p>';
 
-  /* --- Footer --- */
-  html += '<hr class="section-divider">';
-  html += '<p style="font-size:12px;color:#8b949e;text-align:center;">AZCK Command Centre — Usage Tracker — Self-reported data, updated every Save All<br>';
-  html += 'Plan: '+PLAN.name+' ($'+PLAN.costCAD+' CAD/month) — Opus 4.6 — Rolling '+PLAN.windowHours+'-hour window</p>';
+  /* Version comparison table */
+  H += '<table><thead><tr><th>Version</th><th>Date</th><th>Codename</th><th>Tokens</th><th>Bytes</th>';
+  H += '<th>Startup Reads</th><th>Startup Cost</th><th>Save Cost</th><th>Changes</th></tr></thead><tbody>';
+  V.forEach(function(v){
+    H += '<tr><td><span class="version-badge">'+v.version+'</span></td><td>'+v.date+'</td>';
+    H += '<td style="font-weight:600;">'+v.codename+'</td>';
+    H += '<td>'+v.tokens.toLocaleString()+'</td><td>'+v.bytes.toLocaleString()+'</td>';
+    H += '<td>'+v.startupReads+'</td><td>$'+fmt(v.startupCostCAD)+'</td>';
+    H += '<td>$'+fmt(v.saveCostCAD)+'</td>';
+    H += '<td style="font-size:13px;color:#8b949e;">'+v.changes+'</td></tr>';
+  });
+  H += '</tbody></table></div>';
 
-  app.innerHTML = html;
+  /* CLAUDE.md Growth chart */
+  H += '<h2>CLAUDE.md Token Growth</h2><div class="card">';
+  H += '<div class="chart-wrap" style="height:260px;"><canvas id="growthChart"></canvas></div>';
+  H += '<p style="font-size:13px;color:#8b949e;margin-top:8px;">Red dashed line = 8,000 token recommended ceiling. Current: '+currentCB.tokens.toLocaleString()+' tokens ('+Math.round(currentCB.tokens/8000*100)+'% of ceiling).</p>';
+  H += '</div>';
 
-  /* ---------- Charts ---------- */
+  /* Startup cost comparison */
+  H += '<h2>Startup Cost by Version</h2><div class="card">';
+  H += '<div class="chart-wrap" style="height:240px;"><canvas id="startupChart"></canvas></div>';
+  H += '</div>';
+  H += '</div>'; // end tab-versions
 
-  /* Trend chart */
+  /* ============================================================
+     TAB 3: FILE REGISTRY
+     ============================================================ */
+  H += '<div id="tab-files" class="tab-content">';
+  H += '<h2>File Size Registry</h2>';
+  H += '<p style="color:#8b949e;">Snapshot as of '+D.fileSizes.asOf+'. Every file that Forge loads or writes, with token cost.</p>';
+
+  H += '<h3>Cached at Startup (CLAUDE.md)</h3><div class="card">';
+  D.fileSizes.cached.forEach(function(f){
+    var pct = Math.round(f.tokens / D.fileSizes.maxRecommendedTokens * 100);
+    H += '<div style="margin-bottom:12px;"><strong>'+f.name+'</strong> — '+f.tokens.toLocaleString()+' tokens ('+f.lines+' lines, '+f.bytes.toLocaleString()+' bytes)';
+    H += '<div class="progress-track" style="height:18px;margin:6px 0;">';
+    H += '<div class="progress-fill '+(pct>80?'warn-bg':'')+'" style="width:'+pct+'%"></div>';
+    H += '<div class="progress-label" style="font-size:11px;">'+pct+'% of '+D.fileSizes.maxRecommendedTokens.toLocaleString()+' ceiling</div></div>';
+    H += '<span style="font-size:12px;color:#8b949e;">'+f.role+'</span></div>';
+  });
+  H += '</div>';
+
+  H += '<h3>On-Demand Files</h3><div class="card">';
+  H += '<table><thead><tr><th>File</th><th>Tokens</th><th>Cost to Read</th><th>Role</th></tr></thead><tbody>';
+  D.fileSizes.onDemand.forEach(function(f){
+    var cost = (f.tokens / 1000000 * P.models.opus.input).toFixed(3);
+    H += '<tr><td style="font-weight:600;">'+f.name+'</td><td>'+f.tokens.toLocaleString()+'</td>';
+    H += '<td>$'+cost+'</td><td style="font-size:13px;color:#8b949e;">'+f.role+'</td></tr>';
+  });
+  H += '</tbody></table></div>';
+
+  H += '<h3>Workers (loaded by keyword)</h3><div class="card">';
+  H += '<div class="chart-wrap" style="height:280px;"><canvas id="workerChart"></canvas></div>';
+  H += '</div>';
+  H += '</div>'; // end tab-files
+
+  /* ============================================================
+     TAB 4: PLATFORMS
+     ============================================================ */
+  H += '<div id="tab-platforms" class="tab-content">';
+  H += '<h2>Platform Ecosystem</h2>';
+  H += '<p style="color:#8b949e;">All services AZCK relies on — status, limits, connections, and costs.</p>';
+  H += '<div class="platform-grid">';
+  D.platforms.forEach(function(p){
+    H += '<div class="platform-card">';
+    H += '<h4>'+statusDot(p.status)+p.name+'</h4>';
+    H += '<div class="meta">'+p.plan;
+    if(p.monthlyCostCAD !== null && p.monthlyCostCAD > 0) H += ' — $'+fmt(p.monthlyCostCAD)+'/month CAD';
+    else if(p.monthlyCostCAD === 0) H += ' — Free';
+    H += '</div>';
+    if(p.url) H += '<div class="meta"><a href="'+p.url+'" style="color:#58a6ff;" target="_blank">'+p.url+'</a></div>';
+
+    /* Sites/repos */
+    if(p.repos){
+      H += '<div class="limits"><strong>Repos:</strong> ';
+      H += p.repos.map(function(r){ return r.name+(r.pages?' (Pages)':'')+'—'+r.purpose; }).join('; ');
+      H += '</div>';
+    }
+    if(p.sites && Array.isArray(p.sites) && typeof p.sites[0]==='object'){
+      H += '<div class="limits"><strong>Sites:</strong> ';
+      H += p.sites.map(function(s){ return s.name+(s.products?' ('+s.products+' products)':''); }).join(', ');
+      H += '</div>';
+    } else if(p.sites && Array.isArray(p.sites) && typeof p.sites[0]==='string'){
+      H += '<div class="limits"><strong>Sites:</strong> '+p.sites.join(', ')+'</div>';
+    }
+    if(p.mcpConnections){
+      H += '<div class="limits"><strong>MCP:</strong> '+p.mcpConnections.join(', ')+'</div>';
+    }
+    if(p.services){
+      H += '<div class="limits"><strong>Services:</strong> '+p.services.join(', ')+'</div>';
+    }
+
+    /* Limits */
+    if(p.limits){
+      H += '<div class="limits"><strong>Limits:</strong> ';
+      H += Object.keys(p.limits).map(function(k){ return k+': '+p.limits[k]; }).join(' · ');
+      H += '</div>';
+    }
+
+    /* Connections */
+    if(p.connectedTo){
+      H += '<div class="limits" style="margin-top:4px;"><strong>Connected to:</strong> '+p.connectedTo.join(', ')+'</div>';
+    }
+
+    if(p.notes) H += '<div class="meta" style="margin-top:6px;font-style:italic;">'+p.notes+'</div>';
+    H += '</div>';
+  });
+  H += '</div></div>'; // end tab-platforms
+
+  /* ============================================================
+     TAB 5: PROTOCOL COSTS
+     ============================================================ */
+  H += '<div id="tab-protocols" class="tab-content">';
+  H += '<h2>Protocol Costs by Version</h2>';
+  H += '<p style="color:#8b949e;">What each standard operation costs, and how it changed across Condensed Brain versions.</p>';
+
+  H += '<div class="card">';
+  H += '<div class="chart-wrap" style="height:300px;"><canvas id="protocolChart"></canvas></div>';
+  H += '</div>';
+
+  H += '<div class="card">';
+  H += '<table><thead><tr><th>Protocol</th>';
+  D.protocols.forEach(function(p){ H += '<th>'+p.cbVersion+'</th>'; });
+  H += '<th>Change</th></tr></thead><tbody>';
+  var protoKeys = ['startup','saveAll','sharedBrain','superBrain','forgeLoad'];
+  var protoLabels = { startup:'Startup',saveAll:'Save All',sharedBrain:'Load Shared Brain',superBrain:'Load Super Brain',forgeLoad:'Load Forge Identity' };
+  protoKeys.forEach(function(k){
+    H += '<tr><td style="font-weight:600;">'+protoLabels[k]+'</td>';
+    var first=null, last=null;
+    D.protocols.forEach(function(p){
+      var v=p[k]; if(!first) first=v.costCAD; last=v.costCAD;
+      H += '<td>$'+fmt(v.costCAD)+'<br><span style="font-size:11px;color:#8b949e;">'+v.tokens.toLocaleString()+' tok</span></td>';
+    });
+    var change = first>0 ? Math.round((1-last/first)*100) : 0;
+    var changeClass = change>0?'green':change<0?'danger':'';
+    H += '<td class="'+changeClass+'">'+(change>0?'↓':change<0?'↑':'—')+Math.abs(change)+'%</td>';
+    H += '</tr>';
+  });
+  H += '</tbody></table></div>';
+
+  /* Model pricing reference */
+  H += '<h2>Model Pricing Reference</h2><div class="card">';
+  H += '<table><thead><tr><th>Model</th><th>Input/MTok</th><th>Output/MTok</th><th>Cached/MTok</th><th>Output vs Opus</th></tr></thead><tbody>';
+  Object.keys(P.models).forEach(function(k){
+    var m=P.models[k]; var savePct = Math.round((1-m.output/P.models.opus.output)*100);
+    H += '<tr><td><span class="tag tag-'+k+'">'+m.label+'</span></td>';
+    H += '<td>$'+fmt(m.input)+'</td><td>$'+fmt(m.output)+'</td><td>$'+fmt(m.cached)+'</td>';
+    H += '<td>'+(savePct>0?'<span class="green">↓'+savePct+'% cheaper</span>':'Baseline')+'</td></tr>';
+  });
+  H += '</tbody></table></div>';
+  H += '</div>'; // end tab-protocols
+
+  /* ============================================================
+     TAB 6: EFFICIENCY TIPS
+     ============================================================ */
+  H += '<div id="tab-tips" class="tab-content">';
+  H += '<h2>Efficiency Rules</h2><div class="card">';
+  H += '<div class="tip-box"><strong>Keep sessions under 30 turns.</strong> Context replay means turn 50 costs ~10x more than turn 1.</div>';
+  H += '<div class="tip-box"><strong>Start fresh when work shifts topic.</strong> New session = clean context = cheaper turns.</div>';
+  H += '<div class="tip-box"><strong>Be specific.</strong> A precise 2-sentence request costs less than a vague paragraph needing clarification.</div>';
+  H += '<div class="tip-box"><strong>Don\'t load Super Brain unless needed.</strong> ~$3.38 CAD per load. CLAUDE.md cache covers 90% of daily work.</div>';
+  H += '<div class="tip-box"><strong>Output costs 5x more than input.</strong> Ask for concise answers. Don\'t request explanations you already understand.</div>';
+  H += '<div class="tip-box"><strong>Use Sonnet for routine tasks.</strong> 40% cheaper output. With the Condensed Brain, Sonnet handles greetings, Save All, simple edits, and file creation.</div>';
+  H += '<div class="tip-box"><strong>Reserve Opus for architecture days.</strong> Complex debugging, strategic planning, new system design — that\'s where Opus earns its cost.</div>';
+  H += '<div class="tip-box"><strong>Batch Command Centre deploys.</strong> Update JSON data during Save All. Push to GitHub once daily or every other day in a short deploy session.</div>';
+  H += '<div class="tip-box"><strong>ENGINE + DATA BLOCK everything.</strong> HTML engine never changes. JSON data block is the only thing that gets updated. 10-12x cheaper than rewriting HTML.</div>';
+  H += '</div>';
+
+  /* Condensed Brain ceiling */
+  H += '<h2>Condensed Brain Ceiling Monitor</h2><div class="card">';
+  var cbPct = Math.round(currentCB.tokens / D.fileSizes.maxRecommendedTokens * 100);
+  H += '<div class="stat-grid">';
+  H += '<div class="stat-box"><div class="stat-value">'+currentCB.tokens.toLocaleString()+'</div><div class="stat-label">Current Tokens</div></div>';
+  H += '<div class="stat-box"><div class="stat-value">'+D.fileSizes.maxRecommendedTokens.toLocaleString()+'</div><div class="stat-label">Recommended Ceiling</div></div>';
+  H += '<div class="stat-box"><div class="stat-value '+(cbPct>80?'warn':'green')+'">'+cbPct+'%</div><div class="stat-label">Capacity Used</div></div>';
+  H += '<div class="stat-box"><div class="stat-value">'+(D.fileSizes.maxRecommendedTokens - currentCB.tokens).toLocaleString()+'</div><div class="stat-label">Tokens Remaining</div></div>';
+  H += '</div>';
+  H += '<div class="progress-track"><div class="progress-fill '+(cbPct>80?'warn-bg':'')+'" style="width:'+cbPct+'%"></div>';
+  H += '<div class="progress-label">'+cbPct+'% of ceiling</div></div>';
+  H += '</div>';
+  H += '</div>'; // end tab-tips
+
+  /* === FOOTER === */
+  H += '<hr class="section-divider">';
+  H += '<p style="font-size:12px;color:#8b949e;text-align:center;">AZCK Command Centre — Usage Tracker v2.0 — Master Dashboard Engine<br>';
+  H += 'Plan: '+P.name+' ($'+P.costCAD+' CAD/month) — Condensed Brain '+currentCB.version+' "'+currentCB.codename+'"<br>';
+  H += 'ENGINE + DATA BLOCK architecture — update JSON only, never touch HTML</p>';
+
+  $('app').innerHTML = H;
+
+  /* === CHARTS === */
+
+  /* Spending trend */
+  var budgetLine = dailyDates.map(function(){ return P.costCAD; });
   new Chart($('trendChart'), {
-    type: 'bar',
-    data: {
-      labels: dailyDates.map(function(d){ return d.replace('2026-','')}),
-      datasets: [
-        { type:'bar', label:'Daily Cost (CAD)', data: dailyCosts, backgroundColor:'#58a6ff44', borderColor:'#58a6ff', borderWidth:1, borderRadius:4, order:2 },
-        { type:'line', label:'Cumulative (CAD)', data: cumCosts, borderColor:'#3fb950', backgroundColor:'#3fb95022', pointRadius:4, pointBackgroundColor:'#3fb950', tension:0.3, fill:true, order:1 }
+    type:'bar',
+    data:{
+      labels: dailyDates.map(function(d){ return d.replace('2026-',''); }),
+      datasets:[
+        { type:'bar', label:'Daily (CAD)', data:dailyCosts, backgroundColor:'#58a6ff44', borderColor:'#58a6ff', borderWidth:1, borderRadius:4, order:3 },
+        { type:'line', label:'Cumulative (CAD)', data:cumCosts, borderColor:'#3fb950', backgroundColor:'#3fb95022', pointRadius:4, pointBackgroundColor:'#3fb950', tension:0.3, fill:true, order:2 },
+        { type:'line', label:'$'+P.costCAD+' ceiling', data:budgetLine, borderColor:'#f8514966', borderDash:[8,4], pointRadius:0, borderWidth:2, order:1 }
       ]
     },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { labels: { color:'#8b949e', font:{size:12} } },
-        tooltip: { callbacks: { label: function(ctx){ return ctx.dataset.label+': $'+fmt(ctx.parsed.y); } } }
-      },
-      scales: {
-        x: { ticks:{color:'#8b949e'}, grid:{color:'#21262d'} },
-        y: { ticks:{color:'#8b949e', callback:function(v){return '$'+v;}}, grid:{color:'#21262d'} }
-      }
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{labels:{color:'#8b949e',font:{size:12}}}, tooltip:{callbacks:{label:function(c){return c.dataset.label+': $'+fmt(c.parsed.y);}}} },
+      scales:{ x:{ticks:{color:'#8b949e'},grid:{color:'#21262d'}}, y:{ticks:{color:'#8b949e',callback:function(v){return '$'+v;}},grid:{color:'#21262d'}} }
     }
   });
+
+  /* Weekly trend */
+  if(weeks.length>0 && $('weeklyChart')){
+    new Chart($('weeklyChart'), {
+      type:'bar',
+      data:{
+        labels:weeks,
+        datasets:[
+          { label:'Weekly Cost (CAD)', data:weeks.map(function(w){return weeklyMap[w].cost;}), backgroundColor:'#58a6ff66', borderColor:'#58a6ff', borderWidth:1, borderRadius:4 },
+          { label:'Sessions', data:weeks.map(function(w){return weeklyMap[w].sessions;}), backgroundColor:'#bc8cff44', borderColor:'#bc8cff', borderWidth:1, borderRadius:4 }
+        ]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{labels:{color:'#8b949e'}} },
+        scales:{ x:{ticks:{color:'#8b949e'},grid:{color:'#21262d'}}, y:{ticks:{color:'#8b949e'},grid:{color:'#21262d'}} }
+      }
+    });
+  }
+
+  /* Model doughnut */
+  if(modelNames.length>1 && $('modelChart')){
+    var mColors = { opus:'#bc8cff', sonnet:'#58a6ff', haiku:'#3fb950' };
+    new Chart($('modelChart'), {
+      type:'doughnut',
+      data:{
+        labels:modelNames.map(function(m){ return P.models[m]?P.models[m].label:m; }),
+        datasets:[{data:modelNames.map(function(m){return models[m].costCAD;}),backgroundColor:modelNames.map(function(m){return mColors[m]||'#8b949e';}),borderColor:'#161b22',borderWidth:3}]
+      },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{color:'#8b949e',padding:12}}} }
+    });
+  }
 
   /* Project doughnut */
-  var projNames = Object.keys(projects);
-  var projCosts = projNames.map(function(n){ return projects[n].costCAD; });
-  var projColors = ['#58a6ff','#bc8cff','#3fb950','#f0883e','#f778ba','#d29922'];
+  var projNames=Object.keys(projects);
+  var projColors=['#58a6ff','#bc8cff','#3fb950','#f0883e','#f778ba','#d29922'];
   new Chart($('projectChart'), {
-    type: 'doughnut',
-    data: {
-      labels: projNames,
-      datasets: [{ data: projCosts, backgroundColor: projColors.slice(0, projNames.length), borderColor:'#161b22', borderWidth:3 }]
+    type:'doughnut',
+    data:{
+      labels:projNames,
+      datasets:[{data:projNames.map(function(n){return projects[n].costCAD;}),backgroundColor:projColors.slice(0,projNames.length),borderColor:'#161b22',borderWidth:3}]
     },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { position:'bottom', labels:{color:'#8b949e', padding:16, font:{size:13}} },
-        tooltip: { callbacks: { label:function(ctx){ return ctx.label+': $'+fmt(ctx.parsed)+' CAD'; } } }
-      }
-    }
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{color:'#8b949e',padding:12}},tooltip:{callbacks:{label:function(c){return c.label+': $'+fmt(c.parsed)+' CAD';}}}} }
   });
 
+  /* CB Growth chart */
+  if($('growthChart')){
+    var vLabels=V.map(function(v){return v.version;});
+    var vTokens=V.map(function(v){return v.tokens;});
+    var ceiling=V.map(function(){return D.fileSizes.maxRecommendedTokens;});
+    new Chart($('growthChart'), {
+      type:'line',
+      data:{
+        labels:vLabels,
+        datasets:[
+          {label:'CLAUDE.md Tokens',data:vTokens,borderColor:'#58a6ff',backgroundColor:'#58a6ff22',pointRadius:6,pointBackgroundColor:'#58a6ff',tension:0.3,fill:true},
+          {label:'8K Ceiling',data:ceiling,borderColor:'#f85149',borderDash:[8,4],pointRadius:0,borderWidth:2,fill:false}
+        ]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{labels:{color:'#8b949e'}}},
+        scales:{x:{ticks:{color:'#8b949e'},grid:{color:'#21262d'}},y:{min:0,max:10000,ticks:{color:'#8b949e'},grid:{color:'#21262d'}}}
+      }
+    });
+  }
+
+  /* Startup cost comparison */
+  if($('startupChart')){
+    new Chart($('startupChart'), {
+      type:'bar',
+      data:{
+        labels:V.map(function(v){return v.version+' — '+v.codename;}),
+        datasets:[
+          {label:'Startup Cost (CAD)',data:V.map(function(v){return v.startupCostCAD;}),backgroundColor:'#58a6ff66',borderColor:'#58a6ff',borderWidth:1,borderRadius:4},
+          {label:'Save Cost (CAD)',data:V.map(function(v){return v.saveCostCAD;}),backgroundColor:'#3fb95066',borderColor:'#3fb950',borderWidth:1,borderRadius:4}
+        ]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{labels:{color:'#8b949e'}},tooltip:{callbacks:{label:function(c){return c.dataset.label+': $'+fmt(c.parsed.y);}}}},
+        scales:{x:{ticks:{color:'#8b949e'},grid:{color:'#21262d'}},y:{ticks:{color:'#8b949e',callback:function(v){return '$'+v;}},grid:{color:'#21262d'}}}
+      }
+    });
+  }
+
+  /* Worker chart */
+  if($('workerChart')){
+    var wk=D.fileSizes.workers;
+    new Chart($('workerChart'), {
+      type:'bar',
+      data:{
+        labels:wk.map(function(w){return w.name.replace('.md','');}),
+        datasets:[{label:'Tokens',data:wk.map(function(w){return w.tokens;}),backgroundColor:'#58a6ff44',borderColor:'#58a6ff',borderWidth:1,borderRadius:4}]
+      },
+      options:{
+        indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return c.parsed.x.toLocaleString()+' tokens (~$'+((c.parsed.x/1000000)*5).toFixed(3)+' to read)';}}}},
+        scales:{x:{ticks:{color:'#8b949e'},grid:{color:'#21262d'}},y:{ticks:{color:'#8b949e',font:{size:11}},grid:{color:'#21262d'}}}
+      }
+    });
+  }
+
+  /* Protocol comparison */
+  if($('protocolChart')){
+    var pColors=['#58a6ff','#3fb950','#bc8cff'];
+    var pDatasets=D.protocols.map(function(p,i){
+      return {
+        label:p.cbVersion,
+        data:protoKeys.map(function(k){return p[k].costCAD;}),
+        backgroundColor:pColors[i]+'66',borderColor:pColors[i],borderWidth:1,borderRadius:4
+      };
+    });
+    new Chart($('protocolChart'), {
+      type:'bar',
+      data:{ labels:protoKeys.map(function(k){return protoLabels[k];}), datasets:pDatasets },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{labels:{color:'#8b949e'}},tooltip:{callbacks:{label:function(c){return c.dataset.label+': $'+fmt(c.parsed.y);}}}},
+        scales:{x:{ticks:{color:'#8b949e'},grid:{color:'#21262d'}},y:{ticks:{color:'#8b949e',callback:function(v){return '$'+v;}},grid:{color:'#21262d'}}}
+      }
+    });
+  }
+
 })();
+
+/* === TAB SWITCHING === */
+function showTab(name){
+  document.querySelectorAll('.tab-content').forEach(function(el){ el.classList.remove('active'); });
+  document.querySelectorAll('.tab-btn').forEach(function(el){ el.classList.remove('active'); });
+  document.getElementById('tab-'+name).classList.add('active');
+  event.target.classList.add('active');
+  /* Trigger chart resize for hidden tabs */
+  window.dispatchEvent(new Event('resize'));
+}
 </script>
 
 </body>
