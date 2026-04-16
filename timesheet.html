@@ -3,302 +3,494 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AZCK Project Timesheet</title>
+<title>AZCK Timesheet — Command Centre</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #0d1117; color: #e6edf3;
-  padding: 24px; max-width: 1200px; margin: 0 auto;
-}
-h1 { font-size: 32px; font-weight: 700; color: #58a6ff; margin-bottom: 4px; }
-h2 { font-size: 22px; font-weight: 700; color: #58a6ff; margin: 40px 0 16px; }
-h3 { font-size: 16px; font-weight: 600; color: #e6edf3; margin: 16px 0 8px; }
-.subtitle { font-size: 14px; color: #8b949e; margin-bottom: 32px; }
-.highlight { color: #58a6ff; font-weight: 600; }
-.card {
-  background: #161b22; border: 1px solid #30363d;
-  border-radius: 12px; padding: 24px; margin-bottom: 20px;
-}
-.section-divider { border: none; border-top: 1px solid #21262d; margin: 32px 0; }
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0d1117;color:#e6edf3;padding:24px;max-width:1200px;margin:0 auto}
+h1{font-size:32px;font-weight:700;color:#58a6ff;margin-bottom:4px}
+h2{font-size:22px;font-weight:700;color:#58a6ff;margin:32px 0 16px}
+h3{font-size:17px;font-weight:600;color:#e6edf3;margin:20px 0 10px}
+.subtitle{font-size:14px;color:#8b949e;margin-bottom:32px}
+.highlight{color:#58a6ff;font-weight:600}
+.warn{color:#d29922;font-weight:600}
+.danger{color:#f85149;font-weight:600}
+.green{color:#3fb950;font-weight:600}
+.card{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:24px;margin-bottom:20px}
+.back-link{display:inline-block;margin-bottom:20px;color:#58a6ff;text-decoration:none;font-size:13px}
+.back-link:hover{text-decoration:underline}
 
-/* Summary cards row */
-.summary-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
-.stat-card {
-  background: #161b22; border: 1px solid #30363d; border-radius: 12px;
-  padding: 20px; text-align: center;
-}
-.stat-value { font-size: 36px; font-weight: 800; color: #58a6ff; }
-.stat-label { font-size: 13px; color: #8b949e; margin-top: 4px; }
+/* Tabs — EXACT match to usage.html */
+.tab-bar{display:flex;gap:4px;margin-bottom:24px;flex-wrap:wrap}
+.tab-btn{background:#21262d;border:1px solid #30363d;color:#8b949e;padding:8px 18px;border-radius:8px 8px 0 0;cursor:pointer;font-size:14px;font-weight:600;transition:all 0.2s}
+.tab-btn:hover{color:#e6edf3;background:#161b22}
+.tab-btn.active{background:#161b22;color:#58a6ff;border-bottom-color:#161b22}
+.tab-content{display:none}.tab-content.active{display:block}
+
+/* Stats — EXACT match to usage.html */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;margin-bottom:20px}
+.stat-box{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:16px;text-align:center}
+.stat-value{font-size:28px;font-weight:700;color:#58a6ff}
+.stat-value.green{color:#3fb950}.stat-value.warn{color:#d29922}.stat-value.danger{color:#f85149}
+.stat-label{font-size:12px;color:#8b949e;margin-top:4px}
+
+/* Progress bar — EXACT match to usage.html */
+.progress-track{width:100%;height:28px;background:#21262d;border-radius:14px;overflow:hidden;position:relative;margin:12px 0}
+.progress-fill{height:100%;border-radius:14px;transition:width 1s ease;background:linear-gradient(90deg,#3fb950,#58a6ff)}
+.progress-fill.warn-bg{background:linear-gradient(90deg,#d29922,#f0883e)}
+.progress-fill.danger-bg{background:linear-gradient(90deg,#f85149,#da3633)}
+.progress-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:13px;font-weight:700;color:#e6edf3;text-shadow:0 1px 3px #000}
 
 /* Project bars */
-.project-bar-wrap { margin-bottom: 14px; }
-.project-bar-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
-.project-bar-name { font-size: 14px; font-weight: 600; color: #e6edf3; }
-.project-bar-hours { font-size: 14px; font-weight: 700; color: #58a6ff; }
-.project-bar-track { height: 28px; background: #21262d; border-radius: 6px; overflow: hidden; position: relative; }
-.project-bar-fill { height: 100%; border-radius: 6px; transition: width 1s ease; }
+.bar-wrap{margin-bottom:12px}
+.bar-header{display:flex;justify-content:space-between;margin-bottom:3px}
+.bar-name{font-size:13px;font-weight:600}
+.bar-hours{font-size:13px;font-weight:700;color:#58a6ff}
+.bar-track{height:24px;background:#21262d;border-radius:6px;overflow:hidden}
+.bar-fill{height:100%;border-radius:6px;transition:width 0.8s ease}
+
+/* Chart */
+.chart-wrap{position:relative;height:280px;margin-top:12px}
 
 /* Table */
-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-th { text-align: left; padding: 10px 12px; background: #161b22; color: #8b949e; font-weight: 600; border-bottom: 2px solid #30363d; position: sticky; top: 0; }
-td { padding: 10px 12px; border-bottom: 1px solid #21262d; color: #c9d1d9; }
-tr:hover td { background: #161b22; }
-.tag {
-  display: inline-block; padding: 2px 8px; border-radius: 4px;
-  font-size: 11px; font-weight: 600; text-transform: uppercase;
-}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:8px 10px;color:#8b949e;font-weight:600;border-bottom:1px solid #30363d}
+td{padding:8px 10px;border-bottom:1px solid #21262d;color:#c9d1d9}
+tr:hover td{background:#1c2128}
+.tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
 
 /* Filter bar */
-.filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
-.filter-btn {
-  padding: 6px 14px; border-radius: 20px; border: 1px solid #30363d;
-  background: #161b22; color: #8b949e; font-size: 12px; font-weight: 600;
-  cursor: pointer; transition: all 0.2s;
+.filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.filter-btn{padding:5px 12px;border-radius:20px;border:1px solid #30363d;background:#161b22;color:#8b949e;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s}
+.filter-btn:hover,.filter-btn.active{background:#58a6ff;color:#0d1117;border-color:#58a6ff}
+
+/* Form */
+.form-row{display:grid;grid-template-columns:120px 180px 80px 140px 1fr auto;gap:10px;align-items:end;margin-bottom:16px}
+.form-group{display:flex;flex-direction:column}
+.form-group label{font-size:11px;color:#8b949e;margin-bottom:4px;font-weight:600}
+.form-group input,.form-group select{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:8px 10px;color:#e6edf3;font-size:13px}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:#58a6ff}
+.btn{padding:8px 16px;border-radius:6px;border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s}
+.btn-primary{background:#58a6ff;color:#0d1117}
+.btn-primary:hover{background:#79c0ff}
+.btn-danger{background:#f8514922;color:#f85149;border:1px solid #f8514944}
+.btn-danger:hover{background:#f8514944}
+.btn-sm{padding:4px 10px;font-size:11px}
+
+/* Team split */
+.team-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+
+/* Responsive */
+@media(max-width:768px){
+  body{padding:12px}
+  .stat-grid{grid-template-columns:1fr 1fr}
+  .form-row{grid-template-columns:1fr 1fr}
+  .team-grid{grid-template-columns:1fr}
+  h1{font-size:24px}
+  .tab-btn{padding:6px 12px;font-size:13px}
 }
-.filter-btn:hover, .filter-btn.active { background: #58a6ff; color: #0d1117; border-color: #58a6ff; }
-
-/* Chart canvas */
-.chart-wrap { position: relative; height: 300px; margin-top: 16px; }
-
-/* Back link */
-.back-link { display: inline-block; margin-bottom: 20px; color: #58a6ff; text-decoration: none; font-size: 13px; }
-.back-link:hover { text-decoration: underline; }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 <body>
 
-<a class="back-link" href="index.html">← Command Centre</a>
-<h1>Project Timesheet</h1>
-<p class="subtitle">All AZCK project hours tracked by Forge — updated every Save All.</p>
+<a class="back-link" href="index.html">&larr; Command Centre</a>
+<h1>AZCK Timesheet</h1>
+<p class="subtitle">All project hours — Forge sessions + Shop work. Updated every Save All + manual entries.</p>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="showTab('overview',this)">Overview</button>
+  <button class="tab-btn" onclick="showTab('forge',this)">Forge Log</button>
+  <button class="tab-btn" onclick="showTab('shop',this)">Shop Log</button>
+</div>
 
 <!-- ═══════════════════════════════════════════════════════════════
-     DATA BLOCK — UPDATE THIS SECTION ONLY
-     To add an entry: add to TIMESHEET array.
+     DATA BLOCK — UPDATE THIS SECTION ONLY (Forge auto-logged entries)
+     To add an entry: add to FORGE_LOG array during Save All.
      To add a project: add color to PROJECT_COLORS.
-     Engine below auto-renders everything from this data.
+     Engine below auto-generates everything from this data.
      ═══════════════════════════════════════════════════════════════ -->
 <script>
+var SUPABASE_URL = 'https://bsiycfypzhfbqeibfwma.supabase.co';
+var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzaXljZnlwemhmYnFlaWJmd21hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyODEyNzEsImV4cCI6MjA5MDg1NzI3MX0.E9tZLgWGWW6j5R4LoB5uBkriDHVsxyJ95auf3OBTlIM';
+
+// ── FORGE PROJECT COLORS ──
 var PROJECT_COLORS = {
-  'Website':          '#58a6ff',
-  'QuadFang':         '#f85149',
-  'Command Centre':   '#3fb950',
-  'Forge System':     '#bc8cff',
-  'Grants':           '#d29922',
-  'Booking System':   '#f0883e',
-  'Clients':          '#f778ba',
-  'Admin':            '#79c0ff'
+  'Website':            '#58a6ff',
+  'QuadFang R&D':       '#f85149',
+  'QuadFang Website':   '#FC4C02',
+  'Command Centre':     '#3fb950',
+  'Forge System':       '#bc8cff',
+  'Grants':             '#d29922',
+  'Booking System':     '#f0883e',
+  'Clients':            '#f778ba',
+  'Admin':              '#79c0ff'
 };
 
-var TIMESHEET = [
-  // Pre-Forge era (estimated from session logs)
-  { date:'2026-04-01', user:'Alessio', project:'Grants', hours:1.0, desc:'SR&ED Activity Log template, IRAP Prep Guide, Open Tasks Guide', type:'Forge AI' },
-  { date:'2026-04-01', user:'Alessio', project:'Grants', hours:2.0, desc:'QuadFang business plan, budget, pitch deck, project tracker', type:'Forge AI' },
-  { date:'2026-04-08', user:'Alessio', project:'Forge System', hours:6.0, desc:'Full Forge Office restructure, grant-writer worker, 22 Shared Brain files', type:'Forge AI' },
-  { date:'2026-04-08', user:'Reanna', project:'Grants', hours:1.5, desc:'Grant roadmap created, 7 programs web-searched, CDAP confirmed dead', type:'Forge AI' },
-  { date:'2026-04-08', user:'Alessio', project:'Grants', hours:1.5, desc:'Grant roadmap PDF, 6 "What Forge Can Draft" deliverables', type:'Forge AI' },
-  { date:'2026-04-10', user:'Alessio', project:'Website', hours:2.0, desc:'Tech plan, booking page planning', type:'Forge AI' },
-  { date:'2026-04-10', user:'Alessio', project:'Booking System', hours:5.0, desc:'All 6 booking pages built, Family Events, knife details', type:'Forge AI' },
-  { date:'2026-04-11', user:'Alessio', project:'Booking System', hours:1.0, desc:'Instructions doc, folder cleanup', type:'Forge AI' },
-  { date:'2026-04-11', user:'Alessio', project:'Booking System', hours:3.0, desc:'Booking published live, repo cleanup, deep-links verified', type:'Forge AI' },
-  { date:'2026-04-11', user:'Alessio', project:'Website', hours:3.0, desc:'Wix gift card, architecture audit, headless checkout research', type:'Forge AI' },
-  { date:'2026-04-12', user:'Alessio', project:'Website', hours:2.5, desc:'Shared nav/footer deployed to all 18 pages, CMS parked', type:'Forge AI' },
-  { date:'2026-04-12', user:'Alessio', project:'Command Centre', hours:4.0, desc:'Forge chart, usage guide, CLAUDE.md rebuild', type:'Forge AI' },
-  { date:'2026-04-12', user:'Alessio', project:'Command Centre', hours:1.0, desc:'usage.html built, Condensed Brain v1.0', type:'Forge AI' },
-  { date:'2026-04-12', user:'Alessio', project:'Forge System', hours:0.5, desc:'Zero-Read Startup rebuild', type:'Forge AI' },
-  { date:'2026-04-12', user:'Alessio', project:'Command Centre', hours:2.0, desc:'usage.html v3.0 JSON master, model awareness', type:'Forge AI' },
-  { date:'2026-04-12', user:'Alessio', project:'Forge System', hours:1.5, desc:'Renderer failure, lessons, plans system', type:'Forge AI' },
-  { date:'2026-04-14', user:'Alessio', project:'QuadFang', hours:2.0, desc:'Meeting with Matt Runhart (Terra Machine) — Fusion 360 design, manufacturing options', type:'Supplier Meeting' },
-  { date:'2026-04-14', user:'Alessio', project:'Website', hours:1.0, desc:'Website master plan, folder reorg, CLAUDE.md updates', type:'Forge AI' },
-  { date:'2026-04-14', user:'Alessio', project:'Website', hours:2.0, desc:'Phase 0 Website Audit — 22 pages, 11 issues found', type:'Forge AI' },
-  { date:'2026-04-14', user:'Alessio', project:'Forge System', hours:1.5, desc:'Full brain load, CLAUDE.md fixes, Forge lessons, auto-memory', type:'Forge AI' },
-  { date:'2026-04-14', user:'Reanna', project:'Website', hours:1.5, desc:'Website photo category list (8 categories), Legacy Knives idea, session passoff', type:'Forge AI' },
-  { date:'2026-04-15', user:'Alessio', project:'Clients', hours:2.0, desc:'Avalon Research HT invoice, trade agreement, client folder system', type:'Forge AI' },
-  { date:'2026-04-15', user:'Alessio', project:'Admin', hours:1.5, desc:'AI folder restructure, CLAUDE.md v1.2, calendar events', type:'Forge AI' },
-  { date:'2026-04-15', user:'Alessio', project:'Website', hours:1.5, desc:'Waiver PDF links fixed, blog refactored to ENGINE+DATA BLOCK', type:'Forge AI' },
-  { date:'2026-04-15', user:'Alessio', project:'QuadFang', hours:0.5, desc:'"Coming Soonr" typo fixed on Shopify', type:'Forge AI' },
-  { date:'2026-04-15', user:'Alessio', project:'Clients', hours:0.5, desc:'Kyran client folder, reimbursement billing plan', type:'Forge AI' },
-  { date:'2026-04-15', user:'Alessio', project:'QuadFang', hours:1.0, desc:'GitHub Pages site build — 19 files, ENGINE+DATA BLOCK', type:'Forge AI' },
-  { date:'2026-04-15', user:'Alessio', project:'Website', hours:1.0, desc:'Homepage fade-in bug diagnosed, v2 CSS fix created', type:'Forge AI' },
-  { date:'2026-04-15', user:'Alessio', project:'QuadFang', hours:2.5, desc:'Full GitHub deployment, DNS migration, Hunt Gallery color change, newsletter table', type:'Forge AI' },
-  { date:'2026-04-15', user:'Alessio', project:'Website', hours:0.5, desc:'v2 CSS fix deployed — homepage fade-in sections now visible', type:'Forge AI' },
-  { date:'2026-04-15', user:'Alessio', project:'Command Centre', hours:1.0, desc:'Timesheet page built for Command Centre', type:'Forge AI' }
+// ── SHOP PROJECT COLORS ──
+var SHOP_COLORS = {
+  'Custom Knife Build': '#f85149',
+  'Sharpening Service': '#58a6ff',
+  'Heat Treatment':     '#f0883e',
+  'Engraving':          '#d29922',
+  'Blacksmithing':      '#bc8cff',
+  'Teaching / Classes': '#3fb950',
+  'QuadFang Prototyping':'#FC4C02',
+  'Equipment / Maintenance':'#79c0ff',
+  'Photography':        '#f778ba',
+  'Shipping / Packaging':'#7ee787'
+};
+
+var ALL_COLORS = Object.assign({}, PROJECT_COLORS, SHOP_COLORS);
+
+// ── SHOP PROJECT LIST (for dropdown) ──
+var SHOP_PROJECTS = Object.keys(SHOP_COLORS);
+
+// ── FORGE LOG (auto-logged by Forge during Save All) ──
+var FORGE_LOG = [
+  // ═══ PRE-TRACKING ERA (Mar 31 – Apr 9) ═══
+  { date:'2026-03-31', user:'Alessio', project:'Forge System', hours:5.0, desc:'First Forge session — initial AI system exploration, prompt engineering' },
+  { date:'2026-04-01', user:'Alessio', project:'Forge System', hours:4.0, desc:'Shared Brain established, first startup protocol, Single Source of Truth, gist sync' },
+  { date:'2026-04-01', user:'Alessio', project:'Grants', hours:3.0, desc:'SR&ED Activity Log template, IRAP Prep Guide, Open Tasks Guide' },
+  { date:'2026-04-01', user:'Alessio', project:'Grants', hours:4.0, desc:'QuadFang business plan, budget financials, pitch deck, project tracker' },
+  { date:'2026-04-01', user:'Alessio', project:'QuadFang R&D', hours:2.0, desc:'QuadFang deliverables review, product documentation' },
+  { date:'2026-04-02', user:'Alessio', project:'Forge System', hours:3.0, desc:'Brain file organization, worker concept development' },
+  { date:'2026-04-03', user:'Alessio', project:'Forge System', hours:5.0, desc:'Security audit, 20-page risk report, folder restructure' },
+  { date:'2026-04-03', user:'Alessio', project:'Admin', hours:2.0, desc:'File organization, backup protocols, system hardening' },
+  { date:'2026-04-04', user:'Alessio', project:'Forge System', hours:3.0, desc:'Everything broke. FUSE bug discovered' },
+  { date:'2026-04-04', user:'Alessio', project:'Forge System', hours:4.0, desc:'Easter Saturday debug session, FUSE bug root cause found and fixed' },
+  { date:'2026-04-04', user:'Alessio', project:'Forge System', hours:5.0, desc:'Named Forge. Tiered startup built. Super Brain created. Identity born.' },
+  { date:'2026-04-04', user:'Alessio', project:'Forge System', hours:4.0, desc:'Three independent databases designed. Modular hub-and-spoke architecture.' },
+  { date:'2026-04-05', user:'Alessio', project:'Forge System', hours:3.0, desc:'Brain file refinement, worker templates, system testing' },
+  { date:'2026-04-06', user:'Alessio', project:'Website', hours:2.0, desc:'Website planning, content review, architecture research' },
+  { date:'2026-04-06', user:'Alessio', project:'QuadFang R&D', hours:2.0, desc:'QuadFang brand guidelines, product strategy' },
+  { date:'2026-04-07', user:'Alessio', project:'Forge System', hours:3.0, desc:'Pre-Forge Office prep, worker files drafted' },
+  { date:'2026-04-08', user:'Alessio', project:'Forge System', hours:8.0, desc:'Hub-and-spoke model. 9 specialist workers. Full ops layer. 22 Shared Brain files.' },
+  { date:'2026-04-08', user:'Alessio', project:'Grants', hours:3.0, desc:'Grant-writer worker, grant roadmap PDF, 6 deliverables' },
+  { date:'2026-04-08', user:'Reanna', project:'Grants', hours:1.5, desc:'First Forge session. Grant roadmap, 7 programs researched, CDAP confirmed dead' },
+  { date:'2026-04-08', user:'Alessio', project:'Forge System', hours:2.0, desc:'Clock check system, session logging, evolution chart accountability' },
+  { date:'2026-04-09', user:'Alessio', project:'Forge System', hours:4.0, desc:'Two failed Save Alls reconstructed. Grant pipeline activated.' },
+
+  // ═══ TRACKED ERA (Apr 10+) ═══
+  { date:'2026-04-10', user:'Alessio', project:'Website', hours:3.0, desc:'Tech plan delivered, booking page planning, site architecture review' },
+  { date:'2026-04-10', user:'Alessio', project:'Booking System', hours:7.0, desc:'All 6 booking pages built — Family Events, knife details, sharpening, blacksmithing, team building, private' },
+  { date:'2026-04-11', user:'Alessio', project:'Booking System', hours:2.0, desc:'Instructions doc, folder cleanup, final verification' },
+  { date:'2026-04-11', user:'Alessio', project:'Booking System', hours:4.0, desc:'Booking system published LIVE, repo cleanup, deep-links verified' },
+  { date:'2026-04-11', user:'Alessio', project:'Website', hours:4.0, desc:'Wix gift card, full architecture audit, headless checkout research, Wix API deep-dive' },
+  { date:'2026-04-12', user:'Alessio', project:'Website', hours:4.0, desc:'Shared nav/footer deployed to all 18 pages, CMS architecture parked' },
+  { date:'2026-04-12', user:'Alessio', project:'Command Centre', hours:5.0, desc:'Forge chart, usage guide, CLAUDE.md Condensed Brain v1.0 rebuilt' },
+  { date:'2026-04-12', user:'Alessio', project:'Command Centre', hours:1.5, desc:'usage.html dashboard built, Condensed Brain deployed' },
+  { date:'2026-04-12', user:'Alessio', project:'Forge System', hours:1.0, desc:'Zero-Read Startup rebuild — v1.1, all startup reads eliminated' },
+  { date:'2026-04-12', user:'Alessio', project:'Command Centre', hours:3.0, desc:'usage.html v3.0 JSON-driven master dashboard, community research, model awareness' },
+  { date:'2026-04-12', user:'Alessio', project:'Forge System', hours:2.5, desc:'Renderer failure, lessons learned, plans system created' },
+  { date:'2026-04-13', user:'Alessio', project:'Forge System', hours:2.0, desc:'Late night session — startup testing, system verification' },
+  { date:'2026-04-14', user:'Alessio', project:'QuadFang R&D', hours:2.0, desc:'Meeting with Matt Runhart (Terra Machine) — Fusion 360 design, manufacturing options' },
+  { date:'2026-04-14', user:'Alessio', project:'Website', hours:2.0, desc:'Website master plan (9 phases), folder reorg, CLAUDE.md updates' },
+  { date:'2026-04-14', user:'Alessio', project:'Admin', hours:1.0, desc:'Folder restructure, handoff for Phase 0 audit' },
+  { date:'2026-04-14', user:'Alessio', project:'Website', hours:2.0, desc:'Phase 0 Website Audit — 22 pages, 11 issues found (4 critical)' },
+  { date:'2026-04-14', user:'Reanna', project:'Website', hours:1.5, desc:'Photo category list (8 categories + Legacy Knives), session passoff' },
+  { date:'2026-04-14', user:'Alessio', project:'Forge System', hours:2.0, desc:'Full brain load, CLAUDE.md fixes, Forge lessons, auto-memory' },
+  { date:'2026-04-15', user:'Alessio', project:'Clients', hours:2.0, desc:'Avalon Research HT invoice ($829.50), trade agreement, invoice template' },
+  { date:'2026-04-15', user:'Alessio', project:'Admin', hours:2.0, desc:'AI folder restructure, CLAUDE.md v1.2, 15+ calendar events' },
+  { date:'2026-04-15', user:'Alessio', project:'Website', hours:2.0, desc:'Waiver PDF links fixed, blog refactored to ENGINE+DATA BLOCK' },
+  { date:'2026-04-15', user:'Alessio', project:'QuadFang Website', hours:1.0, desc:'"Coming Soonr" typo fixed in Shopify, billing structure documented' },
+  { date:'2026-04-15', user:'Alessio', project:'Clients', hours:1.0, desc:'Kyran client folder, reimbursement billing plan ($500/mo)' },
+  { date:'2026-04-15', user:'Alessio', project:'QuadFang Website', hours:1.5, desc:'GitHub Pages site build — 19 files, ENGINE+DATA BLOCK architecture' },
+  { date:'2026-04-15', user:'Alessio', project:'Website', hours:1.5, desc:'Homepage fade-in bug fixed, v2 CSS deployed LIVE' },
+  { date:'2026-04-15', user:'Alessio', project:'QuadFang Website', hours:4.0, desc:'Full GitHub Pages deployment, DNS migration, Hunt Gallery colors, newsletter table' },
+  { date:'2026-04-15', user:'Alessio', project:'Command Centre', hours:1.5, desc:'Timesheet page built — unified Forge + Shop tracker' }
 ];
 </script>
 <!-- ═══ END DATA BLOCK ═══ -->
 
-<!-- Summary cards — auto-generated -->
-<div class="summary-row" id="summaryRow"></div>
-
-<!-- Project breakdown bars -->
-<h2>Hours by Project</h2>
-<div class="card" id="projectBars"></div>
-
-<!-- Timeline chart -->
-<h2>Daily Activity</h2>
-<div class="card">
-  <div class="chart-wrap">
-    <canvas id="dailyChart"></canvas>
-  </div>
-</div>
-
-<hr class="section-divider">
-
-<!-- User split -->
-<h2>Team Split</h2>
-<div class="card" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;" id="teamSplit"></div>
-
-<hr class="section-divider">
-
-<!-- Filter + full table -->
-<h2>Full Log</h2>
-<div class="filter-bar" id="filterBar"></div>
-<div class="card" style="overflow-x:auto;">
-  <table id="logTable">
-    <thead>
-      <tr><th>Date</th><th>User</th><th>Project</th><th>Hours</th><th>Type</th><th>Description</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
-
-<hr class="section-divider">
-<p style="font-size:12px;color:#484f58;text-align:center;margin-top:24px;">
-  AZCK Project Timesheet — Command Centre · Auto-generated by Forge · Updated every Save All
-</p>
+<div id="app"></div>
 
 <!-- ═══ ENGINE — DO NOT EDIT BELOW ═══ -->
 <script>
 (function(){
-  // Aggregate by project
-  var byProject = {};
-  var byDate = {};
-  var byUser = {};
-  var totalHours = 0;
-  var totalSessions = TIMESHEET.length;
-  var projects = Object.keys(PROJECT_COLORS);
-  var dates = [];
+  // ── Supabase client ──
+  var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  TIMESHEET.forEach(function(e){
-    byProject[e.project] = (byProject[e.project]||0) + e.hours;
-    byUser[e.user] = (byUser[e.user]||0) + e.hours;
-    totalHours += e.hours;
-    if(!byDate[e.date]) byDate[e.date] = {};
-    byDate[e.date][e.project] = (byDate[e.date][e.project]||0) + e.hours;
-    if(dates.indexOf(e.date)===-1) dates.push(e.date);
-  });
-  dates.sort();
+  // ── Helpers ──
+  function $(id){return document.getElementById(id)}
+  function colorFor(p){return ALL_COLORS[p]||'#58a6ff'}
+  function fmt(n){return n.toLocaleString('en-CA',{minimumFractionDigits:1,maximumFractionDigits:1})}
 
-  // Unique projects actually used
-  var usedProjects = Object.keys(byProject).sort(function(a,b){ return byProject[b]-byProject[a]; });
-  var uniqueDays = dates.length;
+  function aggregate(entries){
+    var byProject={},byDate={},byUser={},total=0,dates=[];
+    entries.forEach(function(e){
+      byProject[e.project]=(byProject[e.project]||0)+e.hours;
+      byUser[e.user]=(byUser[e.user]||0)+e.hours;
+      total+=e.hours;
+      if(!byDate[e.date]) byDate[e.date]={};
+      byDate[e.date][e.project]=(byDate[e.date][e.project]||0)+e.hours;
+      if(dates.indexOf(e.date)===-1) dates.push(e.date);
+    });
+    dates.sort();
+    var projects=Object.keys(byProject).sort(function(a,b){return byProject[b]-byProject[a]});
+    return {byProject:byProject,byDate:byDate,byUser:byUser,total:total,dates:dates,projects:projects,count:entries.length,days:dates.length};
+  }
 
-  // Summary cards
-  var summaryHTML = '';
-  summaryHTML += '<div class="stat-card"><div class="stat-value">'+totalHours.toFixed(1)+'</div><div class="stat-label">Total Hours</div></div>';
-  summaryHTML += '<div class="stat-card"><div class="stat-value">'+totalSessions+'</div><div class="stat-label">Log Entries</div></div>';
-  summaryHTML += '<div class="stat-card"><div class="stat-value">'+uniqueDays+'</div><div class="stat-label">Active Days</div></div>';
-  summaryHTML += '<div class="stat-card"><div class="stat-value">'+usedProjects.length+'</div><div class="stat-label">Projects</div></div>';
-  summaryHTML += '<div class="stat-card"><div class="stat-value">'+(totalHours/Math.max(uniqueDays,1)).toFixed(1)+'</div><div class="stat-label">Avg Hours/Day</div></div>';
-  document.getElementById('summaryRow').innerHTML = summaryHTML;
+  // ── Build all HTML ──
+  var shopEntries=[];
+  var H='';
 
-  // Project bars
-  var maxHours = 0;
-  usedProjects.forEach(function(p){ if(byProject[p]>maxHours) maxHours=byProject[p]; });
-  var barsHTML = '';
-  usedProjects.forEach(function(p){
-    var pct = (byProject[p]/maxHours*100).toFixed(1);
-    var col = PROJECT_COLORS[p]||'#58a6ff';
-    barsHTML += '<div class="project-bar-wrap">';
-    barsHTML += '<div class="project-bar-header"><span class="project-bar-name">'+p+'</span><span class="project-bar-hours">'+byProject[p].toFixed(1)+' hrs</span></div>';
-    barsHTML += '<div class="project-bar-track"><div class="project-bar-fill" style="width:'+pct+'%;background:'+col+';"></div></div>';
-    barsHTML += '</div>';
-  });
-  document.getElementById('projectBars').innerHTML = barsHTML;
+  // ═══ TAB: OVERVIEW ═══
+  H+='<div id="tab-overview" class="tab-content active">';
+  H+='<div class="stat-grid" id="overviewStats"></div>';
+  H+='<div class="card" id="overviewProgress"></div>';
+  H+='<h2>Hours by Project — All Sources</h2>';
+  H+='<div class="card" id="overviewBars"></div>';
+  H+='<h2>Daily Activity</h2>';
+  H+='<div class="card"><div class="chart-wrap"><canvas id="overviewChart"></canvas></div></div>';
+  H+='<h2>Team Split</h2>';
+  H+='<div class="card team-grid" id="overviewTeam"></div>';
+  H+='</div>';
 
-  // Daily stacked bar chart
-  var datasets = usedProjects.map(function(p){
-    return {
-      label: p,
-      data: dates.map(function(d){ return (byDate[d]&&byDate[d][p])||0; }),
-      backgroundColor: PROJECT_COLORS[p]||'#58a6ff',
-      borderRadius: 4
-    };
-  });
-  new Chart(document.getElementById('dailyChart'), {
-    type:'bar',
-    data:{ labels: dates.map(function(d){ return d.replace('2026-','')}), datasets: datasets },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ labels:{ color:'#8b949e', font:{size:11} } } },
-      scales:{
-        x:{ stacked:true, ticks:{color:'#8b949e'}, grid:{color:'#21262d'} },
-        y:{ stacked:true, ticks:{color:'#8b949e'}, grid:{color:'#21262d'}, title:{display:true,text:'Hours',color:'#8b949e'} }
+  // ═══ TAB: FORGE LOG ═══
+  H+='<div id="tab-forge" class="tab-content">';
+  H+='<div class="stat-grid" id="forgeStats"></div>';
+  H+='<h2>Forge Hours by Project</h2>';
+  H+='<div class="card" id="forgeBars"></div>';
+  H+='<h2>Daily Forge Activity</h2>';
+  H+='<div class="card"><div class="chart-wrap"><canvas id="forgeChart"></canvas></div></div>';
+  H+='<h2>Full Forge Log</h2>';
+  H+='<div class="filter-bar" id="forgeFilter"></div>';
+  H+='<div class="card" style="overflow-x:auto;max-height:600px;overflow-y:auto;">';
+  H+='<table id="forgeTable"><thead><tr><th>Date</th><th>User</th><th>Project</th><th>Hours</th><th>Description</th></tr></thead><tbody></tbody></table>';
+  H+='</div>';
+  H+='</div>';
+
+  // ═══ TAB: SHOP LOG ═══
+  H+='<div id="tab-shop" class="tab-content">';
+  H+='<h2>Log Shop Time</h2>';
+  H+='<div class="card">';
+  H+='<div class="form-row">';
+  H+='<div class="form-group"><label>Date</label><input type="date" id="shopDate"></div>';
+  H+='<div class="form-group"><label>Project</label><select id="shopProject"></select></div>';
+  H+='<div class="form-group"><label>Hours</label><input type="number" id="shopHours" step="0.25" min="0.25" max="24" placeholder="2.5"></div>';
+  H+='<div class="form-group"><label>Client / Order</label><input type="text" id="shopClient" placeholder="e.g. Avalon, Walk-in"></div>';
+  H+='<div class="form-group"><label>Description</label><input type="text" id="shopDesc" placeholder="What did you do?"></div>';
+  H+='<div class="form-group"><label>&nbsp;</label><button class="btn btn-primary" id="shopAdd">Add</button></div>';
+  H+='</div>';
+  H+='<div id="shopFormMsg" style="font-size:12px;color:#3fb950;margin-top:-8px;margin-bottom:8px;display:none;"></div>';
+  H+='</div>';
+  H+='<div class="stat-grid" id="shopStats"></div>';
+  H+='<h2>Shop Hours by Category</h2>';
+  H+='<div class="card" id="shopBars"></div>';
+  H+='<h2>Shop Entries</h2>';
+  H+='<div class="filter-bar" id="shopFilter"></div>';
+  H+='<div class="card" style="overflow-x:auto;max-height:600px;overflow-y:auto;">';
+  H+='<table id="shopTable"><thead><tr><th>Date</th><th>Project</th><th>Hours</th><th>Client</th><th>Description</th><th></th></tr></thead><tbody></tbody></table>';
+  H+='</div>';
+  H+='</div>';
+
+  // Footer
+  H+='<hr style="border:none;border-top:1px solid #21262d;margin:32px 0;">';
+  H+='<p style="font-size:12px;color:#8b949e;text-align:center;">AZCK Timesheet — Command Centre<br>Forge entries auto-logged during Save All &middot; Shop entries via Supabase &middot; ENGINE + DATA BLOCK architecture</p>';
+
+  $('app').innerHTML=H;
+
+  // ── Populate shop dropdown ──
+  var sel=$('shopProject');
+  SHOP_PROJECTS.forEach(function(p){var o=document.createElement('option');o.value=p;o.textContent=p;sel.appendChild(o)});
+  $('shopDate').valueAsDate=new Date();
+
+  // ── Render functions ──
+  function renderStats(id,agg){
+    var h='';
+    h+='<div class="stat-box"><div class="stat-value">'+fmt(agg.total)+'</div><div class="stat-label">Total Hours</div></div>';
+    h+='<div class="stat-box"><div class="stat-value">'+agg.count+'</div><div class="stat-label">Entries</div></div>';
+    h+='<div class="stat-box"><div class="stat-value">'+agg.days+'</div><div class="stat-label">Active Days</div></div>';
+    h+='<div class="stat-box"><div class="stat-value">'+agg.projects.length+'</div><div class="stat-label">Projects</div></div>';
+    h+='<div class="stat-box"><div class="stat-value">'+fmt(agg.total/Math.max(agg.days,1))+'</div><div class="stat-label">Avg Hrs/Day</div></div>';
+    $(id).innerHTML=h;
+  }
+
+  function renderProgress(id,agg){
+    // Progress bar showing hours distribution — Forge vs Shop
+    var forgeH=0,shopH=0;
+    FORGE_LOG.forEach(function(e){forgeH+=e.hours});
+    shopEntries.forEach(function(e){shopH+=e.hours});
+    var totalH=forgeH+shopH;
+    var forgePct=totalH>0?(forgeH/totalH*100):100;
+    var h='<div style="display:flex;justify-content:space-between;margin-bottom:8px;">';
+    h+='<span style="font-size:13px;font-weight:600;color:#bc8cff;">Forge: '+fmt(forgeH)+' hrs ('+forgePct.toFixed(0)+'%)</span>';
+    h+='<span style="font-size:13px;font-weight:600;color:#3fb950;">Shop: '+fmt(shopH)+' hrs ('+(100-forgePct).toFixed(0)+'%)</span>';
+    h+='</div>';
+    h+='<div class="progress-track">';
+    h+='<div class="progress-fill" style="width:'+forgePct+'%;background:linear-gradient(90deg,#bc8cff,#58a6ff);"></div>';
+    h+='<div class="progress-label">'+fmt(totalH)+' total hours</div>';
+    h+='</div>';
+    $(id).innerHTML=h;
+  }
+
+  function renderBars(id,agg){
+    var max=0;agg.projects.forEach(function(p){if(agg.byProject[p]>max)max=agg.byProject[p]});
+    var h='';agg.projects.forEach(function(p){
+      var pct=(agg.byProject[p]/max*100).toFixed(1);var c=colorFor(p);
+      h+='<div class="bar-wrap"><div class="bar-header"><span class="bar-name" style="color:'+c+'">'+p+'</span><span class="bar-hours">'+fmt(agg.byProject[p])+' hrs</span></div>';
+      h+='<div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:'+c+';"></div></div></div>';
+    });
+    $(id).innerHTML=h;
+  }
+
+  function renderChart(canvasId,agg){
+    var existing=Chart.getChart(canvasId);
+    if(existing) existing.destroy();
+    var datasets=agg.projects.map(function(p){
+      return {label:p,data:agg.dates.map(function(d){return(agg.byDate[d]&&agg.byDate[d][p])||0}),backgroundColor:colorFor(p),borderRadius:3};
+    });
+    new Chart($(canvasId),{
+      type:'bar',data:{labels:agg.dates.map(function(d){return d.replace('2026-','')}),datasets:datasets},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8b949e',font:{size:10}}}},
+        scales:{x:{stacked:true,ticks:{color:'#8b949e'},grid:{color:'#21262d'}},y:{stacked:true,ticks:{color:'#8b949e'},grid:{color:'#21262d'},title:{display:true,text:'Hours',color:'#8b949e'}}}}
+    });
+  }
+
+  function renderTeam(id,agg,entries){
+    var h='';
+    Object.keys(agg.byUser).sort().forEach(function(u){
+      h+='<div><h3 style="color:#58a6ff;margin-bottom:8px;">'+u+'</h3>';
+      h+='<div class="stat-value" style="font-size:28px;">'+fmt(agg.byUser[u])+' hrs</div>';
+      h+='<div class="stat-label" style="margin-bottom:12px;">'+((agg.byUser[u]/agg.total)*100).toFixed(0)+'% of total</div>';
+      var up={};entries.forEach(function(e){if(e.user===u)up[e.project]=(up[e.project]||0)+e.hours});
+      var sorted=Object.keys(up).sort(function(a,b){return up[b]-up[a]});
+      sorted.forEach(function(p){
+        h+='<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid #21262d;">';
+        h+='<span style="color:'+colorFor(p)+';">'+p+'</span><span style="color:#8b949e;">'+fmt(up[p])+'h</span></div>';
+      });
+      h+='</div>';
+    });
+    $(id).innerHTML=h;
+  }
+
+  function renderFilterTable(filterId,tableId,entries,showDelete){
+    var projects={};entries.forEach(function(e){projects[e.project]=true});
+    var sorted=Object.keys(projects).sort();
+    var fh='<button class="filter-btn active" data-f="all">All</button>';
+    sorted.forEach(function(p){fh+='<button class="filter-btn" data-f="'+p+'" style="border-color:'+colorFor(p)+'">'+p+'</button>'});
+    $(filterId).innerHTML=fh;
+
+    function render(filter){
+      var tbody=document.querySelector('#'+tableId+' tbody');
+      var rows='';
+      var list=entries.slice().sort(function(a,b){return b.date.localeCompare(a.date)||b.hours-a.hours});
+      list.forEach(function(e){
+        if(filter!=='all'&&e.project!==filter)return;
+        var c=colorFor(e.project);
+        rows+='<tr>';
+        rows+='<td style="white-space:nowrap;">'+e.date+'</td>';
+        if(!showDelete) rows+='<td>'+e.user+'</td>';
+        rows+='<td><span class="tag" style="background:'+c+'22;color:'+c+';border:1px solid '+c+'44;">'+e.project+'</span></td>';
+        rows+='<td style="font-weight:700;color:#58a6ff;">'+parseFloat(e.hours).toFixed(1)+'</td>';
+        if(showDelete) rows+='<td>'+(e.client||'—')+'</td>';
+        rows+='<td style="max-width:300px;">'+(e.desc||e.description||'')+'</td>';
+        if(showDelete) rows+='<td><button class="btn btn-danger btn-sm" data-del="'+e.id+'">✕</button></td>';
+        rows+='</tr>';
+      });
+      tbody.innerHTML=rows||'<tr><td colspan="6" style="text-align:center;color:#8b949e;padding:24px;">No entries yet — add your first shop entry above!</td></tr>';
+
+      if(showDelete){
+        tbody.querySelectorAll('[data-del]').forEach(function(btn){
+          btn.addEventListener('click',async function(){
+            if(!confirm('Delete this entry?'))return;
+            await sb.from('shop_timesheet').delete().eq('id',btn.dataset.del);
+            loadShop();
+          });
+        });
       }
     }
-  });
-
-  // Team split
-  var splitHTML = '';
-  Object.keys(byUser).sort().forEach(function(u){
-    splitHTML += '<div>';
-    splitHTML += '<h3 style="color:#58a6ff;">'+u+'</h3>';
-    splitHTML += '<div class="stat-value" style="font-size:28px;">'+byUser[u].toFixed(1)+' hrs</div>';
-    splitHTML += '<div class="stat-label">'+((byUser[u]/totalHours)*100).toFixed(0)+'% of total</div>';
-    // Per-project breakdown for this user
-    var userProjects = {};
-    TIMESHEET.forEach(function(e){ if(e.user===u) userProjects[e.project]=(userProjects[e.project]||0)+e.hours; });
-    var upSorted = Object.keys(userProjects).sort(function(a,b){return userProjects[b]-userProjects[a];});
-    splitHTML += '<div style="margin-top:12px;">';
-    upSorted.forEach(function(p){
-      var col = PROJECT_COLORS[p]||'#58a6ff';
-      splitHTML += '<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid #21262d;">';
-      splitHTML += '<span style="color:'+col+';">'+p+'</span><span style="color:#8b949e;">'+userProjects[p].toFixed(1)+'h</span>';
-      splitHTML += '</div>';
+    render('all');
+    $(filterId).addEventListener('click',function(ev){
+      if(!ev.target.classList.contains('filter-btn'))return;
+      document.querySelectorAll('#'+filterId+' .filter-btn').forEach(function(b){b.classList.remove('active')});
+      ev.target.classList.add('active');
+      render(ev.target.dataset.f);
     });
-    splitHTML += '</div></div>';
-  });
-  document.getElementById('teamSplit').innerHTML = splitHTML;
-
-  // Filter buttons
-  var filterHTML = '<button class="filter-btn active" data-filter="all">All</button>';
-  usedProjects.forEach(function(p){
-    filterHTML += '<button class="filter-btn" data-filter="'+p+'" style="border-color:'+(PROJECT_COLORS[p]||'#30363d')+'">'+p+'</button>';
-  });
-  document.getElementById('filterBar').innerHTML = filterHTML;
-
-  // Full log table
-  function renderTable(filter){
-    var tbody = document.querySelector('#logTable tbody');
-    var rows = '';
-    var sorted = TIMESHEET.slice().sort(function(a,b){ return b.date.localeCompare(a.date)||b.hours-a.hours; });
-    sorted.forEach(function(e){
-      if(filter!=='all' && e.project!==filter) return;
-      var col = PROJECT_COLORS[e.project]||'#58a6ff';
-      rows += '<tr>';
-      rows += '<td style="white-space:nowrap;">'+e.date+'</td>';
-      rows += '<td>'+e.user+'</td>';
-      rows += '<td><span class="tag" style="background:'+col+'22;color:'+col+';border:1px solid '+col+'44;">'+e.project+'</span></td>';
-      rows += '<td style="font-weight:700;color:#58a6ff;">'+e.hours.toFixed(1)+'</td>';
-      rows += '<td style="font-size:11px;color:#8b949e;">'+e.type+'</td>';
-      rows += '<td style="max-width:350px;">'+e.desc+'</td>';
-      rows += '</tr>';
-    });
-    tbody.innerHTML = rows;
   }
-  renderTable('all');
 
-  // Filter click handlers
-  document.getElementById('filterBar').addEventListener('click', function(ev){
-    if(!ev.target.classList.contains('filter-btn')) return;
-    document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');});
-    ev.target.classList.add('active');
-    renderTable(ev.target.getAttribute('data-filter'));
+  // ── FORGE TAB ──
+  var forgeAgg=aggregate(FORGE_LOG);
+  renderStats('forgeStats',forgeAgg);
+  renderBars('forgeBars',forgeAgg);
+  renderChart('forgeChart',forgeAgg);
+  renderFilterTable('forgeFilter','forgeTable',FORGE_LOG,false);
+
+  // ── SHOP TAB — load from Supabase ──
+  async function loadShop(){
+    var {data,error}=await sb.from('shop_timesheet').select('*').order('date',{ascending:false});
+    if(error){console.error(error);return}
+    shopEntries=data.map(function(r){
+      return {id:r.id,date:r.date,user:r.user_name,project:r.project,hours:parseFloat(r.hours),client:r.client,desc:r.description};
+    });
+
+    var shopAgg=aggregate(shopEntries);
+    renderStats('shopStats',shopAgg);
+    renderBars('shopBars',shopAgg);
+    renderFilterTable('shopFilter','shopTable',shopEntries,true);
+    renderOverview();
+  }
+
+  function renderOverview(){
+    var combined=FORGE_LOG.map(function(e){return {date:e.date,user:e.user,project:e.project,hours:e.hours,desc:e.desc}})
+      .concat(shopEntries.map(function(e){return {date:e.date,user:e.user,project:e.project,hours:e.hours,desc:e.desc}}));
+    var allAgg=aggregate(combined);
+    renderStats('overviewStats',allAgg);
+    renderProgress('overviewProgress',allAgg);
+    renderBars('overviewBars',allAgg);
+    renderChart('overviewChart',allAgg);
+    renderTeam('overviewTeam',allAgg,combined);
+  }
+
+  // ── Add shop entry ──
+  $('shopAdd').addEventListener('click',async function(){
+    var date=$('shopDate').value;
+    var project=$('shopProject').value;
+    var hours=parseFloat($('shopHours').value);
+    var client=$('shopClient').value.trim();
+    var desc=$('shopDesc').value.trim();
+
+    if(!date||!project||!hours||hours<=0){
+      var msg=$('shopFormMsg');
+      msg.textContent='Please fill in date, project, and hours.';
+      msg.style.color='#f85149';msg.style.display='block';
+      setTimeout(function(){msg.style.display='none'},3000);
+      return;
+    }
+
+    var {error}=await sb.from('shop_timesheet').insert({
+      date:date,user_name:'Alessio',project:project,hours:hours,client:client||null,description:desc||null
+    });
+
+    if(error){console.error(error);return}
+
+    var msg=$('shopFormMsg');
+    msg.textContent='✓ Logged '+hours+'h to '+project;
+    msg.style.color='#3fb950';msg.style.display='block';
+    setTimeout(function(){msg.style.display='none'},3000);
+
+    $('shopHours').value='';
+    $('shopClient').value='';
+    $('shopDesc').value='';
+    $('shopDate').valueAsDate=new Date();
+
+    loadShop();
   });
+
+  // ── Initial load ──
+  loadShop();
 
 })();
-</script>
 
+/* === TAB SWITCHING — EXACT match to usage.html === */
+function showTab(name,btn){
+  document.querySelectorAll('.tab-content').forEach(function(el){el.classList.remove('active')});
+  document.querySelectorAll('.tab-btn').forEach(function(el){el.classList.remove('active')});
+  document.getElementById('tab-'+name).classList.add('active');
+  if(btn)btn.classList.add('active');
+  window.dispatchEvent(new Event('resize'));
+}
+</script>
 </body>
 </html>
