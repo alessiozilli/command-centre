@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AZCK Project Timesheet</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #0d1117; color: #e6edf3;
+  padding: 24px; max-width: 1200px; margin: 0 auto;
+}
+h1 { font-size: 32px; font-weight: 700; color: #58a6ff; margin-bottom: 4px; }
+h2 { font-size: 22px; font-weight: 700; color: #58a6ff; margin: 40px 0 16px; }
+h3 { font-size: 16px; font-weight: 600; color: #e6edf3; margin: 16px 0 8px; }
+.subtitle { font-size: 14px; color: #8b949e; margin-bottom: 32px; }
+.highlight { color: #58a6ff; font-weight: 600; }
+.card {
+  background: #161b22; border: 1px solid #30363d;
+  border-radius: 12px; padding: 24px; margin-bottom: 20px;
+}
+.section-divider { border: none; border-top: 1px solid #21262d; margin: 32px 0; }
+
+/* Summary cards row */
+.summary-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+.stat-card {
+  background: #161b22; border: 1px solid #30363d; border-radius: 12px;
+  padding: 20px; text-align: center;
+}
+.stat-value { font-size: 36px; font-weight: 800; color: #58a6ff; }
+.stat-label { font-size: 13px; color: #8b949e; margin-top: 4px; }
+
+/* Project bars */
+.project-bar-wrap { margin-bottom: 14px; }
+.project-bar-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+.project-bar-name { font-size: 14px; font-weight: 600; color: #e6edf3; }
+.project-bar-hours { font-size: 14px; font-weight: 700; color: #58a6ff; }
+.project-bar-track { height: 28px; background: #21262d; border-radius: 6px; overflow: hidden; position: relative; }
+.project-bar-fill { height: 100%; border-radius: 6px; transition: width 1s ease; }
+
+/* Table */
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; padding: 10px 12px; background: #161b22; color: #8b949e; font-weight: 600; border-bottom: 2px solid #30363d; position: sticky; top: 0; }
+td { padding: 10px 12px; border-bottom: 1px solid #21262d; color: #c9d1d9; }
+tr:hover td { background: #161b22; }
+.tag {
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+}
+
+/* Filter bar */
+.filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+.filter-btn {
+  padding: 6px 14px; border-radius: 20px; border: 1px solid #30363d;
+  background: #161b22; color: #8b949e; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+}
+.filter-btn:hover, .filter-btn.active { background: #58a6ff; color: #0d1117; border-color: #58a6ff; }
+
+/* Chart canvas */
+.chart-wrap { position: relative; height: 300px; margin-top: 16px; }
+
+/* Back link */
+.back-link { display: inline-block; margin-bottom: 20px; color: #58a6ff; text-decoration: none; font-size: 13px; }
+.back-link:hover { text-decoration: underline; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+<a class="back-link" href="index.html">← Command Centre</a>
+<h1>Project Timesheet</h1>
+<p class="subtitle">All AZCK project hours tracked by Forge — updated every Save All.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     DATA BLOCK — UPDATE THIS SECTION ONLY
+     To add an entry: add to TIMESHEET array.
+     To add a project: add color to PROJECT_COLORS.
+     Engine below auto-renders everything from this data.
+     ═══════════════════════════════════════════════════════════════ -->
+<script>
+var PROJECT_COLORS = {
+  'Website':          '#58a6ff',
+  'QuadFang':         '#f85149',
+  'Command Centre':   '#3fb950',
+  'Forge System':     '#bc8cff',
+  'Grants':           '#d29922',
+  'Booking System':   '#f0883e',
+  'Clients':          '#f778ba',
+  'Admin':            '#79c0ff'
+};
+
+var TIMESHEET = [
+  // Pre-Forge era (estimated from session logs)
+  { date:'2026-04-01', user:'Alessio', project:'Grants', hours:1.0, desc:'SR&ED Activity Log template, IRAP Prep Guide, Open Tasks Guide', type:'Forge AI' },
+  { date:'2026-04-01', user:'Alessio', project:'Grants', hours:2.0, desc:'QuadFang business plan, budget, pitch deck, project tracker', type:'Forge AI' },
+  { date:'2026-04-08', user:'Alessio', project:'Forge System', hours:6.0, desc:'Full Forge Office restructure, grant-writer worker, 22 Shared Brain files', type:'Forge AI' },
+  { date:'2026-04-08', user:'Reanna', project:'Grants', hours:1.5, desc:'Grant roadmap created, 7 programs web-searched, CDAP confirmed dead', type:'Forge AI' },
+  { date:'2026-04-08', user:'Alessio', project:'Grants', hours:1.5, desc:'Grant roadmap PDF, 6 "What Forge Can Draft" deliverables', type:'Forge AI' },
+  { date:'2026-04-10', user:'Alessio', project:'Website', hours:2.0, desc:'Tech plan, booking page planning', type:'Forge AI' },
+  { date:'2026-04-10', user:'Alessio', project:'Booking System', hours:5.0, desc:'All 6 booking pages built, Family Events, knife details', type:'Forge AI' },
+  { date:'2026-04-11', user:'Alessio', project:'Booking System', hours:1.0, desc:'Instructions doc, folder cleanup', type:'Forge AI' },
+  { date:'2026-04-11', user:'Alessio', project:'Booking System', hours:3.0, desc:'Booking published live, repo cleanup, deep-links verified', type:'Forge AI' },
+  { date:'2026-04-11', user:'Alessio', project:'Website', hours:3.0, desc:'Wix gift card, architecture audit, headless checkout research', type:'Forge AI' },
+  { date:'2026-04-12', user:'Alessio', project:'Website', hours:2.5, desc:'Shared nav/footer deployed to all 18 pages, CMS parked', type:'Forge AI' },
+  { date:'2026-04-12', user:'Alessio', project:'Command Centre', hours:4.0, desc:'Forge chart, usage guide, CLAUDE.md rebuild', type:'Forge AI' },
+  { date:'2026-04-12', user:'Alessio', project:'Command Centre', hours:1.0, desc:'usage.html built, Condensed Brain v1.0', type:'Forge AI' },
+  { date:'2026-04-12', user:'Alessio', project:'Forge System', hours:0.5, desc:'Zero-Read Startup rebuild', type:'Forge AI' },
+  { date:'2026-04-12', user:'Alessio', project:'Command Centre', hours:2.0, desc:'usage.html v3.0 JSON master, model awareness', type:'Forge AI' },
+  { date:'2026-04-12', user:'Alessio', project:'Forge System', hours:1.5, desc:'Renderer failure, lessons, plans system', type:'Forge AI' },
+  { date:'2026-04-14', user:'Alessio', project:'QuadFang', hours:2.0, desc:'Meeting with Matt Runhart (Terra Machine) — Fusion 360 design, manufacturing options', type:'Supplier Meeting' },
+  { date:'2026-04-14', user:'Alessio', project:'Website', hours:1.0, desc:'Website master plan, folder reorg, CLAUDE.md updates', type:'Forge AI' },
+  { date:'2026-04-14', user:'Alessio', project:'Website', hours:2.0, desc:'Phase 0 Website Audit — 22 pages, 11 issues found', type:'Forge AI' },
+  { date:'2026-04-14', user:'Alessio', project:'Forge System', hours:1.5, desc:'Full brain load, CLAUDE.md fixes, Forge lessons, auto-memory', type:'Forge AI' },
+  { date:'2026-04-14', user:'Reanna', project:'Website', hours:1.5, desc:'Website photo category list (8 categories), Legacy Knives idea, session passoff', type:'Forge AI' },
+  { date:'2026-04-15', user:'Alessio', project:'Clients', hours:2.0, desc:'Avalon Research HT invoice, trade agreement, client folder system', type:'Forge AI' },
+  { date:'2026-04-15', user:'Alessio', project:'Admin', hours:1.5, desc:'AI folder restructure, CLAUDE.md v1.2, calendar events', type:'Forge AI' },
+  { date:'2026-04-15', user:'Alessio', project:'Website', hours:1.5, desc:'Waiver PDF links fixed, blog refactored to ENGINE+DATA BLOCK', type:'Forge AI' },
+  { date:'2026-04-15', user:'Alessio', project:'QuadFang', hours:0.5, desc:'"Coming Soonr" typo fixed on Shopify', type:'Forge AI' },
+  { date:'2026-04-15', user:'Alessio', project:'Clients', hours:0.5, desc:'Kyran client folder, reimbursement billing plan', type:'Forge AI' },
+  { date:'2026-04-15', user:'Alessio', project:'QuadFang', hours:1.0, desc:'GitHub Pages site build — 19 files, ENGINE+DATA BLOCK', type:'Forge AI' },
+  { date:'2026-04-15', user:'Alessio', project:'Website', hours:1.0, desc:'Homepage fade-in bug diagnosed, v2 CSS fix created', type:'Forge AI' },
+  { date:'2026-04-15', user:'Alessio', project:'QuadFang', hours:2.5, desc:'Full GitHub deployment, DNS migration, Hunt Gallery color change, newsletter table', type:'Forge AI' },
+  { date:'2026-04-15', user:'Alessio', project:'Website', hours:0.5, desc:'v2 CSS fix deployed — homepage fade-in sections now visible', type:'Forge AI' },
+  { date:'2026-04-15', user:'Alessio', project:'Command Centre', hours:1.0, desc:'Timesheet page built for Command Centre', type:'Forge AI' }
+];
+</script>
+<!-- ═══ END DATA BLOCK ═══ -->
+
+<!-- Summary cards — auto-generated -->
+<div class="summary-row" id="summaryRow"></div>
+
+<!-- Project breakdown bars -->
+<h2>Hours by Project</h2>
+<div class="card" id="projectBars"></div>
+
+<!-- Timeline chart -->
+<h2>Daily Activity</h2>
+<div class="card">
+  <div class="chart-wrap">
+    <canvas id="dailyChart"></canvas>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- User split -->
+<h2>Team Split</h2>
+<div class="card" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;" id="teamSplit"></div>
+
+<hr class="section-divider">
+
+<!-- Filter + full table -->
+<h2>Full Log</h2>
+<div class="filter-bar" id="filterBar"></div>
+<div class="card" style="overflow-x:auto;">
+  <table id="logTable">
+    <thead>
+      <tr><th>Date</th><th>User</th><th>Project</th><th>Hours</th><th>Type</th><th>Description</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<hr class="section-divider">
+<p style="font-size:12px;color:#484f58;text-align:center;margin-top:24px;">
+  AZCK Project Timesheet — Command Centre · Auto-generated by Forge · Updated every Save All
+</p>
+
+<!-- ═══ ENGINE — DO NOT EDIT BELOW ═══ -->
+<script>
+(function(){
+  // Aggregate by project
+  var byProject = {};
+  var byDate = {};
+  var byUser = {};
+  var totalHours = 0;
+  var totalSessions = TIMESHEET.length;
+  var projects = Object.keys(PROJECT_COLORS);
+  var dates = [];
+
+  TIMESHEET.forEach(function(e){
+    byProject[e.project] = (byProject[e.project]||0) + e.hours;
+    byUser[e.user] = (byUser[e.user]||0) + e.hours;
+    totalHours += e.hours;
+    if(!byDate[e.date]) byDate[e.date] = {};
+    byDate[e.date][e.project] = (byDate[e.date][e.project]||0) + e.hours;
+    if(dates.indexOf(e.date)===-1) dates.push(e.date);
+  });
+  dates.sort();
+
+  // Unique projects actually used
+  var usedProjects = Object.keys(byProject).sort(function(a,b){ return byProject[b]-byProject[a]; });
+  var uniqueDays = dates.length;
+
+  // Summary cards
+  var summaryHTML = '';
+  summaryHTML += '<div class="stat-card"><div class="stat-value">'+totalHours.toFixed(1)+'</div><div class="stat-label">Total Hours</div></div>';
+  summaryHTML += '<div class="stat-card"><div class="stat-value">'+totalSessions+'</div><div class="stat-label">Log Entries</div></div>';
+  summaryHTML += '<div class="stat-card"><div class="stat-value">'+uniqueDays+'</div><div class="stat-label">Active Days</div></div>';
+  summaryHTML += '<div class="stat-card"><div class="stat-value">'+usedProjects.length+'</div><div class="stat-label">Projects</div></div>';
+  summaryHTML += '<div class="stat-card"><div class="stat-value">'+(totalHours/Math.max(uniqueDays,1)).toFixed(1)+'</div><div class="stat-label">Avg Hours/Day</div></div>';
+  document.getElementById('summaryRow').innerHTML = summaryHTML;
+
+  // Project bars
+  var maxHours = 0;
+  usedProjects.forEach(function(p){ if(byProject[p]>maxHours) maxHours=byProject[p]; });
+  var barsHTML = '';
+  usedProjects.forEach(function(p){
+    var pct = (byProject[p]/maxHours*100).toFixed(1);
+    var col = PROJECT_COLORS[p]||'#58a6ff';
+    barsHTML += '<div class="project-bar-wrap">';
+    barsHTML += '<div class="project-bar-header"><span class="project-bar-name">'+p+'</span><span class="project-bar-hours">'+byProject[p].toFixed(1)+' hrs</span></div>';
+    barsHTML += '<div class="project-bar-track"><div class="project-bar-fill" style="width:'+pct+'%;background:'+col+';"></div></div>';
+    barsHTML += '</div>';
+  });
+  document.getElementById('projectBars').innerHTML = barsHTML;
+
+  // Daily stacked bar chart
+  var datasets = usedProjects.map(function(p){
+    return {
+      label: p,
+      data: dates.map(function(d){ return (byDate[d]&&byDate[d][p])||0; }),
+      backgroundColor: PROJECT_COLORS[p]||'#58a6ff',
+      borderRadius: 4
+    };
+  });
+  new Chart(document.getElementById('dailyChart'), {
+    type:'bar',
+    data:{ labels: dates.map(function(d){ return d.replace('2026-','')}), datasets: datasets },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ labels:{ color:'#8b949e', font:{size:11} } } },
+      scales:{
+        x:{ stacked:true, ticks:{color:'#8b949e'}, grid:{color:'#21262d'} },
+        y:{ stacked:true, ticks:{color:'#8b949e'}, grid:{color:'#21262d'}, title:{display:true,text:'Hours',color:'#8b949e'} }
+      }
+    }
+  });
+
+  // Team split
+  var splitHTML = '';
+  Object.keys(byUser).sort().forEach(function(u){
+    splitHTML += '<div>';
+    splitHTML += '<h3 style="color:#58a6ff;">'+u+'</h3>';
+    splitHTML += '<div class="stat-value" style="font-size:28px;">'+byUser[u].toFixed(1)+' hrs</div>';
+    splitHTML += '<div class="stat-label">'+((byUser[u]/totalHours)*100).toFixed(0)+'% of total</div>';
+    // Per-project breakdown for this user
+    var userProjects = {};
+    TIMESHEET.forEach(function(e){ if(e.user===u) userProjects[e.project]=(userProjects[e.project]||0)+e.hours; });
+    var upSorted = Object.keys(userProjects).sort(function(a,b){return userProjects[b]-userProjects[a];});
+    splitHTML += '<div style="margin-top:12px;">';
+    upSorted.forEach(function(p){
+      var col = PROJECT_COLORS[p]||'#58a6ff';
+      splitHTML += '<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid #21262d;">';
+      splitHTML += '<span style="color:'+col+';">'+p+'</span><span style="color:#8b949e;">'+userProjects[p].toFixed(1)+'h</span>';
+      splitHTML += '</div>';
+    });
+    splitHTML += '</div></div>';
+  });
+  document.getElementById('teamSplit').innerHTML = splitHTML;
+
+  // Filter buttons
+  var filterHTML = '<button class="filter-btn active" data-filter="all">All</button>';
+  usedProjects.forEach(function(p){
+    filterHTML += '<button class="filter-btn" data-filter="'+p+'" style="border-color:'+(PROJECT_COLORS[p]||'#30363d')+'">'+p+'</button>';
+  });
+  document.getElementById('filterBar').innerHTML = filterHTML;
+
+  // Full log table
+  function renderTable(filter){
+    var tbody = document.querySelector('#logTable tbody');
+    var rows = '';
+    var sorted = TIMESHEET.slice().sort(function(a,b){ return b.date.localeCompare(a.date)||b.hours-a.hours; });
+    sorted.forEach(function(e){
+      if(filter!=='all' && e.project!==filter) return;
+      var col = PROJECT_COLORS[e.project]||'#58a6ff';
+      rows += '<tr>';
+      rows += '<td style="white-space:nowrap;">'+e.date+'</td>';
+      rows += '<td>'+e.user+'</td>';
+      rows += '<td><span class="tag" style="background:'+col+'22;color:'+col+';border:1px solid '+col+'44;">'+e.project+'</span></td>';
+      rows += '<td style="font-weight:700;color:#58a6ff;">'+e.hours.toFixed(1)+'</td>';
+      rows += '<td style="font-size:11px;color:#8b949e;">'+e.type+'</td>';
+      rows += '<td style="max-width:350px;">'+e.desc+'</td>';
+      rows += '</tr>';
+    });
+    tbody.innerHTML = rows;
+  }
+  renderTable('all');
+
+  // Filter click handlers
+  document.getElementById('filterBar').addEventListener('click', function(ev){
+    if(!ev.target.classList.contains('filter-btn')) return;
+    document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');});
+    ev.target.classList.add('active');
+    renderTable(ev.target.getAttribute('data-filter'));
+  });
+
+})();
+</script>
+
+</body>
+</html>
