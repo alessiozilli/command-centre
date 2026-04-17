@@ -1,1214 +1,462 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://twrlvnfszohyrmivdhre.supabase.co wss://twrlvnfszohyrmivdhre.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'">
-  <title>AZCK Admin</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #0d1117; color: #e6edf3; line-height: 1.6; font-size: 16px; }
-    header { background-color: #161b22; border-bottom: 1px solid #30363d; padding: 2rem 2rem 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
-    header h1 { font-size: 2rem; font-weight: 700; letter-spacing: 0.05em; flex: 1; min-width: 200px; }
-    .header-right { display: flex; align-items: center; gap: 2rem; flex-wrap: wrap; }
-    .header-date { font-size: 0.95rem; color: #8b949e; font-weight: 500; }
-    .status-bar { display: flex; gap: 1.5rem; font-size: 0.9rem; }
-    .status-item { display: flex; flex-direction: column; align-items: center; }
-    .status-label { color: #8b949e; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
-    .status-count { font-size: 1.5rem; font-weight: 700; color: #58a6ff; }
-    .status-item.done .status-count { color: #3fb950; }
-    .status-item.synced .status-count { color: #8b949e; font-size: 0.8rem; }
-    nav.pill-nav { background-color: #0d1117; border-bottom: 1px solid #30363d; padding: 1rem 2rem; display: flex; gap: 0.75rem; flex-wrap: wrap; }
-    nav.pill-nav a, nav.pill-nav button { padding: 0.5rem 1rem; border: 1px solid #30363d; border-radius: 20px; background-color: transparent; color: #8b949e; text-decoration: none; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; font-family: inherit; }
-    nav.pill-nav a:hover, nav.pill-nav button:hover { color: #e6edf3; border-color: #58a6ff; }
-    nav.pill-nav a.active { background-color: #58a6ff; color: #0d1117; border-color: #58a6ff; font-weight: 600; }
-    .summary-stats { background-color: #161b22; border-bottom: 1px solid #30363d; padding: 1.5rem 2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1.5rem; align-items: center; }
-    .stat-block { display: flex; flex-direction: column; gap: 0.5rem; }
-    .stat-label { font-size: 0.85rem; color: #8b949e; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
-    .stat-value { font-size: 1.75rem; font-weight: 700; color: #58a6ff; }
-    .stat-block.done .stat-value { color: #3fb950; }
-    .stat-block.synced .stat-value { font-size: 0.9rem; color: #8b949e; }
-    .category-tabs { background-color: #0d1117; border-bottom: 1px solid #30363d; padding: 1rem 2rem; display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
-    .category-tab { padding: 0.5rem 1rem; border: 2px solid #30363d; border-radius: 6px; background-color: transparent; color: #e6edf3; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s; position: relative; user-select: none; font-family: inherit; }
-    .category-tab:hover { border-color: #58a6ff; color: #58a6ff; }
-    .category-tab.active { border-color: #990000; background-color: rgba(153, 0, 0, 0.15); color: #ff6b6b; }
-    .category-count { font-size: 0.8rem; color: #8b949e; margin-left: 0.5rem; }
-    .category-tab.active .category-count { color: #ff6b6b; }
-    .btn-add-category { padding: 0.5rem 0.75rem; border: 1px dashed #30363d; border-radius: 6px; background-color: transparent; color: #8b949e; cursor: pointer; font-size: 1rem; transition: all 0.2s; font-family: inherit; }
-    .btn-add-category:hover { border-color: #58a6ff; color: #58a6ff; }
-    .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
-    .filter-bar { display: flex; gap: 0.75rem; margin-bottom: 2rem; flex-wrap: wrap; }
-    .filter-btn { padding: 0.5rem 1rem; border: 1px solid #30363d; border-radius: 6px; background-color: transparent; color: #8b949e; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; font-family: inherit; }
-    .filter-btn:hover { color: #e6edf3; border-color: #58a6ff; }
-    .filter-btn.active { background-color: #58a6ff; color: #0d1117; border-color: #58a6ff; font-weight: 600; }
-    .btn-add-task { padding: 0.75rem 1.5rem; background-color: #990000; color: #e6edf3; border: none; border-radius: 6px; cursor: pointer; font-size: 0.95rem; font-weight: 600; transition: all 0.2s; font-family: inherit; }
-    .btn-add-task:hover { background-color: #cc0000; }
-    .task-list { display: flex; flex-direction: column; gap: 1rem; }
-    .task-row { background-color: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1.25rem; display: grid; grid-template-columns: auto 1fr auto auto auto auto; gap: 1rem; align-items: center; transition: all 0.2s; }
-    .task-row:hover { border-color: #58a6ff; background-color: #0d1117; }
-    .task-row.done { opacity: 0.6; }
-    .task-row.done .task-title { text-decoration: line-through; color: #8b949e; }
-    .task-checkbox { width: 20px; height: 20px; cursor: pointer; accent-color: #3fb950; }
-    .task-content { display: flex; flex-direction: column; gap: 0.5rem; }
-    .task-title { font-weight: 600; color: #e6edf3; font-size: 0.95rem; }
-    .task-notes { font-size: 0.85rem; color: #8b949e; line-height: 1.5; }
-    .task-meta { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
-    .priority-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-    .priority-badge.high { background-color: rgba(248, 81, 73, 0.15); color: #f85149; }
-    .priority-badge.medium { background-color: rgba(240, 136, 62, 0.15); color: #f0883e; }
-    .priority-badge.low { background-color: rgba(139, 148, 158, 0.15); color: #8b949e; }
-    .task-date { font-size: 0.85rem; color: #8b949e; }
-    .task-actions { display: flex; gap: 0.5rem; }
-    .btn-task-action { padding: 0.4rem 0.8rem; border: 1px solid #30363d; border-radius: 4px; background-color: transparent; color: #8b949e; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; font-family: inherit; }
-    .btn-task-action:hover { color: #e6edf3; border-color: #58a6ff; }
-    .btn-task-action.delete:hover { color: #f85149; border-color: #f85149; }
-    .task-edit-form { grid-column: 1 / -1; background-color: #0d1117; border: 1px solid #58a6ff; border-radius: 6px; padding: 1rem; display: grid; gap: 1rem; }
-    .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
-    .form-group label { font-size: 0.85rem; color: #8b949e; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
-    .form-group input, .form-group select, .form-group textarea { padding: 0.75rem; background-color: #161b22; border: 1px solid #30363d; border-radius: 4px; color: #e6edf3; font-family: inherit; font-size: 0.95rem; transition: all 0.2s; }
-    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #58a6ff; outline: none; background-color: #0d1117; }
-    .form-group textarea { resize: vertical; min-height: 80px; }
-    .form-buttons { display: flex; gap: 0.75rem; margin-top: 0.5rem; }
-    .btn-save, .btn-cancel { padding: 0.6rem 1.2rem; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-weight: 600; font-family: inherit; transition: all 0.2s; }
-    .btn-save { background-color: #58a6ff; color: #0d1117; }
-    .btn-save:hover { background-color: #79c0ff; }
-    .btn-cancel { background-color: transparent; color: #8b949e; border: 1px solid #30363d; }
-    .btn-cancel:hover { color: #e6edf3; border-color: #58a6ff; }
-    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.8); z-index: 1000; align-items: center; justify-content: center; }
-    .modal-overlay.active { display: flex; }
-    .modal { background-color: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 2rem; max-width: 500px; width: 90%; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); }
-    .modal-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; color: #e6edf3; }
-    .modal-buttons { display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem; }
-    .btn-confirm { padding: 0.75rem 1.5rem; background-color: #f85149; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-family: inherit; transition: all 0.2s; }
-    .btn-confirm:hover { background-color: #fc6d71; }
-    .btn-secondary { padding: 0.75rem 1.5rem; background-color: transparent; color: #8b949e; border: 1px solid #30363d; border-radius: 4px; cursor: pointer; font-weight: 600; font-family: inherit; transition: all 0.2s; }
-    .btn-secondary:hover { color: #e6edf3; border-color: #58a6ff; }
-    .category-form { display: grid; gap: 1rem; }
-    .color-picker-wrapper { display: flex; align-items: center; gap: 1rem; }
-    .color-picker-input { width: 50px; height: 50px; border: 2px solid #30363d; border-radius: 4px; cursor: pointer; }
-    .nav-add-form { display: none; align-items: center; gap: 0.5rem; }
-    .nav-add-form.active { display: inline-flex; }
-    .nav-add-form input { padding: 0.4rem 0.6rem; background: #0d1117; border: 1px solid #30363d; border-radius: 20px; color: #e6edf3; font-size: 0.85rem; width: 120px; font-family: inherit; }
-    .nav-add-form input:focus { border-color: #58a6ff; outline: none; }
-    .nav-add-form button { padding: 0.4rem 0.7rem; border-radius: 20px; border: 1px solid #30363d; background: transparent; color: #8b949e; cursor: pointer; font-size: 0.8rem; font-family: inherit; }
-    .nav-add-form .btn-nav-save { border-color: #3fb950; color: #3fb950; }
-    /* Drag-and-drop */
-    .category-tab[draggable="true"], nav.pill-nav a[draggable="true"] { cursor: grab; }
-    .category-tab[draggable="true"]:active, nav.pill-nav a[draggable="true"]:active { cursor: grabbing; }
-    .category-tab.drag-over { border-color: #58a6ff; border-style: dashed; background-color: rgba(88,166,255,0.1); }
-    nav.pill-nav a.drag-over { border-color: #58a6ff; border-style: dashed; background-color: rgba(88,166,255,0.1); }
-    .category-tab.dragging, nav.pill-nav a.dragging { opacity: 0.4; }
-    .context-menu { display: none; position: fixed; background-color: #161b22; border: 1px solid #30363d; border-radius: 6px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5); z-index: 2000; min-width: 150px; }
-    .context-menu.active { display: block; }
-    .context-menu-item { padding: 0.75rem 1rem; color: #8b949e; cursor: pointer; transition: all 0.2s; border-bottom: 1px solid #30363d; }
-    .context-menu-item:last-child { border-bottom: none; }
-    .context-menu-item:hover { background-color: #0d1117; color: #e6edf3; }
-    .context-menu-item.delete:hover { color: #f85149; }
-    .empty-state { text-align: center; padding: 3rem 2rem; color: #8b949e; }
-    .empty-state-icon { font-size: 3rem; margin-bottom: 1rem; }
-    .empty-state-text { font-size: 1rem; margin-bottom: 2rem; }
-    @media (max-width: 768px) {
-      header { flex-direction: column; align-items: flex-start; }
-      .header-right { width: 100%; justify-content: space-between; }
-      .status-bar { justify-content: space-around; width: 100%; gap: 0.75rem; }
-      .status-item { flex-direction: row; gap: 0.5rem; }
-      .status-label { font-size: 0.7rem; }
-      .task-row { grid-template-columns: auto 1fr; gap: 0.75rem; }
-      .task-meta { grid-column: 1 / -1; gap: 0.75rem; }
-      .task-actions { grid-column: 1 / -1; }
-      .priority-badge { font-size: 0.75rem; padding: 0.2rem 0.6rem; }
-      .category-tabs { padding: 1rem; overflow-x: auto; }
-      .container { padding: 1rem; }
-    }
-    @media (max-width: 480px) {
-      header h1 { font-size: 1.5rem; }
-      .summary-stats { padding: 1rem; grid-template-columns: 1fr; gap: 1rem; }
-      .filter-bar { gap: 0.5rem; }
-      .filter-btn { font-size: 0.8rem; padding: 0.4rem 0.8rem; }
-      .btn-add-task { width: 100%; }
-      nav.pill-nav { padding: 0.75rem 1rem; gap: 0.5rem; }
-      nav.pill-nav a, nav.pill-nav button { font-size: 0.8rem; padding: 0.4rem 0.8rem; }
-    }
-    #appContent { display: block; }
-    .user-bar { display: flex; align-items: center; gap: 0.75rem; }
-    .user-name { color: #8b949e; font-size: 0.9rem; font-weight: 500; }
-    .user-role { color: #990000; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
-    .btn-logout { background: transparent; border: 1px solid #30363d; color: #8b949e; padding: 0.35rem 0.75rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; }
-    .btn-logout:hover { border-color: #990000; color: #e6edf3; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://twrlvnfszohyrmivdhre.supabase.co wss://twrlvnfszohyrmivdhre.supabase.co; img-src 'self' data: https:;">
+<title>Tasks — AZCK Command Centre</title>
+<link rel="stylesheet" href="cc-shell.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  .app-wrap { max-width:1320px; margin:20px auto 80px; padding:0 20px; }
+  .toolbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:12px; flex-wrap:wrap; }
+  .view-toggle { display:flex; gap:4px; background:#0d1117; padding:4px; border:1px solid #30363d; border-radius:8px; }
+  .view-toggle button { background:transparent; color:#8b949e; border:none; padding:6px 14px; border-radius:5px; cursor:pointer; font-size:0.9rem; }
+  .view-toggle button.active { background:#21262d; color:#e6edf3; }
+  .btn { background:#238636; color:#fff; border:none; padding:8px 14px; border-radius:6px; cursor:pointer; font-size:0.9rem; font-weight:500; }
+  .btn:hover { background:#2ea043; }
+  .btn-ghost { background:transparent; border:1px solid #30363d; color:#e6edf3; }
+  .btn-ghost:hover { background:#21262d; }
+  .btn-danger { background:#da3633; } .btn-danger:hover{ background:#f85149; }
+  .actions-group { display:flex; gap:8px; }
+
+  .group { background:#161b22; border:1px solid #30363d; border-radius:8px; margin-bottom:14px; overflow:hidden; }
+  .group-head { display:flex; align-items:center; gap:10px; padding:12px 16px; cursor:pointer; user-select:none; background:#0d1117; }
+  .group-head:hover { background:#161b22; }
+  .group-head .dot { width:10px; height:10px; border-radius:50%; flex:none; }
+  .group-head .name { flex:1; color:#e6edf3; font-weight:600; }
+  .group-head .meta { color:#8b949e; font-size:0.85rem; }
+  .group-head .chev { color:#8b949e; transition:.2s; }
+  .group.collapsed .chev { transform:rotate(-90deg); }
+  .group.collapsed .group-body { display:none; }
+
+  /* LIST VIEW */
+  .task-row { display:grid; grid-template-columns: 24px 1fr 110px 110px 110px 40px; gap:10px; align-items:center; padding:10px 16px; border-top:1px solid #21262d; }
+  .task-row:first-child { border-top:none; }
+  .task-row:hover { background:#0d1117; }
+  .task-row.done .title { color:#8b949e; text-decoration:line-through; }
+  .task-row .cb { width:18px; height:18px; accent-color:#238636; cursor:pointer; }
+  .task-row .title { color:#e6edf3; cursor:text; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .task-row .title[contenteditable="true"] { white-space:normal; background:#0d1117; padding:4px 8px; border-radius:4px; outline:1px solid #58a6ff; }
+  .task-row select, .task-row input[type="date"] { background:#0d1117; border:1px solid #30363d; color:#e6edf3; padding:4px 6px; border-radius:4px; font-size:0.85rem; width:100%; }
+  .task-row .delete { background:transparent; border:none; color:#8b949e; cursor:pointer; font-size:1.2rem; }
+  .task-row .delete:hover { color:#f85149; }
+  .prio-high { color:#f85149; } .prio-medium { color:#d29922; } .prio-low { color:#3fb950; }
+  .due-overdue { color:#f85149; font-weight:600; } .due-today { color:#d29922; font-weight:600; }
+
+  /* KANBAN VIEW */
+  .kanban { display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; }
+  .kanban-col { background:#0d1117; border:1px solid #30363d; border-radius:8px; padding:10px; min-height:200px; }
+  .kanban-col h3 { margin:0 0 10px; color:#e6edf3; font-size:0.95rem; padding:0 4px; display:flex; justify-content:space-between; }
+  .kanban-col h3 .cnt { color:#8b949e; font-weight:400; }
+  .kanban-card { background:#161b22; border:1px solid #30363d; border-radius:6px; padding:10px 12px; margin-bottom:8px; cursor:pointer; }
+  .kanban-card:hover { border-color:#58a6ff; }
+  .kanban-card .t { color:#e6edf3; font-weight:500; margin-bottom:6px; font-size:0.9rem; }
+  .kanban-card .meta { display:flex; gap:8px; font-size:0.75rem; color:#8b949e; flex-wrap:wrap; }
+  .kanban-card .meta select { background:#0d1117; border:1px solid #30363d; color:#e6edf3; border-radius:4px; padding:1px 4px; font-size:0.75rem; }
+
+  /* DETAIL VIEW */
+  .detail-card { background:#161b22; border:1px solid #30363d; border-radius:8px; padding:16px 20px; margin-bottom:10px; }
+  .detail-card h3 { margin:0 0 8px; color:#e6edf3; font-size:1.05rem; display:flex; gap:10px; align-items:center; }
+  .detail-card h3 input[type=checkbox] { width:18px; height:18px; accent-color:#238636; }
+  .detail-card .body { color:#c9d1d9; margin:8px 0 12px; white-space:pre-wrap; min-height:22px; }
+  .detail-card .body:focus, .detail-card h3 [contenteditable="true"]:focus { outline:1px solid #58a6ff; background:#0d1117; padding:2px 6px; border-radius:4px; }
+  .detail-card .fields { display:flex; gap:10px; flex-wrap:wrap; font-size:0.85rem; }
+  .detail-card .fields label { color:#8b949e; display:flex; align-items:center; gap:6px; }
+  .detail-card .fields select, .detail-card .fields input { background:#0d1117; border:1px solid #30363d; color:#e6edf3; padding:4px 6px; border-radius:4px; font-size:0.85rem; }
+
+  /* MODAL */
+  .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex; align-items:center; justify-content:center; z-index:1000; }
+  .modal { background:#161b22; padding:24px; border-radius:8px; border:1px solid #30363d; min-width:360px; max-width:520px; width:90%; }
+  .modal h3 { margin:0 0 16px; color:#e6edf3; }
+  .modal input, .modal select, .modal textarea { width:100%; padding:9px; margin-bottom:10px; background:#0d1117; border:1px solid #30363d; color:#e6edf3; border-radius:6px; box-sizing:border-box; font-family:inherit; }
+  .modal textarea { min-height:80px; resize:vertical; }
+  .modal .row { display:flex; gap:10px; }
+  .modal .actions { display:flex; gap:8px; justify-content:flex-end; margin-top:8px; }
+
+  .login-shell { max-width:360px; margin:60px auto; background:#161b22; padding:30px; border:1px solid #30363d; border-radius:8px; }
+  .login-shell h2 { margin:0 0 18px; color:#e6edf3; }
+  .login-shell input { width:100%; padding:10px; margin-bottom:10px; background:#0d1117; border:1px solid #30363d; color:#e6edf3; border-radius:6px; font-size:0.95rem; box-sizing:border-box; }
+  .login-msg { color:#f85149; font-size:0.85rem; margin-top:10px; min-height:1.2em; }
+  .loading, .empty { color:#8b949e; padding:20px; text-align:center; }
+  .error { background:#5a1d1d; color:#ffb3b3; padding:12px 16px; border-radius:6px; margin-bottom:12px; }
+</style>
 </head>
 <body>
 
-<div id="appContent">
-  <header>
-    <h1>AZ COMMAND CENTRE</h1>
-    <div class="header-right">
-      <div class="user-bar">
-        <span class="user-name" id="userName"></span>
-        <span class="user-role" id="userRole"></span>
-        <button class="btn-logout" id="btnLogout" onclick="handleLogout()">Sign Out</button>
-      </div>
-      <div class="header-date" id="headerDate"></div>
-      <div class="status-bar">
-        <div class="status-item">
-          <div class="status-label">Open</div>
-          <div class="status-count" id="statusOpen">0</div>
-        </div>
-        <div class="status-item">
-          <div class="status-label">Today</div>
-          <div class="status-count" id="statusToday">0</div>
-        </div>
-        <div class="status-item done">
-          <div class="status-label">Done</div>
-          <div class="status-count" id="statusDone">0</div>
-        </div>
-        <div class="status-item synced">
-          <div class="status-label">Synced</div>
-          <div class="status-count" id="statusSynced">—</div>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <nav class="pill-nav" id="pillNav">
-    <a href="alessio.html" class="active">Tasks</a>
-    <a href="timesheet.html">Timesheet</a>
-    <a href="forge.html">Forge</a>
-    <a href="usage.html">Usage</a>
-    <a href="network.html">Network</a>
-  </nav>
-
-  <div class="context-menu" id="navContextMenu">
-    <div class="context-menu-item" id="navContextEdit">Edit</div>
-    <div class="context-menu-item delete" id="navContextDelete">Delete</div>
-  </div>
-
-  <div class="summary-stats">
-    <div class="stat-block">
-      <div class="stat-label">Total Open</div>
-      <div class="stat-value" id="statTotalOpen">0</div>
-    </div>
-    <div class="stat-block">
-      <div class="stat-label">Due This Week</div>
-      <div class="stat-value" id="statDueWeek">0</div>
-    </div>
-    <div class="stat-block done">
-      <div class="stat-label">Completed</div>
-      <div class="stat-value" id="statCompleted">0</div>
-    </div>
-    <div class="stat-block synced">
-      <div class="stat-label">Last Updated</div>
-      <div class="stat-value" id="statLastUpdated">Never</div>
-    </div>
-  </div>
-
-  <div class="category-tabs" id="categoryTabs"></div>
-
-  <div class="container">
-    <div style="margin-bottom: 2rem;">
-      <div class="filter-bar">
-        <button class="filter-btn active" data-filter="all">All Tasks</button>
-        <button class="filter-btn" data-filter="open">Open Only</button>
-        <button class="filter-btn" data-filter="high">High Priority</button>
-        <button class="filter-btn" data-filter="done">Done Only</button>
-      </div>
-      <button class="btn-add-task" id="btnAddTask">+ Add Task</button>
-    </div>
-    <div class="task-list" id="taskList"></div>
-    <div class="empty-state" id="emptyState" style="display: none;">
-      <div class="empty-state-icon">📋</div>
-      <div class="empty-state-text">No tasks in this category. Start by adding one!</div>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="confirmModal">
-    <div class="modal">
-      <h2 class="modal-title" id="confirmTitle">Confirm Action</h2>
-      <p id="confirmMessage"></p>
-      <div class="modal-buttons">
-        <button class="btn-secondary" id="btnConfirmCancel">Cancel</button>
-        <button class="btn-confirm" id="btnConfirmOK">Confirm</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="categoryModal">
-    <div class="modal">
-      <h2 class="modal-title" id="categoryModalTitle">Add Category</h2>
-      <form class="category-form" id="categoryForm">
-        <div class="form-group">
-          <label for="categoryName">Category Name</label>
-          <input type="text" id="categoryName" required placeholder="e.g., Work, Personal">
-        </div>
-        <div class="form-group">
-          <label>Color</label>
-          <div class="color-picker-wrapper">
-            <input type="color" id="categoryColor" class="color-picker-input" value="#58a6ff">
-            <span id="colorValue">#58a6ff</span>
-          </div>
-        </div>
-        <div class="modal-buttons">
-          <button type="button" class="btn-secondary" id="btnCategoryCancel">Cancel</button>
-          <button type="submit" class="btn-confirm">Create Category</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <div class="context-menu" id="contextMenu">
-    <div class="context-menu-item" id="contextRename">Rename</div>
-    <div class="context-menu-item" id="contextColor">Change Color</div>
-    <div class="context-menu-item delete" id="contextDelete">Delete</div>
-  </div>
-</div>
+<div id="app" class="app-wrap"><div class="loading">Loading…</div></div>
 
 <script>
-// === SUPABASE CONFIG ===
-const SUPABASE_URL = 'https://twrlvnfszohyrmivdhre.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3cmx2bmZzem9oeXJtaXZkaHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NjkxMTMsImV4cCI6MjA5MDE0NTExM30.o96DFNbBObst0EAmX51rnRFXzu8oTN1o-HNAxN7MY8A';
-const USE_SUPABASE = true;
+  window.PAGE = {
+    id: 'tasks',
+    title: 'Tasks',
+    subtitle: 'Projects + tasks · inline edit · list / kanban / detail',
+    subtabs: [
+      { id:'open',      label:'Open' },
+      { id:'week',      label:'This Week' },
+      { id:'overdue',   label:'Overdue' },
+      { id:'done',      label:'Completed' }
+    ],
+    stats: []
+  };
+</script>
+<script src="cc-shell.js"></script>
 
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: {
-    storageKey: 'sb-twrlvnfszohyrmivdhre-auth-token',
-    lock: async (name, acquireTimeout, fn) => await fn()
-  }
-});
+<script>
+(function(){
+  'use strict';
 
-// Current user
-let currentUser = null;
+  const SUPABASE_URL = 'https://twrlvnfszohyrmivdhre.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3cmx2bmZzem9oeXJtaXZkaHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NjkxMTMsImV4cCI6MjA5MDE0NTExM30.o96DFNbBObst0EAmX51rnRFXzu8oTN1o-HNAxN7MY8A';
 
-// ===== CONSTANTS & STORAGE =====
-const STORAGE_KEY = 'azck-command-centre';
-const DEFAULT_CATEGORIES = [
-  { id: 1, name: 'Personal', color: '#58a6ff', sortOrder: 1 },
-  { id: 2, name: 'AZ Custom Knives', color: '#990000', sortOrder: 2 },
-  { id: 3, name: 'Quad Fang', color: '#FC4C02', sortOrder: 3 },
-  { id: 4, name: '3D Printing', color: '#bc8cff', sortOrder: 4 },
-  { id: 5, name: 'Family', color: '#3fb950', sortOrder: 5 }
-];
-
-// ===== STATE MANAGEMENT =====
-let appState = {
-  categories: [],
-  tasks: [],
-  activeCategory: null,
-  activeFilter: 'all',
-  editingTaskId: null,
-  lastSynced: null,
-  nextId: 100
-};
-
-// ===== SUPABASE AUTH =====
-async function handleLogout() {
-  await sb.auth.signOut();
-  currentUser = null;
-  appState.categories = [];
-  appState.tasks = [];
-  appState.lastSynced = null;
-  window.location.href = 'index.html';
-}
-
-async function loadUserProfile(userId, email) {
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    let { data, error } = await sb
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-
-    if (data && !error) return data;
-
-    if (email) {
-      const res = await sb
-        .from('profiles')
-        .select('*')
-        .eq('email', email)
-        .single();
-      if (res.data && !res.error) return res.data;
+  const supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: {
+      storageKey: 'sb-twrlvnfszohyrmivdhre-auth-token',
+      persistSession: true,
+      autoRefreshToken: true
     }
+  });
+  window.supa = supa;
 
-    console.warn(`Profile load attempt ${attempt} failed:`, error?.message);
-    if (attempt < 3) await new Promise(r => setTimeout(r, 500 * attempt));
-  }
-  console.error('Profile load failed after 3 attempts');
-  return null;
-}
-
-function showUserInfo() {
-  if (!currentUser) return;
-  document.getElementById('userName').textContent = currentUser.display_name || currentUser.email;
-  document.getElementById('userRole').textContent = currentUser.role || '';
-}
-
-function unlockApp() {
-  // App is visible by default
-}
-
-// ===== SUPABASE DATA =====
-async function loadFromSupabase() {
-  // Only load this user's categories + shared (owner_id is NULL)
-  const { data: cats, error: catErr } = await sb
-    .from('categories')
-    .select('*')
-    .or('owner_id.eq.' + currentUser.id + ',owner_id.is.null')
-    .order('sort_order', { ascending: true });
-
-  if (catErr) {
-    console.error('Category load error:', catErr);
-  } else if (cats && cats.length > 0) {
-    appState.categories = cats.map(c => ({
-      id: c.id, name: c.name, color: c.color || '#f0883e',
-      sortOrder: c.sort_order, ownerId: c.owner_id
-    }));
-  } else {
-    appState.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
-  }
-
-  // Only load tasks in visible categories
-  const visibleCatIds = appState.categories.map(c => c.id);
-  const { data: tasks, error: taskErr } = await sb
-    .from('tasks')
-    .select('*')
-    .in('category_id', visibleCatIds)
-    .order('created_at', { ascending: false });
-
-  if (taskErr) {
-    console.error('Task load error:', taskErr);
-  } else {
-    appState.tasks = (tasks || []).map(t => ({
-      id: t.id, categoryId: t.category_id, title: t.title,
-      notes: t.notes || '', priority: t.priority || 'medium',
-      status: t.status || 'open', dueDate: t.due_date,
-      createdAt: t.created_at, completedAt: t.completed_at,
-      ownerId: t.owner_id, sortOrder: t.sort_order
-    }));
-  }
-
-  appState.lastSynced = new Date().toISOString();
-  saveToLocalStorage();
-
-  if (appState.categories.length > 0 && !appState.activeCategory) {
-    appState.activeCategory = appState.categories[0].id;
-  }
-}
-
-async function saveTaskToSupabase(task) {
-  const payload = {
-    category_id: task.categoryId, owner_id: currentUser?.id || null,
-    title: task.title || 'Untitled Task', notes: task.notes || null,
-    priority: task.priority || 'medium', status: task.status || 'open',
-    due_date: task.dueDate || null, sort_order: task.sortOrder || 0,
-    completed_at: task.completedAt || null
+  const STATE = {
+    tasks: [],
+    projects: [],
+    categories: [],
+    profile: null,
+    view: localStorage.getItem('tasks.view') || 'list',
+    subtab: 'open',
+    collapsedGroups: JSON.parse(localStorage.getItem('tasks.collapsed') || '{}')
   };
 
-  if (task._isNew) {
-    const { data, error } = await sb.from('tasks').insert(payload).select().single();
-    if (error) { console.error('Task insert error:', error); return null; }
-    return data;
-  } else {
-    const { data, error } = await sb.from('tasks').update(payload).eq('id', task.id).select().single();
-    if (error) { console.error('Task update error:', error); return null; }
-    return data;
+  const app = document.getElementById('app');
+  const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+  const todayISO = () => new Date().toISOString().slice(0,10);
+  const weekEndISO = () => { const d = new Date(); d.setDate(d.getDate()+7); return d.toISOString().slice(0,10); };
+
+  async function boot(){
+    const { data:{ session } } = await supa.auth.getSession();
+    if (!session) return renderLogin();
+
+    await loadAll();
+    if (window.CC && window.CC.onSubtabChange) wireShell();
+    else document.addEventListener('cc-shell-ready', wireShell, { once:true });
   }
-}
 
-async function deleteTaskFromSupabase(taskId) {
-  const { error } = await sb.from('tasks').delete().eq('id', taskId);
-  if (error) console.error('Task delete error:', error);
-}
+  function wireShell(){
+    window.CC.onSubtabChange(id => { STATE.subtab = id; render(); });
+    STATE.subtab = window.CC.getSubtab() || 'open';
+    render();
+  }
 
-async function saveCategoryToSupabase(cat) {
-  const payload = {
-    name: cat.name, color: cat.color || '#f0883e',
-    sort_order: cat.sortOrder || 0, owner_id: currentUser?.id || null
+  async function loadAll(){
+    const [{ data:tasks }, { data:projects }, { data:categories }, { data:{ user } }] = await Promise.all([
+      supa.from('tasks').select('*').order('sort_order').order('created_at', { ascending:false }),
+      supa.from('projects').select('*').eq('archived', false).order('sort_order'),
+      supa.from('categories').select('*').order('sort_order'),
+      supa.auth.getUser()
+    ]);
+    STATE.tasks = tasks || [];
+    STATE.projects = projects || [];
+    STATE.categories = categories || [];
+    STATE.user = user;
+  }
+
+  function filterTasks(){
+    const t = STATE.tasks;
+    if (STATE.subtab === 'open')    return t.filter(x => x.status !== 'done');
+    if (STATE.subtab === 'done')    return t.filter(x => x.status === 'done');
+    if (STATE.subtab === 'week')    return t.filter(x => x.status !== 'done' && x.due_date && x.due_date <= weekEndISO());
+    if (STATE.subtab === 'overdue') return t.filter(x => x.status !== 'done' && x.due_date && x.due_date < todayISO());
+    return t;
+  }
+
+  function groupByProject(tasks){
+    const groups = { __inbox: { id:'__inbox', name:'Inbox', color:'#8b949e', tasks:[] } };
+    STATE.projects.forEach(p => { groups[p.id] = { id:p.id, name:p.name, color:p.color||'#58a6ff', tasks:[] }; });
+    tasks.forEach(t => {
+      const key = t.project_id || '__inbox';
+      if (!groups[key]) groups[key] = { id:key, name:'(unknown)', color:'#8b949e', tasks:[] };
+      groups[key].tasks.push(t);
+    });
+    return Object.values(groups).filter(g => g.tasks.length > 0 || g.id !== '__inbox');
+  }
+
+  // ─── RENDER ────
+  function render(){
+    const filtered = filterTasks();
+    app.innerHTML = `
+      <div class="toolbar">
+        <div class="actions-group">
+          <button class="btn" onclick="taskAdd()">+ Add Task</button>
+          <button class="btn btn-ghost" onclick="projectAdd()">+ Add Project</button>
+        </div>
+        <div class="view-toggle">
+          <button class="${STATE.view==='list'?'active':''}" onclick="setView('list')">List</button>
+          <button class="${STATE.view==='kanban'?'active':''}" onclick="setView('kanban')">Kanban</button>
+          <button class="${STATE.view==='detail'?'active':''}" onclick="setView('detail')">Detail</button>
+        </div>
+      </div>
+      <div id="view-root"></div>`;
+    const root = document.getElementById('view-root');
+    if (STATE.view === 'list')   renderList(root, filtered);
+    if (STATE.view === 'kanban') renderKanban(root, filtered);
+    if (STATE.view === 'detail') renderDetail(root, filtered);
+  }
+
+  window.setView = (v) => { STATE.view = v; localStorage.setItem('tasks.view', v); render(); };
+
+  // ─── LIST VIEW ────
+  function renderList(root, tasks){
+    if (!tasks.length) return root.innerHTML = '<div class="empty">No tasks in this view.</div>';
+    const groups = groupByProject(tasks);
+    root.innerHTML = groups.map(g => {
+      const collapsed = STATE.collapsedGroups[g.id] ? 'collapsed' : '';
+      return `<div class="group ${collapsed}" data-group="${esc(g.id)}">
+        <div class="group-head" onclick="toggleGroup('${esc(g.id)}')">
+          <span class="dot" style="background:${esc(g.color)}"></span>
+          <span class="name">${esc(g.name)}</span>
+          <span class="meta">${g.tasks.length} task${g.tasks.length===1?'':'s'}</span>
+          <span class="chev">▾</span>
+        </div>
+        <div class="group-body">${g.tasks.map(rowList).join('')}</div>
+      </div>`;
+    }).join('');
+  }
+  function rowList(t){
+    const done = t.status === 'done';
+    const dueClass = t.due_date && !done ? (t.due_date < todayISO() ? 'due-overdue' : (t.due_date === todayISO() ? 'due-today' : '')) : '';
+    const projOpts = ['<option value="">— no project —</option>']
+      .concat(STATE.projects.map(p=>`<option value="${esc(p.id)}"${t.project_id===p.id?' selected':''}>${esc(p.name)}</option>`))
+      .join('');
+    return `<div class="task-row ${done?'done':''}" data-id="${t.id}">
+      <input type="checkbox" class="cb" ${done?'checked':''} onchange="taskToggleDone(${t.id}, this.checked)">
+      <span class="title" contenteditable="false"
+            onclick="this.setAttribute('contenteditable','true');this.focus()"
+            onblur="taskInlineSave(${t.id}, 'title', this.textContent); this.setAttribute('contenteditable','false')"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${esc(t.title||'(untitled)')}</span>
+      <select onchange="taskInlineSave(${t.id}, 'priority', this.value)">
+        <option value="high"${t.priority==='high'?' selected':''}>High</option>
+        <option value="medium"${t.priority==='medium'?' selected':''}>Medium</option>
+        <option value="low"${t.priority==='low'?' selected':''}>Low</option>
+      </select>
+      <input type="date" class="${dueClass}" value="${esc(t.due_date||'')}" onchange="taskInlineSave(${t.id}, 'due_date', this.value||null)">
+      <select onchange="taskInlineSave(${t.id}, 'project_id', this.value||null)">${projOpts}</select>
+      <button class="delete" onclick="taskDelete(${t.id})" title="Delete">×</button>
+    </div>`;
+  }
+
+  // ─── KANBAN VIEW ────
+  function renderKanban(root, tasks){
+    const cols = [
+      { id:'open',        label:'To Do' },
+      { id:'in_progress', label:'In Progress' },
+      { id:'done',        label:'Done' }
+    ];
+    root.innerHTML = `<div class="kanban">${cols.map(c => {
+      const bucket = tasks.filter(t => t.status === c.id);
+      return `<div class="kanban-col">
+        <h3>${esc(c.label)} <span class="cnt">${bucket.length}</span></h3>
+        ${bucket.map(t => kanCard(t)).join('') || '<div class="empty" style="padding:10px;font-size:0.85rem;">—</div>'}
+      </div>`;
+    }).join('')}</div>`;
+  }
+  function kanCard(t){
+    const proj = STATE.projects.find(p=>p.id===t.project_id);
+    return `<div class="kanban-card" onclick="taskDetail(${t.id})">
+      <div class="t">${esc(t.title||'(untitled)')}</div>
+      <div class="meta">
+        ${proj ? `<span style="color:${esc(proj.color)};">● ${esc(proj.name)}</span>` : '<span>Inbox</span>'}
+        ${t.due_date ? `<span>${esc(t.due_date)}</span>` : ''}
+        <span class="prio-${esc(t.priority||'medium')}">${esc((t.priority||'medium').toUpperCase())}</span>
+        <select onclick="event.stopPropagation();" onchange="taskInlineSave(${t.id}, 'status', this.value)">
+          <option value="open"${t.status==='open'?' selected':''}>To Do</option>
+          <option value="in_progress"${t.status==='in_progress'?' selected':''}>In Progress</option>
+          <option value="done"${t.status==='done'?' selected':''}>Done</option>
+        </select>
+      </div>
+    </div>`;
+  }
+
+  // ─── DETAIL VIEW ────
+  function renderDetail(root, tasks){
+    if (!tasks.length) return root.innerHTML = '<div class="empty">No tasks in this view.</div>';
+    const groups = groupByProject(tasks);
+    root.innerHTML = groups.map(g => `
+      <div class="group">
+        <div class="group-head"><span class="dot" style="background:${esc(g.color)}"></span><span class="name">${esc(g.name)}</span><span class="meta">${g.tasks.length}</span></div>
+        <div class="group-body">${g.tasks.map(rowDetail).join('')}</div>
+      </div>`).join('');
+  }
+  function rowDetail(t){
+    const done = t.status==='done';
+    const projOpts = ['<option value="">— no project —</option>']
+      .concat(STATE.projects.map(p=>`<option value="${esc(p.id)}"${t.project_id===p.id?' selected':''}>${esc(p.name)}</option>`)).join('');
+    return `<div class="detail-card" data-id="${t.id}">
+      <h3>
+        <input type="checkbox" ${done?'checked':''} onchange="taskToggleDone(${t.id}, this.checked)">
+        <span contenteditable="true" onblur="taskInlineSave(${t.id}, 'title', this.textContent)"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${esc(t.title||'(untitled)')}</span>
+      </h3>
+      <div class="body" contenteditable="true"
+        onblur="taskInlineSave(${t.id}, 'notes', this.textContent)">${esc(t.notes||'')}</div>
+      <div class="fields">
+        <label>Priority
+          <select onchange="taskInlineSave(${t.id}, 'priority', this.value)">
+            <option value="high"${t.priority==='high'?' selected':''}>High</option>
+            <option value="medium"${t.priority==='medium'?' selected':''}>Medium</option>
+            <option value="low"${t.priority==='low'?' selected':''}>Low</option>
+          </select>
+        </label>
+        <label>Status
+          <select onchange="taskInlineSave(${t.id}, 'status', this.value)">
+            <option value="open"${t.status==='open'?' selected':''}>To Do</option>
+            <option value="in_progress"${t.status==='in_progress'?' selected':''}>In Progress</option>
+            <option value="done"${t.status==='done'?' selected':''}>Done</option>
+          </select>
+        </label>
+        <label>Due <input type="date" value="${esc(t.due_date||'')}" onchange="taskInlineSave(${t.id}, 'due_date', this.value||null)"></label>
+        <label>Project <select onchange="taskInlineSave(${t.id}, 'project_id', this.value||null)">${projOpts}</select></label>
+        <button class="btn btn-danger" style="margin-left:auto;" onclick="taskDelete(${t.id})">Delete</button>
+      </div>
+    </div>`;
+  }
+
+  // ─── ACTIONS ────
+  window.toggleGroup = function(id){
+    STATE.collapsedGroups[id] = !STATE.collapsedGroups[id];
+    localStorage.setItem('tasks.collapsed', JSON.stringify(STATE.collapsedGroups));
+    render();
   };
 
-  if (cat._isNew) {
-    const { data, error } = await sb.from('categories').insert(payload).select().single();
-    if (error) { console.error('Category insert error:', error); return null; }
-    return data;
-  } else {
-    const { data, error } = await sb.from('categories').update(payload).eq('id', cat.id).select().single();
-    if (error) console.error('Category update error:', error);
-    return data;
-  }
-}
+  window.taskInlineSave = async function(id, field, value){
+    const before = STATE.tasks.find(t=>t.id===id);
+    if (before && before[field] === value) return;
+    // optimistic
+    if (before) before[field] = value;
+    const { error } = await supa.from('tasks').update({ [field]: value }).eq('id', id);
+    if (error) { alert('Save failed: ' + error.message); await loadAll(); render(); }
+  };
 
-async function deleteCategoryFromSupabase(catId) {
-  const { error } = await sb.from('categories').delete().eq('id', catId);
-  if (error) console.error('Category delete error:', error);
-}
+  window.taskToggleDone = async function(id, checked){
+    const next = checked ? 'done' : 'open';
+    const patch = { status: next, completed_at: checked ? new Date().toISOString() : null };
+    const t = STATE.tasks.find(x=>x.id===id);
+    if (t) Object.assign(t, patch);
+    render();
+    const { error } = await supa.from('tasks').update(patch).eq('id', id);
+    if (error) { alert('Failed: '+error.message); await loadAll(); render(); }
+  };
 
-// ===== REALTIME SUBSCRIPTIONS =====
-function subscribeToRealtime() {
-  sb.channel('tasks-changes')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => {
-      loadFromSupabase().then(() => { updateStatusBar(); renderCategoryTabs(); renderTasks(); });
-    }).subscribe();
+  window.taskDelete = async function(id){
+    if (!confirm('Delete this task?')) return;
+    const { error } = await supa.from('tasks').delete().eq('id', id);
+    if (error) return alert(error.message);
+    STATE.tasks = STATE.tasks.filter(t=>t.id!==id);
+    render();
+  };
 
-  sb.channel('categories-changes')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => {
-      loadFromSupabase().then(() => { renderCategoryTabs(); renderTasks(); updateStatusBar(); });
-    }).subscribe();
+  window.taskAdd = function(){
+    const projOpts = ['<option value="">— no project —</option>']
+      .concat(STATE.projects.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`)).join('');
+    showModal('New Task', `
+      <input id="m-title" placeholder="What needs doing?" autofocus>
+      <textarea id="m-notes" placeholder="Notes (optional)"></textarea>
+      <div class="row">
+        <select id="m-prio"><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option></select>
+        <input id="m-due" type="date">
+      </div>
+      <select id="m-proj">${projOpts}</select>
+    `, async ()=>{
+      const title = document.getElementById('m-title').value.trim();
+      if (!title) return;
+      const payload = {
+        title,
+        notes: document.getElementById('m-notes').value || null,
+        priority: document.getElementById('m-prio').value,
+        due_date: document.getElementById('m-due').value || null,
+        project_id: document.getElementById('m-proj').value || null,
+        status: 'open'
+      };
+      const { data, error } = await supa.from('tasks').insert(payload).select().single();
+      if (error) return alert(error.message);
+      STATE.tasks.unshift(data);
+      closeModal(); render();
+    });
+  };
 
-  sb.channel('nav-links-changes')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'nav_links' }, () => {
-      loadNavLinks().then(renderNavLinks);
-    }).subscribe();
-}
+  window.projectAdd = function(){
+    showModal('New Project', `
+      <input id="m-name" placeholder="Project name" autofocus>
+      <div class="row">
+        <input id="m-icon" placeholder="Icon (optional, e.g. 🔨)">
+        <input id="m-color" type="color" value="#58a6ff" style="height:42px;padding:4px;">
+      </div>
+    `, async ()=>{
+      const name = document.getElementById('m-name').value.trim();
+      if (!name) return;
+      const payload = {
+        name,
+        icon: document.getElementById('m-icon').value || null,
+        color: document.getElementById('m-color').value
+      };
+      const { data, error } = await supa.from('projects').insert(payload).select().single();
+      if (error) return alert(error.message);
+      STATE.projects.push(data);
+      closeModal(); render();
+    });
+  };
 
-// ===== NAV LINKS (dynamic, draggable) =====
-let navLinks = [];
-let navContextTarget = null;
-let dragNavIndex = null;
+  window.taskDetail = function(id){
+    // Switch to detail view and scroll to task
+    STATE.view = 'detail';
+    localStorage.setItem('tasks.view', 'detail');
+    render();
+    setTimeout(() => {
+      const el = document.querySelector(`.detail-card[data-id="${id}"]`);
+      if (el) el.scrollIntoView({ behavior:'smooth', block:'center' });
+    }, 50);
+  };
 
-async function loadNavLinks() {
-  const { data, error } = await sb
-    .from('nav_links')
-    .select('*')
-    .or('owner_id.eq.' + currentUser.id + ',owner_id.is.null')
-    .order('sort_order', { ascending: true });
-  if (!error && data) navLinks = data;
-}
-
-function renderNavLinks() {
-  const nav = document.getElementById('pillNav');
-  const tasksLink = nav.querySelector('a');
-  nav.innerHTML = '';
-  nav.appendChild(tasksLink);
-
-  navLinks.forEach((link, idx) => {
-    const a = document.createElement('a');
-    a.href = link.url;
-    a.textContent = link.label;
-    a.draggable = true;
-
-    a.addEventListener('contextmenu', (e) => {
+  // ─── LOGIN ────
+  function renderLogin(){
+    app.innerHTML = `
+      <div class="login-shell">
+        <h2>Sign in to Command Centre</h2>
+        <form id="login-form">
+          <input type="email" id="email" placeholder="Email" autocomplete="username" required>
+          <input type="password" id="pw" placeholder="Password" autocomplete="current-password" required>
+          <button type="submit" class="btn" style="width:100%;padding:10px;">Sign in</button>
+          <div class="login-msg" id="login-msg"></div>
+        </form>
+      </div>`;
+    document.getElementById('login-form').addEventListener('submit', async (e)=>{
       e.preventDefault();
-      navContextTarget = link.id;
-      const menu = document.getElementById('navContextMenu');
-      menu.style.left = e.clientX + 'px';
-      menu.style.top = e.clientY + 'px';
-      menu.classList.add('active');
-    });
-
-    // Drag-and-drop
-    a.addEventListener('dragstart', (e) => {
-      dragNavIndex = idx;
-      a.classList.add('dragging');
-      e.dataTransfer.effectAllowed = 'move';
-    });
-    a.addEventListener('dragend', () => { a.classList.remove('dragging'); dragNavIndex = null; });
-    a.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      a.classList.add('drag-over');
-    });
-    a.addEventListener('dragleave', () => a.classList.remove('drag-over'));
-    a.addEventListener('drop', (e) => {
-      e.preventDefault();
-      a.classList.remove('drag-over');
-      if (dragNavIndex === null || dragNavIndex === idx) return;
-      const moved = navLinks.splice(dragNavIndex, 1)[0];
-      navLinks.splice(idx, 0, moved);
-      saveNavLinkOrder();
-      renderNavLinks();
-    });
-
-    nav.appendChild(a);
-  });
-
-  const addBtn = document.createElement('button');
-  addBtn.textContent = '+ Link';
-  addBtn.addEventListener('click', () => {
-    const form = document.getElementById('navAddForm');
-    form.classList.toggle('active');
-    if (form.classList.contains('active')) {
-      form.querySelector('#navLabelInput').value = '';
-      form.querySelector('#navUrlInput').value = '';
-      form.querySelector('#navLabelInput').focus();
-      delete form.dataset.editId;
-    }
-  });
-  nav.appendChild(addBtn);
-
-  const form = document.createElement('div');
-  form.className = 'nav-add-form';
-  form.id = 'navAddForm';
-  form.innerHTML = '<input id="navLabelInput" placeholder="Label" />'
-    + '<input id="navUrlInput" placeholder="URL (e.g. page.html)" />'
-    + '<button class="btn-nav-save" onclick="saveNavLink()">Save</button>'
-    + '<button onclick="document.getElementById(\'navAddForm\').classList.remove(\'active\')">Cancel</button>';
-  nav.appendChild(form);
-}
-
-async function saveNavLink() {
-  const label = document.getElementById('navLabelInput').value.trim();
-  const url = document.getElementById('navUrlInput').value.trim();
-  if (!label || !url) return;
-  const form = document.getElementById('navAddForm');
-  const editId = form.dataset.editId;
-
-  if (editId) {
-    await sb.from('nav_links').update({ label: label, url: url }).eq('id', parseInt(editId));
-    delete form.dataset.editId;
-  } else {
-    const maxSort = navLinks.length > 0 ? Math.max(...navLinks.map(l => l.sort_order)) : 0;
-    await sb.from('nav_links').insert({
-      owner_id: currentUser.id, label: label, url: url, sort_order: maxSort + 1
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('pw').value;
+      const msg = document.getElementById('login-msg');
+      msg.textContent = 'Signing in…';
+      const { error } = await supa.auth.signInWithPassword({ email, password });
+      if (error) { msg.textContent = error.message; return; }
+      location.reload();
     });
   }
-  form.classList.remove('active');
-  await loadNavLinks();
-  renderNavLinks();
-}
 
-async function saveNavLinkOrder() {
-  for (let i = 0; i < navLinks.length; i++) {
-    navLinks[i].sort_order = i;
-    await sb.from('nav_links').update({ sort_order: i }).eq('id', navLinks[i].id);
+  // ─── MODAL ────
+  function showModal(title, bodyHtml, onSave){
+    const bd = document.createElement('div');
+    bd.className = 'modal-backdrop';
+    bd.innerHTML = `<div class="modal"><h3>${esc(title)}</h3>${bodyHtml}
+      <div class="actions"><button class="btn btn-ghost" id="m-cancel">Cancel</button><button class="btn" id="m-save">Save</button></div></div>`;
+    document.body.appendChild(bd);
+    document.getElementById('m-cancel').onclick = closeModal;
+    document.getElementById('m-save').onclick = onSave;
+    bd.addEventListener('click', e=>{ if(e.target===bd) closeModal(); });
   }
-}
-
-async function deleteNavLink(id) {
-  await sb.from('nav_links').delete().eq('id', id);
-  await loadNavLinks();
-  renderNavLinks();
-}
-
-function editNavLink(id) {
-  const link = navLinks.find(l => l.id === id);
-  if (!link) return;
-  const form = document.getElementById('navAddForm');
-  form.classList.add('active');
-  form.dataset.editId = id;
-  document.getElementById('navLabelInput').value = link.label;
-  document.getElementById('navUrlInput').value = link.url;
-  document.getElementById('navLabelInput').focus();
-}
-
-// Nav context menu handlers
-document.addEventListener('click', (e) => {
-  const menu = document.getElementById('navContextMenu');
-  if (menu && !menu.contains(e.target)) menu.classList.remove('active');
-});
-document.getElementById('navContextEdit')?.addEventListener('click', () => {
-  if (navContextTarget) editNavLink(navContextTarget);
-  document.getElementById('navContextMenu').classList.remove('active');
-});
-document.getElementById('navContextDelete')?.addEventListener('click', () => {
-  if (navContextTarget) {
-    deleteNavLink(navContextTarget);
-    navContextTarget = null;
-  }
-  document.getElementById('navContextMenu').classList.remove('active');
-});
-
-// ===== LOCALSTORAGE FALLBACK =====
-function saveToLocalStorage() {
-  const data = { categories: appState.categories, tasks: appState.tasks,
-    lastSynced: appState.lastSynced, nextId: appState.nextId };
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
-}
-
-function loadFromLocalStorage() {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const data = JSON.parse(stored);
-      appState.categories = data.categories || DEFAULT_CATEGORIES;
-      appState.tasks = data.tasks || [];
-      appState.lastSynced = data.lastSynced || null;
-      appState.nextId = data.nextId || 100;
-    } else {
-      appState.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
-      appState.tasks = [];
-      appState.nextId = 100;
-    }
-  } catch(e) {
-    appState.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
-    appState.tasks = [];
-  }
-  if (appState.categories.length > 0) {
-    appState.activeCategory = appState.categories[0].id;
-  }
-}
-
-async function initializeData() {
-  if (USE_SUPABASE && currentUser) {
-    await loadFromSupabase();
-  } else {
-    loadFromLocalStorage();
-  }
-  if (appState.categories.length > 0 && !appState.activeCategory) {
-    appState.activeCategory = appState.categories[0].id;
-  }
-}
-
-function saveData() {
-  appState.lastSynced = new Date().toISOString();
-  saveToLocalStorage();
-  updateSyncDisplay();
-}
-
-// ===== HELPERS =====
-function formatDate(dateStr) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
-
-// ===== RENDER FUNCTIONS =====
-function updateHeaderDate() {
-  const today = new Date();
-  const dateStr = today.toLocaleDateString('en-US', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-  });
-  document.getElementById('headerDate').textContent = dateStr;
-}
-
-function updateStatusBar() {
-  const openTasks = appState.tasks.filter(t => t.status === 'open').length;
-  const doneTasks = appState.tasks.filter(t => t.status === 'done').length;
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayTasks = appState.tasks.filter(t => {
-    if (!t.dueDate) return false;
-    const dueDate = new Date(t.dueDate);
-    dueDate.setHours(0, 0, 0, 0);
-    return dueDate.getTime() === today.getTime();
-  }).length;
-
-  document.getElementById('statusOpen').textContent = openTasks;
-  document.getElementById('statusToday').textContent = todayTasks;
-  document.getElementById('statusDone').textContent = doneTasks;
-
-  updateSyncDisplay();
-  updateSummaryStats();
-}
-
-function updateSyncDisplay() {
-  if (!appState.lastSynced) {
-    document.getElementById('statusSynced').textContent = '—';
-    document.getElementById('statLastUpdated').textContent = 'Never';
-  } else {
-    const now = new Date();
-    const synced = new Date(appState.lastSynced);
-    const diffMinutes = Math.floor((now - synced) / 60000);
-
-    let timeStr = 'just now';
-    if (diffMinutes > 0 && diffMinutes < 60) {
-      timeStr = `${diffMinutes}m ago`;
-    } else if (diffMinutes >= 60) {
-      const diffHours = Math.floor(diffMinutes / 60);
-      timeStr = `${diffHours}h ago`;
-    }
-
-    document.getElementById('statusSynced').textContent = timeStr;
-    document.getElementById('statLastUpdated').textContent = timeStr;
-  }
-}
-
-function updateSummaryStats() {
-  const openTasks = appState.tasks.filter(t => t.status === 'open').length;
-  const doneTasks = appState.tasks.filter(t => t.status === 'done').length;
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const nextWeek = new Date(today);
-  nextWeek.setDate(nextWeek.getDate() + 7);
-
-  const dueThisWeek = appState.tasks.filter(t => {
-    if (!t.dueDate || t.status === 'done') return false;
-    const dueDate = new Date(t.dueDate);
-    dueDate.setHours(0, 0, 0, 0);
-    return dueDate >= today && dueDate < nextWeek;
-  }).length;
-
-  document.getElementById('statTotalOpen').textContent = openTasks;
-  document.getElementById('statDueWeek').textContent = dueThisWeek;
-  document.getElementById('statCompleted').textContent = doneTasks;
-}
-
-let dragCatIndex = null;
-
-function renderCategoryTabs() {
-  const container = document.getElementById('categoryTabs');
-  container.innerHTML = '';
-
-  appState.categories.forEach((cat, idx) => {
-    const button = document.createElement('button');
-    button.className = `category-tab ${cat.id === appState.activeCategory ? 'active' : ''}`;
-    button.dataset.categoryId = cat.id;
-    button.draggable = true;
-
-    const count = appState.tasks.filter(t => t.categoryId === cat.id).length;
-    button.innerHTML = `${cat.name} <span class="category-count">(${count})</span>`;
-
-    button.addEventListener('click', () => {
-      appState.activeCategory = cat.id;
-      appState.activeFilter = 'all';
-      renderCategoryTabs();
-      renderTasks();
-      updateFilterButtons();
-    });
-
-    button.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-      showCategoryContextMenu(e, cat.id);
-    });
-
-    // Drag-and-drop
-    button.addEventListener('dragstart', (e) => {
-      dragCatIndex = idx;
-      button.classList.add('dragging');
-      e.dataTransfer.effectAllowed = 'move';
-    });
-    button.addEventListener('dragend', () => {
-      button.classList.remove('dragging');
-      dragCatIndex = null;
-    });
-    button.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      button.classList.add('drag-over');
-    });
-    button.addEventListener('dragleave', () => button.classList.remove('drag-over'));
-    button.addEventListener('drop', (e) => {
-      e.preventDefault();
-      button.classList.remove('drag-over');
-      if (dragCatIndex === null || dragCatIndex === idx) return;
-      const moved = appState.categories.splice(dragCatIndex, 1)[0];
-      appState.categories.splice(idx, 0, moved);
-      saveCategoryOrder();
-      renderCategoryTabs();
-    });
-
-    container.appendChild(button);
-  });
-
-  const addBtn = document.createElement('button');
-  addBtn.className = 'btn-add-category';
-  addBtn.textContent = '+ Category';
-  addBtn.addEventListener('click', showAddCategoryModal);
-  container.appendChild(addBtn);
-}
-
-async function saveCategoryOrder() {
-  for (let i = 0; i < appState.categories.length; i++) {
-    appState.categories[i].sortOrder = i;
-    await sb.from('categories').update({ sort_order: i }).eq('id', appState.categories[i].id);
-  }
-  saveData();
-}
-
-function renderTasks() {
-  const container = document.getElementById('taskList');
-  const emptyState = document.getElementById('emptyState');
-  container.innerHTML = '';
-
-  let filteredTasks = appState.tasks.filter(t => t.categoryId === appState.activeCategory);
-
-  if (appState.activeFilter === 'open') {
-    filteredTasks = filteredTasks.filter(t => t.status === 'open');
-  } else if (appState.activeFilter === 'high') {
-    filteredTasks = filteredTasks.filter(t => t.priority === 'high' && t.status === 'open');
-  } else if (appState.activeFilter === 'done') {
-    filteredTasks = filteredTasks.filter(t => t.status === 'done');
-  }
-
-  if (filteredTasks.length === 0) {
-    emptyState.style.display = 'block';
-    return;
-  }
-
-  emptyState.style.display = 'none';
-
-  filteredTasks.forEach(task => {
-    const row = document.createElement('div');
-    row.className = `task-row ${task.status === 'done' ? 'done' : ''}`;
-    row.dataset.taskId = task.id;
-
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.className = 'task-checkbox';
-    checkbox.checked = task.status === 'done';
-    checkbox.addEventListener('change', async () => {
-      task.status = checkbox.checked ? 'done' : 'open';
-      task.completedAt = checkbox.checked ? new Date().toISOString() : null;
-      if (USE_SUPABASE && currentUser) { await saveTaskToSupabase(task); }
-      saveData();
-      updateStatusBar();
-      renderTasks();
-    });
-
-    const content = document.createElement('div');
-    content.className = 'task-content';
-
-    const title = document.createElement('div');
-    title.className = 'task-title';
-    title.textContent = task.title;
-
-    content.appendChild(title);
-    if (task.notes) {
-      const notes = document.createElement('div');
-      notes.className = 'task-notes';
-      notes.textContent = task.notes;
-      content.appendChild(notes);
-    }
-
-    const meta = document.createElement('div');
-    meta.className = 'task-meta';
-
-    const priorityBadge = document.createElement('span');
-    priorityBadge.className = `priority-badge ${task.priority}`;
-    priorityBadge.textContent = task.priority.charAt(0).toUpperCase() + task.priority.slice(1);
-    meta.appendChild(priorityBadge);
-
-    if (task.dueDate) {
-      const dateSpan = document.createElement('span');
-      dateSpan.className = 'task-date';
-      dateSpan.textContent = formatDate(task.dueDate);
-      meta.appendChild(dateSpan);
-    }
-
-    const actions = document.createElement('div');
-    actions.className = 'task-actions';
-
-    const editBtn = document.createElement('button');
-    editBtn.className = 'btn-task-action';
-    editBtn.textContent = 'Edit';
-    editBtn.addEventListener('click', () => showEditForm(task.id));
-    actions.appendChild(editBtn);
-
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'btn-task-action delete';
-    deleteBtn.textContent = 'Delete';
-    deleteBtn.addEventListener('click', () => confirmDelete(task.id));
-    actions.appendChild(deleteBtn);
-
-    row.appendChild(checkbox);
-    row.appendChild(content);
-    row.appendChild(meta);
-    row.appendChild(actions);
-    container.appendChild(row);
-
-    if (appState.editingTaskId === task.id) {
-      const editForm = createEditForm(task);
-      const formRow = document.createElement('div');
-      formRow.className = 'task-row';
-      formRow.appendChild(editForm);
-      container.appendChild(formRow);
-    }
-  });
-}
-
-function createEditForm(task) {
-  const form = document.createElement('div');
-  form.className = 'task-edit-form';
-
-  const titleGroup = document.createElement('div');
-  titleGroup.className = 'form-group';
-  titleGroup.innerHTML = '<label for="editTitle">Task Title</label>';
-  const titleInput = document.createElement('input');
-  titleInput.type = 'text'; titleInput.id = 'editTitle'; titleInput.value = task.title;
-  titleGroup.appendChild(titleInput);
-  form.appendChild(titleGroup);
-
-  const notesGroup = document.createElement('div');
-  notesGroup.className = 'form-group';
-  notesGroup.innerHTML = '<label for="editNotes">Notes</label>';
-  const notesInput = document.createElement('textarea');
-  notesInput.id = 'editNotes'; notesInput.value = task.notes || '';
-  notesGroup.appendChild(notesInput);
-  form.appendChild(notesGroup);
-
-  const priorityGroup = document.createElement('div');
-  priorityGroup.className = 'form-group';
-  priorityGroup.innerHTML = '<label for="editPriority">Priority</label>';
-  const prioritySelect = document.createElement('select');
-  prioritySelect.id = 'editPriority';
-  ['low', 'medium', 'high'].forEach(p => {
-    const opt = document.createElement('option');
-    opt.value = p; opt.textContent = p.charAt(0).toUpperCase() + p.slice(1);
-    opt.selected = p === task.priority;
-    prioritySelect.appendChild(opt);
-  });
-  priorityGroup.appendChild(prioritySelect);
-  form.appendChild(priorityGroup);
-
-  const dueDateGroup = document.createElement('div');
-  dueDateGroup.className = 'form-group';
-  dueDateGroup.innerHTML = '<label for="editDueDate">Due Date (optional)</label>';
-  const dueDateInput = document.createElement('input');
-  dueDateInput.type = 'date'; dueDateInput.id = 'editDueDate'; dueDateInput.value = task.dueDate || '';
-  dueDateGroup.appendChild(dueDateInput);
-  form.appendChild(dueDateGroup);
-
-  const buttonGroup = document.createElement('div');
-  buttonGroup.className = 'form-buttons';
-
-  const saveBtn = document.createElement('button');
-  saveBtn.className = 'btn-save'; saveBtn.type = 'button'; saveBtn.textContent = 'Save';
-  saveBtn.addEventListener('click', async () => {
-    task.title = titleInput.value || 'Untitled Task';
-    task.notes = notesInput.value;
-    task.priority = prioritySelect.value;
-    task.dueDate = dueDateInput.value || null;
-    appState.editingTaskId = null;
-
-    if (USE_SUPABASE && currentUser) {
-      const saved = await saveTaskToSupabase(task);
-      if (saved && task._isNew) {
-        const idx = appState.tasks.findIndex(t => t.id === task.id);
-        if (idx >= 0) { appState.tasks[idx].id = saved.id; appState.tasks[idx]._isNew = false; }
-      }
-    }
-
-    saveData(); updateStatusBar(); renderTasks();
-  });
-  buttonGroup.appendChild(saveBtn);
-
-  const cancelBtn = document.createElement('button');
-  cancelBtn.className = 'btn-cancel'; cancelBtn.type = 'button'; cancelBtn.textContent = 'Cancel';
-  cancelBtn.addEventListener('click', () => { appState.editingTaskId = null; renderTasks(); });
-  buttonGroup.appendChild(cancelBtn);
-
-  form.appendChild(buttonGroup);
-  return form;
-}
-
-function showEditForm(taskId) { appState.editingTaskId = taskId; renderTasks(); }
-
-function confirmDelete(taskId) {
-  const task = appState.tasks.find(t => t.id === taskId);
-  if (!task) return;
-  showConfirmModal('Delete Task',
-    `Are you sure you want to delete "${task.title}"? This cannot be undone.`,
-    async () => {
-      if (USE_SUPABASE && currentUser) { await deleteTaskFromSupabase(taskId); }
-      appState.tasks = appState.tasks.filter(t => t.id !== taskId);
-      saveData(); updateStatusBar(); renderTasks();
-    }
-  );
-}
-
-// ===== MODAL & FORM HANDLERS =====
-function showConfirmModal(title, message, onConfirm) {
-  const modal = document.getElementById('confirmModal');
-  document.getElementById('confirmTitle').textContent = title;
-  document.getElementById('confirmMessage').textContent = message;
-  document.getElementById('btnConfirmCancel').onclick = () => { modal.classList.remove('active'); };
-  document.getElementById('btnConfirmOK').onclick = () => { modal.classList.remove('active'); onConfirm(); };
-  modal.classList.add('active');
-}
-
-function showAddCategoryModal() {
-  const modal = document.getElementById('categoryModal');
-  document.getElementById('categoryModalTitle').textContent = 'Add Category';
-  document.getElementById('categoryName').value = '';
-  document.getElementById('categoryColor').value = '#58a6ff';
-  document.getElementById('colorValue').textContent = '#58a6ff';
-
-  const form = document.getElementById('categoryForm');
-  form.onsubmit = async (e) => {
-    e.preventDefault();
-    const name = document.getElementById('categoryName').value.trim();
-    const color = document.getElementById('categoryColor').value;
-    if (!name) return;
-
-    const newCategory = { name, color, sortOrder: appState.categories.length + 1, _isNew: true };
-
-    if (USE_SUPABASE && currentUser) {
-      const saved = await saveCategoryToSupabase(newCategory);
-      if (saved) {
-        appState.categories.push({
-          id: saved.id, name: saved.name, color: saved.color,
-          sortOrder: saved.sort_order, ownerId: saved.owner_id
-        });
-      }
-    } else {
-      newCategory.id = appState.nextId++;
-      appState.categories.push(newCategory);
-    }
-
-    saveData(); renderCategoryTabs(); modal.classList.remove('active');
-  };
-
-  document.getElementById('btnCategoryCancel').onclick = () => { modal.classList.remove('active'); };
-  document.getElementById('categoryColor').addEventListener('input', (e) => {
-    document.getElementById('colorValue').textContent = e.target.value;
-  });
-
-  modal.classList.add('active');
-  document.getElementById('categoryName').focus();
-}
-
-function showCategoryContextMenu(e, categoryId) {
-  const menu = document.getElementById('contextMenu');
-  menu.style.left = e.clientX + 'px';
-  menu.style.top = e.clientY + 'px';
-  menu.classList.add('active');
-
-  const category = appState.categories.find(c => c.id === categoryId);
-  if (!category) return;
-
-  document.getElementById('contextRename').onclick = async () => {
-    menu.classList.remove('active');
-    const newName = prompt('Rename category:', category.name);
-    if (newName && newName.trim()) {
-      category.name = newName.trim();
-      if (USE_SUPABASE && currentUser) { await saveCategoryToSupabase(category); }
-      saveData(); renderCategoryTabs();
-    }
-  };
-
-  document.getElementById('contextColor').onclick = async () => {
-    menu.classList.remove('active');
-    const picker = document.createElement('input');
-    picker.type = 'color';
-    picker.value = category.color || '#58a6ff';
-    picker.style.position = 'fixed';
-    picker.style.opacity = '0';
-    document.body.appendChild(picker);
-    picker.addEventListener('input', async () => {
-      category.color = picker.value;
-      if (USE_SUPABASE && currentUser) { await saveCategoryToSupabase(category); }
-      saveData(); renderCategoryTabs();
-    });
-    picker.addEventListener('change', () => picker.remove());
-    picker.click();
-  };
-
-  document.getElementById('contextDelete').onclick = () => {
-    menu.classList.remove('active');
-    showConfirmModal('Delete Category',
-      `Delete "${category.name}"? All tasks in this category will be deleted.`,
-      async () => {
-        if (USE_SUPABASE && currentUser) { await deleteCategoryFromSupabase(categoryId); }
-        appState.categories = appState.categories.filter(c => c.id !== categoryId);
-        appState.tasks = appState.tasks.filter(t => t.categoryId !== categoryId);
-        if (appState.activeCategory === categoryId) {
-          appState.activeCategory = appState.categories[0]?.id || null;
-        }
-        saveData(); updateStatusBar(); renderCategoryTabs(); renderTasks();
-      }
-    );
-  };
-
-  document.addEventListener('click', (e) => {
-    if (e.target !== menu && !menu.contains(e.target)) { menu.classList.remove('active'); }
-  }, { once: true });
-}
-
-function updateFilterButtons() {
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    const filter = btn.dataset.filter;
-    btn.classList.toggle('active', filter === appState.activeFilter);
-  });
-}
-
-// ===== AUTH-GUARDED BOOT =====
-let authResolved = false;
-
-async function bootDashboard(session) {
-  if (authResolved) return;
-  authResolved = true;
-
-  const profile = await loadUserProfile(session.user.id, session.user.email);
-  currentUser = {
-    id: session.user.id,
-    email: session.user.email,
-    display_name: profile?.display_name || session.user.email.split('@')[0],
-    role: profile?.role || 'viewer'
-  };
-  showUserInfo();
-  unlockApp();
-  await initializeData();
-  await loadNavLinks();
-  updateHeaderDate();
-  updateStatusBar();
-  renderCategoryTabs();
-  renderTasks();
-  renderNavLinks();
-  subscribeToRealtime();
-}
-
-// ===== EVENT LISTENERS =====
-document.addEventListener('DOMContentLoaded', async () => {
-  updateHeaderDate();
-
-  // FIX: Don't redirect on first null session — Supabase needs time to restore from localStorage
-  // Don't use await inside onAuthStateChange (can deadlock with Supabase internal locks)
-  sb.auth.onAuthStateChange((event, session) => {
-    if (session?.user) {
-      bootDashboard(session);  // no await — prevents deadlock
-    } else if (event === 'SIGNED_OUT') {
-      window.location.href = 'index.html';
-    }
-    // INITIAL_SESSION with null session = not logged in yet, but don't redirect immediately
-  });
-
-  // Actively check for existing session (belt-and-suspenders with onAuthStateChange)
-  const { data: { session: existingSession } } = await sb.auth.getSession();
-  if (existingSession?.user) {
-    bootDashboard(existingSession);
-  } else {
-    // No session found yet — give Supabase 2 seconds to restore, then redirect if still nothing
-    setTimeout(async () => {
-      if (authResolved) return;
-      const { data: { session: retrySession } } = await sb.auth.getSession();
-      if (retrySession?.user) {
-        bootDashboard(retrySession);
-      } else {
-        window.location.href = 'index.html';
-      }
-    }, 2000);
-  }
-
-  // Filter buttons
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      appState.activeFilter = btn.dataset.filter;
-      updateFilterButtons();
-      renderTasks();
-    });
-  });
-
-  // Add task button
-  document.getElementById('btnAddTask').addEventListener('click', () => {
-    const tempId = 'temp-' + Date.now();
-    const newTask = {
-      id: tempId, categoryId: appState.activeCategory,
-      title: '', notes: '', priority: 'medium', status: 'open',
-      dueDate: null, createdAt: new Date().toISOString(),
-      completedAt: null, _isNew: true
-    };
-    appState.tasks.push(newTask);
-    appState.editingTaskId = tempId;
-    saveData(); renderTasks(); updateStatusBar();
-  });
-
-  // Update sync display periodically
-  setInterval(updateSyncDisplay, 60000);
-});
-
-// Close modals on outside click
-document.getElementById('confirmModal').addEventListener('click', (e) => {
-  if (e.target.id === 'confirmModal') { e.target.classList.remove('active'); }
-});
-
-document.getElementById('categoryModal').addEventListener('click', (e) => {
-  if (e.target.id === 'categoryModal') { e.target.classList.remove('active'); }
-});
-
-document.addEventListener('click', (e) => {
-  const menu = document.getElementById('contextMenu');
-  if (!menu.contains(e.target)) { menu.classList.remove('active'); }
-});
+  function closeModal(){ const bd = document.querySelector('.modal-backdrop'); if (bd) bd.remove(); }
+  window.closeModal = closeModal;
+
+  boot();
+})();
 </script>
 </body>
 </html>
