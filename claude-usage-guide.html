@@ -3,60 +3,55 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://twrlvnfszohyrmivdhre.supabase.co wss://twrlvnfszohyrmivdhre.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:;">
 <title>Claude Usage Guide — AZCK Ltd</title>
+<link rel="stylesheet" href="cc-shell.css">
+<script>
+  window.PAGE = {
+    id: 'guide',
+    title: 'Understanding Claude Usage',
+    subtitle: 'Plain-English guide — what tokens are, what your plan includes, and how your real sessions translate into usage.',
+    subtabs: [],
+    stats: [
+      { id: 'plan',    label: 'Plan',    value: '$280 CAD/mo' },
+      { id: 'bill',    label: 'Billing', value: 'USD' },
+      { id: 'rate',    label: 'USD→CAD', value: '~1.38' }
+    ]
+  };
+</script>
+<script src="cc-shell.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #0d1117; color: #e6edf3;
-  padding: 24px; max-width: 1000px; margin: 0 auto;
-}
-h1 { font-size: 28px; font-weight: 700; color: #58a6ff; margin-bottom: 4px; }
-h2 { font-size: 20px; font-weight: 700; color: #58a6ff; margin: 36px 0 12px; }
-h3 { font-size: 16px; font-weight: 700; color: #e6edf3; margin: 20px 0 8px; }
-.sub { font-size: 13px; color: #8b949e; margin-bottom: 24px; }
-p { margin-bottom: 12px; color: #c9d1d9; font-size: 15px; line-height: 1.6; }
-.hl { color: #58a6ff; font-weight: 600; }
+/* Layout + typography come from cc-shell.css. Page-specific styling only. */
+h2 { margin: 36px 0 12px; }
+h3 { font-size: 16px; font-weight: 700; color: var(--cc-text); margin: 20px 0 8px; }
+.sub { font-size: 13px; color: var(--cc-text-muted); margin-bottom: 24px; }
+.hl { color: var(--cc-accent); font-weight: 600; }
 .card {
-  background: #161b22; border: 1px solid #30363d;
-  border-radius: 12px; padding: 24px; margin-bottom: 20px;
+  background: var(--cc-bg-card); border: 1px solid var(--cc-border);
+  border-radius: var(--cc-r-lg); padding: 24px; margin-bottom: 20px;
 }
-.divider { border: none; border-top: 1px solid #21262d; margin: 32px 0; }
+.divider { border: none; border-top: 1px solid var(--cc-border-soft); margin: 32px 0; }
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
-th { text-align: left; padding: 10px 12px; color: #8b949e; border-bottom: 1px solid #30363d; font-weight: 600; }
-td { padding: 10px 12px; border-bottom: 1px solid #21262d; color: #c9d1d9; }
+th { text-align: left; padding: 10px 12px; color: var(--cc-text-muted); border-bottom: 1px solid var(--cc-border); font-weight: 600; }
+td { padding: 10px 12px; border-bottom: 1px solid var(--cc-border-soft); color: var(--cc-text-body); }
 .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
-.tag-you { background: #58a6ff22; color: #58a6ff; border: 1px solid #58a6ff44; }
-.tag-pro { background: #3fb95022; color: #3fb950; border: 1px solid #3fb95044; }
+.tag-you { background: #58a6ff22; color: var(--cc-accent); border: 1px solid #58a6ff44; }
+.tag-pro { background: #3fb95022; color: var(--cc-success); border: 1px solid #3fb95044; }
 .callout {
-  background: #161b2288; border-left: 3px solid #58a6ff;
+  background: #161b2288; border-left: 3px solid var(--cc-accent);
   padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 16px 0;
 }
 .callout-warn {
-  background: #161b2288; border-left: 3px solid #d29922;
+  background: #161b2288; border-left: 3px solid var(--cc-warn);
   padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 16px 0;
 }
 .chart-wrap { position: relative; max-width: 600px; margin: 16px auto; height: 300px; }
 .chart-wrap-wide { position: relative; max-width: 800px; margin: 16px auto; height: 350px; }
-.footer { text-align: center; padding: 40px 0 20px; font-size: 11px; color: #30363d; }
-.pill-nav{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
-.pill-nav a{background:#21262d;border:1px solid #30363d;color:#8b949e;padding:7px 18px;border-radius:20px;text-decoration:none;font-size:14px;font-weight:600;transition:all 0.2s}
-.pill-nav a:hover{color:#e6edf3;background:#30363d}
-.pill-nav a.active{background:#58a6ff;color:#0d1117;border-color:#58a6ff}
+.footer { text-align: center; padding: 40px 0 20px; font-size: 11px; color: var(--cc-text-dim); }
 </style>
 </head>
 <body>
-<nav class="pill-nav" id="pillNav">
-    <a href="alessio.html">Tasks</a>
-    <a href="timesheet.html">Timesheet</a>
-    <a href="forge.html">Forge</a>
-    <a href="usage.html">Usage</a>
-    <a href="network.html">Network</a>
-</nav>
-
-<h1>Understanding Claude Usage</h1>
 <p class="sub">A plain-English guide for AZCK Ltd — what tokens are, what your plan includes, and how your real sessions translate into usage.<br>All API rates shown in USD (Anthropic bills in USD). Your subscription is <strong>$280 CAD/month</strong> (~$200 USD). CAD equivalents shown where it matters.</p>
 
 <!-- ══════════════════════════════════════ -->
