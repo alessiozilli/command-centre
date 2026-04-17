@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://twrlvnfszohyrmivdhre.supabase.co wss://twrlvnfszohyrmivdhre.supabase.co; img-src 'self' data: https:;">
+<title>Shared — AZCK Command Centre</title>
+<link rel="stylesheet" href="cc-shell.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  /* page-specific */
+  .app-wrap { max-width: 1180px; margin: 24px auto 80px; padding: 0 20px; }
+  .section { background:#161b22; border:1px solid #30363d; border-radius:8px; padding:20px; margin-bottom:20px; }
+  .section-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:12px; flex-wrap:wrap; }
+  .section-header h2 { font-size:1.15rem; margin:0; color:#e6edf3; }
+  .btn { background:#238636; color:#fff; border:none; padding:8px 14px; border-radius:6px; cursor:pointer; font-size:0.9rem; font-weight:500; }
+  .btn:hover { background:#2ea043; }
+  .btn-ghost { background:transparent; border:1px solid #30363d; color:#e6edf3; }
+  .btn-ghost:hover { background:#21262d; }
+  .btn-danger { background:#da3633; } .btn-danger:hover{ background:#f85149; }
+  .links-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:10px; }
+  .link-card { display:flex; flex-direction:column; padding:14px; background:#0d1117; border:1px solid #30363d; border-radius:6px; color:#58a6ff; text-decoration:none; transition:.15s; }
+  .link-card:hover { border-color:#58a6ff; transform:translateY(-1px); }
+  .link-card .lbl { color:#e6edf3; font-weight:600; margin-bottom:4px; }
+  .link-card .url { color:#8b949e; font-size:0.8rem; word-break:break-all; }
+  .link-card .row-actions { margin-top:8px; display:flex; gap:6px; }
+  .link-card .row-actions button { font-size:0.75rem; padding:4px 8px; }
+  .projects-list { display:flex; flex-direction:column; gap:8px; }
+  .project-row { display:flex; align-items:center; gap:12px; padding:12px 14px; background:#0d1117; border:1px solid #30363d; border-radius:6px; }
+  .project-dot { width:10px; height:10px; border-radius:50%; flex:none; }
+  .project-name { flex:1; color:#e6edf3; font-weight:500; }
+  .project-meta { color:#8b949e; font-size:0.85rem; }
+  .qr-table { width:100%; border-collapse:collapse; }
+  .qr-table th { text-align:left; color:#8b949e; font-weight:500; padding:6px 10px; font-size:0.8rem; text-transform:uppercase; letter-spacing:.05em; }
+  .qr-table td { padding:8px 10px; border-top:1px solid #21262d; color:#e6edf3; }
+  .qr-table td.lbl { color:#8b949e; width:180px; }
+  .loading, .empty { color:#8b949e; padding:20px; text-align:center; }
+  .error { background:#5a1d1d; color:#ffb3b3; padding:12px 16px; border-radius:6px; }
+  .login-shell { max-width:360px; margin:60px auto; background:#161b22; padding:30px; border:1px solid #30363d; border-radius:8px; }
+  .login-shell h2 { margin:0 0 18px; color:#e6edf3; }
+  .login-shell input { width:100%; padding:10px; margin-bottom:10px; background:#0d1117; border:1px solid #30363d; color:#e6edf3; border-radius:6px; font-size:0.95rem; box-sizing:border-box; }
+  .login-shell button { width:100%; padding:10px; }
+  .login-msg { color:#f85149; font-size:0.85rem; margin-top:10px; min-height:1.2em; }
+  .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex; align-items:center; justify-content:center; z-index:1000; }
+  .modal { background:#161b22; padding:24px; border-radius:8px; border:1px solid #30363d; min-width:340px; max-width:480px; }
+  .modal h3 { margin:0 0 16px; color:#e6edf3; }
+  .modal input, .modal select { width:100%; padding:9px; margin-bottom:10px; background:#0d1117; border:1px solid #30363d; color:#e6edf3; border-radius:6px; box-sizing:border-box; }
+  .modal .actions { display:flex; gap:8px; justify-content:flex-end; margin-top:8px; }
+</style>
+</head>
+<body>
+
+<div id="app" class="app-wrap"><div class="loading">Loading…</div></div>
+
+<script>
+  // PAGE declaration — consumed by cc-shell.js
+  window.PAGE = {
+    id: 'shared',
+    title: 'Shared',
+    subtitle: 'Alessio + Reanna · links, projects, quick reference',
+    subtabs: [
+      { id:'links',    label:'Links' },
+      { id:'projects', label:'Projects' },
+      { id:'quickref', label:'Quick Ref' }
+    ],
+    stats: []
+  };
+</script>
+<script src="cc-shell.js"></script>
+
+<script>
+(function(){
+  'use strict';
+
+  const SUPABASE_URL = 'https://twrlvnfszohyrmivdhre.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3cmx2bmZzem9oeXJtaXZkaHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NjkxMTMsImV4cCI6MjA5MDE0NTExM30.o96DFNbBObst0EAmX51rnRFXzu8oTN1o-HNAxN7MY8A';
+
+  const supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: {
+      storageKey: 'sb-twrlvnfszohyrmivdhre-auth-token',
+      persistSession: true,
+      autoRefreshToken: true
+    }
+  });
+  window.supa = supa;
+
+  const app = document.getElementById('app');
+
+  const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+  const fail = (msg) => `<div class="error">${esc(msg)}</div>`;
+
+  async function boot(){
+    const { data:{ session } } = await supa.auth.getSession();
+    if (!session) return renderLogin();
+
+    // Wait for shell (may have fired already)
+    if (window.CC && window.CC.onSubtabChange) {
+      wireSubtabs();
+    } else {
+      document.addEventListener('cc-shell-ready', wireSubtabs, { once:true });
+    }
+  }
+
+  function wireSubtabs(){
+    window.CC.onSubtabChange(id => renderSubtab(id));
+    renderSubtab(window.CC.getSubtab() || 'links');
+  }
+
+  function renderSubtab(id){
+    if (id==='links')    return renderLinks();
+    if (id==='projects') return renderProjects();
+    if (id==='quickref') return renderQuickRef();
+    app.innerHTML = fail('Unknown subtab: '+id);
+  }
+
+  // ─── LINKS ───
+  async function renderLinks(){
+    app.innerHTML = '<div class="loading">Loading links…</div>';
+    const { data, error } = await supa.from('nav_links').select('*').order('sort_order', { ascending:true });
+    if (error) return app.innerHTML = fail(error.message);
+    app.innerHTML = `
+      <div class="section">
+        <div class="section-header">
+          <h2>Shared Links <span style="color:#8b949e;font-weight:400;font-size:0.9rem;">(${data.length})</span></h2>
+          <button class="btn" onclick="sharedAddLink()">+ Add Link</button>
+        </div>
+        ${data.length ? `<div class="links-grid">${data.map(cardLink).join('')}</div>` : '<div class="empty">No links yet. Add one above.</div>'}
+      </div>`;
+  }
+  function cardLink(l){
+    return `<div class="link-card">
+      <span class="lbl">${esc(l.label)}</span>
+      <a href="${esc(l.url)}" target="_blank" rel="noopener" class="url">${esc(l.url)}</a>
+      <div class="row-actions">
+        <button class="btn btn-ghost" onclick="sharedEditLink(${l.id})">Edit</button>
+        <button class="btn btn-danger" onclick="sharedDeleteLink(${l.id})">Delete</button>
+      </div>
+    </div>`;
+  }
+
+  window.sharedAddLink = function(){
+    showModal('Add Link', `
+      <input id="m-label" placeholder="Label (e.g. Wix Dashboard)" required>
+      <input id="m-url" placeholder="https://..." required>
+    `, async ()=>{
+      const label = document.getElementById('m-label').value.trim();
+      const url = document.getElementById('m-url').value.trim();
+      if (!label || !url) return;
+      const { error } = await supa.from('nav_links').insert({ label, url });
+      if (error) return alert(error.message);
+      closeModal(); renderLinks();
+    });
+  };
+  window.sharedEditLink = async function(id){
+    const { data } = await supa.from('nav_links').select('*').eq('id', id).single();
+    if (!data) return;
+    showModal('Edit Link', `
+      <input id="m-label" value="${esc(data.label)}">
+      <input id="m-url" value="${esc(data.url)}">
+    `, async ()=>{
+      const label = document.getElementById('m-label').value.trim();
+      const url = document.getElementById('m-url').value.trim();
+      const { error } = await supa.from('nav_links').update({ label, url }).eq('id', id);
+      if (error) return alert(error.message);
+      closeModal(); renderLinks();
+    });
+  };
+  window.sharedDeleteLink = async function(id){
+    if (!confirm('Delete this link?')) return;
+    const { error } = await supa.from('nav_links').delete().eq('id', id);
+    if (error) return alert(error.message);
+    renderLinks();
+  };
+
+  // ─── PROJECTS ───
+  async function renderProjects(){
+    app.innerHTML = '<div class="loading">Loading projects…</div>';
+    const [{ data:projects, error:pErr }, { count:inboxCount, error:iErr }] = await Promise.all([
+      supa.from('projects').select('*').eq('archived', false).order('sort_order', { ascending:true }),
+      supa.from('tasks').select('*', { count:'exact', head:true }).is('project_id', null)
+    ]);
+    if (pErr) return app.innerHTML = fail(pErr.message);
+
+    // Task counts per project
+    const countMap = {};
+    if (projects && projects.length) {
+      const ids = projects.map(p=>p.id);
+      const { data:rows } = await supa.from('tasks').select('project_id').in('project_id', ids);
+      (rows||[]).forEach(r => { countMap[r.project_id] = (countMap[r.project_id]||0) + 1; });
+    }
+
+    const projectRows = (projects||[]).map(p=>`
+      <div class="project-row">
+        <span class="project-dot" style="background:${esc(p.color||'#58a6ff')}"></span>
+        <span class="project-name">${esc(p.name)}</span>
+        <span class="project-meta">${countMap[p.id]||0} task${(countMap[p.id]||0)===1?'':'s'}</span>
+      </div>
+    `).join('');
+
+    app.innerHTML = `
+      <div class="section">
+        <div class="section-header">
+          <h2>Projects <span style="color:#8b949e;font-weight:400;font-size:0.9rem;">(${(projects||[]).length})</span></h2>
+          <a href="alessio.html" class="btn btn-ghost">Manage in Tasks →</a>
+        </div>
+        <div class="projects-list">
+          <div class="project-row">
+            <span class="project-dot" style="background:#8b949e"></span>
+            <span class="project-name">Inbox <span style="color:#8b949e;font-weight:400;">(tasks without a project)</span></span>
+            <span class="project-meta">${inboxCount||0} task${inboxCount===1?'':'s'}</span>
+          </div>
+          ${projectRows || '<div class="empty" style="padding:10px;">No projects yet. Create one in Tasks.</div>'}
+        </div>
+      </div>`;
+  }
+
+  // ─── QUICK REF ───
+  function renderQuickRef(){
+    const sections = [
+      { title:'Business', rows:[
+        ['Phone',     '1-780-831-2987'],
+        ['Address',   '#104, 9602 115 Street, Grande Prairie, AB T8V 5W2'],
+        ['Slogan',    'A Slice of Excellence'],
+        ['Alessio',   'alessio.zilli@azcustomknives.com'],
+        ['Reanna',    'admin@azcustomknives.com']
+      ]},
+      { title:'Sites', rows:[
+        ['Main',      'azcustomknives.com'],
+        ['Shop',      'shop.azcustomknives.com (Wix)'],
+        ['QuadFang',  'quadfang.com (Shopify, parked)'],
+        ['CC',        'command.azcustomknives.com'],
+        ['Alessio CC','az-command-centre.netlify.app'],
+        ['Reanna CC', 'rl-command-centre.netlify.app']
+      ]},
+      { title:'Key Contacts', rows:[
+        ['Matt Runhart',  'Terra Machine — CNC / prototypes'],
+        ['Roger Hatt',    'mentor'],
+        ['Kent Friesen',  'Friesen Bain accountant, Grande Prairie'],
+        ['Kyran',         'QuadFang partner']
+      ]},
+      { title:'Grant Priority', rows:[
+        ['Active',    'SR&ED → IRAP → CDAP → AMPG'],
+        ['Deadline',  'CanExport $50K — May 29, 2026']
+      ]}
+    ];
+    app.innerHTML = sections.map(s=>`
+      <div class="section">
+        <div class="section-header"><h2>${esc(s.title)}</h2></div>
+        <table class="qr-table"><tbody>
+          ${s.rows.map(r=>`<tr><td class="lbl">${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join('')}
+        </tbody></table>
+      </div>
+    `).join('');
+  }
+
+  // ─── LOGIN ───
+  function renderLogin(){
+    app.innerHTML = `
+      <div class="login-shell">
+        <h2>Sign in to Command Centre</h2>
+        <form id="login-form">
+          <input type="email" id="email" placeholder="Email" autocomplete="username" required>
+          <input type="password" id="pw" placeholder="Password" autocomplete="current-password" required>
+          <button type="submit" class="btn">Sign in</button>
+          <div class="login-msg" id="login-msg"></div>
+        </form>
+      </div>`;
+    document.getElementById('login-form').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('pw').value;
+      const msg = document.getElementById('login-msg');
+      msg.textContent = 'Signing in…';
+      const { error } = await supa.auth.signInWithPassword({ email, password });
+      if (error) { msg.textContent = error.message; return; }
+      location.reload();
+    });
+  }
+
+  // ─── MODAL ───
+  function showModal(title, bodyHtml, onSave){
+    const bd = document.createElement('div');
+    bd.className = 'modal-backdrop';
+    bd.innerHTML = `<div class="modal">
+      <h3>${esc(title)}</h3>
+      ${bodyHtml}
+      <div class="actions">
+        <button class="btn btn-ghost" id="m-cancel">Cancel</button>
+        <button class="btn" id="m-save">Save</button>
+      </div>
+    </div>`;
+    document.body.appendChild(bd);
+    document.getElementById('m-cancel').onclick = closeModal;
+    document.getElementById('m-save').onclick = onSave;
+    bd.addEventListener('click', e=>{ if(e.target===bd) closeModal(); });
+  }
+  function closeModal(){
+    const bd = document.querySelector('.modal-backdrop');
+    if (bd) bd.remove();
+  }
+  window.closeModal = closeModal;
+
+  boot();
+})();
+</script>
+</body>
+</html>
