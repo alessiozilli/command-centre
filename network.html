@@ -80,7 +80,9 @@
 
     /* Loading state */
     #loadingMsg { padding:40px; text-align:center; color:var(--cc-text-dim); }
-    [data-subtab] { display:none; }
+    /* NOTE: subtab visibility handled natively by cc-shell.js (applySubtabVisibility).
+       Do NOT add `[data-subtab] { display:none; }` — cc-shell uses inline style and
+       a CSS rule will override its "show active" attempt and hide every section. */
   </style>
 </head>
 <body>
