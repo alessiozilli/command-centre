@@ -1,1214 +1,507 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://twrlvnfszohyrmivdhre.supabase.co wss://twrlvnfszohyrmivdhre.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'">
-  <title>AZCK Admin</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #0d1117; color: #e6edf3; line-height: 1.6; font-size: 16px; }
-    header { background-color: #161b22; border-bottom: 1px solid #30363d; padding: 2rem 2rem 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
-    header h1 { font-size: 2rem; font-weight: 700; letter-spacing: 0.05em; flex: 1; min-width: 200px; }
-    .header-right { display: flex; align-items: center; gap: 2rem; flex-wrap: wrap; }
-    .header-date { font-size: 0.95rem; color: #8b949e; font-weight: 500; }
-    .status-bar { display: flex; gap: 1.5rem; font-size: 0.9rem; }
-    .status-item { display: flex; flex-direction: column; align-items: center; }
-    .status-label { color: #8b949e; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
-    .status-count { font-size: 1.5rem; font-weight: 700; color: #58a6ff; }
-    .status-item.done .status-count { color: #3fb950; }
-    .status-item.synced .status-count { color: #8b949e; font-size: 0.8rem; }
-    nav.pill-nav { background-color: #0d1117; border-bottom: 1px solid #30363d; padding: 1rem 2rem; display: flex; gap: 0.75rem; flex-wrap: wrap; }
-    nav.pill-nav a, nav.pill-nav button { padding: 0.5rem 1rem; border: 1px solid #30363d; border-radius: 20px; background-color: transparent; color: #8b949e; text-decoration: none; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; font-family: inherit; }
-    nav.pill-nav a:hover, nav.pill-nav button:hover { color: #e6edf3; border-color: #58a6ff; }
-    nav.pill-nav a.active { background-color: #58a6ff; color: #0d1117; border-color: #58a6ff; font-weight: 600; }
-    .summary-stats { background-color: #161b22; border-bottom: 1px solid #30363d; padding: 1.5rem 2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1.5rem; align-items: center; }
-    .stat-block { display: flex; flex-direction: column; gap: 0.5rem; }
-    .stat-label { font-size: 0.85rem; color: #8b949e; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
-    .stat-value { font-size: 1.75rem; font-weight: 700; color: #58a6ff; }
-    .stat-block.done .stat-value { color: #3fb950; }
-    .stat-block.synced .stat-value { font-size: 0.9rem; color: #8b949e; }
-    .category-tabs { background-color: #0d1117; border-bottom: 1px solid #30363d; padding: 1rem 2rem; display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
-    .category-tab { padding: 0.5rem 1rem; border: 2px solid #30363d; border-radius: 6px; background-color: transparent; color: #e6edf3; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s; position: relative; user-select: none; font-family: inherit; }
-    .category-tab:hover { border-color: #58a6ff; color: #58a6ff; }
-    .category-tab.active { border-color: #990000; background-color: rgba(153, 0, 0, 0.15); color: #ff6b6b; }
-    .category-count { font-size: 0.8rem; color: #8b949e; margin-left: 0.5rem; }
-    .category-tab.active .category-count { color: #ff6b6b; }
-    .btn-add-category { padding: 0.5rem 0.75rem; border: 1px dashed #30363d; border-radius: 6px; background-color: transparent; color: #8b949e; cursor: pointer; font-size: 1rem; transition: all 0.2s; font-family: inherit; }
-    .btn-add-category:hover { border-color: #58a6ff; color: #58a6ff; }
-    .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
-    .filter-bar { display: flex; gap: 0.75rem; margin-bottom: 2rem; flex-wrap: wrap; }
-    .filter-btn { padding: 0.5rem 1rem; border: 1px solid #30363d; border-radius: 6px; background-color: transparent; color: #8b949e; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; font-family: inherit; }
-    .filter-btn:hover { color: #e6edf3; border-color: #58a6ff; }
-    .filter-btn.active { background-color: #58a6ff; color: #0d1117; border-color: #58a6ff; font-weight: 600; }
-    .btn-add-task { padding: 0.75rem 1.5rem; background-color: #990000; color: #e6edf3; border: none; border-radius: 6px; cursor: pointer; font-size: 0.95rem; font-weight: 600; transition: all 0.2s; font-family: inherit; }
-    .btn-add-task:hover { background-color: #cc0000; }
-    .task-list { display: flex; flex-direction: column; gap: 1rem; }
-    .task-row { background-color: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1.25rem; display: grid; grid-template-columns: auto 1fr auto auto auto auto; gap: 1rem; align-items: center; transition: all 0.2s; }
-    .task-row:hover { border-color: #58a6ff; background-color: #0d1117; }
-    .task-row.done { opacity: 0.6; }
-    .task-row.done .task-title { text-decoration: line-through; color: #8b949e; }
-    .task-checkbox { width: 20px; height: 20px; cursor: pointer; accent-color: #3fb950; }
-    .task-content { display: flex; flex-direction: column; gap: 0.5rem; }
-    .task-title { font-weight: 600; color: #e6edf3; font-size: 0.95rem; }
-    .task-notes { font-size: 0.85rem; color: #8b949e; line-height: 1.5; }
-    .task-meta { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
-    .priority-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-    .priority-badge.high { background-color: rgba(248, 81, 73, 0.15); color: #f85149; }
-    .priority-badge.medium { background-color: rgba(240, 136, 62, 0.15); color: #f0883e; }
-    .priority-badge.low { background-color: rgba(139, 148, 158, 0.15); color: #8b949e; }
-    .task-date { font-size: 0.85rem; color: #8b949e; }
-    .task-actions { display: flex; gap: 0.5rem; }
-    .btn-task-action { padding: 0.4rem 0.8rem; border: 1px solid #30363d; border-radius: 4px; background-color: transparent; color: #8b949e; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; font-family: inherit; }
-    .btn-task-action:hover { color: #e6edf3; border-color: #58a6ff; }
-    .btn-task-action.delete:hover { color: #f85149; border-color: #f85149; }
-    .task-edit-form { grid-column: 1 / -1; background-color: #0d1117; border: 1px solid #58a6ff; border-radius: 6px; padding: 1rem; display: grid; gap: 1rem; }
-    .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
-    .form-group label { font-size: 0.85rem; color: #8b949e; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
-    .form-group input, .form-group select, .form-group textarea { padding: 0.75rem; background-color: #161b22; border: 1px solid #30363d; border-radius: 4px; color: #e6edf3; font-family: inherit; font-size: 0.95rem; transition: all 0.2s; }
-    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #58a6ff; outline: none; background-color: #0d1117; }
-    .form-group textarea { resize: vertical; min-height: 80px; }
-    .form-buttons { display: flex; gap: 0.75rem; margin-top: 0.5rem; }
-    .btn-save, .btn-cancel { padding: 0.6rem 1.2rem; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-weight: 600; font-family: inherit; transition: all 0.2s; }
-    .btn-save { background-color: #58a6ff; color: #0d1117; }
-    .btn-save:hover { background-color: #79c0ff; }
-    .btn-cancel { background-color: transparent; color: #8b949e; border: 1px solid #30363d; }
-    .btn-cancel:hover { color: #e6edf3; border-color: #58a6ff; }
-    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.8); z-index: 1000; align-items: center; justify-content: center; }
-    .modal-overlay.active { display: flex; }
-    .modal { background-color: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 2rem; max-width: 500px; width: 90%; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); }
-    .modal-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; color: #e6edf3; }
-    .modal-buttons { display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem; }
-    .btn-confirm { padding: 0.75rem 1.5rem; background-color: #f85149; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-family: inherit; transition: all 0.2s; }
-    .btn-confirm:hover { background-color: #fc6d71; }
-    .btn-secondary { padding: 0.75rem 1.5rem; background-color: transparent; color: #8b949e; border: 1px solid #30363d; border-radius: 4px; cursor: pointer; font-weight: 600; font-family: inherit; transition: all 0.2s; }
-    .btn-secondary:hover { color: #e6edf3; border-color: #58a6ff; }
-    .category-form { display: grid; gap: 1rem; }
-    .color-picker-wrapper { display: flex; align-items: center; gap: 1rem; }
-    .color-picker-input { width: 50px; height: 50px; border: 2px solid #30363d; border-radius: 4px; cursor: pointer; }
-    .nav-add-form { display: none; align-items: center; gap: 0.5rem; }
-    .nav-add-form.active { display: inline-flex; }
-    .nav-add-form input { padding: 0.4rem 0.6rem; background: #0d1117; border: 1px solid #30363d; border-radius: 20px; color: #e6edf3; font-size: 0.85rem; width: 120px; font-family: inherit; }
-    .nav-add-form input:focus { border-color: #58a6ff; outline: none; }
-    .nav-add-form button { padding: 0.4rem 0.7rem; border-radius: 20px; border: 1px solid #30363d; background: transparent; color: #8b949e; cursor: pointer; font-size: 0.8rem; font-family: inherit; }
-    .nav-add-form .btn-nav-save { border-color: #3fb950; color: #3fb950; }
-    /* Drag-and-drop */
-    .category-tab[draggable="true"], nav.pill-nav a[draggable="true"] { cursor: grab; }
-    .category-tab[draggable="true"]:active, nav.pill-nav a[draggable="true"]:active { cursor: grabbing; }
-    .category-tab.drag-over { border-color: #58a6ff; border-style: dashed; background-color: rgba(88,166,255,0.1); }
-    nav.pill-nav a.drag-over { border-color: #58a6ff; border-style: dashed; background-color: rgba(88,166,255,0.1); }
-    .category-tab.dragging, nav.pill-nav a.dragging { opacity: 0.4; }
-    .context-menu { display: none; position: fixed; background-color: #161b22; border: 1px solid #30363d; border-radius: 6px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5); z-index: 2000; min-width: 150px; }
-    .context-menu.active { display: block; }
-    .context-menu-item { padding: 0.75rem 1rem; color: #8b949e; cursor: pointer; transition: all 0.2s; border-bottom: 1px solid #30363d; }
-    .context-menu-item:last-child { border-bottom: none; }
-    .context-menu-item:hover { background-color: #0d1117; color: #e6edf3; }
-    .context-menu-item.delete:hover { color: #f85149; }
-    .empty-state { text-align: center; padding: 3rem 2rem; color: #8b949e; }
-    .empty-state-icon { font-size: 3rem; margin-bottom: 1rem; }
-    .empty-state-text { font-size: 1rem; margin-bottom: 2rem; }
-    @media (max-width: 768px) {
-      header { flex-direction: column; align-items: flex-start; }
-      .header-right { width: 100%; justify-content: space-between; }
-      .status-bar { justify-content: space-around; width: 100%; gap: 0.75rem; }
-      .status-item { flex-direction: row; gap: 0.5rem; }
-      .status-label { font-size: 0.7rem; }
-      .task-row { grid-template-columns: auto 1fr; gap: 0.75rem; }
-      .task-meta { grid-column: 1 / -1; gap: 0.75rem; }
-      .task-actions { grid-column: 1 / -1; }
-      .priority-badge { font-size: 0.75rem; padding: 0.2rem 0.6rem; }
-      .category-tabs { padding: 1rem; overflow-x: auto; }
-      .container { padding: 1rem; }
-    }
-    @media (max-width: 480px) {
-      header h1 { font-size: 1.5rem; }
-      .summary-stats { padding: 1rem; grid-template-columns: 1fr; gap: 1rem; }
-      .filter-bar { gap: 0.5rem; }
-      .filter-btn { font-size: 0.8rem; padding: 0.4rem 0.8rem; }
-      .btn-add-task { width: 100%; }
-      nav.pill-nav { padding: 0.75rem 1rem; gap: 0.5rem; }
-      nav.pill-nav a, nav.pill-nav button { font-size: 0.8rem; padding: 0.4rem 0.8rem; }
-    }
-    #appContent { display: block; }
-    .user-bar { display: flex; align-items: center; gap: 0.75rem; }
-    .user-name { color: #8b949e; font-size: 0.9rem; font-weight: 500; }
-    .user-role { color: #990000; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
-    .btn-logout { background: transparent; border: 1px solid #30363d; color: #8b949e; padding: 0.35rem 0.75rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; }
-    .btn-logout:hover { border-color: #990000; color: #e6edf3; }
-  </style>
+<title>AZCK Timesheet — Command Centre</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0d1117;color:#e6edf3;padding:24px;max-width:1200px;margin:0 auto}
+h1{font-size:32px;font-weight:700;color:#58a6ff;margin-bottom:4px}
+h2{font-size:22px;font-weight:700;color:#58a6ff;margin:32px 0 16px}
+h3{font-size:17px;font-weight:600;color:#e6edf3;margin:20px 0 10px}
+.subtitle{font-size:14px;color:#8b949e;margin-bottom:32px}
+.highlight{color:#58a6ff;font-weight:600}
+.warn{color:#d29922;font-weight:600}
+.danger{color:#f85149;font-weight:600}
+.green{color:#3fb950;font-weight:600}
+.card{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:24px;margin-bottom:20px}
+.back-link{display:inline-block;margin-bottom:20px;color:#58a6ff;text-decoration:none;font-size:13px}
+.back-link:hover{text-decoration:underline}
+
+/* Tabs — EXACT match to usage.html */
+.tab-bar{display:flex;gap:4px;margin-bottom:24px;flex-wrap:wrap}
+.tab-btn{background:#21262d;border:1px solid #30363d;color:#8b949e;padding:8px 18px;border-radius:8px 8px 0 0;cursor:pointer;font-size:14px;font-weight:600;transition:all 0.2s}
+.tab-btn:hover{color:#e6edf3;background:#161b22}
+.tab-btn.active{background:#161b22;color:#58a6ff;border-bottom-color:#161b22}
+.tab-content{display:none}.tab-content.active{display:block}
+
+/* Stats — EXACT match to usage.html */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;margin-bottom:20px}
+.stat-box{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:16px;text-align:center}
+.stat-value{font-size:28px;font-weight:700;color:#58a6ff}
+.stat-value.green{color:#3fb950}.stat-value.warn{color:#d29922}.stat-value.danger{color:#f85149}
+.stat-label{font-size:12px;color:#8b949e;margin-top:4px}
+
+/* Progress bar — EXACT match to usage.html */
+.progress-track{width:100%;height:28px;background:#21262d;border-radius:14px;overflow:hidden;position:relative;margin:12px 0}
+.progress-fill{height:100%;border-radius:14px;transition:width 1s ease;background:linear-gradient(90deg,#3fb950,#58a6ff)}
+.progress-fill.warn-bg{background:linear-gradient(90deg,#d29922,#f0883e)}
+.progress-fill.danger-bg{background:linear-gradient(90deg,#f85149,#da3633)}
+.progress-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:13px;font-weight:700;color:#e6edf3;text-shadow:0 1px 3px #000}
+
+/* Project bars */
+.bar-wrap{margin-bottom:12px}
+.bar-header{display:flex;justify-content:space-between;margin-bottom:3px}
+.bar-name{font-size:13px;font-weight:600}
+.bar-hours{font-size:13px;font-weight:700;color:#58a6ff}
+.bar-track{height:24px;background:#21262d;border-radius:6px;overflow:hidden}
+.bar-fill{height:100%;border-radius:6px;transition:width 0.8s ease}
+
+/* Chart */
+.chart-wrap{position:relative;height:280px;margin-top:12px}
+
+/* Table */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:8px 10px;color:#8b949e;font-weight:600;border-bottom:1px solid #30363d}
+td{padding:8px 10px;border-bottom:1px solid #21262d;color:#c9d1d9}
+tr:hover td{background:#1c2128}
+.tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+
+/* Filter bar */
+.filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.filter-btn{padding:5px 12px;border-radius:20px;border:1px solid #30363d;background:#161b22;color:#8b949e;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s}
+.filter-btn:hover,.filter-btn.active{background:#58a6ff;color:#0d1117;border-color:#58a6ff}
+
+/* Form */
+.form-row{display:grid;grid-template-columns:120px 180px 80px 140px 1fr auto;gap:10px;align-items:end;margin-bottom:16px}
+.form-group{display:flex;flex-direction:column}
+.form-group label{font-size:11px;color:#8b949e;margin-bottom:4px;font-weight:600}
+.form-group input,.form-group select{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:8px 10px;color:#e6edf3;font-size:13px}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:#58a6ff}
+.btn{padding:8px 16px;border-radius:6px;border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s}
+.btn-primary{background:#58a6ff;color:#0d1117}
+.btn-primary:hover{background:#79c0ff}
+.btn-danger{background:#f8514922;color:#f85149;border:1px solid #f8514944}
+.btn-danger:hover{background:#f8514944}
+.btn-sm{padding:4px 10px;font-size:11px}
+
+/* Team split */
+.team-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+
+/* Responsive */
+@media(max-width:768px){
+  body{padding:12px}
+  .stat-grid{grid-template-columns:1fr 1fr}
+  .form-row{grid-template-columns:1fr 1fr}
+  .team-grid{grid-template-columns:1fr}
+  h1{font-size:24px}
+  .tab-btn{padding:6px 12px;font-size:13px}
+}
+.pill-nav{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
+.pill-nav a{background:#21262d;border:1px solid #30363d;color:#8b949e;padding:7px 18px;border-radius:20px;text-decoration:none;font-size:14px;font-weight:600;transition:all 0.2s}
+.pill-nav a:hover{color:#e6edf3;background:#30363d}
+.pill-nav a.active{background:#58a6ff;color:#0d1117;border-color:#58a6ff}
+</style>
 </head>
 <body>
 
-<div id="appContent">
-  <header>
-    <h1>AZ COMMAND CENTRE</h1>
-    <div class="header-right">
-      <div class="user-bar">
-        <span class="user-name" id="userName"></span>
-        <span class="user-role" id="userRole"></span>
-        <button class="btn-logout" id="btnLogout" onclick="handleLogout()">Sign Out</button>
-      </div>
-      <div class="header-date" id="headerDate"></div>
-      <div class="status-bar">
-        <div class="status-item">
-          <div class="status-label">Open</div>
-          <div class="status-count" id="statusOpen">0</div>
-        </div>
-        <div class="status-item">
-          <div class="status-label">Today</div>
-          <div class="status-count" id="statusToday">0</div>
-        </div>
-        <div class="status-item done">
-          <div class="status-label">Done</div>
-          <div class="status-count" id="statusDone">0</div>
-        </div>
-        <div class="status-item synced">
-          <div class="status-label">Synced</div>
-          <div class="status-count" id="statusSynced">—</div>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <nav class="pill-nav" id="pillNav">
-    <a href="alessio.html" class="active">Tasks</a>
-    <a href="timesheet.html">Timesheet</a>
+<nav class="pill-nav" id="pillNav">
+    <a href="alessio.html">Tasks</a>
+    <a href="timesheet.html" class="active">Timesheet</a>
     <a href="forge.html">Forge</a>
     <a href="usage.html">Usage</a>
     <a href="network.html">Network</a>
-  </nav>
+</nav>
+<h1>AZCK Timesheet</h1>
+<p class="subtitle">All project hours — Forge sessions + Shop work. Updated every Save All + manual entries.</p>
 
-  <div class="context-menu" id="navContextMenu">
-    <div class="context-menu-item" id="navContextEdit">Edit</div>
-    <div class="context-menu-item delete" id="navContextDelete">Delete</div>
-  </div>
-
-  <div class="summary-stats">
-    <div class="stat-block">
-      <div class="stat-label">Total Open</div>
-      <div class="stat-value" id="statTotalOpen">0</div>
-    </div>
-    <div class="stat-block">
-      <div class="stat-label">Due This Week</div>
-      <div class="stat-value" id="statDueWeek">0</div>
-    </div>
-    <div class="stat-block done">
-      <div class="stat-label">Completed</div>
-      <div class="stat-value" id="statCompleted">0</div>
-    </div>
-    <div class="stat-block synced">
-      <div class="stat-label">Last Updated</div>
-      <div class="stat-value" id="statLastUpdated">Never</div>
-    </div>
-  </div>
-
-  <div class="category-tabs" id="categoryTabs"></div>
-
-  <div class="container">
-    <div style="margin-bottom: 2rem;">
-      <div class="filter-bar">
-        <button class="filter-btn active" data-filter="all">All Tasks</button>
-        <button class="filter-btn" data-filter="open">Open Only</button>
-        <button class="filter-btn" data-filter="high">High Priority</button>
-        <button class="filter-btn" data-filter="done">Done Only</button>
-      </div>
-      <button class="btn-add-task" id="btnAddTask">+ Add Task</button>
-    </div>
-    <div class="task-list" id="taskList"></div>
-    <div class="empty-state" id="emptyState" style="display: none;">
-      <div class="empty-state-icon">📋</div>
-      <div class="empty-state-text">No tasks in this category. Start by adding one!</div>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="confirmModal">
-    <div class="modal">
-      <h2 class="modal-title" id="confirmTitle">Confirm Action</h2>
-      <p id="confirmMessage"></p>
-      <div class="modal-buttons">
-        <button class="btn-secondary" id="btnConfirmCancel">Cancel</button>
-        <button class="btn-confirm" id="btnConfirmOK">Confirm</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="categoryModal">
-    <div class="modal">
-      <h2 class="modal-title" id="categoryModalTitle">Add Category</h2>
-      <form class="category-form" id="categoryForm">
-        <div class="form-group">
-          <label for="categoryName">Category Name</label>
-          <input type="text" id="categoryName" required placeholder="e.g., Work, Personal">
-        </div>
-        <div class="form-group">
-          <label>Color</label>
-          <div class="color-picker-wrapper">
-            <input type="color" id="categoryColor" class="color-picker-input" value="#58a6ff">
-            <span id="colorValue">#58a6ff</span>
-          </div>
-        </div>
-        <div class="modal-buttons">
-          <button type="button" class="btn-secondary" id="btnCategoryCancel">Cancel</button>
-          <button type="submit" class="btn-confirm">Create Category</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <div class="context-menu" id="contextMenu">
-    <div class="context-menu-item" id="contextRename">Rename</div>
-    <div class="context-menu-item" id="contextColor">Change Color</div>
-    <div class="context-menu-item delete" id="contextDelete">Delete</div>
-  </div>
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="showTab('overview',this)">Overview</button>
+  <button class="tab-btn" onclick="showTab('forge',this)">Forge Log</button>
+  <button class="tab-btn" onclick="showTab('shop',this)">Shop Log</button>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════════
+     DATA BLOCK — UPDATE THIS SECTION ONLY (Forge auto-logged entries)
+     To add an entry: add to FORGE_LOG array during Save All.
+     To add a project: add color to PROJECT_COLORS.
+     Engine below auto-generates everything from this data.
+     ═══════════════════════════════════════════════════════════════ -->
 <script>
-// === SUPABASE CONFIG ===
-const SUPABASE_URL = 'https://twrlvnfszohyrmivdhre.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3cmx2bmZzem9oeXJtaXZkaHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NjkxMTMsImV4cCI6MjA5MDE0NTExM30.o96DFNbBObst0EAmX51rnRFXzu8oTN1o-HNAxN7MY8A';
-const USE_SUPABASE = true;
+var SUPABASE_URL = 'https://bsiycfypzhfbqeibfwma.supabase.co';
+var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzaXljZnlwemhmYnFlaWJmd21hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyODEyNzEsImV4cCI6MjA5MDg1NzI3MX0.E9tZLgWGWW6j5R4LoB5uBkriDHVsxyJ95auf3OBTlIM';
 
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: {
-    storageKey: 'sb-twrlvnfszohyrmivdhre-auth-token',
-    lock: async (name, acquireTimeout, fn) => await fn()
-  }
-});
-
-// Current user
-let currentUser = null;
-
-// ===== CONSTANTS & STORAGE =====
-const STORAGE_KEY = 'azck-command-centre';
-const DEFAULT_CATEGORIES = [
-  { id: 1, name: 'Personal', color: '#58a6ff', sortOrder: 1 },
-  { id: 2, name: 'AZ Custom Knives', color: '#990000', sortOrder: 2 },
-  { id: 3, name: 'Quad Fang', color: '#FC4C02', sortOrder: 3 },
-  { id: 4, name: '3D Printing', color: '#bc8cff', sortOrder: 4 },
-  { id: 5, name: 'Family', color: '#3fb950', sortOrder: 5 }
-];
-
-// ===== STATE MANAGEMENT =====
-let appState = {
-  categories: [],
-  tasks: [],
-  activeCategory: null,
-  activeFilter: 'all',
-  editingTaskId: null,
-  lastSynced: null,
-  nextId: 100
+// ── FORGE PROJECT COLORS ──
+var PROJECT_COLORS = {
+  'Website':            '#58a6ff',
+  'QuadFang R&D':       '#f85149',
+  'QuadFang Website':   '#FC4C02',
+  'Command Centre':     '#3fb950',
+  'Forge System':       '#bc8cff',
+  'Grants':             '#d29922',
+  'Booking System':     '#f0883e',
+  'Clients':            '#f778ba',
+  'Admin':              '#79c0ff'
 };
 
-// ===== SUPABASE AUTH =====
-async function handleLogout() {
-  await sb.auth.signOut();
-  currentUser = null;
-  appState.categories = [];
-  appState.tasks = [];
-  appState.lastSynced = null;
-  window.location.href = 'index.html';
-}
+// ── SHOP PROJECT COLORS ──
+var SHOP_COLORS = {
+  'Custom Knife Build': '#f85149',
+  'Sharpening Service': '#58a6ff',
+  'Heat Treatment':     '#f0883e',
+  'Engraving':          '#d29922',
+  'Blacksmithing':      '#bc8cff',
+  'Teaching / Classes': '#3fb950',
+  'QuadFang Prototyping':'#FC4C02',
+  'Equipment / Maintenance':'#79c0ff',
+  'Photography':        '#f778ba',
+  'Shipping / Packaging':'#7ee787'
+};
 
-async function loadUserProfile(userId, email) {
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    let { data, error } = await sb
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
+var ALL_COLORS = Object.assign({}, PROJECT_COLORS, SHOP_COLORS);
 
-    if (data && !error) return data;
+// ── SHOP PROJECT LIST (for dropdown) ──
+var SHOP_PROJECTS = Object.keys(SHOP_COLORS);
 
-    if (email) {
-      const res = await sb
-        .from('profiles')
-        .select('*')
-        .eq('email', email)
-        .single();
-      if (res.data && !res.error) return res.data;
-    }
+// ── FORGE LOG (auto-logged by Forge during Save All) ──
+var FORGE_LOG = [
+  // ═══ PRE-TRACKING ERA (Mar 31 – Apr 9) ═══
+  { date:'2026-03-31', user:'Alessio', project:'Forge System', hours:5.0, desc:'First Forge session — initial AI system exploration, prompt engineering' },
+  { date:'2026-04-01', user:'Alessio', project:'Forge System', hours:4.0, desc:'Shared Brain established, first startup protocol, Single Source of Truth, gist sync' },
+  { date:'2026-04-01', user:'Alessio', project:'Grants', hours:3.0, desc:'SR&ED Activity Log template, IRAP Prep Guide, Open Tasks Guide' },
+  { date:'2026-04-01', user:'Alessio', project:'Grants', hours:4.0, desc:'QuadFang business plan, budget financials, pitch deck, project tracker' },
+  { date:'2026-04-01', user:'Alessio', project:'QuadFang R&D', hours:2.0, desc:'QuadFang deliverables review, product documentation' },
+  { date:'2026-04-02', user:'Alessio', project:'Forge System', hours:3.0, desc:'Brain file organization, worker concept development' },
+  { date:'2026-04-03', user:'Alessio', project:'Forge System', hours:5.0, desc:'Security audit, 20-page risk report, folder restructure' },
+  { date:'2026-04-03', user:'Alessio', project:'Admin', hours:2.0, desc:'File organization, backup protocols, system hardening' },
+  { date:'2026-04-04', user:'Alessio', project:'Forge System', hours:3.0, desc:'Everything broke. FUSE bug discovered' },
+  { date:'2026-04-04', user:'Alessio', project:'Forge System', hours:4.0, desc:'Easter Saturday debug session, FUSE bug root cause found and fixed' },
+  { date:'2026-04-04', user:'Alessio', project:'Forge System', hours:5.0, desc:'Named Forge. Tiered startup built. Super Brain created. Identity born.' },
+  { date:'2026-04-04', user:'Alessio', project:'Forge System', hours:4.0, desc:'Three independent databases designed. Modular hub-and-spoke architecture.' },
+  { date:'2026-04-05', user:'Alessio', project:'Forge System', hours:3.0, desc:'Brain file refinement, worker templates, system testing' },
+  { date:'2026-04-06', user:'Alessio', project:'Website', hours:2.0, desc:'Website planning, content review, architecture research' },
+  { date:'2026-04-06', user:'Alessio', project:'QuadFang R&D', hours:2.0, desc:'QuadFang brand guidelines, product strategy' },
+  { date:'2026-04-07', user:'Alessio', project:'Forge System', hours:3.0, desc:'Pre-Forge Office prep, worker files drafted' },
+  { date:'2026-04-08', user:'Alessio', project:'Forge System', hours:8.0, desc:'Hub-and-spoke model. 9 specialist workers. Full ops layer. 22 Shared Brain files.' },
+  { date:'2026-04-08', user:'Alessio', project:'Grants', hours:3.0, desc:'Grant-writer worker, grant roadmap PDF, 6 deliverables' },
+  { date:'2026-04-08', user:'Reanna', project:'Grants', hours:1.5, desc:'First Forge session. Grant roadmap, 7 programs researched, CDAP confirmed dead' },
+  { date:'2026-04-08', user:'Alessio', project:'Forge System', hours:2.0, desc:'Clock check system, session logging, evolution chart accountability' },
+  { date:'2026-04-09', user:'Alessio', project:'Forge System', hours:4.0, desc:'Two failed Save Alls reconstructed. Grant pipeline activated.' },
 
-    console.warn(`Profile load attempt ${attempt} failed:`, error?.message);
-    if (attempt < 3) await new Promise(r => setTimeout(r, 500 * attempt));
-  }
-  console.error('Profile load failed after 3 attempts');
-  return null;
-}
+  // ═══ TRACKED ERA (Apr 10+) ═══
+  { date:'2026-04-10', user:'Alessio', project:'Website', hours:3.0, desc:'Tech plan delivered, booking page planning, site architecture review' },
+  { date:'2026-04-10', user:'Alessio', project:'Booking System', hours:7.0, desc:'All 6 booking pages built — Family Events, knife details, sharpening, blacksmithing, team building, private' },
+  { date:'2026-04-11', user:'Alessio', project:'Booking System', hours:2.0, desc:'Instructions doc, folder cleanup, final verification' },
+  { date:'2026-04-11', user:'Alessio', project:'Booking System', hours:4.0, desc:'Booking system published LIVE, repo cleanup, deep-links verified' },
+  { date:'2026-04-11', user:'Alessio', project:'Website', hours:4.0, desc:'Wix gift card, full architecture audit, headless checkout research, Wix API deep-dive' },
+  { date:'2026-04-12', user:'Alessio', project:'Website', hours:4.0, desc:'Shared nav/footer deployed to all 18 pages, CMS architecture parked' },
+  { date:'2026-04-12', user:'Alessio', project:'Command Centre', hours:5.0, desc:'Forge chart, usage guide, CLAUDE.md Condensed Brain v1.0 rebuilt' },
+  { date:'2026-04-12', user:'Alessio', project:'Command Centre', hours:1.5, desc:'usage.html dashboard built, Condensed Brain deployed' },
+  { date:'2026-04-12', user:'Alessio', project:'Forge System', hours:1.0, desc:'Zero-Read Startup rebuild — v1.1, all startup reads eliminated' },
+  { date:'2026-04-12', user:'Alessio', project:'Command Centre', hours:3.0, desc:'usage.html v3.0 JSON-driven master dashboard, community research, model awareness' },
+  { date:'2026-04-12', user:'Alessio', project:'Forge System', hours:2.5, desc:'Renderer failure, lessons learned, plans system created' },
+  { date:'2026-04-13', user:'Alessio', project:'Forge System', hours:2.0, desc:'Late night session — startup testing, system verification' },
+  { date:'2026-04-14', user:'Alessio', project:'QuadFang R&D', hours:2.0, desc:'Meeting with Matt Runhart (Terra Machine) — Fusion 360 design, manufacturing options' },
+  { date:'2026-04-14', user:'Alessio', project:'Website', hours:2.0, desc:'Website master plan (9 phases), folder reorg, CLAUDE.md updates' },
+  { date:'2026-04-14', user:'Alessio', project:'Admin', hours:1.0, desc:'Folder restructure, handoff for Phase 0 audit' },
+  { date:'2026-04-14', user:'Alessio', project:'Website', hours:2.0, desc:'Phase 0 Website Audit — 22 pages, 11 issues found (4 critical)' },
+  { date:'2026-04-14', user:'Reanna', project:'Website', hours:1.5, desc:'Photo category list (8 categories + Legacy Knives), session passoff' },
+  { date:'2026-04-14', user:'Alessio', project:'Forge System', hours:2.0, desc:'Full brain load, CLAUDE.md fixes, Forge lessons, auto-memory' },
+  { date:'2026-04-15', user:'Alessio', project:'Clients', hours:2.0, desc:'Avalon Research HT invoice ($829.50), trade agreement, invoice template' },
+  { date:'2026-04-15', user:'Alessio', project:'Admin', hours:2.0, desc:'AI folder restructure, CLAUDE.md v1.2, 15+ calendar events' },
+  { date:'2026-04-15', user:'Alessio', project:'Website', hours:2.0, desc:'Waiver PDF links fixed, blog refactored to ENGINE+DATA BLOCK' },
+  { date:'2026-04-15', user:'Alessio', project:'QuadFang Website', hours:1.0, desc:'"Coming Soonr" typo fixed in Shopify, billing structure documented' },
+  { date:'2026-04-15', user:'Alessio', project:'Clients', hours:1.0, desc:'Kyran client folder, reimbursement billing plan ($500/mo)' },
+  { date:'2026-04-15', user:'Alessio', project:'QuadFang Website', hours:1.5, desc:'GitHub Pages site build — 19 files, ENGINE+DATA BLOCK architecture' },
+  { date:'2026-04-15', user:'Alessio', project:'Website', hours:1.5, desc:'Homepage fade-in bug fixed, v2 CSS deployed LIVE' },
+  { date:'2026-04-15', user:'Alessio', project:'QuadFang Website', hours:4.0, desc:'Full GitHub Pages deployment, DNS migration, Hunt Gallery colors, newsletter table' },
+  { date:'2026-04-15', user:'Alessio', project:'Command Centre', hours:1.5, desc:'Timesheet page built — unified Forge + Shop tracker' }
+];
+</script>
+<!-- ═══ END DATA BLOCK ═══ -->
 
-function showUserInfo() {
-  if (!currentUser) return;
-  document.getElementById('userName').textContent = currentUser.display_name || currentUser.email;
-  document.getElementById('userRole').textContent = currentUser.role || '';
-}
+<div id="app"></div>
 
-function unlockApp() {
-  // App is visible by default
-}
+<!-- ═══ ENGINE — DO NOT EDIT BELOW ═══ -->
+<script>
+(function(){
+  // ── Supabase client ──
+  var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ===== SUPABASE DATA =====
-async function loadFromSupabase() {
-  // Only load this user's categories + shared (owner_id is NULL)
-  const { data: cats, error: catErr } = await sb
-    .from('categories')
-    .select('*')
-    .or('owner_id.eq.' + currentUser.id + ',owner_id.is.null')
-    .order('sort_order', { ascending: true });
+  // ── Helpers ──
+  function $(id){return document.getElementById(id)}
+  function colorFor(p){return ALL_COLORS[p]||'#58a6ff'}
+  function fmt(n){return n.toLocaleString('en-CA',{minimumFractionDigits:1,maximumFractionDigits:1})}
 
-  if (catErr) {
-    console.error('Category load error:', catErr);
-  } else if (cats && cats.length > 0) {
-    appState.categories = cats.map(c => ({
-      id: c.id, name: c.name, color: c.color || '#f0883e',
-      sortOrder: c.sort_order, ownerId: c.owner_id
-    }));
-  } else {
-    appState.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
-  }
-
-  // Only load tasks in visible categories
-  const visibleCatIds = appState.categories.map(c => c.id);
-  const { data: tasks, error: taskErr } = await sb
-    .from('tasks')
-    .select('*')
-    .in('category_id', visibleCatIds)
-    .order('created_at', { ascending: false });
-
-  if (taskErr) {
-    console.error('Task load error:', taskErr);
-  } else {
-    appState.tasks = (tasks || []).map(t => ({
-      id: t.id, categoryId: t.category_id, title: t.title,
-      notes: t.notes || '', priority: t.priority || 'medium',
-      status: t.status || 'open', dueDate: t.due_date,
-      createdAt: t.created_at, completedAt: t.completed_at,
-      ownerId: t.owner_id, sortOrder: t.sort_order
-    }));
-  }
-
-  appState.lastSynced = new Date().toISOString();
-  saveToLocalStorage();
-
-  if (appState.categories.length > 0 && !appState.activeCategory) {
-    appState.activeCategory = appState.categories[0].id;
-  }
-}
-
-async function saveTaskToSupabase(task) {
-  const payload = {
-    category_id: task.categoryId, owner_id: currentUser?.id || null,
-    title: task.title || 'Untitled Task', notes: task.notes || null,
-    priority: task.priority || 'medium', status: task.status || 'open',
-    due_date: task.dueDate || null, sort_order: task.sortOrder || 0,
-    completed_at: task.completedAt || null
-  };
-
-  if (task._isNew) {
-    const { data, error } = await sb.from('tasks').insert(payload).select().single();
-    if (error) { console.error('Task insert error:', error); return null; }
-    return data;
-  } else {
-    const { data, error } = await sb.from('tasks').update(payload).eq('id', task.id).select().single();
-    if (error) { console.error('Task update error:', error); return null; }
-    return data;
-  }
-}
-
-async function deleteTaskFromSupabase(taskId) {
-  const { error } = await sb.from('tasks').delete().eq('id', taskId);
-  if (error) console.error('Task delete error:', error);
-}
-
-async function saveCategoryToSupabase(cat) {
-  const payload = {
-    name: cat.name, color: cat.color || '#f0883e',
-    sort_order: cat.sortOrder || 0, owner_id: currentUser?.id || null
-  };
-
-  if (cat._isNew) {
-    const { data, error } = await sb.from('categories').insert(payload).select().single();
-    if (error) { console.error('Category insert error:', error); return null; }
-    return data;
-  } else {
-    const { data, error } = await sb.from('categories').update(payload).eq('id', cat.id).select().single();
-    if (error) console.error('Category update error:', error);
-    return data;
-  }
-}
-
-async function deleteCategoryFromSupabase(catId) {
-  const { error } = await sb.from('categories').delete().eq('id', catId);
-  if (error) console.error('Category delete error:', error);
-}
-
-// ===== REALTIME SUBSCRIPTIONS =====
-function subscribeToRealtime() {
-  sb.channel('tasks-changes')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => {
-      loadFromSupabase().then(() => { updateStatusBar(); renderCategoryTabs(); renderTasks(); });
-    }).subscribe();
-
-  sb.channel('categories-changes')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => {
-      loadFromSupabase().then(() => { renderCategoryTabs(); renderTasks(); updateStatusBar(); });
-    }).subscribe();
-
-  sb.channel('nav-links-changes')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'nav_links' }, () => {
-      loadNavLinks().then(renderNavLinks);
-    }).subscribe();
-}
-
-// ===== NAV LINKS (dynamic, draggable) =====
-let navLinks = [];
-let navContextTarget = null;
-let dragNavIndex = null;
-
-async function loadNavLinks() {
-  const { data, error } = await sb
-    .from('nav_links')
-    .select('*')
-    .or('owner_id.eq.' + currentUser.id + ',owner_id.is.null')
-    .order('sort_order', { ascending: true });
-  if (!error && data) navLinks = data;
-}
-
-function renderNavLinks() {
-  const nav = document.getElementById('pillNav');
-  const tasksLink = nav.querySelector('a');
-  nav.innerHTML = '';
-  nav.appendChild(tasksLink);
-
-  navLinks.forEach((link, idx) => {
-    const a = document.createElement('a');
-    a.href = link.url;
-    a.textContent = link.label;
-    a.draggable = true;
-
-    a.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-      navContextTarget = link.id;
-      const menu = document.getElementById('navContextMenu');
-      menu.style.left = e.clientX + 'px';
-      menu.style.top = e.clientY + 'px';
-      menu.classList.add('active');
+  function aggregate(entries){
+    var byProject={},byDate={},byUser={},total=0,dates=[];
+    entries.forEach(function(e){
+      byProject[e.project]=(byProject[e.project]||0)+e.hours;
+      byUser[e.user]=(byUser[e.user]||0)+e.hours;
+      total+=e.hours;
+      if(!byDate[e.date]) byDate[e.date]={};
+      byDate[e.date][e.project]=(byDate[e.date][e.project]||0)+e.hours;
+      if(dates.indexOf(e.date)===-1) dates.push(e.date);
     });
+    dates.sort();
+    var projects=Object.keys(byProject).sort(function(a,b){return byProject[b]-byProject[a]});
+    return {byProject:byProject,byDate:byDate,byUser:byUser,total:total,dates:dates,projects:projects,count:entries.length,days:dates.length};
+  }
 
-    // Drag-and-drop
-    a.addEventListener('dragstart', (e) => {
-      dragNavIndex = idx;
-      a.classList.add('dragging');
-      e.dataTransfer.effectAllowed = 'move';
+  // ── Build all HTML ──
+  var shopEntries=[];
+  var H='';
+
+  // ═══ TAB: OVERVIEW ═══
+  H+='<div id="tab-overview" class="tab-content active">';
+  H+='<div class="stat-grid" id="overviewStats"></div>';
+  H+='<div class="card" id="overviewProgress"></div>';
+  H+='<h2>Hours by Project — All Sources</h2>';
+  H+='<div class="card" id="overviewBars"></div>';
+  H+='<h2>Daily Activity</h2>';
+  H+='<div class="card"><div class="chart-wrap"><canvas id="overviewChart"></canvas></div></div>';
+  H+='<h2>Team Split</h2>';
+  H+='<div class="card team-grid" id="overviewTeam"></div>';
+  H+='</div>';
+
+  // ═══ TAB: FORGE LOG ═══
+  H+='<div id="tab-forge" class="tab-content">';
+  H+='<div class="stat-grid" id="forgeStats"></div>';
+  H+='<h2>Forge Hours by Project</h2>';
+  H+='<div class="card" id="forgeBars"></div>';
+  H+='<h2>Daily Forge Activity</h2>';
+  H+='<div class="card"><div class="chart-wrap"><canvas id="forgeChart"></canvas></div></div>';
+  H+='<h2>Full Forge Log</h2>';
+  H+='<div class="filter-bar" id="forgeFilter"></div>';
+  H+='<div class="card" style="overflow-x:auto;max-height:600px;overflow-y:auto;">';
+  H+='<table id="forgeTable"><thead><tr><th>Date</th><th>User</th><th>Project</th><th>Hours</th><th>Description</th></tr></thead><tbody></tbody></table>';
+  H+='</div>';
+  H+='</div>';
+
+  // ═══ TAB: SHOP LOG ═══
+  H+='<div id="tab-shop" class="tab-content">';
+  H+='<h2>Log Shop Time</h2>';
+  H+='<div class="card">';
+  H+='<div class="form-row">';
+  H+='<div class="form-group"><label>Date</label><input type="date" id="shopDate"></div>';
+  H+='<div class="form-group"><label>Project</label><select id="shopProject"></select></div>';
+  H+='<div class="form-group"><label>Hours</label><input type="number" id="shopHours" step="0.25" min="0.25" max="24" placeholder="2.5"></div>';
+  H+='<div class="form-group"><label>Client / Order</label><input type="text" id="shopClient" placeholder="e.g. Avalon, Walk-in"></div>';
+  H+='<div class="form-group"><label>Description</label><input type="text" id="shopDesc" placeholder="What did you do?"></div>';
+  H+='<div class="form-group"><label>&nbsp;</label><button class="btn btn-primary" id="shopAdd">Add</button></div>';
+  H+='</div>';
+  H+='<div id="shopFormMsg" style="font-size:12px;color:#3fb950;margin-top:-8px;margin-bottom:8px;display:none;"></div>';
+  H+='</div>';
+  H+='<div class="stat-grid" id="shopStats"></div>';
+  H+='<h2>Shop Hours by Category</h2>';
+  H+='<div class="card" id="shopBars"></div>';
+  H+='<h2>Shop Entries</h2>';
+  H+='<div class="filter-bar" id="shopFilter"></div>';
+  H+='<div class="card" style="overflow-x:auto;max-height:600px;overflow-y:auto;">';
+  H+='<table id="shopTable"><thead><tr><th>Date</th><th>Project</th><th>Hours</th><th>Client</th><th>Description</th><th></th></tr></thead><tbody></tbody></table>';
+  H+='</div>';
+  H+='</div>';
+
+  // Footer
+  H+='<hr style="border:none;border-top:1px solid #21262d;margin:32px 0;">';
+  H+='<p style="font-size:12px;color:#8b949e;text-align:center;">AZCK Timesheet — Command Centre<br>Forge entries auto-logged during Save All &middot; Shop entries via Supabase &middot; ENGINE + DATA BLOCK architecture</p>';
+
+  $('app').innerHTML=H;
+
+  // ── Populate shop dropdown ──
+  var sel=$('shopProject');
+  SHOP_PROJECTS.forEach(function(p){var o=document.createElement('option');o.value=p;o.textContent=p;sel.appendChild(o)});
+  $('shopDate').valueAsDate=new Date();
+
+  // ── Render functions ──
+  function renderStats(id,agg){
+    var h='';
+    h+='<div class="stat-box"><div class="stat-value">'+fmt(agg.total)+'</div><div class="stat-label">Total Hours</div></div>';
+    h+='<div class="stat-box"><div class="stat-value">'+agg.count+'</div><div class="stat-label">Entries</div></div>';
+    h+='<div class="stat-box"><div class="stat-value">'+agg.days+'</div><div class="stat-label">Active Days</div></div>';
+    h+='<div class="stat-box"><div class="stat-value">'+agg.projects.length+'</div><div class="stat-label">Projects</div></div>';
+    h+='<div class="stat-box"><div class="stat-value">'+fmt(agg.total/Math.max(agg.days,1))+'</div><div class="stat-label">Avg Hrs/Day</div></div>';
+    $(id).innerHTML=h;
+  }
+
+  function renderProgress(id,agg){
+    // Progress bar showing hours distribution — Forge vs Shop
+    var forgeH=0,shopH=0;
+    FORGE_LOG.forEach(function(e){forgeH+=e.hours});
+    shopEntries.forEach(function(e){shopH+=e.hours});
+    var totalH=forgeH+shopH;
+    var forgePct=totalH>0?(forgeH/totalH*100):100;
+    var h='<div style="display:flex;justify-content:space-between;margin-bottom:8px;">';
+    h+='<span style="font-size:13px;font-weight:600;color:#bc8cff;">Forge: '+fmt(forgeH)+' hrs ('+forgePct.toFixed(0)+'%)</span>';
+    h+='<span style="font-size:13px;font-weight:600;color:#3fb950;">Shop: '+fmt(shopH)+' hrs ('+(100-forgePct).toFixed(0)+'%)</span>';
+    h+='</div>';
+    h+='<div class="progress-track">';
+    h+='<div class="progress-fill" style="width:'+forgePct+'%;background:linear-gradient(90deg,#bc8cff,#58a6ff);"></div>';
+    h+='<div class="progress-label">'+fmt(totalH)+' total hours</div>';
+    h+='</div>';
+    $(id).innerHTML=h;
+  }
+
+  function renderBars(id,agg){
+    var max=0;agg.projects.forEach(function(p){if(agg.byProject[p]>max)max=agg.byProject[p]});
+    var h='';agg.projects.forEach(function(p){
+      var pct=(agg.byProject[p]/max*100).toFixed(1);var c=colorFor(p);
+      h+='<div class="bar-wrap"><div class="bar-header"><span class="bar-name" style="color:'+c+'">'+p+'</span><span class="bar-hours">'+fmt(agg.byProject[p])+' hrs</span></div>';
+      h+='<div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:'+c+';"></div></div></div>';
     });
-    a.addEventListener('dragend', () => { a.classList.remove('dragging'); dragNavIndex = null; });
-    a.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      a.classList.add('drag-over');
+    $(id).innerHTML=h;
+  }
+
+  function renderChart(canvasId,agg){
+    var existing=Chart.getChart(canvasId);
+    if(existing) existing.destroy();
+    var datasets=agg.projects.map(function(p){
+      return {label:p,data:agg.dates.map(function(d){return(agg.byDate[d]&&agg.byDate[d][p])||0}),backgroundColor:colorFor(p),borderRadius:3};
     });
-    a.addEventListener('dragleave', () => a.classList.remove('drag-over'));
-    a.addEventListener('drop', (e) => {
-      e.preventDefault();
-      a.classList.remove('drag-over');
-      if (dragNavIndex === null || dragNavIndex === idx) return;
-      const moved = navLinks.splice(dragNavIndex, 1)[0];
-      navLinks.splice(idx, 0, moved);
-      saveNavLinkOrder();
-      renderNavLinks();
-    });
-
-    nav.appendChild(a);
-  });
-
-  const addBtn = document.createElement('button');
-  addBtn.textContent = '+ Link';
-  addBtn.addEventListener('click', () => {
-    const form = document.getElementById('navAddForm');
-    form.classList.toggle('active');
-    if (form.classList.contains('active')) {
-      form.querySelector('#navLabelInput').value = '';
-      form.querySelector('#navUrlInput').value = '';
-      form.querySelector('#navLabelInput').focus();
-      delete form.dataset.editId;
-    }
-  });
-  nav.appendChild(addBtn);
-
-  const form = document.createElement('div');
-  form.className = 'nav-add-form';
-  form.id = 'navAddForm';
-  form.innerHTML = '<input id="navLabelInput" placeholder="Label" />'
-    + '<input id="navUrlInput" placeholder="URL (e.g. page.html)" />'
-    + '<button class="btn-nav-save" onclick="saveNavLink()">Save</button>'
-    + '<button onclick="document.getElementById(\'navAddForm\').classList.remove(\'active\')">Cancel</button>';
-  nav.appendChild(form);
-}
-
-async function saveNavLink() {
-  const label = document.getElementById('navLabelInput').value.trim();
-  const url = document.getElementById('navUrlInput').value.trim();
-  if (!label || !url) return;
-  const form = document.getElementById('navAddForm');
-  const editId = form.dataset.editId;
-
-  if (editId) {
-    await sb.from('nav_links').update({ label: label, url: url }).eq('id', parseInt(editId));
-    delete form.dataset.editId;
-  } else {
-    const maxSort = navLinks.length > 0 ? Math.max(...navLinks.map(l => l.sort_order)) : 0;
-    await sb.from('nav_links').insert({
-      owner_id: currentUser.id, label: label, url: url, sort_order: maxSort + 1
+    new Chart($(canvasId),{
+      type:'bar',data:{labels:agg.dates.map(function(d){return d.replace('2026-','')}),datasets:datasets},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8b949e',font:{size:10}}}},
+        scales:{x:{stacked:true,ticks:{color:'#8b949e'},grid:{color:'#21262d'}},y:{stacked:true,ticks:{color:'#8b949e'},grid:{color:'#21262d'},title:{display:true,text:'Hours',color:'#8b949e'}}}}
     });
   }
-  form.classList.remove('active');
-  await loadNavLinks();
-  renderNavLinks();
-}
 
-async function saveNavLinkOrder() {
-  for (let i = 0; i < navLinks.length; i++) {
-    navLinks[i].sort_order = i;
-    await sb.from('nav_links').update({ sort_order: i }).eq('id', navLinks[i].id);
-  }
-}
-
-async function deleteNavLink(id) {
-  await sb.from('nav_links').delete().eq('id', id);
-  await loadNavLinks();
-  renderNavLinks();
-}
-
-function editNavLink(id) {
-  const link = navLinks.find(l => l.id === id);
-  if (!link) return;
-  const form = document.getElementById('navAddForm');
-  form.classList.add('active');
-  form.dataset.editId = id;
-  document.getElementById('navLabelInput').value = link.label;
-  document.getElementById('navUrlInput').value = link.url;
-  document.getElementById('navLabelInput').focus();
-}
-
-// Nav context menu handlers
-document.addEventListener('click', (e) => {
-  const menu = document.getElementById('navContextMenu');
-  if (menu && !menu.contains(e.target)) menu.classList.remove('active');
-});
-document.getElementById('navContextEdit')?.addEventListener('click', () => {
-  if (navContextTarget) editNavLink(navContextTarget);
-  document.getElementById('navContextMenu').classList.remove('active');
-});
-document.getElementById('navContextDelete')?.addEventListener('click', () => {
-  if (navContextTarget) {
-    deleteNavLink(navContextTarget);
-    navContextTarget = null;
-  }
-  document.getElementById('navContextMenu').classList.remove('active');
-});
-
-// ===== LOCALSTORAGE FALLBACK =====
-function saveToLocalStorage() {
-  const data = { categories: appState.categories, tasks: appState.tasks,
-    lastSynced: appState.lastSynced, nextId: appState.nextId };
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
-}
-
-function loadFromLocalStorage() {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const data = JSON.parse(stored);
-      appState.categories = data.categories || DEFAULT_CATEGORIES;
-      appState.tasks = data.tasks || [];
-      appState.lastSynced = data.lastSynced || null;
-      appState.nextId = data.nextId || 100;
-    } else {
-      appState.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
-      appState.tasks = [];
-      appState.nextId = 100;
-    }
-  } catch(e) {
-    appState.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
-    appState.tasks = [];
-  }
-  if (appState.categories.length > 0) {
-    appState.activeCategory = appState.categories[0].id;
-  }
-}
-
-async function initializeData() {
-  if (USE_SUPABASE && currentUser) {
-    await loadFromSupabase();
-  } else {
-    loadFromLocalStorage();
-  }
-  if (appState.categories.length > 0 && !appState.activeCategory) {
-    appState.activeCategory = appState.categories[0].id;
-  }
-}
-
-function saveData() {
-  appState.lastSynced = new Date().toISOString();
-  saveToLocalStorage();
-  updateSyncDisplay();
-}
-
-// ===== HELPERS =====
-function formatDate(dateStr) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
-
-// ===== RENDER FUNCTIONS =====
-function updateHeaderDate() {
-  const today = new Date();
-  const dateStr = today.toLocaleDateString('en-US', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-  });
-  document.getElementById('headerDate').textContent = dateStr;
-}
-
-function updateStatusBar() {
-  const openTasks = appState.tasks.filter(t => t.status === 'open').length;
-  const doneTasks = appState.tasks.filter(t => t.status === 'done').length;
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayTasks = appState.tasks.filter(t => {
-    if (!t.dueDate) return false;
-    const dueDate = new Date(t.dueDate);
-    dueDate.setHours(0, 0, 0, 0);
-    return dueDate.getTime() === today.getTime();
-  }).length;
-
-  document.getElementById('statusOpen').textContent = openTasks;
-  document.getElementById('statusToday').textContent = todayTasks;
-  document.getElementById('statusDone').textContent = doneTasks;
-
-  updateSyncDisplay();
-  updateSummaryStats();
-}
-
-function updateSyncDisplay() {
-  if (!appState.lastSynced) {
-    document.getElementById('statusSynced').textContent = '—';
-    document.getElementById('statLastUpdated').textContent = 'Never';
-  } else {
-    const now = new Date();
-    const synced = new Date(appState.lastSynced);
-    const diffMinutes = Math.floor((now - synced) / 60000);
-
-    let timeStr = 'just now';
-    if (diffMinutes > 0 && diffMinutes < 60) {
-      timeStr = `${diffMinutes}m ago`;
-    } else if (diffMinutes >= 60) {
-      const diffHours = Math.floor(diffMinutes / 60);
-      timeStr = `${diffHours}h ago`;
-    }
-
-    document.getElementById('statusSynced').textContent = timeStr;
-    document.getElementById('statLastUpdated').textContent = timeStr;
-  }
-}
-
-function updateSummaryStats() {
-  const openTasks = appState.tasks.filter(t => t.status === 'open').length;
-  const doneTasks = appState.tasks.filter(t => t.status === 'done').length;
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const nextWeek = new Date(today);
-  nextWeek.setDate(nextWeek.getDate() + 7);
-
-  const dueThisWeek = appState.tasks.filter(t => {
-    if (!t.dueDate || t.status === 'done') return false;
-    const dueDate = new Date(t.dueDate);
-    dueDate.setHours(0, 0, 0, 0);
-    return dueDate >= today && dueDate < nextWeek;
-  }).length;
-
-  document.getElementById('statTotalOpen').textContent = openTasks;
-  document.getElementById('statDueWeek').textContent = dueThisWeek;
-  document.getElementById('statCompleted').textContent = doneTasks;
-}
-
-let dragCatIndex = null;
-
-function renderCategoryTabs() {
-  const container = document.getElementById('categoryTabs');
-  container.innerHTML = '';
-
-  appState.categories.forEach((cat, idx) => {
-    const button = document.createElement('button');
-    button.className = `category-tab ${cat.id === appState.activeCategory ? 'active' : ''}`;
-    button.dataset.categoryId = cat.id;
-    button.draggable = true;
-
-    const count = appState.tasks.filter(t => t.categoryId === cat.id).length;
-    button.innerHTML = `${cat.name} <span class="category-count">(${count})</span>`;
-
-    button.addEventListener('click', () => {
-      appState.activeCategory = cat.id;
-      appState.activeFilter = 'all';
-      renderCategoryTabs();
-      renderTasks();
-      updateFilterButtons();
+  function renderTeam(id,agg,entries){
+    var h='';
+    Object.keys(agg.byUser).sort().forEach(function(u){
+      h+='<div><h3 style="color:#58a6ff;margin-bottom:8px;">'+u+'</h3>';
+      h+='<div class="stat-value" style="font-size:28px;">'+fmt(agg.byUser[u])+' hrs</div>';
+      h+='<div class="stat-label" style="margin-bottom:12px;">'+((agg.byUser[u]/agg.total)*100).toFixed(0)+'% of total</div>';
+      var up={};entries.forEach(function(e){if(e.user===u)up[e.project]=(up[e.project]||0)+e.hours});
+      var sorted=Object.keys(up).sort(function(a,b){return up[b]-up[a]});
+      sorted.forEach(function(p){
+        h+='<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid #21262d;">';
+        h+='<span style="color:'+colorFor(p)+';">'+p+'</span><span style="color:#8b949e;">'+fmt(up[p])+'h</span></div>';
+      });
+      h+='</div>';
     });
-
-    button.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-      showCategoryContextMenu(e, cat.id);
-    });
-
-    // Drag-and-drop
-    button.addEventListener('dragstart', (e) => {
-      dragCatIndex = idx;
-      button.classList.add('dragging');
-      e.dataTransfer.effectAllowed = 'move';
-    });
-    button.addEventListener('dragend', () => {
-      button.classList.remove('dragging');
-      dragCatIndex = null;
-    });
-    button.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      button.classList.add('drag-over');
-    });
-    button.addEventListener('dragleave', () => button.classList.remove('drag-over'));
-    button.addEventListener('drop', (e) => {
-      e.preventDefault();
-      button.classList.remove('drag-over');
-      if (dragCatIndex === null || dragCatIndex === idx) return;
-      const moved = appState.categories.splice(dragCatIndex, 1)[0];
-      appState.categories.splice(idx, 0, moved);
-      saveCategoryOrder();
-      renderCategoryTabs();
-    });
-
-    container.appendChild(button);
-  });
-
-  const addBtn = document.createElement('button');
-  addBtn.className = 'btn-add-category';
-  addBtn.textContent = '+ Category';
-  addBtn.addEventListener('click', showAddCategoryModal);
-  container.appendChild(addBtn);
-}
-
-async function saveCategoryOrder() {
-  for (let i = 0; i < appState.categories.length; i++) {
-    appState.categories[i].sortOrder = i;
-    await sb.from('categories').update({ sort_order: i }).eq('id', appState.categories[i].id);
-  }
-  saveData();
-}
-
-function renderTasks() {
-  const container = document.getElementById('taskList');
-  const emptyState = document.getElementById('emptyState');
-  container.innerHTML = '';
-
-  let filteredTasks = appState.tasks.filter(t => t.categoryId === appState.activeCategory);
-
-  if (appState.activeFilter === 'open') {
-    filteredTasks = filteredTasks.filter(t => t.status === 'open');
-  } else if (appState.activeFilter === 'high') {
-    filteredTasks = filteredTasks.filter(t => t.priority === 'high' && t.status === 'open');
-  } else if (appState.activeFilter === 'done') {
-    filteredTasks = filteredTasks.filter(t => t.status === 'done');
+    $(id).innerHTML=h;
   }
 
-  if (filteredTasks.length === 0) {
-    emptyState.style.display = 'block';
-    return;
-  }
+  function renderFilterTable(filterId,tableId,entries,showDelete){
+    var projects={};entries.forEach(function(e){projects[e.project]=true});
+    var sorted=Object.keys(projects).sort();
+    var fh='<button class="filter-btn active" data-f="all">All</button>';
+    sorted.forEach(function(p){fh+='<button class="filter-btn" data-f="'+p+'" style="border-color:'+colorFor(p)+'">'+p+'</button>'});
+    $(filterId).innerHTML=fh;
 
-  emptyState.style.display = 'none';
+    function render(filter){
+      var tbody=document.querySelector('#'+tableId+' tbody');
+      var rows='';
+      var list=entries.slice().sort(function(a,b){return b.date.localeCompare(a.date)||b.hours-a.hours});
+      list.forEach(function(e){
+        if(filter!=='all'&&e.project!==filter)return;
+        var c=colorFor(e.project);
+        rows+='<tr>';
+        rows+='<td style="white-space:nowrap;">'+e.date+'</td>';
+        if(!showDelete) rows+='<td>'+e.user+'</td>';
+        rows+='<td><span class="tag" style="background:'+c+'22;color:'+c+';border:1px solid '+c+'44;">'+e.project+'</span></td>';
+        rows+='<td style="font-weight:700;color:#58a6ff;">'+parseFloat(e.hours).toFixed(1)+'</td>';
+        if(showDelete) rows+='<td>'+(e.client||'—')+'</td>';
+        rows+='<td style="max-width:300px;">'+(e.desc||e.description||'')+'</td>';
+        if(showDelete) rows+='<td><button class="btn btn-danger btn-sm" data-del="'+e.id+'">✕</button></td>';
+        rows+='</tr>';
+      });
+      tbody.innerHTML=rows||'<tr><td colspan="6" style="text-align:center;color:#8b949e;padding:24px;">No entries yet — add your first shop entry above!</td></tr>';
 
-  filteredTasks.forEach(task => {
-    const row = document.createElement('div');
-    row.className = `task-row ${task.status === 'done' ? 'done' : ''}`;
-    row.dataset.taskId = task.id;
-
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.className = 'task-checkbox';
-    checkbox.checked = task.status === 'done';
-    checkbox.addEventListener('change', async () => {
-      task.status = checkbox.checked ? 'done' : 'open';
-      task.completedAt = checkbox.checked ? new Date().toISOString() : null;
-      if (USE_SUPABASE && currentUser) { await saveTaskToSupabase(task); }
-      saveData();
-      updateStatusBar();
-      renderTasks();
-    });
-
-    const content = document.createElement('div');
-    content.className = 'task-content';
-
-    const title = document.createElement('div');
-    title.className = 'task-title';
-    title.textContent = task.title;
-
-    content.appendChild(title);
-    if (task.notes) {
-      const notes = document.createElement('div');
-      notes.className = 'task-notes';
-      notes.textContent = task.notes;
-      content.appendChild(notes);
-    }
-
-    const meta = document.createElement('div');
-    meta.className = 'task-meta';
-
-    const priorityBadge = document.createElement('span');
-    priorityBadge.className = `priority-badge ${task.priority}`;
-    priorityBadge.textContent = task.priority.charAt(0).toUpperCase() + task.priority.slice(1);
-    meta.appendChild(priorityBadge);
-
-    if (task.dueDate) {
-      const dateSpan = document.createElement('span');
-      dateSpan.className = 'task-date';
-      dateSpan.textContent = formatDate(task.dueDate);
-      meta.appendChild(dateSpan);
-    }
-
-    const actions = document.createElement('div');
-    actions.className = 'task-actions';
-
-    const editBtn = document.createElement('button');
-    editBtn.className = 'btn-task-action';
-    editBtn.textContent = 'Edit';
-    editBtn.addEventListener('click', () => showEditForm(task.id));
-    actions.appendChild(editBtn);
-
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'btn-task-action delete';
-    deleteBtn.textContent = 'Delete';
-    deleteBtn.addEventListener('click', () => confirmDelete(task.id));
-    actions.appendChild(deleteBtn);
-
-    row.appendChild(checkbox);
-    row.appendChild(content);
-    row.appendChild(meta);
-    row.appendChild(actions);
-    container.appendChild(row);
-
-    if (appState.editingTaskId === task.id) {
-      const editForm = createEditForm(task);
-      const formRow = document.createElement('div');
-      formRow.className = 'task-row';
-      formRow.appendChild(editForm);
-      container.appendChild(formRow);
-    }
-  });
-}
-
-function createEditForm(task) {
-  const form = document.createElement('div');
-  form.className = 'task-edit-form';
-
-  const titleGroup = document.createElement('div');
-  titleGroup.className = 'form-group';
-  titleGroup.innerHTML = '<label for="editTitle">Task Title</label>';
-  const titleInput = document.createElement('input');
-  titleInput.type = 'text'; titleInput.id = 'editTitle'; titleInput.value = task.title;
-  titleGroup.appendChild(titleInput);
-  form.appendChild(titleGroup);
-
-  const notesGroup = document.createElement('div');
-  notesGroup.className = 'form-group';
-  notesGroup.innerHTML = '<label for="editNotes">Notes</label>';
-  const notesInput = document.createElement('textarea');
-  notesInput.id = 'editNotes'; notesInput.value = task.notes || '';
-  notesGroup.appendChild(notesInput);
-  form.appendChild(notesGroup);
-
-  const priorityGroup = document.createElement('div');
-  priorityGroup.className = 'form-group';
-  priorityGroup.innerHTML = '<label for="editPriority">Priority</label>';
-  const prioritySelect = document.createElement('select');
-  prioritySelect.id = 'editPriority';
-  ['low', 'medium', 'high'].forEach(p => {
-    const opt = document.createElement('option');
-    opt.value = p; opt.textContent = p.charAt(0).toUpperCase() + p.slice(1);
-    opt.selected = p === task.priority;
-    prioritySelect.appendChild(opt);
-  });
-  priorityGroup.appendChild(prioritySelect);
-  form.appendChild(priorityGroup);
-
-  const dueDateGroup = document.createElement('div');
-  dueDateGroup.className = 'form-group';
-  dueDateGroup.innerHTML = '<label for="editDueDate">Due Date (optional)</label>';
-  const dueDateInput = document.createElement('input');
-  dueDateInput.type = 'date'; dueDateInput.id = 'editDueDate'; dueDateInput.value = task.dueDate || '';
-  dueDateGroup.appendChild(dueDateInput);
-  form.appendChild(dueDateGroup);
-
-  const buttonGroup = document.createElement('div');
-  buttonGroup.className = 'form-buttons';
-
-  const saveBtn = document.createElement('button');
-  saveBtn.className = 'btn-save'; saveBtn.type = 'button'; saveBtn.textContent = 'Save';
-  saveBtn.addEventListener('click', async () => {
-    task.title = titleInput.value || 'Untitled Task';
-    task.notes = notesInput.value;
-    task.priority = prioritySelect.value;
-    task.dueDate = dueDateInput.value || null;
-    appState.editingTaskId = null;
-
-    if (USE_SUPABASE && currentUser) {
-      const saved = await saveTaskToSupabase(task);
-      if (saved && task._isNew) {
-        const idx = appState.tasks.findIndex(t => t.id === task.id);
-        if (idx >= 0) { appState.tasks[idx].id = saved.id; appState.tasks[idx]._isNew = false; }
-      }
-    }
-
-    saveData(); updateStatusBar(); renderTasks();
-  });
-  buttonGroup.appendChild(saveBtn);
-
-  const cancelBtn = document.createElement('button');
-  cancelBtn.className = 'btn-cancel'; cancelBtn.type = 'button'; cancelBtn.textContent = 'Cancel';
-  cancelBtn.addEventListener('click', () => { appState.editingTaskId = null; renderTasks(); });
-  buttonGroup.appendChild(cancelBtn);
-
-  form.appendChild(buttonGroup);
-  return form;
-}
-
-function showEditForm(taskId) { appState.editingTaskId = taskId; renderTasks(); }
-
-function confirmDelete(taskId) {
-  const task = appState.tasks.find(t => t.id === taskId);
-  if (!task) return;
-  showConfirmModal('Delete Task',
-    `Are you sure you want to delete "${task.title}"? This cannot be undone.`,
-    async () => {
-      if (USE_SUPABASE && currentUser) { await deleteTaskFromSupabase(taskId); }
-      appState.tasks = appState.tasks.filter(t => t.id !== taskId);
-      saveData(); updateStatusBar(); renderTasks();
-    }
-  );
-}
-
-// ===== MODAL & FORM HANDLERS =====
-function showConfirmModal(title, message, onConfirm) {
-  const modal = document.getElementById('confirmModal');
-  document.getElementById('confirmTitle').textContent = title;
-  document.getElementById('confirmMessage').textContent = message;
-  document.getElementById('btnConfirmCancel').onclick = () => { modal.classList.remove('active'); };
-  document.getElementById('btnConfirmOK').onclick = () => { modal.classList.remove('active'); onConfirm(); };
-  modal.classList.add('active');
-}
-
-function showAddCategoryModal() {
-  const modal = document.getElementById('categoryModal');
-  document.getElementById('categoryModalTitle').textContent = 'Add Category';
-  document.getElementById('categoryName').value = '';
-  document.getElementById('categoryColor').value = '#58a6ff';
-  document.getElementById('colorValue').textContent = '#58a6ff';
-
-  const form = document.getElementById('categoryForm');
-  form.onsubmit = async (e) => {
-    e.preventDefault();
-    const name = document.getElementById('categoryName').value.trim();
-    const color = document.getElementById('categoryColor').value;
-    if (!name) return;
-
-    const newCategory = { name, color, sortOrder: appState.categories.length + 1, _isNew: true };
-
-    if (USE_SUPABASE && currentUser) {
-      const saved = await saveCategoryToSupabase(newCategory);
-      if (saved) {
-        appState.categories.push({
-          id: saved.id, name: saved.name, color: saved.color,
-          sortOrder: saved.sort_order, ownerId: saved.owner_id
+      if(showDelete){
+        tbody.querySelectorAll('[data-del]').forEach(function(btn){
+          btn.addEventListener('click',async function(){
+            if(!confirm('Delete this entry?'))return;
+            await sb.from('shop_timesheet').delete().eq('id',btn.dataset.del);
+            loadShop();
+          });
         });
       }
-    } else {
-      newCategory.id = appState.nextId++;
-      appState.categories.push(newCategory);
     }
-
-    saveData(); renderCategoryTabs(); modal.classList.remove('active');
-  };
-
-  document.getElementById('btnCategoryCancel').onclick = () => { modal.classList.remove('active'); };
-  document.getElementById('categoryColor').addEventListener('input', (e) => {
-    document.getElementById('colorValue').textContent = e.target.value;
-  });
-
-  modal.classList.add('active');
-  document.getElementById('categoryName').focus();
-}
-
-function showCategoryContextMenu(e, categoryId) {
-  const menu = document.getElementById('contextMenu');
-  menu.style.left = e.clientX + 'px';
-  menu.style.top = e.clientY + 'px';
-  menu.classList.add('active');
-
-  const category = appState.categories.find(c => c.id === categoryId);
-  if (!category) return;
-
-  document.getElementById('contextRename').onclick = async () => {
-    menu.classList.remove('active');
-    const newName = prompt('Rename category:', category.name);
-    if (newName && newName.trim()) {
-      category.name = newName.trim();
-      if (USE_SUPABASE && currentUser) { await saveCategoryToSupabase(category); }
-      saveData(); renderCategoryTabs();
-    }
-  };
-
-  document.getElementById('contextColor').onclick = async () => {
-    menu.classList.remove('active');
-    const picker = document.createElement('input');
-    picker.type = 'color';
-    picker.value = category.color || '#58a6ff';
-    picker.style.position = 'fixed';
-    picker.style.opacity = '0';
-    document.body.appendChild(picker);
-    picker.addEventListener('input', async () => {
-      category.color = picker.value;
-      if (USE_SUPABASE && currentUser) { await saveCategoryToSupabase(category); }
-      saveData(); renderCategoryTabs();
+    render('all');
+    $(filterId).addEventListener('click',function(ev){
+      if(!ev.target.classList.contains('filter-btn'))return;
+      document.querySelectorAll('#'+filterId+' .filter-btn').forEach(function(b){b.classList.remove('active')});
+      ev.target.classList.add('active');
+      render(ev.target.dataset.f);
     });
-    picker.addEventListener('change', () => picker.remove());
-    picker.click();
-  };
-
-  document.getElementById('contextDelete').onclick = () => {
-    menu.classList.remove('active');
-    showConfirmModal('Delete Category',
-      `Delete "${category.name}"? All tasks in this category will be deleted.`,
-      async () => {
-        if (USE_SUPABASE && currentUser) { await deleteCategoryFromSupabase(categoryId); }
-        appState.categories = appState.categories.filter(c => c.id !== categoryId);
-        appState.tasks = appState.tasks.filter(t => t.categoryId !== categoryId);
-        if (appState.activeCategory === categoryId) {
-          appState.activeCategory = appState.categories[0]?.id || null;
-        }
-        saveData(); updateStatusBar(); renderCategoryTabs(); renderTasks();
-      }
-    );
-  };
-
-  document.addEventListener('click', (e) => {
-    if (e.target !== menu && !menu.contains(e.target)) { menu.classList.remove('active'); }
-  }, { once: true });
-}
-
-function updateFilterButtons() {
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    const filter = btn.dataset.filter;
-    btn.classList.toggle('active', filter === appState.activeFilter);
-  });
-}
-
-// ===== AUTH-GUARDED BOOT =====
-let authResolved = false;
-
-async function bootDashboard(session) {
-  if (authResolved) return;
-  authResolved = true;
-
-  const profile = await loadUserProfile(session.user.id, session.user.email);
-  currentUser = {
-    id: session.user.id,
-    email: session.user.email,
-    display_name: profile?.display_name || session.user.email.split('@')[0],
-    role: profile?.role || 'viewer'
-  };
-  showUserInfo();
-  unlockApp();
-  await initializeData();
-  await loadNavLinks();
-  updateHeaderDate();
-  updateStatusBar();
-  renderCategoryTabs();
-  renderTasks();
-  renderNavLinks();
-  subscribeToRealtime();
-}
-
-// ===== EVENT LISTENERS =====
-document.addEventListener('DOMContentLoaded', async () => {
-  updateHeaderDate();
-
-  // FIX: Don't redirect on first null session — Supabase needs time to restore from localStorage
-  // Don't use await inside onAuthStateChange (can deadlock with Supabase internal locks)
-  sb.auth.onAuthStateChange((event, session) => {
-    if (session?.user) {
-      bootDashboard(session);  // no await — prevents deadlock
-    } else if (event === 'SIGNED_OUT') {
-      window.location.href = 'index.html';
-    }
-    // INITIAL_SESSION with null session = not logged in yet, but don't redirect immediately
-  });
-
-  // Actively check for existing session (belt-and-suspenders with onAuthStateChange)
-  const { data: { session: existingSession } } = await sb.auth.getSession();
-  if (existingSession?.user) {
-    bootDashboard(existingSession);
-  } else {
-    // No session found yet — give Supabase 2 seconds to restore, then redirect if still nothing
-    setTimeout(async () => {
-      if (authResolved) return;
-      const { data: { session: retrySession } } = await sb.auth.getSession();
-      if (retrySession?.user) {
-        bootDashboard(retrySession);
-      } else {
-        window.location.href = 'index.html';
-      }
-    }, 2000);
   }
 
-  // Filter buttons
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      appState.activeFilter = btn.dataset.filter;
-      updateFilterButtons();
-      renderTasks();
+  // ── FORGE TAB ──
+  var forgeAgg=aggregate(FORGE_LOG);
+  renderStats('forgeStats',forgeAgg);
+  renderBars('forgeBars',forgeAgg);
+  renderChart('forgeChart',forgeAgg);
+  renderFilterTable('forgeFilter','forgeTable',FORGE_LOG,false);
+
+  // ── SHOP TAB — load from Supabase ──
+  async function loadShop(){
+    var {data,error}=await sb.from('shop_timesheet').select('*').order('date',{ascending:false});
+    if(error){console.error(error);return}
+    shopEntries=data.map(function(r){
+      return {id:r.id,date:r.date,user:r.user_name,project:r.project,hours:parseFloat(r.hours),client:r.client,desc:r.description};
     });
+
+    var shopAgg=aggregate(shopEntries);
+    renderStats('shopStats',shopAgg);
+    renderBars('shopBars',shopAgg);
+    renderFilterTable('shopFilter','shopTable',shopEntries,true);
+    renderOverview();
+  }
+
+  function renderOverview(){
+    var combined=FORGE_LOG.map(function(e){return {date:e.date,user:e.user,project:e.project,hours:e.hours,desc:e.desc}})
+      .concat(shopEntries.map(function(e){return {date:e.date,user:e.user,project:e.project,hours:e.hours,desc:e.desc}}));
+    var allAgg=aggregate(combined);
+    renderStats('overviewStats',allAgg);
+    renderProgress('overviewProgress',allAgg);
+    renderBars('overviewBars',allAgg);
+    renderChart('overviewChart',allAgg);
+    renderTeam('overviewTeam',allAgg,combined);
+  }
+
+  // ── Add shop entry ──
+  $('shopAdd').addEventListener('click',async function(){
+    var date=$('shopDate').value;
+    var project=$('shopProject').value;
+    var hours=parseFloat($('shopHours').value);
+    var client=$('shopClient').value.trim();
+    var desc=$('shopDesc').value.trim();
+
+    if(!date||!project||!hours||hours<=0){
+      var msg=$('shopFormMsg');
+      msg.textContent='Please fill in date, project, and hours.';
+      msg.style.color='#f85149';msg.style.display='block';
+      setTimeout(function(){msg.style.display='none'},3000);
+      return;
+    }
+
+    var {error}=await sb.from('shop_timesheet').insert({
+      date:date,user_name:'Alessio',project:project,hours:hours,client:client||null,description:desc||null
+    });
+
+    if(error){console.error(error);return}
+
+    var msg=$('shopFormMsg');
+    msg.textContent='✓ Logged '+hours+'h to '+project;
+    msg.style.color='#3fb950';msg.style.display='block';
+    setTimeout(function(){msg.style.display='none'},3000);
+
+    $('shopHours').value='';
+    $('shopClient').value='';
+    $('shopDesc').value='';
+    $('shopDate').valueAsDate=new Date();
+
+    loadShop();
   });
 
-  // Add task button
-  document.getElementById('btnAddTask').addEventListener('click', () => {
-    const tempId = 'temp-' + Date.now();
-    const newTask = {
-      id: tempId, categoryId: appState.activeCategory,
-      title: '', notes: '', priority: 'medium', status: 'open',
-      dueDate: null, createdAt: new Date().toISOString(),
-      completedAt: null, _isNew: true
-    };
-    appState.tasks.push(newTask);
-    appState.editingTaskId = tempId;
-    saveData(); renderTasks(); updateStatusBar();
-  });
+  // ── Initial load ──
+  loadShop();
 
-  // Update sync display periodically
-  setInterval(updateSyncDisplay, 60000);
-});
+})();
 
-// Close modals on outside click
-document.getElementById('confirmModal').addEventListener('click', (e) => {
-  if (e.target.id === 'confirmModal') { e.target.classList.remove('active'); }
-});
-
-document.getElementById('categoryModal').addEventListener('click', (e) => {
-  if (e.target.id === 'categoryModal') { e.target.classList.remove('active'); }
-});
-
-document.addEventListener('click', (e) => {
-  const menu = document.getElementById('contextMenu');
-  if (!menu.contains(e.target)) { menu.classList.remove('active'); }
-});
+/* === TAB SWITCHING — EXACT match to usage.html === */
+function showTab(name,btn){
+  document.querySelectorAll('.tab-content').forEach(function(el){el.classList.remove('active')});
+  document.querySelectorAll('.tab-btn').forEach(function(el){el.classList.remove('active')});
+  document.getElementById('tab-'+name).classList.add('active');
+  if(btn)btn.classList.add('active');
+  window.dispatchEvent(new Event('resize'));
+}
 </script>
 </body>
 </html>
