@@ -258,6 +258,7 @@
     var bar = el('div', { cls: 'cc-statsbar', attrs: { id: 'cc-statsbar' } });
     updateStatsContent(bar, stats);
     var anchor = $('.cc-subtabs') || $('.cc-quickview') || $('.cc-banner');
+    if (!anchor || !anchor.parentNode) return;  // shell not ready yet — skip; next updateStats call will retry
     anchor.parentNode.insertBefore(bar, anchor.nextSibling);
   }
   function updateStatsContent(bar, stats) {
