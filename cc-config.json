@@ -1,0 +1,29 @@
+{
+  "_comment": "Command Centre global config. Editable. Changes propagate on next page load. Users can drag-reorder nav in the UI — that override is stored per-browser in localStorage['cc.navOrder.v1']. To force-reset nav to this JSON default, user clicks the reset button in the banner (or clears localStorage).",
+  "_version": "1.0",
+  "_updated": "2026-04-17",
+
+  "brand": {
+    "text": "AZCK",
+    "sub": "Command Centre",
+    "link": "alessio.html"
+  },
+
+  "nav": [
+    { "id": "tasks",     "label": "Tasks",     "href": "alessio.html",            "icon": "\u2713" },
+    { "id": "shared",    "label": "Shared",    "href": "shared.html",             "icon": "\u2609" },
+    { "id": "timesheet", "label": "Timesheet", "href": "timesheet.html",          "icon": "\u231A" },
+    { "id": "forge",     "label": "Forge",     "href": "forge.html",              "icon": "\u2692" },
+    { "id": "roadmap",   "label": "Roadmap",   "href": "roadmap.html",            "icon": "\u25B2" },
+    { "id": "usage",     "label": "Usage",     "href": "usage.html",              "icon": "\u25CE" },
+    { "id": "network",   "label": "Network",   "href": "network.html",            "icon": "\u25CB" },
+    { "id": "guide",     "label": "Guide",     "href": "claude-usage-guide.html", "icon": "\u272A" }
+  ],
+
+  "quickview": [
+    { "icon": "\uD83D\uDCB0", "label": "Budget",  "value": "$26 CAD left",            "link": "usage.html" },
+    { "icon": "\uD83D\uDCC5", "label": "Next",    "value": "Terra Machine \u00B7 Apr 24", "link": "https://calendar.google.com/" },
+    { "icon": "\u2709\uFE0F",  "label": "Message", "value": "Alessio \u2192 Reanna pending" },
+    { "icon": "\uD83D\uDD25",  "label": "Sprint",  "value": "4 knives due Apr 22",     "link": "alessio.html" }
+  ]
+}
