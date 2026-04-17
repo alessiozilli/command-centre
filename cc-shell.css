@@ -1,0 +1,424 @@
+/* ═══════════════════════════════════════════════════════════════
+   cc-shell.css — AZCK Command Centre unified shell
+   v1.0 — 2026-04-17 (Forge v0.9.5 The Operator)
+
+   Design tokens + layout for all CC pages. Pages load this file
+   and get the header/quickview/subtabs/statsbar/content layout
+   automatically. No per-page theme overrides.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── 1. DESIGN TOKENS ─── */
+:root {
+  /* Backgrounds */
+  --cc-bg:          #0d1117;
+  --cc-bg-card:     #161b22;
+  --cc-bg-raised:   #21262d;
+  --cc-bg-hover:    #1c2128;
+
+  /* Borders */
+  --cc-border:      #30363d;
+  --cc-border-soft: #21262d;
+
+  /* Text */
+  --cc-text:        #e6edf3;
+  --cc-text-body:   #c9d1d9;
+  --cc-text-muted:  #8b949e;
+  --cc-text-dim:    #484f58;
+
+  /* Accents (semantic) */
+  --cc-accent:      #58a6ff;   /* primary blue */
+  --cc-success:     #3fb950;   /* green */
+  --cc-warn:        #d29922;   /* yellow/amber */
+  --cc-danger:      #f85149;   /* red */
+  --cc-magenta:     #bc8cff;   /* purple */
+  --cc-orange:      #f0883e;
+  --cc-pink:        #f778ba;
+
+  /* AZCK brand (for occasional accent use) */
+  --cc-azck-red:    #990000;
+  --cc-azck-gray:   #78909C;
+
+  /* Typography */
+  --cc-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --cc-font-mono: 'SF Mono', Consolas, Menlo, monospace;
+
+  /* Spacing scale */
+  --cc-pad-xs: 4px;
+  --cc-pad-sm: 8px;
+  --cc-pad-md: 16px;
+  --cc-pad-lg: 24px;
+  --cc-pad-xl: 32px;
+
+  /* Radii */
+  --cc-r-sm: 6px;
+  --cc-r-md: 8px;
+  --cc-r-lg: 12px;
+  --cc-r-pill: 20px;
+
+  /* Transitions */
+  --cc-t-fast: 0.15s ease;
+  --cc-t-smooth: 0.25s ease;
+
+  /* Shell sticky z-indices */
+  --cc-z-banner: 100;
+  --cc-z-quickview: 99;
+  --cc-z-subtabs: 98;
+
+  /* Max content width */
+  --cc-max-w: 1200px;
+}
+
+/* ─── 2. GLOBAL RESET + BODY ─── */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  background: var(--cc-bg);
+  color: var(--cc-text);
+  font-family: var(--cc-font);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a { color: var(--cc-accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ─── 3. LEVEL 1 — BANNER + MAIN NAV (sticky top) ─── */
+.cc-banner {
+  position: sticky;
+  top: 0;
+  z-index: var(--cc-z-banner);
+  background: var(--cc-bg);
+  border-bottom: 1px solid var(--cc-border);
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.cc-brand {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--cc-accent);
+  letter-spacing: 0.5px;
+  padding: 4px 12px;
+  border: 1px solid var(--cc-border);
+  border-radius: var(--cc-r-sm);
+  flex-shrink: 0;
+  white-space: nowrap;
+  user-select: none;
+}
+.cc-brand .cc-brand-sub {
+  color: var(--cc-text-muted);
+  font-weight: 500;
+  font-size: 12px;
+  margin-left: 6px;
+}
+.cc-nav {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 1;
+  min-width: 0;
+}
+.cc-nav a {
+  background: var(--cc-bg-raised);
+  border: 1px solid var(--cc-border);
+  color: var(--cc-text-muted);
+  padding: 7px 18px;
+  border-radius: var(--cc-r-pill);
+  font-size: 14px;
+  font-weight: 600;
+  transition: all var(--cc-t-fast);
+  cursor: grab;
+  user-select: none;
+  white-space: nowrap;
+}
+.cc-nav a:hover {
+  color: var(--cc-text);
+  background: var(--cc-border);
+  text-decoration: none;
+}
+.cc-nav a.active {
+  background: var(--cc-accent);
+  color: var(--cc-bg);
+  border-color: var(--cc-accent);
+}
+.cc-nav a.dragging {
+  opacity: 0.4;
+  cursor: grabbing;
+}
+.cc-nav a.drop-before { box-shadow: -3px 0 0 var(--cc-accent); }
+.cc-nav a.drop-after  { box-shadow:  3px 0 0 var(--cc-accent); }
+
+.cc-banner-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.cc-banner-actions button {
+  background: transparent;
+  border: 1px solid var(--cc-border);
+  color: var(--cc-text-muted);
+  padding: 5px 10px;
+  border-radius: var(--cc-r-sm);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--cc-t-fast);
+}
+.cc-banner-actions button:hover {
+  color: var(--cc-text);
+  border-color: var(--cc-text-muted);
+}
+
+/* ─── 4. LEVEL 2 — QUICKVIEW STRIP ─── */
+.cc-quickview {
+  position: sticky;
+  top: 48px;  /* below banner */
+  z-index: var(--cc-z-quickview);
+  background: var(--cc-bg-card);
+  border-bottom: 1px solid var(--cc-border);
+  padding: 8px 24px;
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  font-size: 13px;
+}
+.cc-quickview::-webkit-scrollbar { height: 4px; }
+.cc-quickview::-webkit-scrollbar-thumb { background: var(--cc-border); border-radius: 2px; }
+.cc-qv-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--cc-text-body);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.cc-qv-item .cc-qv-icon { font-size: 14px; }
+.cc-qv-item .cc-qv-label {
+  color: var(--cc-text-muted);
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.cc-qv-item .cc-qv-value {
+  color: var(--cc-text);
+  font-weight: 600;
+}
+.cc-qv-item a.cc-qv-value:hover { color: var(--cc-accent); }
+.cc-qv-item + .cc-qv-item::before {
+  content: '·';
+  color: var(--cc-text-dim);
+  margin-right: 12px;
+}
+
+/* ─── 5. LEVEL 3 — SUB-TABS (per page, drag-reorder) ─── */
+.cc-subtabs {
+  position: sticky;
+  top: 86px;  /* below banner + quickview */
+  z-index: var(--cc-z-subtabs);
+  background: var(--cc-bg);
+  padding: 12px 24px 0;
+  border-bottom: 1px solid var(--cc-border-soft);
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  overflow-x: auto;
+}
+.cc-subtab {
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: none;
+  color: var(--cc-text-muted);
+  padding: 8px 18px;
+  border-radius: var(--cc-r-md) var(--cc-r-md) 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: grab;
+  transition: all var(--cc-t-fast);
+  user-select: none;
+  white-space: nowrap;
+}
+.cc-subtab:hover {
+  color: var(--cc-text);
+  background: var(--cc-bg-card);
+}
+.cc-subtab.active {
+  color: var(--cc-accent);
+  background: var(--cc-bg-card);
+  border-color: var(--cc-border);
+}
+.cc-subtab.dragging { opacity: 0.4; cursor: grabbing; }
+.cc-subtab.drop-before { box-shadow: -3px 0 0 var(--cc-accent); }
+.cc-subtab.drop-after  { box-shadow:  3px 0 0 var(--cc-accent); }
+
+/* ─── 6. LEVEL 4 — STATS BAR ─── */
+.cc-statsbar {
+  background: var(--cc-bg-card);
+  border-bottom: 1px solid var(--cc-border);
+  padding: 10px 24px;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+.cc-stat {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  color: var(--cc-text-muted);
+  white-space: nowrap;
+}
+.cc-stat .cc-stat-label {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 11px;
+}
+.cc-stat .cc-stat-value {
+  color: var(--cc-text);
+  font-weight: 700;
+  font-size: 14px;
+}
+.cc-stat.cc-stat-success .cc-stat-value { color: var(--cc-success); }
+.cc-stat.cc-stat-warn    .cc-stat-value { color: var(--cc-warn); }
+.cc-stat.cc-stat-danger  .cc-stat-value { color: var(--cc-danger); }
+.cc-stat.cc-stat-muted   .cc-stat-value { color: var(--cc-text-muted); }
+
+/* ─── 7. LEVEL 5 — CONTENT AREA ─── */
+.cc-content {
+  max-width: var(--cc-max-w);
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.cc-page-header {
+  margin-bottom: 24px;
+}
+.cc-page-header h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--cc-accent);
+  margin-bottom: 4px;
+}
+.cc-page-header .cc-page-sub {
+  font-size: 14px;
+  color: var(--cc-text-muted);
+}
+
+.cc-view-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.cc-view-modes {
+  display: flex;
+  gap: 4px;
+  background: var(--cc-bg-card);
+  padding: 4px;
+  border-radius: var(--cc-r-md);
+  border: 1px solid var(--cc-border);
+}
+.cc-view-modes button {
+  background: transparent;
+  border: none;
+  color: var(--cc-text-muted);
+  padding: 6px 14px;
+  border-radius: var(--cc-r-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--cc-t-fast);
+}
+.cc-view-modes button:hover { color: var(--cc-text); }
+.cc-view-modes button.active {
+  background: var(--cc-accent);
+  color: var(--cc-bg);
+}
+
+.cc-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.cc-btn {
+  background: var(--cc-bg-raised);
+  border: 1px solid var(--cc-border);
+  color: var(--cc-text);
+  padding: 7px 14px;
+  border-radius: var(--cc-r-md);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--cc-t-fast);
+}
+.cc-btn:hover { background: var(--cc-border); }
+.cc-btn-primary {
+  background: var(--cc-accent);
+  color: var(--cc-bg);
+  border-color: var(--cc-accent);
+}
+.cc-btn-primary:hover {
+  background: #79c0ff;
+  border-color: #79c0ff;
+}
+
+/* Card — generic container */
+.cc-card {
+  background: var(--cc-bg-card);
+  border: 1px solid var(--cc-border);
+  border-radius: var(--cc-r-lg);
+  padding: var(--cc-pad-lg);
+  margin-bottom: var(--cc-pad-md);
+}
+
+/* Inline-edit affordance (task pages) */
+.cc-editable {
+  cursor: text;
+  padding: 2px 4px;
+  border-radius: 3px;
+  transition: background var(--cc-t-fast);
+}
+.cc-editable:hover {
+  background: var(--cc-bg-raised);
+  outline: 1px solid var(--cc-border);
+}
+.cc-editable:focus {
+  outline: 2px solid var(--cc-accent);
+  background: var(--cc-bg);
+}
+
+/* Typography defaults for content */
+.cc-content h1 { font-size: 32px; color: var(--cc-accent); margin-bottom: 4px; }
+.cc-content h2 { font-size: 22px; color: var(--cc-accent); margin: 32px 0 16px; }
+.cc-content h3 { font-size: 17px; color: var(--cc-text); margin: 20px 0 10px; }
+.cc-content p  { margin-bottom: 14px; color: var(--cc-text-body); }
+.cc-content ul { margin: 8px 0 14px 24px; color: var(--cc-text-body); }
+.cc-content ul li { margin-bottom: 4px; }
+
+/* ─── 8. RESPONSIVE ─── */
+@media (max-width: 768px) {
+  .cc-banner { padding: 8px 14px; gap: 10px; flex-wrap: wrap; }
+  .cc-brand  { font-size: 13px; padding: 3px 10px; }
+  .cc-nav a  { padding: 5px 12px; font-size: 13px; }
+  .cc-quickview { padding: 6px 14px; gap: 14px; }
+  .cc-subtabs   { padding: 10px 14px 0; top: auto; position: static; }
+  .cc-statsbar  { padding: 8px 14px; gap: 14px; }
+  .cc-content   { padding: 16px 14px; }
+  .cc-content h1 { font-size: 24px; }
+  .cc-view-toolbar { flex-direction: column; align-items: stretch; }
+}
+
+/* ─── 9. UTILITIES ─── */
+.cc-hidden { display: none !important; }
+.cc-muted  { color: var(--cc-text-muted); }
+.cc-mono   { font-family: var(--cc-font-mono); }
+.cc-flex   { display: flex; gap: 8px; align-items: center; }
+.cc-right  { margin-left: auto; }
+
+/* ═══ END cc-shell.css ═══ */
