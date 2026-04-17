@@ -3,33 +3,35 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://twrlvnfszohyrmivdhre.supabase.co wss://twrlvnfszohyrmivdhre.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:;">
 <title>AZCK Timesheet — Command Centre</title>
+<link rel="stylesheet" href="cc-shell.css">
+<script>
+  window.PAGE = {
+    id: 'timesheet',
+    title: 'AZCK Timesheet',
+    subtitle: 'All project hours — Forge sessions + Shop work. Updated every Save All + manual entries.',
+    subtabs: [
+      { id: 'overview', label: 'Overview' },
+      { id: 'forge',    label: 'Forge Log' },
+      { id: 'shop',     label: 'Shop Log' }
+    ],
+    stats: []
+  };
+</script>
+<script src="cc-shell.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0d1117;color:#e6edf3;padding:24px;max-width:1200px;margin:0 auto}
-h1{font-size:32px;font-weight:700;color:#58a6ff;margin-bottom:4px}
-h2{font-size:22px;font-weight:700;color:#58a6ff;margin:32px 0 16px}
-h3{font-size:17px;font-weight:600;color:#e6edf3;margin:20px 0 10px}
-.subtitle{font-size:14px;color:#8b949e;margin-bottom:32px}
-.highlight{color:#58a6ff;font-weight:600}
-.warn{color:#d29922;font-weight:600}
-.danger{color:#f85149;font-weight:600}
-.green{color:#3fb950;font-weight:600}
-.card{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:24px;margin-bottom:20px}
-.back-link{display:inline-block;margin-bottom:20px;color:#58a6ff;text-decoration:none;font-size:13px}
-.back-link:hover{text-decoration:underline}
+/* Layout + typography come from cc-shell.css. Page-specific styling only. */
+h2 { margin: 32px 0 16px; }
+.highlight{color:var(--cc-accent);font-weight:600}
+.warn{color:var(--cc-warn);font-weight:600}
+.danger{color:var(--cc-danger);font-weight:600}
+.green{color:var(--cc-success);font-weight:600}
+.card{background:var(--cc-bg-card);border:1px solid var(--cc-border);border-radius:var(--cc-r-lg);padding:24px;margin-bottom:20px}
 
-/* Tabs — EXACT match to usage.html */
-.tab-bar{display:flex;gap:4px;margin-bottom:24px;flex-wrap:wrap}
-.tab-btn{background:#21262d;border:1px solid #30363d;color:#8b949e;padding:8px 18px;border-radius:8px 8px 0 0;cursor:pointer;font-size:14px;font-weight:600;transition:all 0.2s}
-.tab-btn:hover{color:#e6edf3;background:#161b22}
-.tab-btn.active{background:#161b22;color:#58a6ff;border-bottom-color:#161b22}
-.tab-content{display:none}.tab-content.active{display:block}
-
-/* Stats — EXACT match to usage.html */
+/* Stats — match cc-shell visual idiom */
 .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;margin-bottom:20px}
 .stat-box{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:16px;text-align:center}
 .stat-value{font-size:28px;font-weight:700;color:#58a6ff}
@@ -84,36 +86,13 @@ tr:hover td{background:#1c2128}
 
 /* Responsive */
 @media(max-width:768px){
-  body{padding:12px}
   .stat-grid{grid-template-columns:1fr 1fr}
   .form-row{grid-template-columns:1fr 1fr}
   .team-grid{grid-template-columns:1fr}
-  h1{font-size:24px}
-  .tab-btn{padding:6px 12px;font-size:13px}
 }
-.pill-nav{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
-.pill-nav a{background:#21262d;border:1px solid #30363d;color:#8b949e;padding:7px 18px;border-radius:20px;text-decoration:none;font-size:14px;font-weight:600;transition:all 0.2s}
-.pill-nav a:hover{color:#e6edf3;background:#30363d}
-.pill-nav a.active{background:#58a6ff;color:#0d1117;border-color:#58a6ff}
 </style>
 </head>
 <body>
-
-<nav class="pill-nav" id="pillNav">
-    <a href="alessio.html">Tasks</a>
-    <a href="timesheet.html" class="active">Timesheet</a>
-    <a href="forge.html">Forge</a>
-    <a href="usage.html">Usage</a>
-    <a href="network.html">Network</a>
-</nav>
-<h1>AZCK Timesheet</h1>
-<p class="subtitle">All project hours — Forge sessions + Shop work. Updated every Save All + manual entries.</p>
-
-<div class="tab-bar">
-  <button class="tab-btn active" onclick="showTab('overview',this)">Overview</button>
-  <button class="tab-btn" onclick="showTab('forge',this)">Forge Log</button>
-  <button class="tab-btn" onclick="showTab('shop',this)">Shop Log</button>
-</div>
 
 <!-- ═══════════════════════════════════════════════════════════════
      DATA BLOCK — UPDATE THIS SECTION ONLY (Forge auto-logged entries)
@@ -247,7 +226,7 @@ var FORGE_LOG = [
   var H='';
 
   // ═══ TAB: OVERVIEW ═══
-  H+='<div id="tab-overview" class="tab-content active">';
+  H+='<div id="tab-overview" data-subtab="overview">';
   H+='<div class="stat-grid" id="overviewStats"></div>';
   H+='<div class="card" id="overviewProgress"></div>';
   H+='<h2>Hours by Project — All Sources</h2>';
@@ -259,7 +238,7 @@ var FORGE_LOG = [
   H+='</div>';
 
   // ═══ TAB: FORGE LOG ═══
-  H+='<div id="tab-forge" class="tab-content">';
+  H+='<div id="tab-forge" data-subtab="forge">';
   H+='<div class="stat-grid" id="forgeStats"></div>';
   H+='<h2>Forge Hours by Project</h2>';
   H+='<div class="card" id="forgeBars"></div>';
@@ -273,7 +252,7 @@ var FORGE_LOG = [
   H+='</div>';
 
   // ═══ TAB: SHOP LOG ═══
-  H+='<div id="tab-shop" class="tab-content">';
+  H+='<div id="tab-shop" data-subtab="shop">';
   H+='<h2>Log Shop Time</h2>';
   H+='<div class="card">';
   H+='<div class="form-row">';
@@ -493,15 +472,7 @@ var FORGE_LOG = [
   loadShop();
 
 })();
-
-/* === TAB SWITCHING — EXACT match to usage.html === */
-function showTab(name,btn){
-  document.querySelectorAll('.tab-content').forEach(function(el){el.classList.remove('active')});
-  document.querySelectorAll('.tab-btn').forEach(function(el){el.classList.remove('active')});
-  document.getElementById('tab-'+name).classList.add('active');
-  if(btn)btn.classList.add('active');
-  window.dispatchEvent(new Event('resize'));
-}
+/* Tab switching is handled by cc-shell.js via [data-subtab] — no page-level logic needed. */
 </script>
 </body>
 </html>
