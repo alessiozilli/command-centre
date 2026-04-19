@@ -98,4 +98,163 @@
   </div>
 
   <div class="ap-note">
-    <strong>How to use:</strong> Flip the toggle to mark a site as approved in your Claude for Chrome extension. Toggle state is saved locally. Use "Copy Pending Only" to get a clean list of s
+    <strong>How to use:</strong> Flip the toggle to mark a site as approved in your Claude for Chrome extension. Toggle state is saved locally. Use "Copy Pending Only" to get a clean list of sites still needing approval.
+  </div>
+</main>
+
+<div id="ap-toast" class="ap-toast">Copied</div>
+
+<script>
+window.PAGE = {
+  id: 'access',
+  title: 'Access',
+  subtabs: []
+};
+
+var ACCESS_DATA = {
+  sites: [
+    {"domain":"azcustomknives.com","tier":1,"purpose":"AZCK main site (GitHub Pages)","defaultApproved":false},
+    {"domain":"www.azcustomknives.com","tier":1,"purpose":"AZCK main site (www)","defaultApproved":false},
+    {"domain":"shop.azcustomknives.com","tier":1,"purpose":"AZCK Wix shop","defaultApproved":false},
+    {"domain":"command.azcustomknives.com","tier":1,"purpose":"Command Centre (GitHub Pages)","defaultApproved":false},
+    {"domain":"quadfang.com","tier":1,"purpose":"QuadFang broadheads (Shopify)","defaultApproved":false},
+    {"domain":"www.quadfang.com","tier":1,"purpose":"QuadFang broadheads (www)","defaultApproved":false},
+    {"domain":"rl-command-centre.netlify.app","tier":1,"purpose":"Reanna's Command Centre","defaultApproved":false},
+
+    {"domain":"manage.wix.com","tier":2,"purpose":"Wix store admin","defaultApproved":true},
+    {"domain":"github.com","tier":2,"purpose":"GitHub web interface","defaultApproved":true},
+    {"domain":"github.dev","tier":2,"purpose":"GitHub web editor","defaultApproved":true},
+    {"domain":"raw.githubusercontent.com","tier":2,"purpose":"Raw file access from GitHub","defaultApproved":true},
+    {"domain":"supabase.com","tier":2,"purpose":"Supabase backend","defaultApproved":true},
+    {"domain":"az-command-centre.netlify.app","tier":2,"purpose":"Alessio Command Centre (Netlify)","defaultApproved":true},
+    {"domain":"azcontrolcenter.netlify.app","tier":2,"purpose":"AZ Control Centre (legacy)","defaultApproved":true},
+
+    {"domain":"admin.shopify.com","tier":3,"purpose":"Shopify admin (QuadFang store)","defaultApproved":false},
+    {"domain":"accounts.shopify.com","tier":3,"purpose":"Shopify account/billing","defaultApproved":false},
+    {"domain":"mail.google.com","tier":3,"purpose":"Gmail web (admin@ + alessio@)","defaultApproved":false},
+    {"domain":"admin.google.com","tier":3,"purpose":"Google Workspace admin","defaultApproved":false},
+    {"domain":"drive.google.com","tier":3,"purpose":"Google Drive","defaultApproved":false},
+    {"domain":"docs.google.com","tier":3,"purpose":"Google Docs","defaultApproved":false},
+    {"domain":"sheets.google.com","tier":3,"purpose":"Google Sheets","defaultApproved":false},
+    {"domain":"calendar.google.com","tier":3,"purpose":"Google Calendar","defaultApproved":false},
+    {"domain":"myaccount.google.com","tier":3,"purpose":"Google account settings","defaultApproved":false},
+    {"domain":"analytics.google.com","tier":3,"purpose":"Google Analytics","defaultApproved":false},
+    {"domain":"search.google.com","tier":3,"purpose":"Google Search Console","defaultApproved":false},
+    {"domain":"business.facebook.com","tier":3,"purpose":"Meta Business Suite","defaultApproved":false},
+    {"domain":"facebook.com","tier":3,"purpose":"Facebook main","defaultApproved":false},
+    {"domain":"www.instagram.com","tier":3,"purpose":"Instagram main","defaultApproved":false},
+    {"domain":"console.anthropic.com","tier":3,"purpose":"Anthropic API console","defaultApproved":false},
+    {"domain":"claude.ai","tier":3,"purpose":"Claude web","defaultApproved":false},
+    {"domain":"mxtoolbox.com","tier":3,"purpose":"DNS/mail diagnostics (SPF/DKIM/DMARC)","defaultApproved":false},
+
+    {"domain":"alberta.ca","tier":4,"purpose":"Alberta government","defaultApproved":false},
+    {"domain":"canada.ca","tier":4,"purpose":"Canada government","defaultApproved":false},
+    {"domain":"albertainnovates.ca","tier":4,"purpose":"Alberta Innovates grants","defaultApproved":false},
+    {"domain":"albertaenterprise.ca","tier":4,"purpose":"Alberta Enterprise","defaultApproved":false},
+    {"domain":"nrc-cnrc.canada.ca","tier":4,"purpose":"NRC IRAP","defaultApproved":false},
+    {"domain":"innovation.canada.ca","tier":4,"purpose":"Innovation Canada","defaultApproved":false}
+  ]
+};
+</script>
+
+<script src="cc-shell.js"></script>
+<script>
+(function(){
+  'use strict';
+  var TIER_LABELS = {1:"Core",2:"Approved",3:"Ops",4:"Grants"};
+  var STORAGE_KEY = "azck_access_toggles_v1";
+  var toggles = {};
+  try { toggles = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); } catch(e){}
+
+  function isApproved(site){
+    return toggles[site.domain] !== undefined ? toggles[site.domain] : site.defaultApproved;
+  }
+  function esc(s){
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  function render(filter){
+    filter = filter || "all";
+    var tbody = document.getElementById("ap-sites-tbody");
+    tbody.innerHTML = "";
+    var total = 0, approved = 0;
+    ACCESS_DATA.sites.forEach(function(site){
+      var ok = isApproved(site);
+      total++; if (ok) approved++;
+      if (filter === "pending" && ok) return;
+      if (filter !== "all" && filter !== "pending" && String(site.tier) !== filter) return;
+      var row = document.createElement("tr");
+      row.innerHTML =
+        '<td>' +
+          '<label class="ap-toggle">' +
+            '<input type="checkbox" ' + (ok ? 'checked' : '') + ' data-domain="' + esc(site.domain) + '">' +
+            '<span class="ap-slider"></span>' +
+          '</label>' +
+        '</td>' +
+        '<td><span class="ap-tier ap-tier-' + site.tier + '">T' + site.tier + ' · ' + TIER_LABELS[site.tier] + '</span></td>' +
+        '<td><code>' + esc(site.domain) + '</code></td>' +
+        '<td class="ap-purpose">' + esc(site.purpose) + '</td>' +
+        '<td><span class="ap-status ' + (ok ? 'ap-status-ok' : 'ap-status-pending') + '">' + (ok ? 'Approved' : 'Pending') + '</span></td>';
+      tbody.appendChild(row);
+    });
+    document.getElementById("ap-total").textContent = total;
+    document.getElementById("ap-approved").textContent = approved;
+    document.getElementById("ap-pending").textContent = total - approved;
+
+    Array.from(tbody.querySelectorAll('input[type="checkbox"]')).forEach(function(cb){
+      cb.addEventListener('change', function(){
+        var d = cb.getAttribute('data-domain');
+        toggles[d] = cb.checked;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(toggles));
+        var activeFilter = document.querySelector(".ap-filter.active").getAttribute('data-filter');
+        render(activeFilter);
+      });
+    });
+  }
+
+  window.apResetToggles = function(){
+    if (!confirm("Reset all toggles to defaults?")) return;
+    localStorage.removeItem(STORAGE_KEY);
+    Object.keys(toggles).forEach(function(k){ delete toggles[k]; });
+    var activeFilter = document.querySelector(".ap-filter.active").getAttribute('data-filter');
+    render(activeFilter);
+    showToast("Toggles reset");
+  };
+  function copyDomains(list, label){
+    var text = list.join("\n");
+    navigator.clipboard.writeText(text).then(function(){
+      showToast("Copied " + list.length + " " + label);
+    });
+  }
+  window.apCopyTier = function(tier){
+    copyDomains(ACCESS_DATA.sites.filter(function(s){return s.tier===tier;}).map(function(s){return s.domain;}), "Tier " + tier + " domains");
+  };
+  window.apCopyAll = function(){
+    copyDomains(ACCESS_DATA.sites.map(function(s){return s.domain;}), "domains");
+  };
+  window.apCopyPending = function(){
+    copyDomains(ACCESS_DATA.sites.filter(function(s){return !isApproved(s);}).map(function(s){return s.domain;}), "pending domains");
+  };
+  function showToast(msg){
+    var t = document.getElementById("ap-toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(function(){ t.classList.remove("show"); }, 1800);
+  }
+
+  document.querySelectorAll(".ap-filter").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      document.querySelectorAll(".ap-filter").forEach(function(b){ b.classList.remove("active"); });
+      btn.classList.add("active");
+      render(btn.getAttribute('data-filter'));
+    });
+  });
+
+  render("all");
+})();
+</script>
+
+</body>
+</html>
