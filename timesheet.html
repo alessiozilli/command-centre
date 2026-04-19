@@ -136,6 +136,24 @@ var ALL_COLORS = Object.assign({}, PROJECT_COLORS, SHOP_COLORS);
 // ── SHOP PROJECT LIST (for dropdown) ──
 var SHOP_PROJECTS = Object.keys(SHOP_COLORS);
 
+// ── BILLABLE RATES ($/hr) — EDIT ME to set real invoice rates ──
+var BILLABLE_RATES = {
+  'kyran':    100,  // Kyran QuadFang reimbursement billing
+  'custom':   150,  // Custom knife clients (premium rate)
+  'sred':       0,  // tracked for SR&ED claim, not invoiced
+  'internal':   0   // own-business (Forge, Admin, Website, etc.)
+};
+
+// ── QUICK-ADD TEMPLATES — 1-click prefill on Shop tab form ──
+var QUICK_TEMPLATES = [
+  { label:'Shop Day',        project:'Custom Knife Build',     hours:6,   client:'',        desc:'' },
+  { label:'R&D QuadFang',    project:'QuadFang Prototyping',   hours:2,   client:'Kyran',   desc:'QuadFang R&D session' },
+  { label:'Sharpening',      project:'Sharpening Service',     hours:1,   client:'Walk-in', desc:'' },
+  { label:'Teaching',        project:'Teaching / Classes',     hours:4,   client:'',        desc:'Class session' },
+  { label:'Engraving',       project:'Engraving',              hours:1,   client:'',        desc:'' },
+  { label:'Shipping/Admin',  project:'Shipping / Packaging',   hours:0.5, client:'',        desc:'' }
+];
+
 // ── FORGE LOG (auto-logged by Forge during Save All) ──
 var FORGE_LOG = [
   // ═══ PRE-TRACKING ERA (Mar 31 – Apr 9) ═══
@@ -206,6 +224,37 @@ var FORGE_LOG = [
   function colorFor(p){return ALL_COLORS[p]||'#58a6ff'}
   function fmt(n){return n.toLocaleString('en-CA',{minimumFractionDigits:1,maximumFractionDigits:1})}
 
+  // ── Billable category (first match wins) ──
+  function billableCategory(e){
+    var p = e.project || '';
+    var c = (e.client || '').toLowerCase();
+    if (c === 'kyran' || p === 'QuadFang R&D' || p === 'QuadFang Prototyping' || p === 'QuadFang Website') return 'kyran';
+    if (p === 'Grants') return 'sred';
+    if (e.client && c !== 'walk-in' && c !== 'internal' && c !== 'avalon') return 'custom';
+    if (p === 'Clients') return 'custom';
+    return 'internal';
+  }
+
+  // ── Date range helpers ──
+  function isoToday(){ return new Date().toISOString().slice(0,10); }
+  function daysAgo(n){ var d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0,10); }
+  function startOfMonth(){ var d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0,10); }
+  function startOfYear(){ return new Date().getFullYear() + '-01-01'; }
+  function inRange(dateStr, from, to){ return dateStr >= from && dateStr <= to; }
+
+  // ── Billable aggregator ──
+  function billableBreakdown(entries, from, to){
+    var buckets = { kyran:{hrs:0,dollars:0}, custom:{hrs:0,dollars:0}, sred:{hrs:0,dollars:0}, internal:{hrs:0,dollars:0} };
+    var t = to || isoToday();
+    entries.forEach(function(e){
+      if (from && !inRange(e.date, from, t)) return;
+      var cat = billableCategory(e);
+      buckets[cat].hrs += e.hours;
+      buckets[cat].dollars += e.hours * (BILLABLE_RATES[cat] || 0);
+    });
+    return buckets;
+  }
+
   function aggregate(entries){
     var byProject={},byDate={},byUser={},total=0,dates=[];
     entries.forEach(function(e){
@@ -227,6 +276,10 @@ var FORGE_LOG = [
 
   // ═══ TAB: OVERVIEW ═══
   H+='<div id="tab-overview" data-subtab="overview">';
+  H+='<h2 style="margin-top:0">Billable Summary</h2>';
+  H+='<div class="card" id="billableSummary"></div>';
+  H+='<h2>This Week (Last 7 Days)</h2>';
+  H+='<div class="card" id="weeklyDigest"></div>';
   H+='<div class="stat-grid" id="overviewStats"></div>';
   H+='<div class="card" id="overviewProgress"></div>';
   H+='<h2>Hours by Project — All Sources</h2>';
@@ -255,6 +308,8 @@ var FORGE_LOG = [
   H+='<div id="tab-shop" data-subtab="shop">';
   H+='<h2>Log Shop Time</h2>';
   H+='<div class="card">';
+  H+='<div style="font-size:11px;color:#8b949e;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Quick Templates — 1-click prefill</div>';
+  H+='<div class="filter-bar" id="quickAddRow" style="margin-bottom:16px;"></div>';
   H+='<div class="form-row">';
   H+='<div class="form-group"><label>Date</label><input type="date" id="shopDate"></div>';
   H+='<div class="form-group"><label>Project</label><select id="shopProject"></select></div>';
@@ -272,6 +327,19 @@ var FORGE_LOG = [
   H+='<div class="filter-bar" id="shopFilter"></div>';
   H+='<div class="card" style="overflow-x:auto;max-height:600px;overflow-y:auto;">';
   H+='<table id="shopTable"><thead><tr><th>Date</th><th>Project</th><th>Hours</th><th>Client</th><th>Description</th><th></th></tr></thead><tbody></tbody></table>';
+  H+='</div>';
+
+  // ── Invoice Generator (on Shop tab) ──
+  H+='<h2>Invoice Generator</h2>';
+  H+='<div class="card">';
+  H+='<div class="form-row" style="grid-template-columns:180px 160px 120px auto;">';
+  H+='<div class="form-group"><label>Client</label><select id="invClient"><option value="Kyran">Kyran (QuadFang)</option><option value="custom">Custom (type name)</option></select></div>';
+  H+='<div class="form-group"><label>Month</label><input type="month" id="invMonth"></div>';
+  H+='<div class="form-group"><label>Rate ($/hr)</label><input type="number" id="invRate" value="100" step="5" min="0"></div>';
+  H+='<div class="form-group"><label>&nbsp;</label><button class="btn btn-primary" id="invGen">Generate Draft</button></div>';
+  H+='</div>';
+  H+='<div id="invCustomWrap" style="display:none;margin-top:8px;"><input type="text" id="invCustomName" placeholder="Client name (e.g. Avalon Research)" style="background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:8px 10px;color:#e6edf3;font-size:13px;width:240px;"></div>';
+  H+='<div id="invPreview" style="margin-top:16px;"></div>';
   H+='</div>';
   H+='</div>';
 
@@ -400,6 +468,169 @@ var FORGE_LOG = [
     });
   }
 
+  // ── Billable Summary (3 time windows) ──
+  function renderBillableSummary(id, allEntries){
+    var wk  = billableBreakdown(allEntries, daysAgo(7));
+    var mo  = billableBreakdown(allEntries, startOfMonth());
+    var ytd = billableBreakdown(allEntries, startOfYear());
+    function sumHrs(b){ return b.kyran.hrs + b.custom.hrs + b.sred.hrs + b.internal.hrs; }
+    function sumDol(b){ return b.kyran.dollars + b.custom.dollars; }
+    function block(label,b){
+      return '<div class="stat-box" style="text-align:left;padding:16px;">'+
+        '<div style="font-size:11px;color:#8b949e;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">'+label+'</div>'+
+        '<div style="font-size:24px;font-weight:700;color:#58a6ff;margin-top:6px;">'+fmt(sumHrs(b))+' <span style="font-size:12px;color:#8b949e;font-weight:400;">hrs</span></div>'+
+        '<div style="font-size:16px;font-weight:700;color:#3fb950;margin-top:2px;">$'+sumDol(b).toFixed(0)+' <span style="font-size:11px;color:#8b949e;font-weight:400;">billable</span></div>'+
+        '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #21262d;font-size:11px;line-height:1.6;">'+
+          '<div style="display:flex;justify-content:space-between;"><span style="color:#f85149;">● Kyran</span><span style="color:#c9d1d9;">'+fmt(b.kyran.hrs)+'h &middot; $'+b.kyran.dollars.toFixed(0)+'</span></div>'+
+          '<div style="display:flex;justify-content:space-between;"><span style="color:#f778ba;">● Custom</span><span style="color:#c9d1d9;">'+fmt(b.custom.hrs)+'h &middot; $'+b.custom.dollars.toFixed(0)+'</span></div>'+
+          '<div style="display:flex;justify-content:space-between;"><span style="color:#d29922;">● SR&amp;ED</span><span style="color:#c9d1d9;">'+fmt(b.sred.hrs)+'h</span></div>'+
+          '<div style="display:flex;justify-content:space-between;"><span style="color:#79c0ff;">● Internal</span><span style="color:#c9d1d9;">'+fmt(b.internal.hrs)+'h</span></div>'+
+        '</div>'+
+      '</div>';
+    }
+    $(id).innerHTML = '<div class="stat-grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr));">'+
+      block('Last 7 Days', wk) + block('This Month', mo) + block('Year-to-Date', ytd) + '</div>'+
+      '<div style="font-size:11px;color:#8b949e;margin-top:12px;text-align:right;">Rates: Kyran $'+BILLABLE_RATES.kyran+'/hr &middot; Custom $'+BILLABLE_RATES.custom+'/hr &middot; edit in DATA BLOCK</div>';
+  }
+
+  // ── Weekly Digest (project breakdown, last 7 days) ──
+  function renderWeeklyDigest(id, allEntries){
+    var from = daysAgo(7);
+    var byProj = {}, byUser = {}, total = 0;
+    allEntries.forEach(function(e){
+      if (e.date < from) return;
+      byProj[e.project] = (byProj[e.project]||0) + e.hours;
+      byUser[e.user]    = (byUser[e.user]||0)    + e.hours;
+      total += e.hours;
+    });
+    var projects = Object.keys(byProj).sort(function(a,b){return byProj[b]-byProj[a]});
+    if (!projects.length){ $(id).innerHTML = '<div style="color:#8b949e;text-align:center;padding:24px;">No entries in the last 7 days.</div>'; return; }
+    var h = '<div style="display:flex;justify-content:space-between;margin-bottom:14px;align-items:baseline;">';
+    h += '<strong style="color:#e6edf3;font-size:16px;">'+fmt(total)+' hours logged</strong>';
+    var userParts = Object.keys(byUser).map(function(u){return u+' '+fmt(byUser[u])+'h';});
+    h += '<span style="color:#8b949e;font-size:12px;">'+userParts.join(' &middot; ')+'</span></div>';
+    projects.forEach(function(p){
+      var c = colorFor(p);
+      var pct = (byProj[p]/total*100).toFixed(0);
+      h += '<div class="bar-wrap"><div class="bar-header"><span class="bar-name" style="color:'+c+'">'+p+'</span><span class="bar-hours">'+fmt(byProj[p])+' hrs &middot; '+pct+'%</span></div>';
+      h += '<div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:'+c+';"></div></div></div>';
+    });
+    $(id).innerHTML = h;
+  }
+
+  // ── Quick-Add Template bar (Shop tab) ──
+  function wireQuickAdd(){
+    var row = $('quickAddRow');
+    var h = '';
+    QUICK_TEMPLATES.forEach(function(t,i){
+      h += '<button class="filter-btn" data-qa="'+i+'" style="border-color:#58a6ff22;background:#58a6ff11;color:#58a6ff;">'+t.label+'</button>';
+    });
+    row.innerHTML = h;
+    row.addEventListener('click', function(ev){
+      var idx = ev.target.dataset && ev.target.dataset.qa;
+      if (idx === undefined) return;
+      var t = QUICK_TEMPLATES[parseInt(idx,10)];
+      $('shopProject').value = t.project;
+      $('shopHours').value   = t.hours;
+      $('shopClient').value  = t.client;
+      $('shopDesc').value    = t.desc;
+      $('shopHours').focus();
+    });
+  }
+
+  // ── Invoice Generator (Shop tab) ──
+  function wireInvoice(){
+    var invMonth = $('invMonth');
+    invMonth.value = (new Date().toISOString()).slice(0,7);
+    $('invClient').addEventListener('change', function(){
+      $('invCustomWrap').style.display = (this.value === 'custom') ? 'block' : 'none';
+      $('invRate').value = (this.value === 'Kyran') ? BILLABLE_RATES.kyran : BILLABLE_RATES.custom;
+    });
+    $('invGen').addEventListener('click', renderInvoice);
+  }
+
+  function renderInvoice(){
+    var clientSel = $('invClient').value;
+    var clientName = (clientSel === 'custom') ? ($('invCustomName').value || '').trim() : clientSel;
+    if (!clientName){ alert('Enter a client name.'); return; }
+    var month = $('invMonth').value;
+    if (!month){ alert('Pick a month.'); return; }
+    var rate = parseFloat($('invRate').value) || 0;
+    var from = month + '-01';
+    var to   = month + '-31';
+
+    var allCombined = shopEntries.concat(
+      FORGE_LOG.map(function(e){return {date:e.date,user:e.user,project:e.project,hours:e.hours,client:e.client||'',desc:e.desc};})
+    );
+
+    var matches = allCombined.filter(function(e){
+      if (!inRange(e.date, from, to)) return false;
+      var c = (e.client||'').toLowerCase();
+      if (clientSel === 'Kyran'){
+        return c === 'kyran' || e.project === 'QuadFang R&D' || e.project === 'QuadFang Prototyping' || e.project === 'QuadFang Website';
+      }
+      return c === clientName.toLowerCase();
+    }).sort(function(a,b){return a.date.localeCompare(b.date);});
+
+    if (!matches.length){
+      $('invPreview').innerHTML = '<div style="background:#f8514922;border:1px solid #f85149;padding:16px;border-radius:8px;color:#f85149;">No entries found for '+clientName+' in '+month+'.</div>';
+      return;
+    }
+
+    var totalHrs = 0, totalDol = 0;
+    var rows = matches.map(function(e){
+      var sub = e.hours * rate;
+      totalHrs += e.hours;
+      totalDol += sub;
+      return '<tr>'+
+        '<td style="padding:6px 8px;border-bottom:1px solid #eee;">'+e.date+'</td>'+
+        '<td style="padding:6px 8px;border-bottom:1px solid #eee;">'+e.project+'</td>'+
+        '<td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:12px;color:#555;">'+(e.desc||'').replace(/</g,'&lt;')+'</td>'+
+        '<td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;">'+fmt(e.hours)+'</td>'+
+        '<td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;">$'+sub.toFixed(2)+'</td>'+
+      '</tr>';
+    }).join('');
+
+    var today = isoToday();
+    var invNum = 'AZ-' + month.replace('-','') + '-' + clientName.toUpperCase().replace(/\s/g,'').slice(0,4);
+
+    var html = '<div id="invDoc" style="background:#fff;color:#222;padding:32px;border-radius:8px;font-family:Arial,Helvetica,sans-serif;max-width:900px;">'+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #990000;padding-bottom:16px;margin-bottom:24px;">'+
+        '<div>'+
+          '<h1 style="margin:0;color:#990000;font-size:28px;letter-spacing:1px;">AZ CUSTOM KNIVES LTD.</h1>'+
+          '<div style="color:#555;font-size:12px;margin-top:4px;line-height:1.6;">#104, 9602 115 Street, Grande Prairie, AB T8V 5W2<br>1-780-831-2987 &middot; alessio.zilli@azcustomknives.com<br>A Slice of Excellence</div>'+
+        '</div>'+
+        '<div style="text-align:right;">'+
+          '<h2 style="margin:0;color:#333;font-size:22px;">INVOICE DRAFT</h2>'+
+          '<div style="font-size:12px;color:#666;margin-top:4px;line-height:1.6;"><strong>'+invNum+'</strong><br>Issued: '+today+'<br>Period: '+month+'</div>'+
+        '</div>'+
+      '</div>'+
+      '<div style="margin-bottom:20px;font-size:13px;"><strong style="color:#990000;">Bill To:</strong> '+clientName+'</div>'+
+      '<table style="width:100%;border-collapse:collapse;font-size:13px;">'+
+        '<thead><tr style="background:#f5f5f5;color:#333;">'+
+          '<th style="text-align:left;padding:8px;border-bottom:2px solid #990000;">Date</th>'+
+          '<th style="text-align:left;padding:8px;border-bottom:2px solid #990000;">Project</th>'+
+          '<th style="text-align:left;padding:8px;border-bottom:2px solid #990000;">Description</th>'+
+          '<th style="text-align:right;padding:8px;border-bottom:2px solid #990000;">Hours</th>'+
+          '<th style="text-align:right;padding:8px;border-bottom:2px solid #990000;">Amount</th>'+
+        '</tr></thead>'+
+        '<tbody>'+rows+'</tbody>'+
+        '<tfoot><tr>'+
+          '<td colspan="3" style="padding:12px 8px;text-align:right;font-weight:700;border-top:2px solid #990000;">Total (@ $'+rate+'/hr):</td>'+
+          '<td style="padding:12px 8px;text-align:right;font-weight:700;border-top:2px solid #990000;">'+fmt(totalHrs)+'</td>'+
+          '<td style="padding:12px 8px;text-align:right;font-weight:700;border-top:2px solid #990000;color:#990000;font-size:17px;">$'+totalDol.toFixed(2)+'</td>'+
+        '</tr></tfoot>'+
+      '</table>'+
+      '<div style="margin-top:28px;font-size:11px;color:#777;border-top:1px solid #ddd;padding-top:12px;"><em>DRAFT — review line items, rate, and client details before sending. Generated from AZCK Timesheet.</em></div>'+
+      '</div>'+
+      '<div style="margin-top:12px;display:flex;gap:8px;">'+
+        '<button class="btn btn-primary" onclick="(function(){var w=window.open(\'\',\'_blank\');w.document.write(document.getElementById(\'invDoc\').outerHTML);w.document.close();setTimeout(function(){w.print();},250);})();">Print / Save PDF</button>'+
+        '<button class="btn" style="background:#30363d;color:#e6edf3;" onclick="document.getElementById(\'invPreview\').innerHTML=\'\';">Clear</button>'+
+      '</div>';
+
+    $('invPreview').innerHTML = html;
+  }
+
   // ── FORGE TAB ──
   var forgeAgg=aggregate(FORGE_LOG);
   renderStats('forgeStats',forgeAgg);
@@ -423,8 +654,10 @@ var FORGE_LOG = [
   }
 
   function renderOverview(){
-    var combined=FORGE_LOG.map(function(e){return {date:e.date,user:e.user,project:e.project,hours:e.hours,desc:e.desc}})
-      .concat(shopEntries.map(function(e){return {date:e.date,user:e.user,project:e.project,hours:e.hours,desc:e.desc}}));
+    var combined=FORGE_LOG.map(function(e){return {date:e.date,user:e.user,project:e.project,hours:e.hours,client:e.client||'',desc:e.desc}})
+      .concat(shopEntries.map(function(e){return {date:e.date,user:e.user,project:e.project,hours:e.hours,client:e.client||'',desc:e.desc}}));
+    renderBillableSummary('billableSummary', combined);
+    renderWeeklyDigest('weeklyDigest', combined);
     var allAgg=aggregate(combined);
     renderStats('overviewStats',allAgg);
     renderProgress('overviewProgress',allAgg);
@@ -467,6 +700,10 @@ var FORGE_LOG = [
 
     loadShop();
   });
+
+  // ── Wire quick-add + invoice ──
+  wireQuickAdd();
+  wireInvoice();
 
   // ── Initial load ──
   loadShop();
