@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co; frame-src 'none';">
+<title>Access · AZCK Command Centre</title>
+<link rel="stylesheet" href="cc-shell.css">
+<style>
+  /* Page-scoped access styles — no shell overrides */
+  .ap-wrap { padding: 24px; max-width: var(--cc-max-w); margin: 0 auto; }
+  .ap-title { font-size: 22px; font-weight: 800; margin-bottom: 6px; color: var(--cc-text); }
+  .ap-subtitle { font-size: 13px; color: var(--cc-text-muted); margin-bottom: 24px; }
+
+  .ap-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .ap-stat { background: var(--cc-bg-card); border: 1px solid var(--cc-border); border-radius: var(--cc-r-md); padding: 14px 16px; text-align: center; }
+  .ap-stat .n { font-size: 26px; font-weight: 800; color: var(--cc-text); line-height: 1.1; }
+  .ap-stat .l { font-size: 11px; font-weight: 700; letter-spacing: 0.8px; color: var(--cc-text-muted); text-transform: uppercase; margin-top: 4px; }
+  .ap-stat .n.ok { color: var(--cc-success); }
+  .ap-stat .n.warn { color: var(--cc-warn); }
+  .ap-stat .n.accent { color: var(--cc-accent); }
+
+  .ap-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  .ap-btn { padding: 0.5rem 1rem; border-radius: 6px; border: 1px solid var(--cc-border); background: transparent; color: var(--cc-text); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .ap-btn:hover { border-color: var(--cc-accent); color: var(--cc-accent); }
+  .ap-btn.primary { background: var(--cc-accent); color: var(--cc-bg); border-color: var(--cc-accent); }
+  .ap-btn.primary:hover { filter: brightness(1.1); color: var(--cc-bg); }
+
+  .ap-filters { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  .ap-filter { padding: 0.4rem 0.8rem; border-radius: 6px; border: 1px solid var(--cc-border); background: transparent; color: var(--cc-text-muted); font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .ap-filter.active { background: var(--cc-accent); color: var(--cc-bg); border-color: var(--cc-accent); }
+
+  .ap-card { background: var(--cc-bg-card); border: 1px solid var(--cc-border); border-radius: var(--cc-r-lg); overflow: hidden; margin-bottom: 20px; }
+  .ap-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .ap-table th { text-align: left; padding: 12px 14px; background: var(--cc-bg); color: var(--cc-text-muted); font-weight: 700; border-bottom: 1px solid var(--cc-border); text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px; }
+  .ap-table td { padding: 10px 14px; border-bottom: 1px solid var(--cc-border-soft); color: var(--cc-text-body); vertical-align: middle; }
+  .ap-table tr:last-child td { border-bottom: none; }
+  .ap-table tr:hover td { background: var(--cc-bg-raised); }
+  .ap-table code { background: var(--cc-bg); padding: 2px 6px; border-radius: 4px; font-size: 12px; color: var(--cc-accent); font-family: "SF Mono", Monaco, Consolas, monospace; }
+
+  .ap-tier { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+  .ap-tier-1 { background: #f8514918; color: var(--cc-danger); border: 1px solid #f8514930; }
+  .ap-tier-2 { background: #3fb95018; color: var(--cc-success); border: 1px solid #3fb95030; }
+  .ap-tier-3 { background: #58a6ff18; color: var(--cc-accent); border: 1px solid #58a6ff30; }
+  .ap-tier-4 { background: #d2992218; color: var(--cc-warn); border: 1px solid #d2992230; }
+
+  .ap-status { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+  .ap-status-ok { background: #3fb95018; color: var(--cc-success); border: 1px solid #3fb95030; }
+  .ap-status-pending { background: #d2992218; color: var(--cc-warn); border: 1px solid #d2992230; }
+
+  .ap-toggle { position: relative; display: inline-block; width: 40px; height: 22px; }
+  .ap-toggle input { opacity: 0; width: 0; height: 0; }
+  .ap-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: var(--cc-border); transition: 0.2s; border-radius: 22px; }
+  .ap-slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background: var(--cc-text-muted); transition: 0.2s; border-radius: 50%; }
+  input:checked + .ap-slider { background: #3fb95040; }
+  input:checked + .ap-slider:before { transform: translateX(18px); background: var(--cc-success); }
+
+  .ap-purpose { color: var(--cc-text-muted); font-size: 12px; }
+  .ap-toast { position: fixed; bottom: 2rem; right: 2rem; background: var(--cc-success); color: var(--cc-bg); padding: 1rem 1.5rem; border-radius: 8px; opacity: 0; transform: translateY(20px); transition: all 0.3s; font-size: 13px; font-weight: 700; pointer-events: none; z-index: 9999; }
+  .ap-toast.show { opacity: 1; transform: translateY(0); }
+  .ap-note { margin-top: 2rem; padding: 12px 16px; background: var(--cc-bg-card); border: 1px solid var(--cc-border); border-radius: 8px; font-size: 12px; color: var(--cc-text-muted); }
+  .ap-note strong { color: var(--cc-text-body); }
+</style>
+<script src="auth.js"></script>
+</head>
+<body>
+
+<main id="cc-content" class="ap-wrap">
+  <h1 class="ap-title">Access Permissions</h1>
+  <div class="ap-subtitle">Domains Forge needs approved in the Claude for Chrome extension.</div>
+
+  <div class="ap-stats">
+    <div class="ap-stat"><div class="n accent" id="ap-total">0</div><div class="l">Total Sites</div></div>
+    <div class="ap-stat"><div class="n ok" id="ap-approved">0</div><div class="l">Approved</div></div>
+    <div class="ap-stat"><div class="n warn" id="ap-pending">0</div><div class="l">Pending</div></div>
+  </div>
+
+  <div class="ap-actions">
+    <button class="ap-btn primary" onclick="apCopyTier(1)">Copy Tier 1 Domains</button>
+    <button class="ap-btn" onclick="apCopyAll()">Copy All Domains</button>
+    <button class="ap-btn" onclick="apCopyPending()">Copy Pending Only</button>
+    <button class="ap-btn" onclick="apResetToggles()">Reset All Toggles</button>
+  </div>
+
+  <div class="ap-filters">
+    <button class="ap-filter active" data-filter="all">All</button>
+    <button class="ap-filter" data-filter="1">Tier 1 · Core</button>
+    <button class="ap-filter" data-filter="2">Tier 2 · Approved</button>
+    <button class="ap-filter" data-filter="3">Tier 3 · Ops</button>
+    <button class="ap-filter" data-filter="4">Tier 4 · Grants</button>
+    <button class="ap-filter" data-filter="pending">Pending Only</button>
+  </div>
+
+  <div class="ap-card">
+    <table class="ap-table" id="ap-sites-table">
+      <thead>
+        <tr>
+          <th style="width:60px;">OK</th>
+          <th style="width:90px;">Tier</th>
+          <th>Domain</th>
+          <th>Purpose</th>
+          <th style="width:100px;">Status</th>
+        </tr>
+      </thead>
+      <tbody id="ap-sites-tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="ap-note">
+    <strong>How to use:</strong> Flip the toggle to mark a site as approved in your Claude for Chrome extension. Toggle state is saved locally. Use "Copy Pending Only" to get a clean list of sites still needing approval.
+  </div>
+</main>
+
+<div id="ap-toast" class="ap-toast">Copied</div>
+
+<!-- ═══════════════════════ DATA BLOCK ═══════════════════════ -->
+<script>
+window.PAGE = {
+  id: 'access',
+  title: 'Access',
+  subtabs: []
+};
+
+var ACCESS_DATA = {
+  sites: [
+    {"domain":"azcustomknives.com","tier":1,"purpose":"AZCK main site (GitHub Pages)","defaultApproved":false},
+    {"domain":"www.azcustomknives.com","tier":1,"purpose":"AZCK main site (www)","defaultApproved":false},
+    {"domain":"shop.azcustomknives.com","tier":1,"purpose":"AZCK Wix shop","defaultApproved":false},
+    {"domain":"command.azcustomknives.com","tier":1,"purpose":"Command Centre (GitHub Pages)","defaultApproved":false},
+    {"domain":"quadfang.com","tier":1,"purpose":"QuadFang broadheads (Shopify)","defaultApproved":false},
+    {"domain":"www.quadfang.com","tier":1,"purpose":"QuadFang broadheads (www)","defaultApproved":false},
+    {"domain":"rl-command-centre.netlify.app","tier":1,"purpose":"Reanna's Command Centre","defaultApproved":false},
+
+    {"domain":"manage.wix.com","tier":2,"purpose":"Wix store admin","defaultApproved":true},
+    {"domain":"github.com","tier":2,"purpose":"GitHub web interface","defaultApproved":true},
+    {"domain":"github.dev","tier":2,"purpose":"GitHub web editor","defaultApproved":true},
+    {"domain":"raw.githubusercontent.com","tier":2,"purpose":"Raw file access from GitHub","defaultApproved":true},
+    {"domain":"supabase.com","tier":2,"purpose":"Supabase backend","defaultApproved":true},
+    {"domain":"az-command-centre.netlify.app","tier":2,"purpose":"Alessio Command Centre (Netlify)","defaultApproved":true},
+    {"domain":"azcontrolcenter.netlify.app","tier":2,"purpose":"AZ Control Centre (legacy)","defaultApproved":true},
+
+    {"domain":"admin.shopify.com","tier":3,"purpose":"Shopify admin (QuadFang store)","defaultApproved":false},
+    {"domain":"accounts.shopify.com","tier":3,"purpose":"Shopify account/billing","defaultApproved":false},
+    {"domain":"mail.google.com","tier":3,"purpose":"Gmail web (admin@ + alessio@)","defaultApproved":false},
+    {"domain":"admin.google.com","tier":3,"purpose":"Google Workspace admin","defaultApproved":false},
+    {"domain":"drive.google.com","tier":3,"purpose":"Google Drive","defaultApproved":false},
+    {"domain":"docs.google.com","tier":3,"purpose":"Google Docs","defaultApproved":false},
+    {"domain":"sheets.google.com","tier":3,"purpose":"Google Sheets","defaultApproved":false},
+    {"domain":"calendar.google.com","tier":3,"purpose":"Google Calendar","defaultApproved":false},
+    {"domain":"myaccount.google.com","tier":3,"purpose":"Google account settings","defaultApproved":false},
+    {"domain":"analytics.google.com","tier":3,"purpose":"Google Analytics","defaultApproved":false},
+    {"domain":"search.google.com","tier":3,"purpose":"Google Search Console","defaultApproved":false},
+    {"domain":"business.facebook.com","tier":3,"purpose":"Meta Business Suite","defaultApproved":false},
+    {"domain":"facebook.com","tier":3,"purpose":"Facebook main","defaultApproved":false},
+    {"domain":"www.instagram.com","tier":3,"purpose":"Instagram main","defaultApproved":false},
+    {"domain":"console.anthropic.com","tier":3,"purpose":"Anthropic API console","defaultApproved":false},
+    {"domain":"claude.ai","tier":3,"purpose":"Claude web","defaultApproved":false},
+    {"domain":"mxtoolbox.com","tier":3,"purpose":"DNS/mail diagnostics (SPF/DKIM/DMARC)","defaultApproved":false},
+
+    {"domain":"alberta.ca","tier":4,"purpose":"Alberta government","defaultApproved":false},
+    {"domain":"canada.ca","tier":4,"purpose":"Canada government","defaultApproved":false},
+    {"domain":"albertainnovates.ca","tier":4,"purpose":"Alberta Innovates grants","defaultApproved":false},
+    {"domain":"albertaenterprise.ca","tier":4,"purpose":"Alberta Enterprise","defaultApproved":false},
+    {"domain":"nrc-cnrc.canada.ca","tier":4,"purpose":"NRC IRAP","defaultApproved":false},
+    {"domain":"innovation.canada.ca","tier":4,"purpose":"Innovation Canada","defaultApproved":false}
+  ]
+};
+</script>
+<!-- ═══════════════ END DATA BLOCK ═══════════════ -->
+
+<script src="cc-shell.js"></script>
+<script>
+(function(){
+  'use strict';
+  var TIER_LABELS = {1:"Core",2:"Approved",3:"Ops",4:"Grants"};
+  var STORAGE_KEY = "azck_access_toggles_v1";
+  var toggles = {};
+  try { toggles = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); } catch(e){}
+
+  function isApproved(site){
+    return toggles[site.domain] !== undefined ? toggles[site.domain] : site.defaultApproved;
+  }
+  function esc(s){
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  function render(filter){
+    filter = filter || "all";
+    var tbody = document.getElementById("ap-sites-tbody");
+    tbody.innerHTML = "";
+    var total = 0, approved = 0;
+    ACCESS_DATA.sites.forEach(function(site){
+      var ok = isApproved(site);
+      total++; if (ok) approved++;
+      if (filter === "pending" && ok) return;
+      if (filter !== "all" && filter !== "pending" && String(site.tier) !== filter) return;
+      var row = document.createElement("tr");
+      row.innerHTML =
+        '<td>' +
+          '<label class="ap-toggle">' +
+            '<input type="checkbox" ' + (ok ? 'checked' : '') + ' data-domain="' + esc(site.domain) + '">' +
+            '<span class="ap-slider"></span>' +
+          '</label>' +
+        '</td>' +
+        '<td><span class="ap-tier ap-tier-' + site.tier + '">T' + site.tier + ' · ' + TIER_LABELS[site.tier] + '</span></td>' +
+        '<td><code>' + esc(site.domain) + '</code></td>' +
+        '<td class="ap-purpose">' + esc(site.purpose) + '</td>' +
+        '<td><span class="ap-status ' + (ok ? 'ap-status-ok' : 'ap-status-pending') + '">' + (ok ? 'Approved' : 'Pending') + '</span></td>';
+      tbody.appendChild(row);
+    });
+    document.getElementById("ap-total").textContent = total;
+    document.getElementById("ap-approved").textContent = approved;
+    document.getElementById("ap-pending").textContent = total - approved;
+
+    Array.from(tbody.querySelectorAll('input[type="checkbox"]')).forEach(function(cb){
+      cb.addEventListener('change', function(){
+        var d = cb.getAttribute('data-domain');
+        toggles[d] = cb.checked;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(toggles));
+        var activeFilter = document.querySelector(".ap-filter.active").getAttribute('data-filter');
+        render(activeFilter);
+      });
+    });
+  }
+
+  window.apResetToggles = function(){
+    if (!confirm("Reset all toggles to defaults?")) return;
+    localStorage.removeItem(STORAGE_KEY);
+    Object.keys(toggles).forEach(function(k){ delete toggles[k]; });
+    var activeFilter = document.querySelector(".ap-filter.active").getAttribute('data-filter');
+    render(activeFilter);
+    showToast("Toggles reset");
+  };
+  function copyDomains(list, label){
+    var text = list.join("\n");
+    navigator.clipboard.writeText(text).then(function(){
+      showToast("Copied " + list.length + " " + label);
+    });
+  }
+  window.apCopyTier = function(tier){
+    copyDomains(ACCESS_DATA.sites.filter(function(s){return s.tier===tier;}).map(function(s){return s.domain;}), "Tier " + tier + " domains");
+  };
+  window.apCopyAll = function(){
+    copyDomains(ACCESS_DATA.sites.map(function(s){return s.domain;}), "domains");
+  };
+  window.apCopyPending = function(){
+    copyDomains(ACCESS_DATA.sites.filter(function(s){return !isApproved(s);}).map(function(s){return s.domain;}), "pending domains");
+  };
+  function showToast(msg){
+    var t = document.getElementById("ap-toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(function(){ t.classList.remove("show"); }, 1800);
+  }
+
+  // filter buttons
+  document.querySelectorAll(".ap-filter").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      document.querySelectorAll(".ap-filter").forEach(function(b){ b.classList.remove("active"); });
+      btn.classList.add("active");
+      render(btn.getAttribute('data-filter'));
+    });
+  });
+
+  render("all");
+})();
+</script>
+
+</body>
+</html>
