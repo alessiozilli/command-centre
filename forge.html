@@ -28,6 +28,7 @@
   };
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 /* Layout comes from cc-shell.css (.cc-content: max-width 1200px, padding 24px).
    Only page-specific styling below. */
@@ -343,7 +344,11 @@ var VERSIONS = [
      Radar, plugins, slider, ledger — all auto-generated from data above.
      ═══════════════════════════════════════════════════════════════ -->
 <script>
-(function() {
+window.FORGE_INIT = function() {
+  // Tear down previous chart instance if rerun
+  if (window.FORGE_CHART && typeof window.FORGE_CHART.destroy === 'function') {
+    try { window.FORGE_CHART.destroy(); } catch (e) {}
+  }
   var numPoints = metricLabels.length;
   var latest = VERSIONS.length - 1;
   var currentIdx = latest;
@@ -660,6 +665,131 @@ var VERSIONS = [
   // Expose for future sections
   window.FORGE_CHART = chart;
   window.FORGE_UPDATE = updateAll;
+};
+window.FORGE_INIT();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     LIVE-READ UPGRADE — replaces hardcoded VERSIONS with Supabase data
+     when reachable. Silent fallback to hardcoded on any failure.
+     ═══════════════════════════════════════════════════════════════ -->
+<script>
+(function() {
+  if (!window.supabase || !window.supabase.createClient) return; // library failed to load → keep fallback
+  var SUPABASE_URL = 'https://twrlvnfszohyrmivdhre.supabase.co';
+  var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3cmx2bmZzem9oeXJtaXZkaHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NjkxMTMsImV4cCI6MjA5MDE0NTExM30.o96DFNbBObst0EAmX51rnRFXzu8oTN1o-HNAxN7MY8A';
+  var supa;
+  try {
+    supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false } });
+  } catch (e) { return; }
+
+  function fmtDate(iso) {
+    if (!iso) return '';
+    try {
+      var d = new Date(iso);
+      var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return months[d.getUTCMonth()] + ' ' + d.getUTCDate();
+    } catch (e) { return ''; }
+  }
+  function extractName(summary) {
+    if (!summary) return '';
+    var dash = summary.indexOf(' — ');
+    if (dash > -1) return summary.slice(0, dash);
+    var period = summary.indexOf('.');
+    if (period > -1 && period < 60) return summary.slice(0, period);
+    return summary.slice(0, 40);
+  }
+
+  Promise.all([
+    supa.from('forge_versions').select('id, version, ring_name, summary, created_at').order('created_at', { ascending: true }),
+    supa.from('forge_scores').select('id, metric_id, score, scored_at').order('scored_at', { ascending: true }),
+    supa.from('forge_metrics').select('id, name').order('id', { ascending: true })
+  ]).then(function(results) {
+    var versionsRes = results[0], scoresRes = results[1], metricsRes = results[2];
+    if (versionsRes.error || scoresRes.error || metricsRes.error) {
+      console.info('[forge] live-read failed, keeping hardcoded VERSIONS', versionsRes.error || scoresRes.error || metricsRes.error);
+      return;
+    }
+    var versions = versionsRes.data || [];
+    var scores = scoresRes.data || [];
+    var metrics = metricsRes.data || [];
+    if (!versions.length || !metrics.length) return;
+
+    // Build metric_id → array index using the canonical metricLabels order
+    var metricIdToIdx = {};
+    metrics.forEach(function(m) {
+      var idx = metricLabels.indexOf(m.name);
+      if (idx > -1) metricIdToIdx[m.id] = idx;
+    });
+
+    // Group scores by date string (UTC YYYY-MM-DD)
+    var scoresByDate = {};
+    scores.forEach(function(s) {
+      var d = (s.scored_at || '').slice(0,10);
+      if (!scoresByDate[d]) scoresByDate[d] = [];
+      scoresByDate[d].push(s);
+    });
+
+    // Build new VERSIONS — chronological, Supabase as source of truth
+    var newVersions = versions.map(function(v) {
+      var dateKey = (v.created_at || '').slice(0,10);
+      var matchingScores = scoresByDate[dateKey] || [];
+      var scoreArr = metricLabels.map(function() { return 0; });
+      matchingScores.forEach(function(s) {
+        var idx = metricIdToIdx[s.metric_id];
+        if (idx != null) scoreArr[idx] = Number(s.score);
+      });
+      return {
+        version: v.version,
+        name: extractName(v.summary),
+        date: fmtDate(v.created_at),
+        desc: v.summary || '',
+        scores: scoreArr,
+        ring: v.ring_name || 'Raw Steel'
+      };
+    });
+
+    // Sanity check: if any version has all-zero scores AND we have a hardcoded match, prefer hardcoded for that one
+    var hardcoded = window.VERSIONS.slice();
+    var hcByVersion = {};
+    hardcoded.forEach(function(h) { hcByVersion[h.version] = h; });
+    newVersions.forEach(function(v, i) {
+      var allZero = v.scores.every(function(s) { return s === 0; });
+      if (allZero && hcByVersion[v.version]) {
+        newVersions[i] = hcByVersion[v.version];
+      }
+    });
+
+    // Stitch in any hardcoded versions that aren't in DB yet (e.g. v0.1–v0.6 not migrated)
+    var newByVersion = {};
+    newVersions.forEach(function(v) { newByVersion[v.version] = true; });
+    var stitched = newVersions.slice();
+    hardcoded.forEach(function(h) {
+      if (!newByVersion[h.version]) stitched.push(h);
+    });
+    // Sort by version semver-ish: split on dot, compare numerically
+    function vkey(v) {
+      return v.replace(/^v/,'').split('.').map(function(n){ return parseInt(n,10) || 0; });
+    }
+    stitched.sort(function(a, b) {
+      var ak = vkey(a.version), bk = vkey(b.version);
+      for (var i = 0; i < Math.max(ak.length, bk.length); i++) {
+        var ai = ak[i] || 0, bi = bk[i] || 0;
+        if (ai !== bi) return ai - bi;
+      }
+      return 0;
+    });
+
+    // Replace global VERSIONS and rebuild the engine
+    window.VERSIONS = stitched;
+    if (typeof VERSIONS !== 'undefined') VERSIONS = stitched; // also reassign top-level binding
+    if (typeof window.FORGE_INIT === 'function') {
+      try { window.FORGE_INIT(); } catch (e) { console.warn('[forge] re-init failed', e); }
+    }
+    console.info('[forge] live data loaded — ' + stitched.length + ' versions');
+  }).catch(function(err) {
+    console.info('[forge] live-read errored, keeping hardcoded VERSIONS', err);
+  });
 })();
 </script>
 
