@@ -3,150 +3,467 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co; frame-src 'none';">
-<title>Finance · AZCK Command Centre</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://twrlvnfszohyrmivdhre.supabase.co wss://twrlvnfszohyrmivdhre.supabase.co; img-src 'self' data: https:;">
+<title>Finance — AZCK Command Centre</title>
 <link rel="stylesheet" href="cc-shell.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-  /* Page-scoped finance styles — no shell overrides */
-  .fin-wrap { padding: 24px; max-width: var(--cc-max-w); margin: 0 auto; }
-  .fin-title { font-size: 22px; font-weight: 800; margin-bottom: 6px; color: var(--cc-text); }
-  .fin-subtitle { font-size: 13px; color: var(--cc-text-muted); margin-bottom: 24px; }
+  /* page-specific */
+  .app-wrap { max-width: 1180px; margin: 24px auto 80px; padding: 0 20px; }
+  .section { background:#161b22; border:1px solid #30363d; border-radius:8px; padding:20px; margin-bottom:20px; }
+  .section-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:12px; flex-wrap:wrap; }
+  .section-header h2 { font-size:1.15rem; margin:0; color:#e6edf3; }
+  .section-header .meta { color:#8b949e; font-size:0.85rem; }
 
-  .fin-hero { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
-  .fin-stat { background: var(--cc-bg-card); border: 1px solid var(--cc-border); border-radius: var(--cc-r-md); padding: 14px 16px; }
-  .fin-stat .n { font-size: 26px; font-weight: 800; line-height: 1.1; color: var(--cc-text); }
-  .fin-stat .l { font-size: 11px; font-weight: 700; letter-spacing: 0.8px; color: var(--cc-text-muted); text-transform: uppercase; margin-top: 4px; }
-  .fin-stat .n.ok { color: var(--cc-success); }
-  .fin-stat .n.warn { color: var(--cc-warn); }
-  .fin-stat .n.danger { color: var(--cc-danger); }
-  .fin-stat .n.accent { color: var(--cc-accent); }
+  .privacy-banner {
+    background:#0d2136; border:1px solid #1f6feb; border-radius:8px;
+    padding:12px 16px; margin-bottom:20px; color:#adbac7; font-size:0.88rem;
+    display:flex; gap:10px; align-items:center;
+  }
+  .privacy-banner .dot { width:8px; height:8px; border-radius:50%; background:#58a6ff; flex:none; }
+  .privacy-banner strong { color:#e6edf3; }
 
-  .fin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; }
-  .fin-tile { background: var(--cc-bg-card); border: 1px solid var(--cc-border); border-radius: var(--cc-r-lg); padding: 20px; display: flex; flex-direction: column; }
-  .fin-tile-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--cc-border-soft); }
-  .fin-tile-title { font-size: 13px; font-weight: 700; letter-spacing: 0.8px; color: var(--cc-text-muted); text-transform: uppercase; }
-  .fin-tile-pill { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; background: var(--cc-bg-raised); color: var(--cc-text-muted); }
-  .fin-tile-pill.ok { color: var(--cc-success); background: #3fb95018; }
-  .fin-tile-pill.warn { color: var(--cc-warn); background: #d2992218; }
-  .fin-tile-pill.danger { color: var(--cc-danger); background: #f8514918; }
+  .hero-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:14px; margin-bottom:20px; }
+  .hero-card { background:#0d1117; border:1px solid #30363d; border-radius:8px; padding:18px; }
+  .hero-card .lbl { color:#8b949e; font-size:0.75rem; text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px; }
+  .hero-card .val { color:#e6edf3; font-size:1.45rem; font-weight:600; }
+  .hero-card .val.pos { color:#3fb950; }
+  .hero-card .val.neg { color:#f85149; }
+  .hero-card .sub { color:#8b949e; font-size:0.8rem; margin-top:4px; }
 
-  .fin-row { padding: 8px 0; display: flex; justify-content: space-between; align-items: center; gap: 10px; border-bottom: 1px dashed var(--cc-border-soft); font-size: 13px; }
-  .fin-row:last-child { border-bottom: 0; }
-  .fin-row .label { color: var(--cc-text-body); flex: 1; min-width: 0; }
-  .fin-row .value { color: var(--cc-text-muted); white-space: nowrap; font-size: 12px; }
-  .fin-row .value.accent { color: var(--cc-accent); }
-  .fin-row .value.success { color: var(--cc-success); }
-  .fin-row .value.warn { color: var(--cc-warn); }
-  .fin-row .value.danger { color: var(--cc-danger); }
+  .chart-wrap { position:relative; height:320px; }
 
-  .fin-banner { background: var(--cc-bg-card); border: 1px solid var(--cc-border); border-radius: var(--cc-r-md); padding: 14px 18px; margin-bottom: 20px; font-size: 13px; color: var(--cc-text-muted); }
-  .fin-banner strong { color: var(--cc-text-body); }
-  .fin-banner a { color: var(--cc-accent); text-decoration: none; }
-  .fin-banner a:hover { text-decoration: underline; }
+  .stream-group { margin-top:14px; }
+  .stream-group h3 { color:#e6edf3; font-size:0.95rem; margin:0 0 8px; font-weight:600; }
+  .stream-group h3 .badge { background:#21262d; color:#8b949e; font-size:0.7rem; padding:2px 8px; border-radius:10px; margin-left:8px; font-weight:500; }
+  .stream-row {
+    display:grid; grid-template-columns: 1fr 100px 100px 80px;
+    gap:10px; align-items:center;
+    padding:10px 14px; background:#0d1117; border:1px solid #30363d;
+    border-radius:6px; margin-bottom:6px; font-size:0.88rem;
+  }
+  .stream-row.inactive { opacity:.55; }
+  .stream-row .name { color:#e6edf3; font-weight:500; }
+  .stream-row .name .note { color:#8b949e; font-weight:400; font-size:0.78rem; display:block; margin-top:2px; }
+  .stream-row .num { color:#adbac7; text-align:right; font-variant-numeric:tabular-nums; }
+  .stream-row .num.pos { color:#3fb950; }
+  .stream-row .num.neg { color:#f85149; }
+  .stream-row .conf { color:#8b949e; text-align:right; font-size:0.8rem; }
+  .stream-row .status { text-align:right; font-size:0.72rem; }
+  .stream-row .status.on { color:#3fb950; }
+  .stream-row .status.off { color:#8b949e; }
+
+  .ins-baseline { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:12px; }
+  .ins-baseline .hero-card { padding:14px; }
+  .ins-note { color:#adbac7; font-size:0.9rem; margin-top:14px; line-height:1.5; }
+  .ins-caveat { background:#1a1410; border:1px solid #9e6a03; border-radius:6px; padding:10px 14px; color:#d4a017; font-size:0.82rem; margin-top:14px; }
+  .todo { color:#8b949e; font-style:italic; font-size:0.85rem; padding:10px; border:1px dashed #30363d; border-radius:6px; background:#0d1117; margin-top:10px; }
+
+  .loading, .empty { color:#8b949e; padding:20px; text-align:center; }
+  .error { background:#5a1d1d; color:#ffb3b3; padding:12px 16px; border-radius:6px; }
+  .login-shell { max-width:360px; margin:60px auto; background:#161b22; padding:30px; border:1px solid #30363d; border-radius:8px; }
+  .login-shell h2 { margin:0 0 18px; color:#e6edf3; }
+  .login-shell input { width:100%; padding:10px; margin-bottom:10px; background:#0d1117; border:1px solid #30363d; color:#e6edf3; border-radius:6px; font-size:0.95rem; box-sizing:border-box; }
+  .login-shell button { width:100%; padding:10px; background:#238636; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:500; }
+  .login-msg { color:#f85149; font-size:0.85rem; margin-top:10px; min-height:1.2em; }
 </style>
-<script src="auth.js"></script>
 </head>
 <body>
 
-<main id="cc-content" class="fin-wrap">
-  <h1 class="fin-title">Finance</h1>
-  <div class="fin-subtitle">Projections snapshot · source of truth: <span id="fin-source"></span></div>
+<div id="app" class="app-wrap"><div class="loading">Loading…</div></div>
 
-  <div class="fin-banner">
-    <strong>Phase 1 snapshot</strong> — this page mirrors the latest manual projection from the Financial Projections Spec. Live Supabase-driven projections land in Phase B8. Update the DATA BLOCK during Save All to refresh values.
-  </div>
-
-  <div class="fin-hero" id="finHero"></div>
-  <div class="fin-grid" id="finGrid"></div>
-</main>
-
-<!-- ═══════════════════════ DATA BLOCK ═══════════════════════ -->
 <script>
-window.PAGE = {
-  id: 'finance',
-  title: 'Finance',
-  subtabs: []
-};
-
-var FIN = {
-  source: 'Financial_Projections_Spec_v1_2026-04-18.md',
-  hero: [
-    { n: '+$162',  l: 'Aug net projection',  tone: 'ok' },
-    { n: '—$2.4K', l: 'May net projection',  tone: 'warn' },
-    { n: '4 of 25', l: 'Revenue streams active', tone: 'accent' },
-    { n: '17 of 33', l: 'Expense streams active', tone: 'warn' }
-  ],
-  revenue: [
-    { label: 'Custom knife orders',           value: 'Active · irregular', tone: 'accent' },
-    { label: 'Sharpening (walk-in + subs)',   value: 'Active · low volume', tone: 'accent' },
-    { label: 'Classes / team-building',       value: 'Active · seasonal',   tone: 'accent' },
-    { label: 'Retail (blade blanks, gifts)',  value: 'Active',              tone: 'accent' },
-    { label: 'QuadFang broadheads (pre-launch)', value: 'Q3–Q4 2026',       tone: 'warn' }
-  ],
-  expenses: [
-    { label: 'Insurance (combined — premium)', value: '~$600/mo',             tone: 'warn' },
-    { label: 'Insurance (expected payouts)',   value: '+$12.8K net 2025',     tone: 'ok' },
-    { label: 'Software subs (Autodesk, Adobe, Claude)', value: '~$400/mo',    tone: 'warn' },
-    { label: 'Shop rent + utilities',          value: '~$1,200/mo',           tone: 'warn' },
-    { label: 'Steel + handle materials',       value: 'Variable',             tone: '' },
-    { label: 'Marketing / shows / fuel',       value: 'Variable',             tone: '' }
-  ],
-  projections: [
-    { label: 'Q2 2026 net',        value: '—$2.4K May · +$162 Aug', tone: 'warn' },
-    { label: 'Q3 2026 net (est)',  value: 'Break-even with QuadFang soft launch', tone: '' },
-    { label: 'Q4 2026 net (est)',  value: '+$3–6K with holiday retail', tone: 'ok' },
-    { label: 'FY2026 net (est)',   value: 'Conservative +$2–4K', tone: 'ok' }
-  ],
-  grants: [
-    { label: 'SR&ED (R&D tax credit)',         value: '35% of R&D spend — pending filing', tone: 'accent' },
-    { label: 'NRC IRAP intake',                value: 'Call 1-877-994-4727',              tone: 'warn' },
-    { label: 'AWE BRIDGE',                     value: '$5K · Reanna eligible',             tone: 'accent' },
-    { label: 'Alberta Innovates Micro-Voucher', value: '$10K · AI adoption',               tone: 'accent' },
-    { label: 'CanExport SMEs',                 value: '$50K · deadline May 29, 2026 · gated on revenue', tone: 'danger' }
-  ]
-};
+  // ─── DATA BLOCK ─────────────────────────────────────────────────────────
+  // Update this block to add categories, change labels, or tweak the 2025
+  // insurance baseline. The ENGINE below reads from here — never edit the
+  // renderers without good reason.
+  window.FINANCE_DATA = {
+    updated: '2026-04-19',
+    categoryLabels: {
+      // Revenue
+      'core':              'Core Revenue',
+      'tier-1':            'Tier 1 — Near-Term Streams',
+      'tier-2':            'Tier 2 — Audience Monetisation',
+      'tier-3':            'Tier 3 — Premium Experiences',
+      'tier-4':            'Tier 4 — Passive / Side Streams',
+      'partnership':       'Partnerships (QuadFang)',
+      // Expenses
+      'ops-shop':          'Shop Operations',
+      'admin-digital':     'Admin & Digital',
+      'quadfang-rnd':      'QuadFang R&D',
+      'fc-tier-1':         'Tier 1 Build Costs',
+      'tier-5-insurance':  'Tier 5 — Wealth Protection (Insurance)',
+      'tier-5-wealth':     'Tier 5 — Wealth Protection (Savings)',
+      'variable':          'Variable / Ad-Hoc'
+    },
+    categoryOrder: {
+      revenue: ['core','tier-1','tier-2','tier-3','tier-4','partnership'],
+      expense: ['ops-shop','admin-digital','quadfang-rnd','fc-tier-1','tier-5-insurance','tier-5-wealth','variable']
+    },
+    // Combined Insurance addendum — 2025 calibration reference.
+    // Dollars local-only per Spec §9; these numbers live in the page, not Supabase.
+    insurance2025: {
+      premiumMonthly: 600,
+      premiumAnnual: 7200,
+      payoutsReceived: 20000,
+      netPosition: 12800,
+      surgeries: 4,
+      payoutPerCut: { suture: 5000, stitches: 6000 },
+      quote: 'The likelihood I insure myself is big, so I capitalize on it, might as well.'
+    }
+  };
 </script>
-<!-- ═══════════════ END DATA BLOCK ═══════════════ -->
 
+<script>
+  // PAGE declaration — consumed by cc-shell.js
+  window.PAGE = {
+    id: 'finance',
+    title: 'Finance',
+    subtitle: 'Projections · private net mode · ratios-to-cloud / dollars-local',
+    subtabs: [
+      { id:'net',       label:'Net' },
+      { id:'revenue',   label:'Revenue' },
+      { id:'expenses',  label:'Expenses' },
+      { id:'insurance', label:'Combined Insurance' }
+    ],
+    stats: []
+  };
+</script>
 <script src="cc-shell.js"></script>
+
 <script>
 (function(){
   'use strict';
-  function esc(s){
-    return String(s == null ? '' : s)
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-  }
-  function heroStat(h){
-    return '<div class="fin-stat"><div class="n ' + (h.tone||'') + '">' +
-           esc(h.n) + '</div><div class="l">' + esc(h.l) + '</div></div>';
-  }
-  function tileRow(r){
-    var tone = r.tone ? (' ' + r.tone) : '';
-    return '<div class="fin-row"><span class="label">' + esc(r.label) +
-           '</span><span class="value' + tone + '">' + esc(r.value) + '</span></div>';
-  }
-  function tile(title, rows, pill){
-    var pillHTML = pill ? ('<span class="fin-tile-pill ' + (pill.tone||'') + '">' + esc(pill.text) + '</span>') : '';
-    var body = (rows && rows.length) ? rows.map(tileRow).join('') : '<div class="fin-row"><span class="label">Nothing yet</span></div>';
-    return '<section class="fin-tile"><div class="fin-tile-head">' +
-           '<span class="fin-tile-title">' + esc(title) + '</span>' + pillHTML + '</div>' +
-           body + '</section>';
+
+  const SUPABASE_URL = 'https://twrlvnfszohyrmivdhre.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3cmx2bmZzem9oeXJtaXZkaHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NjkxMTMsImV4cCI6MjA5MDE0NTExM30.o96DFNbBObst0EAmX51rnRFXzu8oTN1o-HNAxN7MY8A';
+
+  const supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: {
+      storageKey: 'sb-twrlvnfszohyrmivdhre-auth-token',
+      persistSession: true,
+      autoRefreshToken: true
+    }
+  });
+  window.supa = supa;
+
+  const D = window.FINANCE_DATA;
+  const app = document.getElementById('app');
+  let projections = null;     // cached rows from supabase.projections
+  let chartInstance = null;
+
+  const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+  const fail = (msg) => `<div class="error">${esc(msg)}</div>`;
+  const fmt$ = n => (n<0?'-':'') + '$' + Math.abs(Math.round(n)).toLocaleString();
+  const fmtPct = n => Math.round(n*100)+'%';
+
+  const banner = `
+    <div class="privacy-banner">
+      <span class="dot"></span>
+      <div><strong>Private Net mode</strong> — projections only. No dollar actuals are stored in Supabase.
+        <span style="color:#8b949e;"> Ratios to cloud, dollars local. Updated ${esc(D.updated)}.</span>
+      </div>
+    </div>`;
+
+  // ─── BOOT ───────────────────────────────────────────────────────────────
+  async function boot(){
+    const { data:{ session } } = await supa.auth.getSession();
+    if (!session) return renderLogin();
+
+    if (window.CC && window.CC.onSubtabChange) {
+      wireSubtabs();
+    } else {
+      document.addEventListener('cc-shell-ready', wireSubtabs, { once:true });
+    }
   }
 
-  document.getElementById('fin-source').textContent = FIN.source || '—';
+  function wireSubtabs(){
+    window.CC.onSubtabChange(id => renderSubtab(id));
+    renderSubtab(window.CC.getSubtab() || 'net');
+  }
 
-  var heroOut = (FIN.hero || []).map(heroStat).join('');
-  document.getElementById('finHero').innerHTML = heroOut;
+  async function ensureProjections(){
+    if (projections) return projections;
+    const { data, error } = await supa.from('projections')
+      .select('stream_id, stream_type, category, curve_json, confidence, active, notes_ratio')
+      .order('stream_type', { ascending:true })
+      .order('category', { ascending:true })
+      .order('stream_id', { ascending:true });
+    if (error) throw error;
+    projections = data || [];
+    return projections;
+  }
 
-  var gridOut = '';
-  gridOut += tile('Revenue Streams',        FIN.revenue,     { text: String((FIN.revenue||[]).length) + ' streams', tone: 'ok' });
-  gridOut += tile('Expense Streams',        FIN.expenses,    { text: String((FIN.expenses||[]).length) + ' streams', tone: 'warn' });
-  gridOut += tile('Quarterly Projections',  FIN.projections, { text: 'Est.', tone: '' });
-  gridOut += tile('Grants in Flight',       FIN.grants,      { text: String((FIN.grants||[]).length), tone: 'accent' });
-  document.getElementById('finGrid').innerHTML = gridOut;
+  // ─── helpers ────────────────────────────────────────────────────────────
+  function curvePoints(row){
+    const c = row && row.curve_json;
+    if (!c || !Array.isArray(c.points)) return [];
+    return c.points;
+  }
+  function sumCurve(row){
+    return curvePoints(row).reduce((s,p)=>s+Number(p.v||0),0);
+  }
+  function monthlyTotals(rows, type){
+    // returns { labels:[...], totals:[...] } summed across active rows of given type
+    const filtered = rows.filter(r => r.stream_type===type && r.active);
+    const bucket = {};
+    let labels = [];
+    filtered.forEach(r => {
+      curvePoints(r).forEach(p => {
+        if (bucket[p.m] == null) { bucket[p.m] = 0; labels.push(p.m); }
+        bucket[p.m] += Number(p.v||0);
+      });
+    });
+    labels = Array.from(new Set(labels)).sort();
+    return { labels, totals: labels.map(l => bucket[l] || 0) };
+  }
+
+  function renderSubtab(id){
+    if (id==='net')       return renderNet();
+    if (id==='revenue')   return renderStreams('revenue');
+    if (id==='expenses')  return renderStreams('expense');
+    if (id==='insurance') return renderInsurance();
+    app.innerHTML = fail('Unknown subtab: '+id);
+  }
+
+  // ─── NET TAB ────────────────────────────────────────────────────────────
+  async function renderNet(){
+    app.innerHTML = banner + '<div class="loading">Loading projections…</div>';
+    let rows;
+    try { rows = await ensureProjections(); }
+    catch(e){ return app.innerHTML = banner + fail(e.message); }
+
+    const rev = monthlyTotals(rows, 'revenue');
+    const exp = monthlyTotals(rows, 'expense');
+    const labels = Array.from(new Set([...rev.labels, ...exp.labels])).sort();
+    const revMap = Object.fromEntries(rev.labels.map((l,i)=>[l, rev.totals[i]]));
+    const expMap = Object.fromEntries(exp.labels.map((l,i)=>[l, exp.totals[i]]));
+    const revSeries = labels.map(l => revMap[l] || 0);
+    const expSeries = labels.map(l => expMap[l] || 0);
+    const netSeries = labels.map((l,i) => revSeries[i] - expSeries[i]);
+
+    const totalRev = revSeries.reduce((a,b)=>a+b,0);
+    const totalExp = expSeries.reduce((a,b)=>a+b,0);
+    const totalNet = totalRev - totalExp;
+    const activeCount = rows.filter(r => r.active).length;
+
+    app.innerHTML = banner + `
+      <div class="hero-row">
+        <div class="hero-card">
+          <div class="lbl">12-mo Projected Revenue</div>
+          <div class="val pos">${fmt$(totalRev)}</div>
+          <div class="sub">active streams only</div>
+        </div>
+        <div class="hero-card">
+          <div class="lbl">12-mo Projected Expenses</div>
+          <div class="val neg">${fmt$(totalExp)}</div>
+          <div class="sub">active streams only</div>
+        </div>
+        <div class="hero-card">
+          <div class="lbl">12-mo Projected Net</div>
+          <div class="val ${totalNet>=0?'pos':'neg'}">${fmt$(totalNet)}</div>
+          <div class="sub">${labels[0]||'—'} → ${labels[labels.length-1]||'—'}</div>
+        </div>
+        <div class="hero-card">
+          <div class="lbl">Active Streams</div>
+          <div class="val">${activeCount}<span style="color:#8b949e;font-size:1rem;font-weight:400;"> / ${rows.length}</span></div>
+          <div class="sub">dormant streams excluded from totals</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <h2>Monthly Cashflow — Projected</h2>
+          <span class="meta">Revenue (green) · Expenses (red) · Net (blue line)</span>
+        </div>
+        <div class="chart-wrap"><canvas id="net-chart"></canvas></div>
+      </div>
+
+      <div class="todo">
+        TODO (future session): confirmation workflow · drill-down modal per stream · ratio-mode toggle · quarterly breakdown table.
+        See <code>AI/Business/Projects/Command-Centre/Financial_Projections_Spec_v1_2026-04-18.md</code>.
+      </div>`;
+
+    // Chart render
+    if (chartInstance) chartInstance.destroy();
+    const ctx = document.getElementById('net-chart').getContext('2d');
+    chartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { type:'bar', label:'Revenue', data: revSeries, backgroundColor:'rgba(63,185,80,0.55)', borderColor:'#3fb950', borderWidth:1, order:2 },
+          { type:'bar', label:'Expenses', data: expSeries.map(v=>-v), backgroundColor:'rgba(248,81,73,0.55)', borderColor:'#f85149', borderWidth:1, order:2 },
+          { type:'line', label:'Net', data: netSeries, borderColor:'#58a6ff', backgroundColor:'rgba(88,166,255,0.1)', borderWidth:2, tension:.25, pointRadius:3, order:1 }
+        ]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins:{
+          legend:{ labels:{ color:'#adbac7' } },
+          tooltip:{ callbacks:{ label: ctx => ctx.dataset.label+': '+fmt$(Math.abs(ctx.parsed.y)) } }
+        },
+        scales:{
+          x:{ stacked:true, ticks:{ color:'#8b949e' }, grid:{ color:'#21262d' } },
+          y:{ stacked:true, ticks:{ color:'#8b949e', callback:v=>fmt$(v) }, grid:{ color:'#21262d' } }
+        }
+      }
+    });
+  }
+
+  // ─── REVENUE / EXPENSES TAB ────────────────────────────────────────────
+  async function renderStreams(type){
+    app.innerHTML = banner + '<div class="loading">Loading…</div>';
+    let rows;
+    try { rows = await ensureProjections(); }
+    catch(e){ return app.innerHTML = banner + fail(e.message); }
+
+    const typeRows = rows.filter(r => r.stream_type===type);
+    const order = D.categoryOrder[type] || [];
+    const grouped = {};
+    typeRows.forEach(r => {
+      const k = r.category || 'uncategorized';
+      (grouped[k] = grouped[k] || []).push(r);
+    });
+
+    // Categories in defined order, then any stragglers alphabetically
+    const allCats = Array.from(new Set([...order, ...Object.keys(grouped).sort()]));
+
+    const totalActive = typeRows.filter(r=>r.active).reduce((s,r)=>s+sumCurve(r),0);
+    const totalAll    = typeRows.reduce((s,r)=>s+sumCurve(r),0);
+    const typeLabel = type==='revenue' ? 'Revenue' : 'Expenses';
+    const heroClass = type==='revenue' ? 'pos' : 'neg';
+
+    let html = banner + `
+      <div class="hero-row">
+        <div class="hero-card">
+          <div class="lbl">12-mo Active ${esc(typeLabel)}</div>
+          <div class="val ${heroClass}">${fmt$(totalActive)}</div>
+          <div class="sub">${typeRows.filter(r=>r.active).length} active streams</div>
+        </div>
+        <div class="hero-card">
+          <div class="lbl">Including Dormant</div>
+          <div class="val">${fmt$(totalAll)}</div>
+          <div class="sub">${typeRows.length} total streams (if all fired)</div>
+        </div>
+      </div>`;
+
+    allCats.forEach(cat => {
+      const list = grouped[cat]; if (!list || !list.length) return;
+      const label = D.categoryLabels[cat] || cat;
+      const catActive = list.filter(r=>r.active).reduce((s,r)=>s+sumCurve(r),0);
+      html += `
+        <div class="section">
+          <div class="section-header">
+            <h2>${esc(label)} <span class="badge" style="background:#21262d;color:#8b949e;font-size:0.7rem;padding:2px 8px;border-radius:10px;margin-left:8px;font-weight:500;">${list.length}</span></h2>
+            <span class="meta">12-mo active: ${fmt$(catActive)}</span>
+          </div>
+          ${list.map(rowStream).join('')}
+        </div>`;
+    });
+
+    app.innerHTML = html + `
+      <div class="todo">
+        TODO: click a row to drill into its 12-point curve, confidence rationale, and last-confirmed date.
+      </div>`;
+  }
+
+  function rowStream(r){
+    const total = sumCurve(r);
+    const numClass = r.stream_type==='revenue' ? 'pos' : 'neg';
+    const note = r.notes_ratio ? `<span class="note">${esc(r.notes_ratio)}</span>` : '';
+    return `
+      <div class="stream-row ${r.active?'':'inactive'}">
+        <div class="name">${esc(r.stream_id)}${note}</div>
+        <div class="num ${numClass}">${fmt$(r.stream_type==='expense'?-total:total)}</div>
+        <div class="conf">${fmtPct(Number(r.confidence||0))}</div>
+        <div class="status ${r.active?'on':'off'}">${r.active?'ACTIVE':'DORMANT'}</div>
+      </div>`;
+  }
+
+  // ─── COMBINED INSURANCE TAB ────────────────────────────────────────────
+  async function renderInsurance(){
+    app.innerHTML = banner + '<div class="loading">Loading insurance streams…</div>';
+    let rows;
+    try { rows = await ensureProjections(); }
+    catch(e){ return app.innerHTML = banner + fail(e.message); }
+
+    const insRows = rows.filter(r => r.category === 'tier-5-insurance' || (r.stream_id||'').includes('insurance'));
+    const B = D.insurance2025;
+
+    app.innerHTML = banner + `
+      <div class="section">
+        <div class="section-header">
+          <h2>2025 Calibration Baseline</h2>
+          <span class="meta">reference for EV framing — dollars live in-page, not in Supabase</span>
+        </div>
+        <div class="ins-baseline">
+          <div class="hero-card"><div class="lbl">Premium / Month</div><div class="val neg">${fmt$(B.premiumMonthly)}</div><div class="sub">wage-loss / accident / sickness</div></div>
+          <div class="hero-card"><div class="lbl">Premium / Year</div><div class="val neg">${fmt$(B.premiumAnnual)}</div><div class="sub">2025 outflow</div></div>
+          <div class="hero-card"><div class="lbl">2025 Payouts Received</div><div class="val pos">${fmt$(B.payoutsReceived)}+</div><div class="sub">${B.surgeries} minor surgeries</div></div>
+          <div class="hero-card"><div class="lbl">Net 2025 Position</div><div class="val pos">+${fmt$(B.netPosition)}</div><div class="sub">payouts − premiums</div></div>
+        </div>
+        <div class="ins-note">
+          Payout schedule per cut: <strong>${fmt$(B.payoutPerCut.suture)}</strong> (modern suture) / <strong>${fmt$(B.payoutPerCut.stitches)}</strong> (actual stitches).
+          Alessio frames insurance as an <strong>EV-positive investment category</strong>, not a cost category —
+          premiums paired with expected-payout curves, not sunk.
+        </div>
+        <div class="ins-note" style="font-style:italic;color:#8b949e;">&ldquo;${esc(B.quote)}&rdquo;</div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <h2>Insurance Streams <span class="meta">(${insRows.length})</span></h2>
+          <span class="meta">premium outflow only — expected-payout inflow rows pending policy review</span>
+        </div>
+        ${insRows.length ? insRows.map(rowStream).join('') : '<div class="empty">No insurance streams seeded yet.</div>'}
+      </div>
+
+      <div class="section">
+        <div class="section-header"><h2>Policy Attachments</h2><span class="meta">local-only per Spec §9 privacy rule</span></div>
+        <div class="todo">
+          TODO: drop-zone for Alessio's policy PDFs. Stored locally (not Supabase Storage) unless privacy call changes.
+          See <code>AI/Business/Projects/Command-Centre/Financial_Projections_Spec_v1_ADDENDUM_Combined_Insurance_2026-04-18.md</code> §3.
+        </div>
+      </div>
+
+      <div class="ins-caveat">
+        <strong>Caveat:</strong> Expected payouts are actuarial projections based on Alessio's personal incidence rate, not commitments.
+        Once the payout revenue rows are seeded (suffix <code>-payouts</code>, category <code>tier-5-insurance</code>), this tab will render paired curves per policy.
+      </div>
+
+      <div class="todo">
+        TODO (future session): paired premium/payout charts per stream · policy PDF viewer · net insurance position card per quarter.
+      </div>`;
+  }
+
+  // ─── LOGIN ─────────────────────────────────────────────────────────────
+  function renderLogin(){
+    app.innerHTML = `
+      <div class="login-shell">
+        <h2>Sign in to Command Centre</h2>
+        <form id="login-form">
+          <input type="email" id="email" placeholder="Email" autocomplete="username" required>
+          <input type="password" id="pw" placeholder="Password" autocomplete="current-password" required>
+          <button type="submit">Sign in</button>
+          <div class="login-msg" id="login-msg"></div>
+        </form>
+      </div>`;
+    document.getElementById('login-form').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('pw').value;
+      const msg = document.getElementById('login-msg');
+      msg.textContent = 'Signing in…';
+      const { error } = await supa.auth.signInWithPassword({ email, password });
+      if (error) { msg.textContent = error.message; return; }
+      location.reload();
+    });
+  }
+
+  boot();
 })();
 </script>
-
 </body>
 </html>
