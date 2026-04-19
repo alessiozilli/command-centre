@@ -268,7 +268,12 @@
 
     var actions = el('div', { cls: 'cc-banner-actions', children: [
       el('button', { text: 'Reset nav', attrs: { title: 'Clear saved order — restore JSON defaults' },
-        on: { click: function () { removeLS(KEY_NAV); location.reload(); } } })
+        on: { click: function () { removeLS(KEY_NAV); location.reload(); } } }),
+      el('button', { text: 'Log out', attrs: { title: 'Sign out of the Command Centre', 'data-cc-logout': '1' },
+        on: { click: function () {
+          if (typeof ccLogout === 'function') { ccLogout(); }
+          else { try { sessionStorage.removeItem('azck_cc_auth'); } catch(e){} window.location.href = 'index.html'; }
+        } } })
     ]});
 
     var banner = el('header', { cls: 'cc-banner', children: [brand, nav, actions] });
