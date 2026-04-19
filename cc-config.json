@@ -1,29 +1,43 @@
 {
-  "_comment": "Command Centre global config. Editable. Changes propagate on next page load. Users can drag-reorder nav in the UI — that override is stored per-browser in localStorage['cc.navOrder.v1']. To force-reset nav to this JSON default, user clicks the reset button in the banner (or clears localStorage).",
-  "_version": "1.0",
-  "_updated": "2026-04-17",
+  "_comment": "CC visual theme tokens. Edit this file to re-skin every CC page. cc-shell.js loads it on boot and injects values as CSS custom properties on :root. Values here override the defaults in cc-shell.css. If this file is missing or unreachable, cc-shell.css defaults apply — no break.",
 
-  "brand": {
-    "text": "AZCK",
-    "sub": "Command Centre",
-    "link": "alessio.html"
+  "color": {
+    "bg":          "#0d1117",
+    "bg-card":     "#161b22",
+    "bg-raised":   "#21262d",
+    "bg-hover":    "#1c2128",
+
+    "border":      "#30363d",
+    "border-soft": "#21262d",
+
+    "text":        "#e6edf3",
+    "text-body":   "#c9d1d9",
+    "text-muted":  "#8b949e",
+    "text-dim":    "#484f58",
+
+    "accent":      "#58a6ff",
+    "success":     "#3fb950",
+    "warn":        "#d29922",
+    "danger":      "#f85149"
   },
 
-  "nav": [
-    { "id": "tasks",     "label": "Tasks",     "href": "alessio.html",            "icon": "\u2713" },
-    { "id": "shared",    "label": "Shared",    "href": "shared.html",             "icon": "\u2609" },
-    { "id": "timesheet", "label": "Timesheet", "href": "timesheet.html",          "icon": "\u231A" },
-    { "id": "forge",     "label": "Forge",     "href": "forge.html",              "icon": "\u2692" },
-    { "id": "roadmap",   "label": "Roadmap",   "href": "roadmap.html",            "icon": "\u25B2" },
-    { "id": "usage",     "label": "Usage",     "href": "usage.html",              "icon": "\u25CE" },
-    { "id": "network",   "label": "Network",   "href": "network.html",            "icon": "\u25CB" },
-    { "id": "guide",     "label": "Guide",     "href": "claude-usage-guide.html", "icon": "\u272A" }
-  ],
+  "radius": {
+    "sm":   "6px",
+    "md":   "8px",
+    "lg":   "12px",
+    "pill": "20px"
+  },
 
-  "quickview": [
-    { "icon": "\uD83D\uDCB0", "label": "Budget",  "value": "$26 CAD left",            "link": "usage.html" },
-    { "icon": "\uD83D\uDCC5", "label": "Next",    "value": "Terra Machine \u00B7 Apr 24", "link": "https://calendar.google.com/" },
-    { "icon": "\u2709\uFE0F",  "label": "Message", "value": "Alessio \u2192 Reanna pending" },
-    { "icon": "\uD83D\uDD25",  "label": "Sprint",  "value": "4 knives due Apr 22",     "link": "alessio.html" }
-  ]
+  "spacing": {
+    "xs": "4px",
+    "sm": "8px",
+    "md": "16px",
+    "lg": "24px",
+    "xl": "32px"
+  },
+
+  "font": {
+    "body": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    "mono": "'SF Mono', Consolas, Menlo, monospace"
+  }
 }
