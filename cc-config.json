@@ -1,6 +1,6 @@
 {
-  "_comment": "AZCK Command Centre — global config. Edit this, changes propagate on next page load. v2.2 adds Password under REFERENCE (hash generator for changing access code).",
-  "_version": "2.2",
+  "_comment": "AZCK Command Centre — global config. Edit this, changes propagate on next page load. v2.3 removes Password from nav — access code change lives on login screen.",
+  "_version": "2.3",
   "_updated": "2026-04-19",
 
   "brand": {
@@ -55,8 +55,7 @@
       "id": "reference",
       "label": "REFERENCE",
       "items": [
-        { "id": "access",    "label": "Access",     "href": "access-permissions.html" },
-        { "id": "password",  "label": "Password",   "href": "password.html" }
+        { "id": "access",    "label": "Access",     "href": "access-permissions.html" }
       ]
     }
   ],
