@@ -3,415 +3,335 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:;">
-<title>Roadmap — AZCK Command Centre</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co; frame-src 'none';">
+<title>Roadmap · AZCK Command Centre</title>
 <link rel="stylesheet" href="cc-shell.css">
-<script>
-  // window.PAGE — consumed by cc-shell. Editable in the DATA BLOCK at bottom.
-  window.PAGE = {
-    id: 'roadmap',
-    title: 'AZCK Roadmap',
-    subtitle: 'What\'s in flight · what\'s queued · what shipped · what\'s parked. Seeded from AI/Ops/tasks.md.',
-    subtabs: [
-      { id: 'current',  label: 'Current' },
-      { id: 'backlog',  label: 'Backlog' },
-      { id: 'shipped',  label: 'Shipped' },
-      { id: 'parked',   label: 'Parked' }
-    ],
-    stats: [
-      { id: 'current',  label: 'Current',  value: '—' },
-      { id: 'backlog',  label: 'Backlog',  value: '—' },
-      { id: 'shipped',  label: 'Shipped',  value: '—' },
-      { id: 'parked',   label: 'Parked',   value: '—' }
-    ]
-  };
-</script>
-<script src="cc-shell.js" defer></script>
 <style>
-  .rm-wrap { max-width:1100px; margin:0 auto; padding:0 20px 80px; }
-  .rm-section { margin-bottom:28px; }
-  .rm-section h2 {
-    font-size:18px; font-weight:700; color:#58a6ff;
-    margin:0 0 14px; padding-bottom:10px; border-bottom:1px solid #21262d;
-    display:flex; align-items:center; gap:10px;
-  }
-  .rm-section h2 .count {
-    font-size:12px; color:#8b949e; font-weight:500;
-    background:#21262d; padding:2px 10px; border-radius:10px;
-  }
-  .rm-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:12px; }
-  .rm-card {
-    background:#161b22; border:1px solid #30363d; border-radius:8px;
-    padding:14px 16px; transition:border-color .15s;
-  }
-  .rm-card:hover { border-color:#58a6ff; }
-  .rm-card .head {
-    display:flex; align-items:flex-start; gap:10px; margin-bottom:8px;
-  }
-  .rm-card .dot {
-    width:10px; height:10px; border-radius:50%; flex:none; margin-top:6px;
-  }
-  .dot-high     { background:#f85149; }
-  .dot-medium   { background:#d29922; }
-  .dot-low      { background:#3fb950; }
-  .dot-shipped  { background:#58a6ff; }
-  .dot-parked   { background:#8b949e; }
-  .rm-card .title {
-    flex:1; color:#e6edf3; font-size:14px; font-weight:600; line-height:1.4;
-  }
-  .rm-card .notes {
-    color:#8b949e; font-size:12.5px; line-height:1.5; margin:6px 0 10px;
-  }
-  .rm-meta {
-    display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; font-size:11px;
-  }
-  .chip {
-    background:#21262d; border:1px solid #30363d; color:#8b949e;
-    padding:2px 8px; border-radius:10px; font-weight:500;
-  }
-  .chip-alessio { background:#1f2d4a; border-color:#2d4a7a; color:#79c0ff; }
-  .chip-reanna  { background:#2d1f40; border-color:#4a2d6b; color:#c89ce6; }
-  .chip-both    { background:#1f3d2e; border-color:#2d5a44; color:#7ee787; }
-  .chip-date    { background:#0d1117; color:#c9d1d9; }
-  .chip-link a  { color:#58a6ff; text-decoration:none; }
-  .chip-link a:hover { text-decoration:underline; }
-  .rm-empty { color:#8b949e; padding:24px; text-align:center; font-style:italic; }
+  /* Page-scoped roadmap styles */
+  .rm-wrap { padding: 24px; max-width: var(--cc-max-w); margin: 0 auto; }
+  .rm-title { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+  .rm-subtitle { font-size: 14px; color: var(--cc-text-muted); margin-bottom: 24px; }
 
-  .rm-intro {
-    color:#8b949e; font-size:13px; margin-bottom:20px;
-    padding:12px 16px; background:#161b22; border:1px solid #21262d;
-    border-radius:8px; border-left:3px solid #58a6ff;
+  .rm-tier {
+    margin-bottom: 32px;
   }
+  .rm-tier-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--cc-border);
+  }
+  .rm-tier-label {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    color: var(--cc-text-muted);
+    text-transform: uppercase;
+  }
+  .rm-tier-subtitle {
+    font-size: 13px;
+    color: var(--cc-text-dim);
+    font-style: italic;
+  }
+
+  .rm-play {
+    background: var(--cc-bg-card);
+    border: 1px solid var(--cc-border);
+    border-radius: var(--cc-r-md);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+  .rm-play-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+  .rm-play-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--cc-text);
+  }
+  .rm-play-target {
+    font-size: 12px;
+    color: var(--cc-success);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .rm-play-note {
+    font-size: 12px;
+    color: var(--cc-text-body);
+    line-height: 1.4;
+  }
+  .rm-play-meta {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  .rm-chip {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: var(--cc-bg-raised);
+    color: var(--cc-text-muted);
+  }
+  .rm-chip.status-active  { color: var(--cc-success); background: #3fb95018; }
+  .rm-chip.status-planned { color: var(--cc-accent);  background: #58a6ff18; }
+  .rm-chip.status-parked  { color: var(--cc-warn);    background: #d2992218; }
+  .rm-chip.status-gated   { color: var(--cc-danger);  background: #f8514918; }
+  .rm-chip.status-rejected { color: var(--cc-text-dim); background: var(--cc-bg-raised); text-decoration: line-through; }
+
+  .rm-placeholder {
+    padding: 60px 24px;
+    text-align: center;
+    color: var(--cc-text-muted);
+    font-style: italic;
+    border: 1px dashed var(--cc-border);
+    border-radius: var(--cc-r-md);
+    margin: 24px;
+  }
+
+  .rm-rejects-head { font-size: 13px; font-weight: 700; color: var(--cc-danger); margin: 24px 0 8px; }
+  .rm-rejects { color: var(--cc-text-dim); font-size: 12px; }
+  .rm-rejects li { margin: 4px 0; padding-left: 16px; list-style: none; position: relative; }
+  .rm-rejects li::before { content: '✕'; position: absolute; left: 0; color: var(--cc-danger); }
 </style>
 </head>
 <body>
 
-<main class="rm-wrap">
-
-  <div data-subtab="current">
-    <div class="rm-intro">
-      <strong>In flight right now.</strong> Active work that has a deadline this week or is mid-build. Priority-ordered.
-    </div>
-    <div id="rm-current"></div>
-  </div>
-
-  <div data-subtab="backlog">
-    <div class="rm-intro">
-      <strong>Queued — next up.</strong> Ready to start when current clears. Grouped by owner.
-    </div>
-    <div id="rm-backlog"></div>
-  </div>
-
-  <div data-subtab="shipped">
-    <div class="rm-intro">
-      <strong>Recently shipped.</strong> Last 30 days of completed work across all sessions. Newest first.
-    </div>
-    <div id="rm-shipped"></div>
-  </div>
-
-  <div data-subtab="parked">
-    <div class="rm-intro">
-      <strong>Intentionally on hold.</strong> Decided not to work on these now — each has a reason or a trigger to resume.
-    </div>
-    <div id="rm-parked"></div>
-  </div>
-
-</main>
-
 <!-- ═══════════════════════════════════════════════════════════════
      DATA BLOCK — UPDATE THIS SECTION ONLY
-     Source: AI/Ops/tasks.md — seeded 2026-04-17 (Session 20)
-     Add a new item: push to the right bucket array.
-     Move between buckets: cut from old array, paste into new.
-     Engine below reads this and renders each subtab.
+     Each subtab has its own section; engine renders by PAGE.subtabs.
+     Source of truth for Commercial tab:
+       AI/Business/Projects/Forge-Commercial/Roadmap_v1_2026-04-17.md
      ═══════════════════════════════════════════════════════════════ -->
 <script>
-var ROADMAP = {
-  current: [
-    // ─── Alessio ───
-    { owner:'alessio', priority:'high', title:'Knife sprint — 4 knives due Wed Apr 22',
-      notes:'Finish grind Apr 20 · Engrave Apr 21 · Sharpen + photo + delivery Apr 22 (DEADLINE). Leather sheaths Apr 23, kydex Apr 24.',
-      date:'Apr 22' },
-    { owner:'alessio', priority:'high', title:'Terra Machine session with Matt',
-      notes:'Review prototype direction, Fusion 360 iteration.',
-      date:'Fri Apr 24' },
-    { owner:'alessio', priority:'medium', title:'Phase 0.5 implementation — 4 sub-items',
-      notes:'0.5a Booking flow consolidation + hash-routing · 0.5b Cancellation policy before waiver · 0.5c Under-18 waiver toggle · 0.5d Wix checkout pre-booking date flow.',
-      link:{ label:'Master Plan v2', href:'AI/Business/Projects/Website/AZCK_Website_Master_Plan_v2_Walkthrough_Integrated.md' } },
-    { owner:'alessio', priority:'medium', title:'Phase 2 remaining — 3 preview-*.html 404s',
-      notes:'Files exist locally, not yet deployed to GitHub Pages.' },
-    { owner:'alessio', priority:'low', title:'Matt\'s 10 prototypes — ~2 week turnaround',
-      notes:'Started Apr 14. Fusion 360 review waiting.' },
-
-    // ─── Reanna ───
-    { owner:'reanna', priority:'high', title:'Call accountant about SR&ED',
-      notes:'Ask for SR&ED consultant referral, set up tracking. Unlocks 35–55% R&D tax refund.' },
-    { owner:'reanna', priority:'high', title:'Call IRAP intake',
-      notes:'1-877-994-4727. Call prep script ready.' },
-    { owner:'reanna', priority:'medium', title:'Send AWE BRIDGE intro email',
-      notes:'Draft ready for review.' },
-    { owner:'reanna', priority:'medium', title:'Submit Alberta Innovates Micro-Voucher',
-      notes:'$10K grant, online form.' },
-
-    // ─── Both ───
-    { owner:'both', priority:'high', title:'CanExport deadline — May 29 2026',
-      notes:'Check revenue ($300K+) and FTE (3+) gates first. If eligible, fast-track application.',
-      date:'May 29' }
-  ],
-
-  backlog: [
-    // ─── Alessio — Website ───
-    { owner:'alessio', priority:'medium', title:'Phase 3 — Automated messages audit',
-      notes:'Booking confirmations, waiver PDFs, gift cert delivery.' },
-    { owner:'alessio', priority:'medium', title:'Phase 4 — Full manual test pass (pre-CMS gate)' },
-    { owner:'alessio', priority:'medium', title:'Phase 5 — Editable CMS + Wix headless checkout',
-      notes:'Supabase DB + page wiring (blog.html already ENGINE+DATA ready). Wix Cart API + Redirect Session API for payment only. ~2-3 sessions.' },
-    { owner:'alessio', priority:'low', title:'Phase 6 — CMS Admin panel in Command Centre' },
-    { owner:'alessio', priority:'low', title:'Phase 7 — Lockdown',
-      notes:'2FA, allowlist, RLS, audit logs.' },
-    { owner:'alessio', priority:'low', title:'Phase 8 — Full regression test (post-CMS)' },
-
-    // ─── Alessio — QuadFang ───
-    { owner:'alessio', priority:'medium', title:'Fusion 360 design iteration',
-      notes:'Review Matt\'s new direction.' },
-    { owner:'alessio', priority:'medium', title:'Manufacturing decision',
-      notes:'Swiss (outsource) / Haas ($120K) / Tormach ($12–40K).' },
-    { owner:'alessio', priority:'low', title:'Confirm billing period with Kyran',
-      notes:'Reimbursement plan created, no invoice yet.' },
-
-    // ─── Alessio — other ───
-    { owner:'alessio', priority:'low', title:'Submit Anthropic complaint letter',
-      notes:'15-min task. Parked Apr 16.',
-      link:{ label:'Handoff doc', href:'AI/Ops/Complaints/HANDOFF_Anthropic_Complaint_Submission.md' } },
-    { owner:'alessio', priority:'low', title:'Trash root Grants/ and Ops/ folders',
-      notes:'Empty husks with README_MOVED.md. 1-min Finder task.' },
-
-    // ─── Reanna ───
-    { owner:'reanna', priority:'medium', title:'Check AMPG eligibility',
-      notes:'Employee count + 2 years in business required.' },
-    { owner:'reanna', priority:'medium', title:'Check CanExport eligibility',
-      notes:'$300K+ revenue + 3 FTEs. Deadline May 29 2026.' },
-    { owner:'reanna', priority:'low', title:'Bookkeeping catch-up',
-      notes:'Financial logs and transaction entry.' },
-    { owner:'reanna', priority:'low', title:'Social media scheduling',
-      notes:'Queue content for next 2 weeks.' },
-    { owner:'reanna', priority:'low', title:'Unpaid invoice follow-up',
-      notes:'Client payment reminders.' },
-    { owner:'reanna', priority:'low', title:'Order log review',
-      notes:'Weekly reconciliation.' },
-
-    // ─── Both ───
-    { owner:'both', priority:'medium', title:'Fill in real R&D data',
-      notes:'SR&ED Activity Log empty, grant-expense-log has TBD amounts.' },
-    { owner:'both', priority:'low', title:'Review QuadFang deliverables together',
-      notes:'Sync on product feedback + next steps.' },
-    { owner:'both', priority:'low', title:'Update financials with real numbers',
-      notes:'Actual P&L data for reconciliation.' }
-  ],
-
-  shipped: [
-    // ─── Session 18 · Apr 17 ───
-    { session:'S18', date:'Apr 17', title:'CSP Phase 1 — all 6 CC pages hardened',
-      notes:'network, alessio, timesheet, forge, usage, claude-usage-guide. Mid-session wipe incident recovered via git show pre-wipe parent SHAs. Live verified: title+H1+CSP+Chart.js+no-violations.' },
-
-    // ─── Session 17 · Apr 17 ───
-    { session:'S17', date:'Apr 17', title:'Forge v0.9.5 — The Operator · CLAUDE.md v1.3',
-      notes:'Forge reevaluation + tier series wired (quick / checkpoint / wrap / budget-check / what\'s-loaded). Architecture cleanup.' },
-
-    // ─── Session 15 · Apr 16 ───
-    { session:'S15', date:'Apr 16', title:'QuadFang image on AZCK homepage',
-      notes:'Shopify CDN hotlink replaced with local images/quadfang/qf-render-v1.png in azck-site repo.' },
-    { session:'S15', date:'Apr 16', title:'quadfang.com HTTPS enabled',
-      notes:'GitHub Pages Enforce HTTPS toggled ON. Live verified (server: GitHub.com).' },
-    { session:'S15', date:'Apr 16', title:'Handoff Protocol built',
-      notes:'New tier — lightweight continuity transfer under $0.12 CAD. Documented in CLAUDE.md.' },
-
-    // ─── Session 14 · Apr 16 ───
-    { session:'S14', date:'Apr 16', title:'Anthropic complaint letter drafted',
-      notes:'Real session data: 13 sessions / 36h, $236.60 tracked. Submission handoff written.' },
-
-    // ─── Session 13 · Apr 16 ───
-    { session:'S13', date:'Apr 16', title:'Pill-nav deployed to 4 CC pages',
-      notes:'usage.html, timesheet.html, forge.html, claude-usage-guide.html. All 6 CC pages verified live.' },
-    { session:'S13', date:'Apr 16', title:'claude-usage-guide.html restored from archive' },
-
-    // ─── Session 12 · Apr 16 ───
-    { session:'S12', date:'Apr 16', title:'DMARC upgraded to p=reject',
-      notes:'Max enforcement via Wix REST API. network.html DATA BLOCK updated.' },
-
-    // ─── Session 11 · Apr 16 ───
-    { session:'S11', date:'Apr 16', title:'Phase 1 — Universal header/footer/menu bar',
-      notes:'Deployed LIVE to azck-site. 9 nav items + Shop, admin gear in footer. 404 fixed.' },
-
-    // ─── Session 10 · Apr 16 ───
-    { session:'S10', date:'Apr 16', title:'timesheet.html rebuilt with usage.html tab style',
-      notes:'.tab-bar / .tab-btn rounded corners, .stat-grid / .stat-box, progress bar. Live at command.azcustomknives.com/timesheet.html.' },
-
-    // ─── Session 8 · Apr 16 ───
-    { session:'S08', date:'Apr 16', title:'Email auth — SPF hardfail + DKIM 2048-bit + DMARC',
-      notes:'SPF ~all → -all. Google DKIM 2048-bit RSA key deployed via Wix API. DMARC Wix CNAME → own TXT (p=quarantine).' },
-    { session:'S08', date:'Apr 16', title:'Newsletter signup in shared footer',
-      notes:'components.js/css updated, deployed to GitHub.' },
-    { session:'S08', date:'Apr 16', title:'network.html built for Command Centre',
-      notes:'Supabase auth, email auth cards, DNS table, platforms, tools, roadmap.' },
-
-    // ─── Sessions 4–6 · Apr 15 ───
-    { session:'S06', date:'Apr 15', title:'QuadFang deployed to GitHub Pages',
-      notes:'Repo, 19 files, Pages enabled, DNS migrated Shopify → GitHub Pages on Squarespace (4 A records + CNAME).' },
-    { session:'S06', date:'Apr 15', title:'Homepage fade-in bug fixed',
-      notes:'v2 CSS deployed LIVE. All sections visible on scroll. Revenue blocker fixed.' },
-    { session:'S05', date:'Apr 15', title:'Hunt Gallery colors — gold → Hunter Orange',
-      notes:'#B8860B → #FC4C02 in 3 files, uploaded to GitHub.' },
-    { session:'S04', date:'Apr 15', title:'newsletter_subscribers Supabase table + RLS' },
-
-    // ─── Session 3 · Apr 15 ───
-    { session:'S03', date:'Apr 15', title:'QuadFang GitHub Pages Phase 1 build',
-      notes:'19 files. hunt-gallery.html (full Supabase SPA), hunt-gallery-admin.html, images, CNAME. ENGINE + DATA BLOCK architecture.' },
-
-    // ─── Session 2 · Apr 15 ───
-    { session:'S02', date:'Apr 15', title:'Waiver PDFs + Blog refactor + QF typo',
-      notes:'4 broken PDF links fixed. blog.html refactored to ENGINE + DATA BLOCK. "Coming Soonr" typo fixed on quadfang.com.' },
-    { session:'S02', date:'Apr 15', title:'Kyran client folder + reimbursement billing plan',
-      notes:'$500/mo base + overage structure documented.' },
-
-    // ─── Session 1 · Apr 15 ───
-    { session:'S01', date:'Apr 15', title:'Avalon Research — invoice + trade agreement',
-      notes:'AZ-INV-2026-001 ($829.50, 3 settlement options). Trade agreement side letter.' },
-    { session:'S01', date:'Apr 15', title:'AI folder restructure — Forge / Business / Ops / _Archive',
-      notes:'CLAUDE.md v1.2 (14 path refs updated, folder map embedded). Invoice template. Client folder system.' }
-  ],
-
-  parked: [
-    { owner:'alessio', title:'Cancel Shopify (parked to Jun 26 2026)',
-      notes:'Calendar event ete3clmgv4ilqk1busmk3spppg set. Do not cancel before. $1/mo promo until Jun 30; cancelling early = zero savings + risk of losing Coming Soon copy.',
-      date:'Jun 26' },
-    { owner:'alessio', title:'DKIM fix (not urgent)',
-      notes:'Wix DNS value does not match Google\'s expected key. Google Admin → Gmail → Authenticate → regen → update Wix at google._domainkey → wait → Start Authentication.',
-      link:{ label:'Auto-memory', href:'.auto-memory/project_dkim_stale_record.md' } },
-    { owner:'alessio', title:'Awaiting Trevor\'s settlement choice',
-      notes:'Option A/B/C on AZ-INV-2026-001 ($829.50).' },
-    { owner:'alessio', title:'Anthropic complaint — 5-day follow-up reminder',
-      notes:'Forge will remind after submission + ticket #.' },
-    { owner:'both', title:'Local AI Memory System',
-      notes:'3-layer memory (live + cold storage + backup). Scripts ready. Needs Alessio at PC with Docker running.',
-      link:{ label:'Plan', href:'AI/Business/Projects/Local-AI/LOCAL-AI-MEMORY-PLAN.md' } },
-    { owner:'both', title:'Generic renderers refactor',
-      notes:'Makes usage.html truly JSON-only. ~$0.50 CAD.',
-      link:{ label:'Plan', href:'AI/Ops/Plans/generic-renderers.md' } },
-    { owner:'both', title:'Editable CMS — Supabase backend',
-      notes:'~4–5 sessions. Deferred until Phase 5 window opens.' }
+window.PAGE = {
+  id: 'roadmap',
+  title: 'Roadmap',
+  subtitle: '22 plays across 5 tiers · AZCK core · QuadFang R&D',
+  subtabs: [
+    { id: 'commercial', label: 'Commercial (22 plays)' },
+    { id: 'knifebiz',   label: 'Knife Biz' },
+    { id: 'quadfang',   label: 'QuadFang' },
+    { id: 'reanna',     label: 'Reanna (deferred)' }
   ]
 };
-</script>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     ENGINE — DO NOT EDIT (renders the DATA BLOCK above)
-     ═══════════════════════════════════════════════════════════════ -->
+var ROADMAP = {
+  commercial: {
+    // source: Forge Commercial Roadmap v1 — 2026-04-17
+    tiers: [
+      { label: 'TIER 1', tagline: 'Do these first — low cash, high leverage, 90-day start', plays: [
+        { title: '1. Knife Sharpening Subscription (GP commercial)', target: '$600–1,200/mo', status: 'planned',
+          note: 'PostKnife-style rotation. 5-knife sets, bi-weekly. Target 15 commercial clients by Dec 2026. Door-knock 20 GP restaurants/butchers. 70–80% margin.' },
+        { title: '2. Corporate Knife-Make Team Building Days', target: '$15–30K/yr', status: 'active',
+          note: 'ACTIVE — currently 1 of 3 seeded revenue streams. $175–250/person, groups of 6–10. Shop-based, uses existing teach. Scale to 2/month in 2027.' },
+        { title: '3. Gumroad Kit — AI-Run Small Business OS', target: '$1.2–4K Yr 1', status: 'planned',
+          note: '$49 intro → $79. Anonymized cc-shell + ENGINE+DATA BLOCK templates + Save All guide + 30-min Loom. 8–12 hr build. Scales passively.' }
+      ]},
+      { label: 'TIER 2', tagline: 'After Tier 1 traction (Q3–Q4 2026) · pick 1–2', plays: [
+        { title: '4. Grant-Writing Concierge (Canadian artisans)', target: '$2.5–3.5K/claim', status: 'planned',
+          note: 'Contingency 15–20%. SR&ED enhanced 35% on first $6M. Partner with Kent Friesen for filings. 3 clients Yr 1 = $7–10K.' },
+        { title: '5. The AI-Assisted Artisan content engine', target: 'SEO compound', status: 'planned',
+          note: '1 long-form YouTube/mo + reels + blog. 500+ subs Yr 1. Indirect monetization via Tier 1 kit + Tier 3 course sales.' },
+        { title: '6. Custom Waitlist Deposits + Limited Drops', target: '$7–10K/yr cash flow', status: 'planned',
+          note: '$200 deposit locks Defender slot + quarter pricing. 4–8 numbered limited drops/yr at $800–1,500. Kramer-style scarcity model.' }
+      ]},
+      { label: 'TIER 3', tagline: 'Consider in 2027+ · requires Tier 1–2 foundation', plays: [
+        { title: '7. Paid Course: Run Your Craft Business With AI', target: '$9–40K launch', status: 'planned',
+          note: '$297 launch → $497 evergreen. 40–80 hr build. Only after Tier 2 content engine shows audience.' },
+        { title: '8. Bespoke Forge Setup Consulting', target: '$3–6K/project', status: 'planned',
+          note: 'Referral-only. Cap 2/year. Pays slow months. Creates case studies for kit + course.' },
+        { title: '9. Knifemaking Retreat Weekends', target: '$24–40K/yr', status: 'planned',
+          note: '2-day immersive. 4–6 guests at $1,800–2,500. 4 weekends/yr. Requires Reanna on logistics.' }
+      ]},
+      { label: 'TIER 4', tagline: 'Outside the knife business · parallel income streams', plays: [
+        { title: '4A. STL File Marketplace', target: '$300–2K Yr 1', status: 'planned',
+          note: 'Cults3D / MakerWorld / Printables. Jigs, fixtures, templates from existing Fusion files. Year 1 passive.' },
+        { title: '4B. Stock Video / Photo', target: '$200–1.5K Yr 1', status: 'planned',
+          note: 'Adobe Stock / Pond5 / Wirestock. Forge fire, hammer-on-anvil slow-mo. Shoot during normal work.' },
+        { title: '4C. Print-on-Demand (maker/dyslexic themes)', target: '$200–2.5K Yr 1', status: 'planned',
+          note: 'Printful+Etsy, Redbubble. Themes: dyslexic brain, forge iconography, AI+craft crossover.' },
+        { title: '4D. Self-Published Book (Kindle/KDP/Audible)', target: '$500–4K Yr 1', status: 'planned',
+          note: 'Dyslexic Maker / Forge systems-story / Artisan Cash Flow. Forge drafts, Alessio refines (10%/90%).' },
+        { title: '4E. Niche Newsletter (Beehiiv/Substack)', target: '$10–30K Yr 2', status: 'planned',
+          note: 'Non-AZCK brand. Dyslexic Operator / AI Artisan. Sponsor placements + Beehiiv referral.' },
+        { title: '4F. Shop Equipment Rental / Maker Space', target: '$300–600/mo', status: 'gated',
+          note: 'Gated on commercial liability confirmation. Off-hours grinder/forge/printer to vetted hobbyists.' },
+        { title: '4G. Estate Sale / Auction Flipping', target: '$500–2K/mo', status: 'planned',
+          note: 'Weekend scouting. Tool-value edge most buyers don\'t have. $200–500 starter float, self-funding.' },
+        { title: '4H. Retail Sharpening Pop-Ups', target: '$200–600/event', status: 'planned',
+          note: 'Farmer\'s markets, outdoor shows. $8–15/blade, 90% margin. 6–12 events/yr.' },
+        { title: '4I. Skillshare / Udemy — Bladesmithing Intro', target: '$300–2K Yr 1', status: 'planned',
+          note: 'Platform commission 40–50%. Derivative cut of Tier 3 premium course. Different audience.' },
+        { title: '4J. Fiverr/Upwork — Forge Your AI Assistant gigs', target: '$300–1K/mo', status: 'planned',
+          note: 'High-volume version of Tier 3 consulting. $150–500 entry, $800–2K premium tier.' },
+        { title: '4K. Coaching — Dyslexic/ADHD small-biz owners', target: '$500–1.5K/mo', status: 'planned',
+          note: '1-on-1 monthly calls + Notion. $150–300/mo retainer. Disadvantage → value prop.' },
+        { title: '4L. Anatomy-Niche Foot Photography (couples)', target: '$200–500/mo', status: 'gated',
+          note: 'EXPLORATORY — do NOT commit until: (1) Tier 1 sharpening sub running, (2) separate identity, (3) written content policy signed, (4) Reanna consent + capacity test, (5) 90-day measurement. See Spec §14.' }
+      ]},
+      { label: 'TIER 5', tagline: 'Wealth protection · not income, but critical', plays: [
+        { title: '5.1 TFSA + RRSP max annually', target: 'Tax-free growth', status: 'planned',
+          note: 'Broad-market ETFs (XEQT, VEQT, VFV). Automate contributions.' },
+        { title: '5.2 Disability insurance', target: '~$600/mo premium', status: 'active',
+          note: 'ACTIVE — paying $600/mo. 2025 net: +$12.8K (4 minor surgeries, >$20K payouts). Treated as EV-positive investment. See Combined Insurance addendum.' },
+        { title: '5.3 Critical illness insurance', target: 'Lump-sum buffer', status: 'planned',
+          note: 'Business-continuity payout if diagnosed. Hands are the business — don\'t skip.' },
+        { title: '5.4 Term life (20–30 yr)', target: 'Reanna + Grace', status: 'planned',
+          note: 'If not already in place. Family protection.' },
+        { title: '5.5 Emergency fund — 6 mo expenses HISA', target: 'Cash buffer', status: 'planned',
+          note: 'Artisan income is lumpy. Cash buffer = freedom to say no to bad deals.' }
+      ]}
+    ],
+    rejects: [
+      'SaaS CC product — saturated, no moat, support burden. Killed.',
+      'Paid-tier AZCK-branded newsletter — audience too small today.',
+      'Physical retail expansion — capital-heavy, low margin.',
+      'Amazon/eBay direct knife sales — race to bottom, damages brand.',
+      'Dropshipping (any product) — not your brand, not your standards.',
+      'Crypto mining / trading — volatile, regulatory risk.',
+      'NFT / Web3 anything — noise floor, trust deficit.',
+      'Day trading / options speculation — negative EV for retail.',
+      'MLM / affiliate pyramid schemes — ethical + reputational risk.',
+      'YouTube automation / AI-voice faceless channels — cheapens brand.',
+      'Real estate flipping — capital-heavy, timing risk.',
+      'Paid survey / micro-task sites — time-for-pennies.',
+      'Content mills / blog farms — AI-saturated, no moat.',
+      'Get-rich-quick course enrollment OR sale — both sides bad.',
+      'Influencer brand deal chasing on unaligned products — trust destroyer.'
+    ]
+  },
+
+  knifebiz: {
+    tiers: [
+      { label: 'CORE · ACTIVE REVENUE', tagline: 'Running now — seeded in Financial Projections', plays: [
+        { title: 'Custom knife orders', target: 'Primary revenue', status: 'active',
+          note: 'Defender signature line — 17 iterations. Custom orders ongoing. MagnaCut / CruWear / VG10 / ZDP-189 steels.' },
+        { title: 'Knife-making classes', target: 'Seeded', status: 'active',
+          note: 'Existing class enrollment revenue stream. 80CRV2 / 1084 steels for student knives.' },
+        { title: 'Existing sharpening (walk-in)', target: 'Seeded', status: 'active',
+          note: 'Walk-in retail sharpening at the shop. Distinct from the planned Tier 1 subscription play.' }
+      ]},
+      { label: 'SPRINT · APR 22 DEADLINE', tagline: 'Current shop priority', plays: [
+        { title: '4 knives due Wed Apr 22', target: 'SHIP', status: 'active',
+          note: 'Glue up · engrave · rough grind · finish grind · engrave · sharpen · photo · delivery. Leather + kydex sheaths Thu/Fri Apr 23–24.' }
+      ]},
+      { label: 'OPERATIONS', tagline: 'Shop + equipment state', plays: [
+        { title: 'Shop location', target: 'Leased', status: 'active',
+          note: '#104, 9602 115 Street, Grande Prairie, AB T8V 5W2. Rent seeded at $2,000/mo. Phone 1-780-831-2987.' },
+        { title: 'Equipment', target: 'Maintained', status: 'active',
+          note: 'Forge, grinder, Fusion 360, 3D printer. Maintenance budgeted $100/mo.' },
+        { title: 'Signature line', target: 'Defender Mk XVII', status: 'active',
+          note: 'Current Defender iteration. G10 handle material. Candidate for Tier 2 play #6 (limited drops).' }
+      ]}
+    ]
+  },
+
+  quadfang: {
+    tiers: [
+      { label: 'PHASE · PROTOTYPE', tagline: 'Current state — 10 prototypes in production with Matt Runhart', plays: [
+        { title: 'Matt Runhart · 10 prototypes', target: '~2 wk turnaround', status: 'active',
+          note: 'Started 2026-04-14. Fusion 360 design iteration ongoing. Matt at Terra Machine. Session Apr 24.' },
+        { title: 'Kyran partnership · split ratio', target: 'TBD', status: 'parked',
+          note: 'Design question pending Spec §14 Q5 — single field on `quadfang` stream vs separate `quadfang-kyran` outflow. Conversation with Kyran needed.' },
+        { title: 'Manufacturing decision', target: 'TBD', status: 'parked',
+          note: 'Swiss (outsource) / Haas ($120K) / Tormach ($12–40K). Decision after prototype validation.' }
+      ]},
+      { label: 'INFRASTRUCTURE', tagline: 'Website + DNS + storefront', plays: [
+        { title: 'quadfang.com · GitHub Pages', target: 'LIVE', status: 'active',
+          note: 'Served from alessiozilli/quadfang repo. HTTPS enforced. 19 files, ENGINE+DATA BLOCK architecture. Coming Soon page Alessio-written.' },
+        { title: 'newsletter_subscribers table (Supabase)', target: 'Wired', status: 'active',
+          note: 'RLS enabled, anon insert / admin read. Wired to signup form.' },
+        { title: 'Shopify QF store', target: 'Parked Jun 26, 2026', status: 'parked',
+          note: '$1/mo promo until Jun 30, 2026. Calendar event ete3clmgv4ilqk1busmk3spppg. Do not cancel before.' }
+      ]},
+      { label: 'LAUNCH TARGET', tagline: 'Q3–Q4 2026 broadhead launch', plays: [
+        { title: 'Target launch window', target: 'Q3–Q4 2026', status: 'planned',
+          note: '4-blade fixed broadhead. 100 grain. 4145 steel. SLM metal printing. Ethical hunting positioning.' }
+      ]}
+    ]
+  },
+
+  reanna: null  // deferred — placeholder rendered by engine
+};
+</script>
+<!-- ═══ END DATA BLOCK ═══ -->
+
+<!-- ── ENGINE ── -->
+<main id="cc-content" class="rm-wrap">
+  <h1 class="rm-title" id="rmTitle"></h1>
+  <div class="rm-subtitle" id="rmSubtitle"></div>
+  <div data-subtab="commercial" id="rmCommercial"></div>
+  <div data-subtab="knifebiz"   id="rmKnifebiz"></div>
+  <div data-subtab="quadfang"   id="rmQuadfang"></div>
+  <div data-subtab="reanna"     id="rmReanna"></div>
+</main>
+
+<script src="cc-shell.js"></script>
 <script>
 (function(){
   'use strict';
-
-  var esc = function(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){
-    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
-
-  function ownerChip(o){
-    if (!o) return '';
-    var cls = 'chip-' + o;
-    var label = o.charAt(0).toUpperCase() + o.slice(1);
-    return '<span class="chip '+cls+'">'+esc(label)+'</span>';
+  function esc(s){
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   }
-
-  function card(item, opts){
-    opts = opts || {};
-    var dotClass = 'dot-' + (item.priority || opts.defaultDot || 'medium');
-    var meta = [];
-    if (item.owner)   meta.push(ownerChip(item.owner));
-    if (item.session) meta.push('<span class="chip">'+esc(item.session)+'</span>');
-    if (item.date)    meta.push('<span class="chip chip-date">'+esc(item.date)+'</span>');
-    if (item.link && item.link.href) meta.push(
-      '<span class="chip chip-link"><a href="'+esc(item.link.href)+'" target="_blank" rel="noopener">'+esc(item.link.label || 'link')+' ↗</a></span>'
-    );
-    return '' +
-      '<div class="rm-card">' +
-        '<div class="head">' +
-          '<span class="dot '+dotClass+'"></span>' +
-          '<div class="title">'+esc(item.title||'(untitled)')+'</div>' +
+  function renderPlays(tiers) {
+    if (!tiers || !tiers.length) return '<div class="rm-placeholder">No plays defined yet.</div>';
+    return tiers.map(function(t){
+      var plays = (t.plays || []).map(function(p){
+        return '<div class="rm-play">' +
+          '<div class="rm-play-head">' +
+            '<span class="rm-play-title">' + esc(p.title) + '</span>' +
+            (p.target ? '<span class="rm-play-target">' + esc(p.target) + '</span>' : '') +
+          '</div>' +
+          (p.note ? '<div class="rm-play-note">' + esc(p.note) + '</div>' : '') +
+          '<div class="rm-play-meta">' +
+            (p.status ? '<span class="rm-chip status-' + esc(p.status) + '">' + esc(p.status) + '</span>' : '') +
+          '</div>' +
+        '</div>';
+      }).join('');
+      return '<section class="rm-tier">' +
+        '<div class="rm-tier-head">' +
+          '<span class="rm-tier-label">' + esc(t.label) + '</span>' +
+          (t.tagline ? '<span class="rm-tier-subtitle">' + esc(t.tagline) + '</span>' : '') +
         '</div>' +
-        (item.notes ? '<div class="notes">'+esc(item.notes)+'</div>' : '') +
-        (meta.length ? '<div class="rm-meta">'+meta.join('')+'</div>' : '') +
-      '</div>';
+        plays +
+      '</section>';
+    }).join('');
+  }
+  function renderRejects(list) {
+    if (!list || !list.length) return '';
+    return '<h3 class="rm-rejects-head">Rejected outright (do not revisit)</h3>' +
+           '<ul class="rm-rejects">' + list.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>';
   }
 
-  function renderBucket(mountId, items, opts){
-    var el = document.getElementById(mountId);
-    if (!el) return;
-    if (!items || !items.length){
-      el.innerHTML = '<div class="rm-empty">Nothing here right now.</div>';
-      return;
-    }
-    // Group Current + Backlog by owner; Shipped by session; Parked flat grid
-    if (opts && opts.groupBy === 'owner'){
-      var buckets = {
-        alessio: { label:'Alessio', items:[] },
-        reanna:  { label:'Reanna',  items:[] },
-        both:    { label:'Both',    items:[] }
-      };
-      items.forEach(function(it){
-        var key = it.owner || 'both';
-        if (!buckets[key]) buckets[key] = { label:key, items:[] };
-        buckets[key].items.push(it);
-      });
-      var html = '';
-      ['alessio','reanna','both'].forEach(function(key){
-        var b = buckets[key];
-        if (!b || !b.items.length) return;
-        html += '<div class="rm-section">' +
-                  '<h2>'+esc(b.label)+' <span class="count">'+b.items.length+'</span></h2>' +
-                  '<div class="rm-grid">' + b.items.map(function(it){ return card(it, opts); }).join('') + '</div>' +
-                '</div>';
-      });
-      el.innerHTML = html;
-    } else {
-      // Flat grid (Shipped, Parked)
-      el.innerHTML = '<div class="rm-grid">' + items.map(function(it){ return card(it, opts); }).join('') + '</div>';
-    }
-  }
+  document.getElementById('rmTitle').textContent    = window.PAGE.title || 'Roadmap';
+  document.getElementById('rmSubtitle').textContent = window.PAGE.subtitle || '';
 
-  function updateStats(){
-    var statMap = {
-      current: (ROADMAP.current || []).length,
-      backlog: (ROADMAP.backlog || []).length,
-      shipped: (ROADMAP.shipped || []).length,
-      parked:  (ROADMAP.parked  || []).length
-    };
-    // Update values in window.PAGE.stats so cc-shell can render them
-    if (window.PAGE && Array.isArray(window.PAGE.stats)){
-      window.PAGE.stats.forEach(function(s){
-        if (statMap.hasOwnProperty(s.id)) s.value = String(statMap[s.id]);
-      });
-    }
-    // If cc-shell has already rendered stat nodes, update their text in place
-    document.querySelectorAll('[data-stat]').forEach(function(node){
-      var id = node.getAttribute('data-stat');
-      if (statMap.hasOwnProperty(id)) node.textContent = String(statMap[id]);
-    });
-  }
+  document.getElementById('rmCommercial').innerHTML =
+    renderPlays(ROADMAP.commercial && ROADMAP.commercial.tiers) +
+    renderRejects(ROADMAP.commercial && ROADMAP.commercial.rejects);
 
-  function renderAll(){
-    renderBucket('rm-current', ROADMAP.current, { groupBy:'owner' });
-    renderBucket('rm-backlog', ROADMAP.backlog, { groupBy:'owner' });
-    renderBucket('rm-shipped', ROADMAP.shipped, { defaultDot:'shipped' });
-    renderBucket('rm-parked',  ROADMAP.parked,  { defaultDot:'parked' });
-    updateStats();
-  }
-
-  // Render as soon as DOM is ready. cc-shell handles subtab visibility
-  // natively via [data-subtab] — no extra wiring needed.
-  if (document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', renderAll);
-  } else {
-    renderAll();
-  }
+  document.getElementById('rmKnifebiz').innerHTML = renderPlays(ROADMAP.knifebiz && ROADMAP.knifebiz.tiers);
+  document.getElementById('rmQuadfang').innerHTML = renderPlays(ROADMAP.quadfang && ROADMAP.quadfang.tiers);
+  document.getElementById('rmReanna').innerHTML =
+    '<div class="rm-placeholder">' +
+      '<strong style="color:var(--cc-text-muted);">Reanna roadmap — deferred</strong><br>' +
+      'Full tab build deferred until Reanna has seen the roadmap page and can shape her own subtab.<br>' +
+      'Current open items for Reanna are mirrored in <a href="alessio.html">Tasks</a> and <a href="shared.html">Shared</a>.' +
+    '</div>';
 })();
 </script>
 
