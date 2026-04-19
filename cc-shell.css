@@ -151,6 +151,30 @@ a:hover { text-decoration: underline; }
 .cc-nav a.drop-before { box-shadow: -3px 0 0 var(--cc-accent); }
 .cc-nav a.drop-after  { box-shadow:  3px 0 0 var(--cc-accent); }
 
+/* Grouped nav (v2): group label + separator between groups */
+.cc-nav-group-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  color: var(--cc-text-dim);
+  padding: 6px 4px 6px 8px;
+  align-self: center;
+  user-select: none;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+.cc-nav-group-label:first-child {
+  padding-left: 0;
+}
+.cc-nav-group-sep {
+  display: inline-block;
+  width: 1px;
+  height: 18px;
+  background: var(--cc-border);
+  margin: 0 4px;
+  align-self: center;
+}
+
 .cc-banner-actions {
   display: flex;
   gap: 8px;
