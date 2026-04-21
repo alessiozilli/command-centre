@@ -151,11 +151,13 @@
     var p = _currentPage();
     return p === '' || p === 'index.html';
   }
-  // Public pages â€” never guard. password.html must be reachable without a
-  // session so a locked-out user can reset to the baked default code.
+  // Public pages â€” never guard. The ONLY unguarded pages are:
+  //   - index.html  (the login itself)
+  //   - reset-password.html  (forgot-code recovery, standalone, no shell)
+  // password.html is NOT public â€” it's the in-CC "change code while logged in" flow.
   function _isPublicPage() {
     var p = _currentPage();
-    return _isLoginPage() || p === 'password.html';
+    return _isLoginPage() || p === 'reset-password.html';
   }
 
   function ccGuard() {
