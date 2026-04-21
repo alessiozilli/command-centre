@@ -1,21 +1,21 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:;">
-<title>Claude Usage Guide — AZCK Ltd</title>
+<title>Claude Usage Guide â€” AZCK Ltd</title>
 <link rel="stylesheet" href="cc-shell.css">
 <script>
   window.PAGE = {
     id: 'guide',
     title: 'Understanding Claude Usage',
-    subtitle: 'Plain-English guide — what tokens are, what your plan includes, and how your real sessions translate into usage.',
+    subtitle: 'Plain-English guide â€” what tokens are, what your plan includes, and how your real sessions translate into usage.',
     subtabs: [],
     stats: [
       { id: 'plan',    label: 'Plan',    value: '$280 CAD/mo' },
       { id: 'bill',    label: 'Billing', value: 'USD' },
-      { id: 'rate',    label: 'USD→CAD', value: '~1.38' }
+      { id: 'rate',    label: 'USDâ†’CAD', value: '~1.38' }
     ]
   };
 </script>
@@ -50,16 +50,17 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--cc-border-soft); color: 
 .chart-wrap-wide { position: relative; max-width: 800px; margin: 16px auto; height: 350px; }
 .footer { text-align: center; padding: 40px 0 20px; font-size: 11px; color: var(--cc-text-dim); }
 </style>
+  <script defer src="auth.js"></script>
 </head>
 <body>
-<p class="sub">A plain-English guide for AZCK Ltd — what tokens are, what your plan includes, and how your real sessions translate into usage.<br>All API rates shown in USD (Anthropic bills in USD). Your subscription is <strong>$280 CAD/month</strong> (~$200 USD). CAD equivalents shown where it matters.</p>
+<p class="sub">A plain-English guide for AZCK Ltd â€” what tokens are, what your plan includes, and how your real sessions translate into usage.<br>All API rates shown in USD (Anthropic bills in USD). Your subscription is <strong>$280 CAD/month</strong> (~$200 USD). CAD equivalents shown where it matters.</p>
 
-<!-- ══════════════════════════════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <h2>1. What Are Tokens?</h2>
-<!-- ══════════════════════════════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 
 <div class="card">
-  <p>Tokens are the units Claude uses to read and write text. Think of them like syllables — Claude doesn't read whole words, it breaks everything into small chunks called tokens.</p>
+  <p>Tokens are the units Claude uses to read and write text. Think of them like syllables â€” Claude doesn't read whole words, it breaks everything into small chunks called tokens.</p>
 
   <h3>Quick conversion</h3>
   <table>
@@ -74,31 +75,31 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--cc-border-soft); color: 
   </div>
 </div>
 
-<!-- ══════════════════════════════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <h2>2. What Costs You Tokens?</h2>
-<!-- ══════════════════════════════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 
 <div class="card">
-  <p>Every interaction with Claude has two sides — <span class="hl">input</span> (what Claude reads) and <span class="hl">output</span> (what Claude writes back). Both cost tokens. Output tokens cost 5x more than input.</p>
+  <p>Every interaction with Claude has two sides â€” <span class="hl">input</span> (what Claude reads) and <span class="hl">output</span> (what Claude writes back). Both cost tokens. Output tokens cost 5x more than input.</p>
 
   <h3>Input tokens (what Claude reads)</h3>
   <table>
     <tr><th>What</th><th>Typical cost</th></tr>
-    <tr><td>Your message</td><td>50–500 tokens per message</td></tr>
+    <tr><td>Your message</td><td>50â€“500 tokens per message</td></tr>
     <tr><td>Cowork system prompt (CLAUDE.md, skills, tools, safety rules)</td><td>~15,000 tokens (carried every single turn)</td></tr>
-    <tr><td>Conversation history</td><td>Grows every turn — all previous messages are resent</td></tr>
+    <tr><td>Conversation history</td><td>Grows every turn â€” all previous messages are resent</td></tr>
     <tr><td>File reads (Read tool)</td><td>~250 tokens per KB of file</td></tr>
     <tr><td>Web search results</td><td>~2,500 tokens per page fetched</td></tr>
-    <tr><td>Images/screenshots</td><td>~1,000–5,000 tokens depending on size</td></tr>
+    <tr><td>Images/screenshots</td><td>~1,000â€“5,000 tokens depending on size</td></tr>
   </table>
 
-  <h3>Output tokens (what Claude writes) — 5x more expensive</h3>
+  <h3>Output tokens (what Claude writes) â€” 5x more expensive</h3>
   <table>
     <tr><th>What</th><th>Typical cost</th></tr>
-    <tr><td>A short reply</td><td>~200–500 tokens</td></tr>
-    <tr><td>A detailed explanation</td><td>~1,000–3,000 tokens</td></tr>
-    <tr><td>Writing a full HTML file (like forge.html)</td><td>~5,000–15,000 tokens</td></tr>
-    <tr><td>A long report or document</td><td>~10,000–30,000 tokens</td></tr>
+    <tr><td>A short reply</td><td>~200â€“500 tokens</td></tr>
+    <tr><td>A detailed explanation</td><td>~1,000â€“3,000 tokens</td></tr>
+    <tr><td>Writing a full HTML file (like forge.html)</td><td>~5,000â€“15,000 tokens</td></tr>
+    <tr><td>A long report or document</td><td>~10,000â€“30,000 tokens</td></tr>
   </table>
 
   <div class="callout-warn" style="margin-top:16px;">
@@ -114,14 +115,14 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--cc-border-soft); color: 
   <p style="font-size:13px;color:#8b949e;text-align:center;">Each turn re-sends the full history. By turn 40, every message carries ~200K tokens of context.</p>
 </div>
 
-<!-- ══════════════════════════════════════ -->
-<h2>3. Daily Protocol Costs — Measured From Your Actual Files</h2>
-<!-- ══════════════════════════════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<h2>3. Daily Protocol Costs â€” Measured From Your Actual Files</h2>
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 
 <div class="card">
   <p>These are <span class="hl">real measurements</span> from your AZCK Ltd files, not estimates. Every byte measured, converted at ~4 bytes per token.</p>
 
-  <h3>Startup Protocol — "go"</h3>
+  <h3>Startup Protocol â€” "go"</h3>
   <p>What happens when you say "go": 5 file reads + calendar check + greeting output.</p>
   <table>
     <tr><th>File</th><th>Size</th><th>Tokens (input)</th></tr>
@@ -137,12 +138,12 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--cc-border-soft); color: 
     <tr style="background:#58a6ff10;font-weight:700;"><td>TOTAL STARTUP COST</td><td></td><td>~23,300 input + ~800 output</td></tr>
   </table>
   <div class="callout">
-    <p style="margin:0;font-size:14px;"><strong>At API rates:</strong> ~23,300 × $5/MTok + ~800 × $25/MTok = <span class="hl">$0.14 USD ($0.20 CAD) per startup</span>. Cheap. Even 30 startups a month = ~$4 USD ($5.60 CAD).</p>
+    <p style="margin:0;font-size:14px;"><strong>At API rates:</strong> ~23,300 Ã— $5/MTok + ~800 Ã— $25/MTok = <span class="hl">$0.14 USD ($0.20 CAD) per startup</span>. Cheap. Even 30 startups a month = ~$4 USD ($5.60 CAD).</p>
   </div>
 </div>
 
 <div class="card">
-  <h3>Load Shared Brain (full — all Core + Workers + Ops + SOPs)</h3>
+  <h3>Load Shared Brain (full â€” all Core + Workers + Ops + SOPs)</h3>
   <table>
     <tr><th>Section</th><th>Size</th><th>Tokens</th></tr>
     <tr><td>Core/ (6 files: CLAUDE.md, business-azck, business-quadfang, forge-identity, profile-alessio, profile-reanna, website-audit)</td><td>48,520 bytes</td><td>~12,130</td></tr>
@@ -152,7 +153,7 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--cc-border-soft); color: 
     <tr style="background:#58a6ff10;font-weight:700;"><td>TOTAL SHARED BRAIN</td><td>241,278 bytes</td><td>~60,320 tokens</td></tr>
   </table>
   <div class="callout-warn">
-    <p style="margin:0;font-size:14px;"><strong>This is big.</strong> Loading the full Shared Brain = 60K tokens of input. At Opus rates that's $0.30 USD ($0.42 CAD) per load. But in a session, those 60K tokens get re-sent on EVERY subsequent turn. In a 30-turn session, that's 60K × 30 = 1.8M extra tokens = $9 USD ($12.60 CAD) just from the Shared Brain sitting in context.</p>
+    <p style="margin:0;font-size:14px;"><strong>This is big.</strong> Loading the full Shared Brain = 60K tokens of input. At Opus rates that's $0.30 USD ($0.42 CAD) per load. But in a session, those 60K tokens get re-sent on EVERY subsequent turn. In a 30-turn session, that's 60K Ã— 30 = 1.8M extra tokens = $9 USD ($12.60 CAD) just from the Shared Brain sitting in context.</p>
   </div>
 </div>
 
@@ -185,18 +186,18 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--cc-border-soft); color: 
   <p>Save All is mostly <span class="hl">output</span> (Claude writing), which costs 5x more than input per token.</p>
   <table>
     <tr><th>Step</th><th>What happens</th><th>Est. output tokens</th></tr>
-    <tr><td>1. Super Brain append</td><td>Write full session log entry</td><td>~3,000–8,000</td></tr>
-    <tr><td>2. Forge version</td><td>New version entry with scores + narrative</td><td>~2,000–5,000</td></tr>
-    <tr><td>3. Forge Lessons</td><td>Append new lessons</td><td>~500–1,500</td></tr>
-    <tr><td>4. Auto-memory</td><td>Update memory files</td><td>~500–1,000</td></tr>
-    <tr><td>5. Grant logs</td><td>Time + expense entries</td><td>~200–500</td></tr>
-    <tr><td>6. Handoff</td><td>Full session summary for next Claude</td><td>~2,000–4,000</td></tr>
-    <tr><td>7. Tasks</td><td>Update task list</td><td>~500–1,000</td></tr>
-    <tr><td>8. Verify</td><td>List all files + confirm</td><td>~300–500</td></tr>
-    <tr style="background:#58a6ff10;font-weight:700;"><td>TOTAL SAVE ALL</td><td></td><td>~9,000–21,500 output</td></tr>
+    <tr><td>1. Super Brain append</td><td>Write full session log entry</td><td>~3,000â€“8,000</td></tr>
+    <tr><td>2. Forge version</td><td>New version entry with scores + narrative</td><td>~2,000â€“5,000</td></tr>
+    <tr><td>3. Forge Lessons</td><td>Append new lessons</td><td>~500â€“1,500</td></tr>
+    <tr><td>4. Auto-memory</td><td>Update memory files</td><td>~500â€“1,000</td></tr>
+    <tr><td>5. Grant logs</td><td>Time + expense entries</td><td>~200â€“500</td></tr>
+    <tr><td>6. Handoff</td><td>Full session summary for next Claude</td><td>~2,000â€“4,000</td></tr>
+    <tr><td>7. Tasks</td><td>Update task list</td><td>~500â€“1,000</td></tr>
+    <tr><td>8. Verify</td><td>List all files + confirm</td><td>~300â€“500</td></tr>
+    <tr style="background:#58a6ff10;font-weight:700;"><td>TOTAL SAVE ALL</td><td></td><td>~9,000â€“21,500 output</td></tr>
   </table>
   <div class="callout">
-    <p style="margin:0;font-size:14px;"><strong>At API rates:</strong> A mid-range Save All (~15K output tokens) = 15K × $25/MTok = <span class="hl">~$0.38 USD ($0.53 CAD) in output alone</span>. Plus the full conversation context re-sent on each write step (~8 writes × context). At the end of a long 50-turn session, a Save All can cost $5–15 USD ($7–21 CAD) total. The single most expensive operation you trigger.</p>
+    <p style="margin:0;font-size:14px;"><strong>At API rates:</strong> A mid-range Save All (~15K output tokens) = 15K Ã— $25/MTok = <span class="hl">~$0.38 USD ($0.53 CAD) in output alone</span>. Plus the full conversation context re-sent on each write step (~8 writes Ã— context). At the end of a long 50-turn session, a Save All can cost $5â€“15 USD ($7â€“21 CAD) total. The single most expensive operation you trigger.</p>
   </div>
 </div>
 
@@ -212,14 +213,14 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--cc-border-soft); color: 
       <td>~$0.10</td>
     </tr>
     <tr>
-      <td><strong>Elaborate</strong><br><span style="font-size:12px;color:#8b949e;">Full audit like v0.9.3→v0.9.4</span></td>
+      <td><strong>Elaborate</strong><br><span style="font-size:12px;color:#8b949e;">Full audit like v0.9.3â†’v0.9.4</span></td>
       <td>Read all 4 Forge files + review session history + write detailed version entry with narrative + score explanations</td>
       <td>~21,000</td>
       <td>~6,000</td>
       <td>~$0.26</td>
     </tr>
   </table>
-  <p style="font-size:13px;color:#8b949e;">Both are cheap on their own. But they usually happen at the end of a long session, so the conversation context at that point is already 200K+ tokens — that's the real cost.</p>
+  <p style="font-size:13px;color:#8b949e;">Both are cheap on their own. But they usually happen at the end of a long session, so the conversation context at that point is already 200K+ tokens â€” that's the real cost.</p>
 </div>
 
 <div class="card">
@@ -227,12 +228,12 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--cc-border-soft); color: 
   <div class="chart-wrap-wide">
     <canvas id="protocolChart"></canvas>
   </div>
-  <p style="font-size:13px;color:#8b949e;text-align:center;">Token cost of each protocol operation (file reads only — excludes conversation context overhead).</p>
+  <p style="font-size:13px;color:#8b949e;text-align:center;">Token cost of each protocol operation (file reads only â€” excludes conversation context overhead).</p>
 </div>
 
-<!-- ══════════════════════════════════════ -->
-<h2>4. Your Plan — Max 20x</h2>
-<!-- ══════════════════════════════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<h2>4. Your Plan â€” Max 20x</h2>
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 
 <div class="card">
   <table>
@@ -258,7 +259,7 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--cc-border-soft); color: 
   </div>
 
   <h3 style="margin-top:20px;">How the limit works</h3>
-  <p>Your usage runs on a <span class="hl">rolling 5-hour window</span>. It's not a daily or monthly cap — it resets continuously. If you hit the ceiling at 2pm, you'll have capacity again by 7pm (or sooner, since it rolls).</p>
+  <p>Your usage runs on a <span class="hl">rolling 5-hour window</span>. It's not a daily or monthly cap â€” it resets continuously. If you hit the ceiling at 2pm, you'll have capacity again by 7pm (or sooner, since it rolls).</p>
   <p>All Claude surfaces share the same pool: Cowork (what we use), Claude.ai chat, Claude Code, and Claude Desktop all draw from one allowance.</p>
 
   <h3>Extra usage (overflow)</h3>
@@ -271,9 +272,9 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--cc-border-soft); color: 
   </table>
 </div>
 
-<!-- ══════════════════════════════════════ -->
-<h2>5. Real Session Examples — Your Weekend (Apr 10–12)</h2>
-<!-- ══════════════════════════════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<h2>5. Real Session Examples â€” Your Weekend (Apr 10â€“12)</h2>
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 
 <div class="card">
   <p>Here's what actual AZCK sessions look like in token usage. These are estimates based on conversation length, file operations, and model used (Opus 4.6 in Cowork).</p>
@@ -284,7 +285,7 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--cc-border-soft); color: 
 </div>
 
 <div class="card">
-  <h3>Session breakdown — real sessions since Friday</h3>
+  <h3>Session breakdown â€” real sessions since Friday</h3>
   <table>
     <tr><th>Session</th><th>Duration</th><th>Est. Turns</th><th>Est. Input</th><th>Est. Output</th><th>API Value (USD/CAD)</th></tr>
     <tr style="background:#f8514910;">
@@ -318,25 +319,25 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--cc-border-soft); color: 
   </table>
 
   <div class="callout" style="margin-top:16px;">
-    <p style="margin:0;font-size:14px;"><strong>That $168 USD ($235 CAD) of API compute = 50% of your monthly allowance.</strong> So your full Max 20x monthly capacity is roughly ~$336 USD ($470 CAD) of API compute. On a $280 CAD/month plan, you're getting $470 CAD worth of compute — solid value. But this weekend's pace would burn through your full allowance in ~4 days.</p>
+    <p style="margin:0;font-size:14px;"><strong>That $168 USD ($235 CAD) of API compute = 50% of your monthly allowance.</strong> So your full Max 20x monthly capacity is roughly ~$336 USD ($470 CAD) of API compute. On a $280 CAD/month plan, you're getting $470 CAD worth of compute â€” solid value. But this weekend's pace would burn through your full allowance in ~4 days.</p>
   </div>
 
-  <h3 style="margin-top:20px;">For comparison — lighter sessions</h3>
+  <h3 style="margin-top:20px;">For comparison â€” lighter sessions</h3>
   <table>
     <tr><th>Session type</th><th>Duration</th><th>Turns</th><th>API Value (USD / CAD)</th><th>% of monthly</th></tr>
     <tr><td>Quick startup + greeting + 1 task</td><td>~20 min</td><td>~10</td><td>~$2 / $2.80</td><td>~0.6%</td></tr>
     <tr><td>Document creation (docx/pdf)</td><td>~45 min</td><td>~15</td><td>~$5 / $7</td><td>~1.5%</td></tr>
     <tr><td>Moderate website edit</td><td>~1.5 hrs</td><td>~25</td><td>~$12 / $17</td><td>~3.6%</td></tr>
-    <tr><td>Save All (end of session)</td><td>~15 min</td><td>~8</td><td>~$5–15 / $7–21</td><td>~1.5–4.5%</td></tr>
+    <tr><td>Save All (end of session)</td><td>~15 min</td><td>~8</td><td>~$5â€“15 / $7â€“21</td><td>~1.5â€“4.5%</td></tr>
   </table>
 </div>
 
-<!-- ══════════════════════════════════════ -->
-<h2>6. Monthly Allowance — Where Does It Go?</h2>
-<!-- ══════════════════════════════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<h2>6. Monthly Allowance â€” Where Does It Go?</h2>
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 
 <div class="card">
-  <p>You told me you're at <span class="hl">50% usage since Friday April 10 at 1pm</span>. That's ~48 hours. This is the most useful data point we have — let's work backwards from it.</p>
+  <p>You told me you're at <span class="hl">50% usage since Friday April 10 at 1pm</span>. That's ~48 hours. This is the most useful data point we have â€” let's work backwards from it.</p>
 
   <div class="callout-warn">
     <p style="margin:0;font-size:14px;"><strong>Important:</strong> Anthropic doesn't publish exact token budgets. But your real usage meter gives us concrete numbers to work with. The calculations below are calibrated to your actual 50%-in-48-hours observation.</p>
@@ -345,7 +346,7 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--cc-border-soft); color: 
   <h3>What actually happened since Friday 1pm (from handoff timestamps)</h3>
   <table>
     <tr><th>#</th><th>Session</th><th>When</th><th>Work done</th><th>Type</th></tr>
-    <tr><td>1</td><td><strong>Website Build Marathon</strong></td><td>Fri Apr 10, 1pm → late night</td><td>Tech plan v1.0, ALL 6 booking pages built from scratch, Family Events category, knife making details, folder org, instructions doc</td><td style="color:#f85149;">Very heavy</td></tr>
+    <tr><td>1</td><td><strong>Website Build Marathon</strong></td><td>Fri Apr 10, 1pm â†’ late night</td><td>Tech plan v1.0, ALL 6 booking pages built from scratch, Family Events category, knife making details, folder org, instructions doc</td><td style="color:#f85149;">Very heavy</td></tr>
     <tr><td>2</td><td><strong>Final Save + Cleanup</strong></td><td>Sat Apr 11, early AM</td><td>Instructions doc delivered, folder cleanup, final save</td><td style="color:#d29922;">Medium</td></tr>
     <tr><td>3</td><td><strong>Booking System Publish</strong></td><td>Sat Apr 11, afternoon</td><td>6 pages published to live site, GitHub repo cleanup, deep-link verification, Save All + evolution audit (v0.9.3)</td><td style="color:#f85149;">Heavy</td></tr>
     <tr><td>4</td><td><strong>Wix + Architecture</strong></td><td>Sat Apr 11, late afternoon</td><td>Gift card styling + publish, full website architecture audit, headless checkout research, GitHub Pages repo audit</td><td style="color:#f85149;">Heavy</td></tr>
@@ -355,7 +356,7 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--cc-border-soft); color: 
   </table>
 
   <div class="callout-warn">
-    <p style="margin:0;font-size:14px;"><strong>This was not a normal weekend.</strong> Session 1 alone (the booking system build) was a marathon — 6 full HTML pages from scratch in one sitting. Sessions 3–5 each involved heavy GitHub operations, Chrome navigation, and large file writes. This is peak usage.</p>
+    <p style="margin:0;font-size:14px;"><strong>This was not a normal weekend.</strong> Session 1 alone (the booking system build) was a marathon â€” 6 full HTML pages from scratch in one sitting. Sessions 3â€“5 each involved heavy GitHub operations, Chrome navigation, and large file writes. This is peak usage.</p>
   </div>
 
   <h3 style="margin-top:20px;">Projecting the full month</h3>
@@ -389,36 +390,36 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--cc-border-soft); color: 
     </tr>
   </table>
 
-  <h3 style="margin-top:20px;">Your April — real data</h3>
+  <h3 style="margin-top:20px;">Your April â€” real data</h3>
   <div class="chart-wrap">
     <canvas id="monthlyChart"></canvas>
   </div>
-  <p style="font-size:13px;color:#8b949e;text-align:center;">50% used in 48 hours of heavy work (April 10–12). 18 days remaining in April.</p>
+  <p style="font-size:13px;color:#8b949e;text-align:center;">50% used in 48 hours of heavy work (April 10â€“12). 18 days remaining in April.</p>
 </div>
 
 <div class="card">
   <h3>What this means in practice</h3>
-  <p>You used 50% in 48 hours — but this was an unusually heavy weekend. You were building forge.html from scratch, iterating the radar chart, doing web research, reading multiple large files, and running long sessions with lots of tool calls. That's peak usage.</p>
+  <p>You used 50% in 48 hours â€” but this was an unusually heavy weekend. You were building forge.html from scratch, iterating the radar chart, doing web research, reading multiple large files, and running long sessions with lots of tool calls. That's peak usage.</p>
   <p>A normal working week with a mix of quick startups, document creation, and moderate builds would use significantly less. The key insight: <span class="hl">long sessions with Opus 4.6 are the most expensive thing you do</span>. A 3-hour build session uses more tokens than 20 quick "go" startups combined.</p>
 
   <h3>What eats the most tokens</h3>
   <div class="chart-wrap">
     <canvas id="costBreakdown"></canvas>
   </div>
-  <p style="font-size:13px;color:#8b949e;text-align:center;">Where your tokens actually go. Context history is the biggest driver — it grows with every turn.</p>
+  <p style="font-size:13px;color:#8b949e;text-align:center;">Where your tokens actually go. Context history is the biggest driver â€” it grows with every turn.</p>
 
   <div class="callout">
-    <p style="margin:0;font-size:14px;"><strong>The 50% reality check:</strong> This weekend was heavy. You built a full interactive chart page, did 3+ web searches, read a 600-line Forge.md, iterated code multiple times, and ran this session for 60+ turns. In a normal week, you'd use ~25% on 5 working days. You have headroom — but marathon build sessions are expensive. Split them when you can.</p>
+    <p style="margin:0;font-size:14px;"><strong>The 50% reality check:</strong> This weekend was heavy. You built a full interactive chart page, did 3+ web searches, read a 600-line Forge.md, iterated code multiple times, and ran this session for 60+ turns. In a normal week, you'd use ~25% on 5 working days. You have headroom â€” but marathon build sessions are expensive. Split them when you can.</p>
   </div>
 
   <div class="callout-warn">
-    <p style="margin:0;font-size:14px;"><strong>If you do hit the limit:</strong> It resets on a rolling 5-hour window. You won't be locked out for a day or a week — just wait a few hours and capacity comes back. You can also enable "extra usage" in settings which bills overflow at API rates (Opus: $5/MTok input, $25/MTok output). Set a monthly cap so there are no surprises.</p>
+    <p style="margin:0;font-size:14px;"><strong>If you do hit the limit:</strong> It resets on a rolling 5-hour window. You won't be locked out for a day or a week â€” just wait a few hours and capacity comes back. You can also enable "extra usage" in settings which bills overflow at API rates (Opus: $5/MTok input, $25/MTok output). Set a monthly cap so there are no surprises.</p>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <h2>7. Tips to Get More From Your Plan</h2>
-<!-- ══════════════════════════════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 
 <div class="card">
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;font-size:14px;">
@@ -441,21 +442,21 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--cc-border-soft); color: 
   </div>
 </div>
 
-<!-- ══════════════════════════════════════ -->
-<h2>8. The Bottom Line — What We Learned</h2>
-<!-- ══════════════════════════════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<h2>8. The Bottom Line â€” What We Learned</h2>
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 
 <div class="card">
   <p>After digging into the numbers, here's what actually matters:</p>
 
   <h3>What costs the most?</h3>
-  <p><span class="hl">Long sessions.</span> Not your messages. Not my thinking. Not even loading big files. The single biggest cost is conversation length — because every turn re-sends the entire history. Turn 1 costs ~$0.15 USD ($0.21 CAD). Turn 50 of the same session costs ~$1.50 USD ($2.10 CAD) for one message. The conversation gets 10x more expensive just by being long.</p>
+  <p><span class="hl">Long sessions.</span> Not your messages. Not my thinking. Not even loading big files. The single biggest cost is conversation length â€” because every turn re-sends the entire history. Turn 1 costs ~$0.15 USD ($0.21 CAD). Turn 50 of the same session costs ~$1.50 USD ($2.10 CAD) for one message. The conversation gets 10x more expensive just by being long.</p>
 
   <h3>Does loading the Super Brain waste tokens?</h3>
-  <p><span class="hl">No — it saves them.</span> Loading the Super Brain costs ~$3.38 USD ($4.73 CAD) across a 30-turn session. But if Forge doesn't have that context and makes mistakes, each round of corrections costs ~$2+ USD ($2.80+ CAD) in re-sent context. Three corrections and you've already spent more than the Super Brain cost — plus you've lost 15 minutes of your time. Getting it right the first time is cheaper than saving on the load and paying in corrections.</p>
+  <p><span class="hl">No â€” it saves them.</span> Loading the Super Brain costs ~$3.38 USD ($4.73 CAD) across a 30-turn session. But if Forge doesn't have that context and makes mistakes, each round of corrections costs ~$2+ USD ($2.80+ CAD) in re-sent context. Three corrections and you've already spent more than the Super Brain cost â€” plus you've lost 15 minutes of your time. Getting it right the first time is cheaper than saving on the load and paying in corrections.</p>
 
-  <h3>Back-end instructions vs file reads — 7x cheaper</h3>
-  <p>Knowledge in your CLAUDE.md (the back-end instructions) benefits from <span class="hl">prompt caching</span>. After the first turn, cached content costs $0.50 per million tokens instead of $5.00. That's 90% off. The same 22,567 tokens of Super Brain knowledge costs <strong>$3.38 USD ($4.73 CAD) in conversation context</strong> vs <strong>$0.47 USD ($0.66 CAD) in the system prompt</strong> over 30 turns — 7x cheaper. The plan: build a condensed "brain summary" into CLAUDE.md with the 20% of knowledge that matters 80% of the time.</p>
+  <h3>Back-end instructions vs file reads â€” 7x cheaper</h3>
+  <p>Knowledge in your CLAUDE.md (the back-end instructions) benefits from <span class="hl">prompt caching</span>. After the first turn, cached content costs $0.50 per million tokens instead of $5.00. That's 90% off. The same 22,567 tokens of Super Brain knowledge costs <strong>$3.38 USD ($4.73 CAD) in conversation context</strong> vs <strong>$0.47 USD ($0.66 CAD) in the system prompt</strong> over 30 turns â€” 7x cheaper. The plan: build a condensed "brain summary" into CLAUDE.md with the 20% of knowledge that matters 80% of the time.</p>
 
   <h3>The one habit that saves the most</h3>
   <p><span class="hl">Start fresh sessions sooner.</span> When a conversation crosses ~30 turns and the work shifts to something new, say "save all" and start a new session. Forge picks up where you left off through the handoff file. A fresh session with full brain load = ~$0.15. Continuing a bloated old session = ~$1.50 per turn. This one habit would cut monthly usage by 20-30%.</p>
@@ -463,18 +464,18 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--cc-border-soft); color: 
 
 <hr class="divider">
 
-<!-- ══════════════════════════════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <h2>9. Reanna's Quick Guide</h2>
-<!-- ══════════════════════════════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 
 <div class="card" style="border-color:#bc8cff44;">
-  <p style="font-size:16px;font-weight:700;color:#bc8cff;margin-bottom:12px;">Hey Reanna — here's what you need to know about usage, no tech jargon.</p>
+  <p style="font-size:16px;font-weight:700;color:#bc8cff;margin-bottom:12px;">Hey Reanna â€” here's what you need to know about usage, no tech jargon.</p>
 
   <h3>What's the plan?</h3>
   <p>We're on Max 20x ($280 CAD/month). That gives us roughly 20 times more usage than a normal plan. Both your account and Alessio's share the same pool. If he has a heavy weekend building websites, that uses some of your available time too.</p>
 
   <h3>What uses data?</h3>
-  <p>Every conversation with Forge uses data. Think of it like mobile data on your phone — short texts use a little, streaming video uses a lot. Here's what's "texting" and what's "streaming":</p>
+  <p>Every conversation with Forge uses data. Think of it like mobile data on your phone â€” short texts use a little, streaming video uses a lot. Here's what's "texting" and what's "streaming":</p>
 
   <table>
     <tr><th style="color:#3fb950;">Cheap (use freely)</th><th style="color:#f85149;">Expensive (be aware)</th></tr>
@@ -496,18 +497,18 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--cc-border-soft); color: 
     </tr>
     <tr>
       <td>Reading a message from Alessio (~$0.03 CAD)</td>
-      <td>"Save All" at the end of a very long session (~$7–21 CAD)</td>
+      <td>"Save All" at the end of a very long session (~$7â€“21 CAD)</td>
     </tr>
   </table>
 
   <h3>Your typical session costs</h3>
-  <p>A typical Reanna session — startup, check tasks, create a document, ask a few questions, done in 30 minutes — costs roughly <span class="hl">$3–7 CAD</span> worth of the monthly allowance. You could do that every single day and use less than 15% of the plan.</p>
+  <p>A typical Reanna session â€” startup, check tasks, create a document, ask a few questions, done in 30 minutes â€” costs roughly <span class="hl">$3â€“7 CAD</span> worth of the monthly allowance. You could do that every single day and use less than 15% of the plan.</p>
 
   <h3>Three simple rules</h3>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:12px;">
     <div style="border:1px solid #30363d;border-radius:10px;padding:16px;text-align:center;">
       <div style="font-size:24px;font-weight:800;color:#3fb950;">1</div>
-      <p style="font-size:13px;color:#c9d1d9;margin:4px 0 0;"><strong>Be clear upfront.</strong><br>Tell Forge exactly what you want in the first message. "Create a grant expense report for April" is better than "can you help me with something?" — fewer rounds = less data.</p>
+      <p style="font-size:13px;color:#c9d1d9;margin:4px 0 0;"><strong>Be clear upfront.</strong><br>Tell Forge exactly what you want in the first message. "Create a grant expense report for April" is better than "can you help me with something?" â€” fewer rounds = less data.</p>
     </div>
     <div style="border:1px solid #30363d;border-radius:10px;padding:16px;text-align:center;">
       <div style="font-size:24px;font-weight:800;color:#3fb950;">2</div>
@@ -515,27 +516,27 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--cc-border-soft); color: 
     </div>
     <div style="border:1px solid #30363d;border-radius:10px;padding:16px;text-align:center;">
       <div style="font-size:24px;font-weight:800;color:#3fb950;">3</div>
-      <p style="font-size:13px;color:#c9d1d9;margin:4px 0 0;"><strong>Don't worry about it.</strong><br>Your sessions are typically light. The heavy usage comes from Alessio's website marathons. Use Forge when you need it — that's what the plan is for.</p>
+      <p style="font-size:13px;color:#c9d1d9;margin:4px 0 0;"><strong>Don't worry about it.</strong><br>Your sessions are typically light. The heavy usage comes from Alessio's website marathons. Use Forge when you need it â€” that's what the plan is for.</p>
     </div>
   </div>
 
   <div class="callout" style="margin-top:16px;">
-    <p style="margin:0;font-size:14px;"><strong>The short version:</strong> Use Forge normally. Start fresh sessions when changing tasks. Your typical usage pattern is well within the plan. Alessio's building weekends are what use the most — and that's okay, because that's what the plan is designed for.</p>
+    <p style="margin:0;font-size:14px;"><strong>The short version:</strong> Use Forge normally. Start fresh sessions when changing tasks. Your typical usage pattern is well within the plan. Alessio's building weekends are what use the most â€” and that's okay, because that's what the plan is designed for.</p>
   </div>
 </div>
 
 <div class="footer">
-  Claude Usage Guide — AZCK Ltd — Generated April 12, 2026<br>
+  Claude Usage Guide â€” AZCK Ltd â€” Generated April 12, 2026<br>
   Sources: platform.claude.com/docs, support.claude.com, anthropic.com/pricing
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════════
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
      CHARTS ENGINE
-     ═══════════════════════════════════════════════════════════════ -->
+     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <script>
 (function(){
 
-  // ── Context Growth Chart ──
+  // â”€â”€ Context Growth Chart â”€â”€
   var turns = [];
   var tokens = [];
   for (var i = 1; i <= 50; i++) {
@@ -568,7 +569,7 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--cc-border-soft); color: 
     }
   });
 
-  // ── Protocol Cost Chart (horizontal bar) ──
+  // â”€â”€ Protocol Cost Chart (horizontal bar) â”€â”€
   new Chart(document.getElementById('protocolChart'), {
     type: 'bar',
     data: {
@@ -599,7 +600,7 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--cc-border-soft); color: 
     }
   });
 
-  // ── Session Comparison Chart (updated with real sessions) ──
+  // â”€â”€ Session Comparison Chart (updated with real sessions) â”€â”€
   new Chart(document.getElementById('sessionChart'), {
     type: 'bar',
     data: {
@@ -629,7 +630,7 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--cc-border-soft); color: 
     }
   });
 
-  // ── Projection Chart (line) ──
+  // â”€â”€ Projection Chart (line) â”€â”€
   var days = [];
   for (var d = 1; d <= 30; d++) days.push('Apr ' + d);
   // Three scenarios based on real 50%-in-48hrs data
@@ -680,12 +681,12 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--cc-border-soft); color: 
     }
   });
 
-  // ── Monthly Usage Doughnut (calibrated to real data) ──
+  // â”€â”€ Monthly Usage Doughnut (calibrated to real data) â”€â”€
   // 50% used (confirmed), 50% remaining, 18 days left in April
   new Chart(document.getElementById('monthlyChart'), {
     type: 'doughnut',
     data: {
-      labels: ['Used (50% — Apr 1–12)', 'Remaining (50% — 18 days left)'],
+      labels: ['Used (50% â€” Apr 1â€“12)', 'Remaining (50% â€” 18 days left)'],
       datasets: [{
         data: [50, 50],
         backgroundColor: ['#58a6ff', '#21262d'],
@@ -702,7 +703,7 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--cc-border-soft); color: 
     }
   });
 
-  // ── Cost Breakdown (what eats tokens) ──
+  // â”€â”€ Cost Breakdown (what eats tokens) â”€â”€
   new Chart(document.getElementById('costBreakdown'), {
     type: 'doughnut',
     data: {

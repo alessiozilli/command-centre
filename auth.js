@@ -1,120 +1,183 @@
-/* ═══════════════════════════════════════════════════════════════
-   AZCK Command Centre — Auth Guard  (v3 — password.html guarded)
-   Include this script at the TOP of every protected page.
-   If user is not authenticated, redirects to index.html.
+﻿/* AZCK Command Centre â€” auth.js v4
+ * Pass 1 rebuild (2026-04-21). Client-side casual lock + device identity.
+ * Migrates to Supabase Auth in Pass 5.
+ *
+ * What's new vs v3:
+ *  - Remember-me: localStorage when checked, sessionStorage-only when not
+ *  - Device identity: azck_device_id, azck_device_label, first/last seen
+ *  - ccTouchDevice() fires on every authenticated page hit
+ *  - ccGetDeviceInfo() / ccSetDeviceLabel(label)
+ *  - ccSaveNewPassword / ccClearOverride now re-write any active session hash
+ *  - Guard preserves attempted URL in sessionStorage.azck_cc_redirect
+ */
+(function () {
+  'use strict';
 
-   HOW THE PASSWORD WORKS
-   - Default hash is baked in (CC_AUTH.PASSWORD_HASH below).
-   - Per-device override lives in localStorage under CC_AUTH.OVERRIDE_KEY.
-   - Override wins over baked hash. Cleared by "Reset to default" on
-     password.html, or by clearing site data on this browser.
-   - ccGetActiveHash() is the single source of truth for what the
-     current access code hash is on THIS device.
+  // ---- Config ----------------------------------------------------------
+  // Default password hash (SHA-256). Rotate by running ccSetPassword('newpw')
+  // in the browser console on any CC page, then pasting the printed hash here.
+  const CC_AUTH = {
+    PASSWORD_HASH: '455c59944e7fd33667fe9a3b8cc3e91c200174a14065913a06e2013fe2e37bd0',
+    SESSION_KEY:   'azck_cc_session',
+    OVERRIDE_KEY:  'azck_cc_pw_override',
+    REDIRECT_KEY:  'azck_cc_redirect',
+    DEVICE_ID:     'azck_device_id',
+    DEVICE_LABEL:  'azck_device_label',
+    DEVICE_FIRST:  'azck_device_first_seen',
+    DEVICE_LAST:   'azck_device_last_seen',
+    LOGIN_PAGE:    'index.html',
+    HOME_PAGE:     'dashboard.html'
+  };
 
-   FORGOT-CODE RECOVERY (intentional — no public back door)
-   - password.html now requires login, so no stranger can hit it.
-   - If you forget your custom code on a device: open DevTools →
-     Application → Local Storage → command.azcustomknives.com →
-     delete the "azck_cc_pw_override" key. The default code works again.
-   - OR commit a new baked hash on GitHub (see "TO CHANGE THE DEFAULT
-     FOR EVERYONE" below).
+  // ---- Hashing ---------------------------------------------------------
+  async function sha256(str) {
+    const buf = new TextEncoder().encode(str);
+    const hash = await crypto.subtle.digest('SHA-256', buf);
+    return Array.from(new Uint8Array(hash))
+      .map(b => b.toString(16).padStart(2, '0')).join('');
+  }
 
-   TO CHANGE THE DEFAULT FOR EVERYONE
-   1. Open the Command Centre in a browser
-   2. Run in console:  ccSetPassword('yournewpassword')
-   3. Copy the printed hash
-   4. Replace PASSWORD_HASH below
-   5. Commit auth.js
-   ═══════════════════════════════════════════════════════════════ */
+  // ---- Password override (per-device custom code) ---------------------
+  function getActiveHash() {
+    return localStorage.getItem(CC_AUTH.OVERRIDE_KEY) || CC_AUTH.PASSWORD_HASH;
+  }
 
-// ── CONFIG ──
-var CC_AUTH = {
-  PASSWORD_HASH: '455c59944e7fd33667fe9a3b8cc3e91c200174a14065913a06e2013fe2e37bd0',
-  SESSION_KEY:   'azck_cc_auth',
-  OVERRIDE_KEY:  'azck_cc_pw_override',
-  LOGIN_PAGE:    'index.html'
-};
-
-// ── Hash function (SHA-256) ──
-async function ccHash(str) {
-  var encoder = new TextEncoder();
-  var data = encoder.encode(str + '_azck_salt_2026');
-  var hash = await crypto.subtle.digest('SHA-256', data);
-  var arr = Array.from(new Uint8Array(hash));
-  return arr.map(function(b){ return b.toString(16).padStart(2, '0'); }).join('');
-}
-
-// ── Password helper (run in console to generate hash) ──
-window.ccSetPassword = async function(pw) {
-  var hash = await ccHash(pw);
-  console.log('New PASSWORD_HASH: ' + hash);
-  console.log('Update this value in auth.js CC_AUTH.PASSWORD_HASH to change the default for everyone.');
-  return hash;
-};
-
-// ── Active hash (override wins over baked) ──
-function ccGetActiveHash() {
-  try {
-    var o = localStorage.getItem(CC_AUTH.OVERRIDE_KEY);
-    if (o && /^[a-f0-9]{64}$/i.test(o)) return o;
-  } catch(e) {}
-  return CC_AUTH.PASSWORD_HASH;
-}
-
-// ── Is the current device using a custom code? ──
-function ccHasOverride() {
-  try {
-    var o = localStorage.getItem(CC_AUTH.OVERRIDE_KEY);
-    return !!(o && /^[a-f0-9]{64}$/i.test(o));
-  } catch(e) { return false; }
-}
-
-// ── Save a new access code (per-device) ──
-async function ccSaveNewPassword(newPw) {
-  var hash = await ccHash(newPw);
-  try {
-    localStorage.setItem(CC_AUTH.OVERRIDE_KEY, hash);
-    sessionStorage.setItem(CC_AUTH.SESSION_KEY, hash);
-    return true;
-  } catch(e) { return false; }
-}
-
-// ── Clear override, restore default code ──
-function ccClearOverride() {
-  try { localStorage.removeItem(CC_AUTH.OVERRIDE_KEY); } catch(e) {}
-  try { sessionStorage.removeItem(CC_AUTH.SESSION_KEY); } catch(e) {}
-}
-
-// ── Verify login (uses active hash: override or default) ──
-async function ccVerifyPassword(pw) {
-  var hash = await ccHash(pw);
-  if (hash === ccGetActiveHash()) {
-    sessionStorage.setItem(CC_AUTH.SESSION_KEY, hash);
+  async function ccSaveNewPassword(pw) {
+    if (!pw || pw.length < 3) throw new Error('Password too short');
+    const newHash = await sha256(pw);
+    localStorage.setItem(CC_AUTH.OVERRIDE_KEY, newHash);
+    // If a session is active, re-sign it so the user stays logged in.
+    const activeStore = _activeSessionStore();
+    if (activeStore) activeStore.setItem(CC_AUTH.SESSION_KEY, newHash);
     return true;
   }
-  return false;
-}
 
-// ── Check if authenticated ──
-function ccIsAuthenticated() {
-  return sessionStorage.getItem(CC_AUTH.SESSION_KEY) === ccGetActiveHash();
-}
+  function ccClearOverride() {
+    localStorage.removeItem(CC_AUTH.OVERRIDE_KEY);
+    // Re-sign active session to the baked-in default so user stays logged in.
+    const activeStore = _activeSessionStore();
+    if (activeStore) activeStore.setItem(CC_AUTH.SESSION_KEY, CC_AUTH.PASSWORD_HASH);
+    return true;
+  }
 
-// ── Logout ──
-function ccLogout() {
-  sessionStorage.removeItem(CC_AUTH.SESSION_KEY);
-  window.location.href = CC_AUTH.LOGIN_PAGE;
-}
+  async function ccSetPassword(pw) {
+    const h = await sha256(pw);
+    console.log('SHA-256:', h);
+    console.log('Paste into CC_AUTH.PASSWORD_HASH in auth.js and commit.');
+    return h;
+  }
 
-// ── Auth guard — redirect if not on login page and not authenticated ──
-// password.html is NO LONGER exempt — it now requires a logged-in session.
-// This closes the unauthenticated "Reset to default" back door.
-(function() {
-  var currentPage = window.location.pathname.split('/').pop() || 'index.html';
-  if (currentPage !== 'index.html' && currentPage !== '') {
-    if (!ccIsAuthenticated()) {
-      sessionStorage.setItem('azck_cc_redirect', window.location.href);
-      window.location.href = CC_AUTH.LOGIN_PAGE;
+  // ---- Session helpers ------------------------------------------------
+  function _activeSessionStore() {
+    if (localStorage.getItem(CC_AUTH.SESSION_KEY)) return localStorage;
+    if (sessionStorage.getItem(CC_AUTH.SESSION_KEY)) return sessionStorage;
+    return null;
+  }
+
+  function ccIsAuthenticated() {
+    const want = getActiveHash();
+    const ls = localStorage.getItem(CC_AUTH.SESSION_KEY);
+    const ss = sessionStorage.getItem(CC_AUTH.SESSION_KEY);
+    return ls === want || ss === want;
+  }
+
+  async function ccLogin(pw, rememberMe) {
+    const got = await sha256(pw);
+    const want = getActiveHash();
+    if (got !== want) return false;
+    if (rememberMe) {
+      localStorage.setItem(CC_AUTH.SESSION_KEY, want);
+      sessionStorage.removeItem(CC_AUTH.SESSION_KEY);
+    } else {
+      sessionStorage.setItem(CC_AUTH.SESSION_KEY, want);
+      localStorage.removeItem(CC_AUTH.SESSION_KEY);
+    }
+    ccTouchDevice();
+    return true;
+  }
+
+  function ccLogout() {
+    localStorage.removeItem(CC_AUTH.SESSION_KEY);
+    sessionStorage.removeItem(CC_AUTH.SESSION_KEY);
+    window.location.href = CC_AUTH.LOGIN_PAGE;
+  }
+
+  // ---- Device identity ------------------------------------------------
+  function _randHex(n) {
+    const bytes = new Uint8Array(n / 2);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  function ccTouchDevice() {
+    if (!ccIsAuthenticated()) return;
+    if (!localStorage.getItem(CC_AUTH.DEVICE_ID)) {
+      localStorage.setItem(CC_AUTH.DEVICE_ID, _randHex(16));
+      localStorage.setItem(CC_AUTH.DEVICE_LABEL, 'New device');
+      localStorage.setItem(CC_AUTH.DEVICE_FIRST, new Date().toISOString());
+    }
+    localStorage.setItem(CC_AUTH.DEVICE_LAST, new Date().toISOString());
+  }
+
+  function ccGetDeviceInfo() {
+    return {
+      id:       localStorage.getItem(CC_AUTH.DEVICE_ID) || null,
+      label:    localStorage.getItem(CC_AUTH.DEVICE_LABEL) || null,
+      firstSeen:localStorage.getItem(CC_AUTH.DEVICE_FIRST) || null,
+      lastSeen: localStorage.getItem(CC_AUTH.DEVICE_LAST) || null,
+      sessionKind: localStorage.getItem(CC_AUTH.SESSION_KEY)
+                   ? 'localStorage (Remember-me)'
+                   : (sessionStorage.getItem(CC_AUTH.SESSION_KEY) ? 'sessionStorage (this tab)' : 'none'),
+      userAgent: navigator.userAgent
+    };
+  }
+
+  function ccSetDeviceLabel(label) {
+    const clean = String(label || '').slice(0, 40).trim();
+    if (!clean) throw new Error('Label required');
+    localStorage.setItem(CC_AUTH.DEVICE_LABEL, clean);
+    return clean;
+  }
+
+  // ---- Guard ----------------------------------------------------------
+  function _isLoginPage() {
+    return /\/(index\.html)?($|\?)/i.test(window.location.pathname + window.location.search);
+  }
+
+  function ccGuard() {
+    if (ccIsAuthenticated()) {
+      ccTouchDevice();
+      // If sitting on the login page with a valid session â†’ bounce to home
+      if (_isLoginPage()) {
+        const redirect = sessionStorage.getItem(CC_AUTH.REDIRECT_KEY);
+        sessionStorage.removeItem(CC_AUTH.REDIRECT_KEY);
+        window.location.replace(redirect || CC_AUTH.HOME_PAGE);
+      }
+      return;
+    }
+    // Not authenticated â€” preserve intended URL and bounce to login
+    if (!_isLoginPage()) {
+      sessionStorage.setItem(
+        CC_AUTH.REDIRECT_KEY,
+        window.location.pathname + window.location.search + window.location.hash
+      );
+      window.location.replace(CC_AUTH.LOGIN_PAGE);
     }
   }
+
+  // ---- Expose ---------------------------------------------------------
+  window.CC_AUTH = CC_AUTH;
+  window.ccIsAuthenticated = ccIsAuthenticated;
+  window.ccLogin           = ccLogin;
+  window.ccLogout          = ccLogout;
+  window.ccGuard           = ccGuard;
+  window.ccSaveNewPassword = ccSaveNewPassword;
+  window.ccClearOverride   = ccClearOverride;
+  window.ccSetPassword     = ccSetPassword;
+  window.ccTouchDevice     = ccTouchDevice;
+  window.ccGetDeviceInfo   = ccGetDeviceInfo;
+  window.ccSetDeviceLabel  = ccSetDeviceLabel;
+
+  // Auto-run guard as soon as the script loads.
+  ccGuard();
 })();

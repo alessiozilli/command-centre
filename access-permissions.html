@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AZCK Admin — Claude Access Permissions</title>
+<title>AZCK Admin â€” Claude Access Permissions</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #0d1117; color: #e6edf3; line-height: 1.6; font-size: 16px; }
@@ -53,6 +53,7 @@ input:checked + .slider:before { transform: translateX(20px); background-color: 
 .footer-note { margin-top: 2rem; padding: 1rem 1.5rem; background: #161b22; border: 1px solid #30363d; border-radius: 8px; font-size: 0.82rem; color: #8b949e; }
 .footer-note strong { color: #c9d1d9; }
 </style>
+  <script defer src="auth.js"></script>
 </head>
 <body>
 
@@ -81,10 +82,10 @@ input:checked + .slider:before { transform: translateX(20px); background-color: 
   <!-- FILTER -->
   <div class="filter-bar">
     <button class="filter-btn active" data-filter="all">All</button>
-    <button class="filter-btn" data-filter="1">Tier 1 — Core</button>
-    <button class="filter-btn" data-filter="2">Tier 2 — Approved</button>
-    <button class="filter-btn" data-filter="3">Tier 3 — Ops</button>
-    <button class="filter-btn" data-filter="4">Tier 4 — Grants</button>
+    <button class="filter-btn" data-filter="1">Tier 1 â€” Core</button>
+    <button class="filter-btn" data-filter="2">Tier 2 â€” Approved</button>
+    <button class="filter-btn" data-filter="3">Tier 3 â€” Ops</button>
+    <button class="filter-btn" data-filter="4">Tier 4 â€” Grants</button>
     <button class="filter-btn" data-filter="pending">Pending Only</button>
   </div>
 
@@ -112,7 +113,7 @@ input:checked + .slider:before { transform: translateX(20px); background-color: 
 
 <div id="toast" class="toast">Copied to clipboard</div>
 
-<!-- ══════════════════════ DATA BLOCK ══════════════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• DATA BLOCK â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <script id="access-data" type="application/json">
 {
   "sites": [
@@ -188,7 +189,7 @@ function render(filter="all"){
           <span class="slider"></span>
         </label>
       </td>
-      <td><span class="tier-pill tier-${site.tier}">T${site.tier} · ${TIER_LABELS[site.tier]}</span></td>
+      <td><span class="tier-pill tier-${site.tier}">T${site.tier} Â· ${TIER_LABELS[site.tier]}</span></td>
       <td><code>${site.domain}</code></td>
       <td class="purpose">${site.purpose}</td>
       <td><span class="status-pill ${ok?"status-approved":"status-pending"}">${ok?"Approved":"Pending"}</span></td>

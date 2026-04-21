@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://twrlvnfszohyrmivdhre.supabase.co wss://twrlvnfszohyrmivdhre.supabase.co; img-src 'self' data: https:;">
-<title>Shared — AZCK Command Centre</title>
+<title>Shared â€” AZCK Command Centre</title>
 <link rel="stylesheet" href="cc-shell.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
@@ -47,17 +47,18 @@
   .modal input, .modal select { width:100%; padding:9px; margin-bottom:10px; background:#0d1117; border:1px solid #30363d; color:#e6edf3; border-radius:6px; box-sizing:border-box; }
   .modal .actions { display:flex; gap:8px; justify-content:flex-end; margin-top:8px; }
 </style>
+  <script defer src="auth.js"></script>
 </head>
 <body>
 
-<div id="app" class="app-wrap"><div class="loading">Loading…</div></div>
+<div id="app" class="app-wrap"><div class="loading">Loadingâ€¦</div></div>
 
 <script>
-  // PAGE declaration — consumed by cc-shell.js
+  // PAGE declaration â€” consumed by cc-shell.js
   window.PAGE = {
     id: 'shared',
     title: 'Shared',
-    subtitle: 'Alessio + Reanna · links, projects, quick reference',
+    subtitle: 'Alessio + Reanna Â· links, projects, quick reference',
     subtabs: [
       { id:'links',    label:'Links' },
       { id:'projects', label:'Projects' },
@@ -113,9 +114,9 @@
     app.innerHTML = fail('Unknown subtab: '+id);
   }
 
-  // ─── LINKS ───
+  // â”€â”€â”€ LINKS â”€â”€â”€
   async function renderLinks(){
-    app.innerHTML = '<div class="loading">Loading links…</div>';
+    app.innerHTML = '<div class="loading">Loading linksâ€¦</div>';
     const { data, error } = await supa.from('nav_links').select('*').order('sort_order', { ascending:true });
     if (error) return app.innerHTML = fail(error.message);
     app.innerHTML = `
@@ -172,9 +173,9 @@
     renderLinks();
   };
 
-  // ─── PROJECTS ───
+  // â”€â”€â”€ PROJECTS â”€â”€â”€
   async function renderProjects(){
-    app.innerHTML = '<div class="loading">Loading projects…</div>';
+    app.innerHTML = '<div class="loading">Loading projectsâ€¦</div>';
     const [{ data:projects, error:pErr }, { count:inboxCount, error:iErr }] = await Promise.all([
       supa.from('projects').select('*').eq('archived', false).order('sort_order', { ascending:true }),
       supa.from('tasks').select('*', { count:'exact', head:true }).is('project_id', null)
@@ -201,7 +202,7 @@
       <div class="section">
         <div class="section-header">
           <h2>Projects <span style="color:#8b949e;font-weight:400;font-size:0.9rem;">(${(projects||[]).length})</span></h2>
-          <a href="alessio.html" class="btn btn-ghost">Manage in Tasks →</a>
+          <a href="alessio.html" class="btn btn-ghost">Manage in Tasks â†’</a>
         </div>
         <div class="projects-list">
           <div class="project-row">
@@ -214,7 +215,7 @@
       </div>`;
   }
 
-  // ─── QUICK REF ───
+  // â”€â”€â”€ QUICK REF â”€â”€â”€
   function renderQuickRef(){
     const sections = [
       { title:'Business', rows:[
@@ -233,14 +234,14 @@
         ['Reanna CC', 'rl-command-centre.netlify.app']
       ]},
       { title:'Key Contacts', rows:[
-        ['Matt Runhart',  'Terra Machine — CNC / prototypes'],
+        ['Matt Runhart',  'Terra Machine â€” CNC / prototypes'],
         ['Roger Hatt',    'mentor'],
         ['Kent Friesen',  'Friesen Bain accountant, Grande Prairie'],
         ['Kyran',         'QuadFang partner']
       ]},
       { title:'Grant Priority', rows:[
-        ['Active',    'SR&ED → IRAP → CDAP → AMPG'],
-        ['Deadline',  'CanExport $50K — May 29, 2026']
+        ['Active',    'SR&ED â†’ IRAP â†’ CDAP â†’ AMPG'],
+        ['Deadline',  'CanExport $50K â€” May 29, 2026']
       ]}
     ];
     app.innerHTML = sections.map(s=>`
@@ -253,7 +254,7 @@
     `).join('');
   }
 
-  // ─── LOGIN ───
+  // â”€â”€â”€ LOGIN â”€â”€â”€
   function renderLogin(){
     app.innerHTML = `
       <div class="login-shell">
@@ -270,14 +271,14 @@
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('pw').value;
       const msg = document.getElementById('login-msg');
-      msg.textContent = 'Signing in…';
+      msg.textContent = 'Signing inâ€¦';
       const { error } = await supa.auth.signInWithPassword({ email, password });
       if (error) { msg.textContent = error.message; return; }
       location.reload();
     });
   }
 
-  // ─── MODAL ───
+  // â”€â”€â”€ MODAL â”€â”€â”€
   function showModal(title, bodyHtml, onSave){
     const bd = document.createElement('div');
     bd.className = 'modal-backdrop';

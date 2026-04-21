@@ -1,16 +1,16 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:;">
-<title>AZCK Timesheet — Command Centre</title>
+<title>AZCK Timesheet â€” Command Centre</title>
 <link rel="stylesheet" href="cc-shell.css">
 <script>
   window.PAGE = {
     id: 'timesheet',
     title: 'AZCK Timesheet',
-    subtitle: 'All project hours — Forge sessions + Shop work. Updated every Save All + manual entries.',
+    subtitle: 'All project hours â€” Forge sessions + Shop work. Updated every Save All + manual entries.',
     subtabs: [
       { id: 'overview', label: 'Overview' },
       { id: 'forge',    label: 'Forge Log' },
@@ -31,14 +31,14 @@ h2 { margin: 32px 0 16px; }
 .green{color:var(--cc-success);font-weight:600}
 .card{background:var(--cc-bg-card);border:1px solid var(--cc-border);border-radius:var(--cc-r-lg);padding:24px;margin-bottom:20px}
 
-/* Stats — match cc-shell visual idiom */
+/* Stats â€” match cc-shell visual idiom */
 .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;margin-bottom:20px}
 .stat-box{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:16px;text-align:center}
 .stat-value{font-size:28px;font-weight:700;color:#58a6ff}
 .stat-value.green{color:#3fb950}.stat-value.warn{color:#d29922}.stat-value.danger{color:#f85149}
 .stat-label{font-size:12px;color:#8b949e;margin-top:4px}
 
-/* Progress bar — EXACT match to usage.html */
+/* Progress bar â€” EXACT match to usage.html */
 .progress-track{width:100%;height:28px;background:#21262d;border-radius:14px;overflow:hidden;position:relative;margin:12px 0}
 .progress-fill{height:100%;border-radius:14px;transition:width 1s ease;background:linear-gradient(90deg,#3fb950,#58a6ff)}
 .progress-fill.warn-bg{background:linear-gradient(90deg,#d29922,#f0883e)}
@@ -91,20 +91,21 @@ tr:hover td{background:#1c2128}
   .team-grid{grid-template-columns:1fr}
 }
 </style>
+  <script defer src="auth.js"></script>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     DATA BLOCK — UPDATE THIS SECTION ONLY (Forge auto-logged entries)
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+     DATA BLOCK â€” UPDATE THIS SECTION ONLY (Forge auto-logged entries)
      To add an entry: add to FORGE_LOG array during Save All.
      To add a project: add color to PROJECT_COLORS.
      Engine below auto-generates everything from this data.
-     ═══════════════════════════════════════════════════════════════ -->
+     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <script>
 var SUPABASE_URL = 'https://bsiycfypzhfbqeibfwma.supabase.co';
 var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzaXljZnlwemhmYnFlaWJmd21hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyODEyNzEsImV4cCI6MjA5MDg1NzI3MX0.E9tZLgWGWW6j5R4LoB5uBkriDHVsxyJ95auf3OBTlIM';
 
-// ── FORGE PROJECT COLORS ──
+// â”€â”€ FORGE PROJECT COLORS â”€â”€
 var PROJECT_COLORS = {
   'Website':            '#58a6ff',
   'QuadFang R&D':       '#f85149',
@@ -117,7 +118,7 @@ var PROJECT_COLORS = {
   'Admin':              '#79c0ff'
 };
 
-// ── SHOP PROJECT COLORS ──
+// â”€â”€ SHOP PROJECT COLORS â”€â”€
 var SHOP_COLORS = {
   'Custom Knife Build': '#f85149',
   'Sharpening Service': '#58a6ff',
@@ -133,10 +134,10 @@ var SHOP_COLORS = {
 
 var ALL_COLORS = Object.assign({}, PROJECT_COLORS, SHOP_COLORS);
 
-// ── SHOP PROJECT LIST (for dropdown) ──
+// â”€â”€ SHOP PROJECT LIST (for dropdown) â”€â”€
 var SHOP_PROJECTS = Object.keys(SHOP_COLORS);
 
-// ── BILLABLE RATES ($/hr) — EDIT ME to set real invoice rates ──
+// â”€â”€ BILLABLE RATES ($/hr) â€” EDIT ME to set real invoice rates â”€â”€
 var BILLABLE_RATES = {
   'kyran':    100,  // Kyran QuadFang reimbursement billing
   'custom':   150,  // Custom knife clients (premium rate)
@@ -144,7 +145,7 @@ var BILLABLE_RATES = {
   'internal':   0   // own-business (Forge, Admin, Website, etc.)
 };
 
-// ── QUICK-ADD TEMPLATES — 1-click prefill on Shop tab form ──
+// â”€â”€ QUICK-ADD TEMPLATES â€” 1-click prefill on Shop tab form â”€â”€
 var QUICK_TEMPLATES = [
   { label:'Shop Day',        project:'Custom Knife Build',     hours:6,   client:'',        desc:'' },
   { label:'R&D QuadFang',    project:'QuadFang Prototyping',   hours:2,   client:'Kyran',   desc:'QuadFang R&D session' },
@@ -154,10 +155,10 @@ var QUICK_TEMPLATES = [
   { label:'Shipping/Admin',  project:'Shipping / Packaging',   hours:0.5, client:'',        desc:'' }
 ];
 
-// ── FORGE LOG (auto-logged by Forge during Save All) ──
+// â”€â”€ FORGE LOG (auto-logged by Forge during Save All) â”€â”€
 var FORGE_LOG = [
-  // ═══ PRE-TRACKING ERA (Mar 31 – Apr 9) ═══
-  { date:'2026-03-31', user:'Alessio', project:'Forge System', hours:5.0, desc:'First Forge session — initial AI system exploration, prompt engineering' },
+  // â•â•â• PRE-TRACKING ERA (Mar 31 â€“ Apr 9) â•â•â•
+  { date:'2026-03-31', user:'Alessio', project:'Forge System', hours:5.0, desc:'First Forge session â€” initial AI system exploration, prompt engineering' },
   { date:'2026-04-01', user:'Alessio', project:'Forge System', hours:4.0, desc:'Shared Brain established, first startup protocol, Single Source of Truth, gist sync' },
   { date:'2026-04-01', user:'Alessio', project:'Grants', hours:3.0, desc:'SR&ED Activity Log template, IRAP Prep Guide, Open Tasks Guide' },
   { date:'2026-04-01', user:'Alessio', project:'Grants', hours:4.0, desc:'QuadFang business plan, budget financials, pitch deck, project tracker' },
@@ -179,23 +180,23 @@ var FORGE_LOG = [
   { date:'2026-04-08', user:'Alessio', project:'Forge System', hours:2.0, desc:'Clock check system, session logging, evolution chart accountability' },
   { date:'2026-04-09', user:'Alessio', project:'Forge System', hours:4.0, desc:'Two failed Save Alls reconstructed. Grant pipeline activated.' },
 
-  // ═══ TRACKED ERA (Apr 10+) ═══
+  // â•â•â• TRACKED ERA (Apr 10+) â•â•â•
   { date:'2026-04-10', user:'Alessio', project:'Website', hours:3.0, desc:'Tech plan delivered, booking page planning, site architecture review' },
-  { date:'2026-04-10', user:'Alessio', project:'Booking System', hours:7.0, desc:'All 6 booking pages built — Family Events, knife details, sharpening, blacksmithing, team building, private' },
+  { date:'2026-04-10', user:'Alessio', project:'Booking System', hours:7.0, desc:'All 6 booking pages built â€” Family Events, knife details, sharpening, blacksmithing, team building, private' },
   { date:'2026-04-11', user:'Alessio', project:'Booking System', hours:2.0, desc:'Instructions doc, folder cleanup, final verification' },
   { date:'2026-04-11', user:'Alessio', project:'Booking System', hours:4.0, desc:'Booking system published LIVE, repo cleanup, deep-links verified' },
   { date:'2026-04-11', user:'Alessio', project:'Website', hours:4.0, desc:'Wix gift card, full architecture audit, headless checkout research, Wix API deep-dive' },
   { date:'2026-04-12', user:'Alessio', project:'Website', hours:4.0, desc:'Shared nav/footer deployed to all 18 pages, CMS architecture parked' },
   { date:'2026-04-12', user:'Alessio', project:'Command Centre', hours:5.0, desc:'Forge chart, usage guide, CLAUDE.md Condensed Brain v1.0 rebuilt' },
   { date:'2026-04-12', user:'Alessio', project:'Command Centre', hours:1.5, desc:'usage.html dashboard built, Condensed Brain deployed' },
-  { date:'2026-04-12', user:'Alessio', project:'Forge System', hours:1.0, desc:'Zero-Read Startup rebuild — v1.1, all startup reads eliminated' },
+  { date:'2026-04-12', user:'Alessio', project:'Forge System', hours:1.0, desc:'Zero-Read Startup rebuild â€” v1.1, all startup reads eliminated' },
   { date:'2026-04-12', user:'Alessio', project:'Command Centre', hours:3.0, desc:'usage.html v3.0 JSON-driven master dashboard, community research, model awareness' },
   { date:'2026-04-12', user:'Alessio', project:'Forge System', hours:2.5, desc:'Renderer failure, lessons learned, plans system created' },
-  { date:'2026-04-13', user:'Alessio', project:'Forge System', hours:2.0, desc:'Late night session — startup testing, system verification' },
-  { date:'2026-04-14', user:'Alessio', project:'QuadFang R&D', hours:2.0, desc:'Meeting with Matt Runhart (Terra Machine) — Fusion 360 design, manufacturing options' },
+  { date:'2026-04-13', user:'Alessio', project:'Forge System', hours:2.0, desc:'Late night session â€” startup testing, system verification' },
+  { date:'2026-04-14', user:'Alessio', project:'QuadFang R&D', hours:2.0, desc:'Meeting with Matt Runhart (Terra Machine) â€” Fusion 360 design, manufacturing options' },
   { date:'2026-04-14', user:'Alessio', project:'Website', hours:2.0, desc:'Website master plan (9 phases), folder reorg, CLAUDE.md updates' },
   { date:'2026-04-14', user:'Alessio', project:'Admin', hours:1.0, desc:'Folder restructure, handoff for Phase 0 audit' },
-  { date:'2026-04-14', user:'Alessio', project:'Website', hours:2.0, desc:'Phase 0 Website Audit — 22 pages, 11 issues found (4 critical)' },
+  { date:'2026-04-14', user:'Alessio', project:'Website', hours:2.0, desc:'Phase 0 Website Audit â€” 22 pages, 11 issues found (4 critical)' },
   { date:'2026-04-14', user:'Reanna', project:'Website', hours:1.5, desc:'Photo category list (8 categories + Legacy Knives), session passoff' },
   { date:'2026-04-14', user:'Alessio', project:'Forge System', hours:2.0, desc:'Full brain load, CLAUDE.md fixes, Forge lessons, auto-memory' },
   { date:'2026-04-15', user:'Alessio', project:'Clients', hours:2.0, desc:'Avalon Research HT invoice ($829.50), trade agreement, invoice template' },
@@ -203,28 +204,28 @@ var FORGE_LOG = [
   { date:'2026-04-15', user:'Alessio', project:'Website', hours:2.0, desc:'Waiver PDF links fixed, blog refactored to ENGINE+DATA BLOCK' },
   { date:'2026-04-15', user:'Alessio', project:'QuadFang Website', hours:1.0, desc:'"Coming Soonr" typo fixed in Shopify, billing structure documented' },
   { date:'2026-04-15', user:'Alessio', project:'Clients', hours:1.0, desc:'Kyran client folder, reimbursement billing plan ($500/mo)' },
-  { date:'2026-04-15', user:'Alessio', project:'QuadFang Website', hours:1.5, desc:'GitHub Pages site build — 19 files, ENGINE+DATA BLOCK architecture' },
+  { date:'2026-04-15', user:'Alessio', project:'QuadFang Website', hours:1.5, desc:'GitHub Pages site build â€” 19 files, ENGINE+DATA BLOCK architecture' },
   { date:'2026-04-15', user:'Alessio', project:'Website', hours:1.5, desc:'Homepage fade-in bug fixed, v2 CSS deployed LIVE' },
   { date:'2026-04-15', user:'Alessio', project:'QuadFang Website', hours:4.0, desc:'Full GitHub Pages deployment, DNS migration, Hunt Gallery colors, newsletter table' },
-  { date:'2026-04-15', user:'Alessio', project:'Command Centre', hours:1.5, desc:'Timesheet page built — unified Forge + Shop tracker' }
+  { date:'2026-04-15', user:'Alessio', project:'Command Centre', hours:1.5, desc:'Timesheet page built â€” unified Forge + Shop tracker' }
 ];
 </script>
-<!-- ═══ END DATA BLOCK ═══ -->
+<!-- â•â•â• END DATA BLOCK â•â•â• -->
 
 <div id="app"></div>
 
-<!-- ═══ ENGINE — DO NOT EDIT BELOW ═══ -->
+<!-- â•â•â• ENGINE â€” DO NOT EDIT BELOW â•â•â• -->
 <script>
 (function(){
-  // ── Supabase client ──
+  // â”€â”€ Supabase client â”€â”€
   var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // ── Helpers ──
+  // â”€â”€ Helpers â”€â”€
   function $(id){return document.getElementById(id)}
   function colorFor(p){return ALL_COLORS[p]||'#58a6ff'}
   function fmt(n){return n.toLocaleString('en-CA',{minimumFractionDigits:1,maximumFractionDigits:1})}
 
-  // ── Billable category (first match wins) ──
+  // â”€â”€ Billable category (first match wins) â”€â”€
   function billableCategory(e){
     var p = e.project || '';
     var c = (e.client || '').toLowerCase();
@@ -235,14 +236,14 @@ var FORGE_LOG = [
     return 'internal';
   }
 
-  // ── Date range helpers ──
+  // â”€â”€ Date range helpers â”€â”€
   function isoToday(){ return new Date().toISOString().slice(0,10); }
   function daysAgo(n){ var d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0,10); }
   function startOfMonth(){ var d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0,10); }
   function startOfYear(){ return new Date().getFullYear() + '-01-01'; }
   function inRange(dateStr, from, to){ return dateStr >= from && dateStr <= to; }
 
-  // ── Billable aggregator ──
+  // â”€â”€ Billable aggregator â”€â”€
   function billableBreakdown(entries, from, to){
     var buckets = { kyran:{hrs:0,dollars:0}, custom:{hrs:0,dollars:0}, sred:{hrs:0,dollars:0}, internal:{hrs:0,dollars:0} };
     var t = to || isoToday();
@@ -270,11 +271,11 @@ var FORGE_LOG = [
     return {byProject:byProject,byDate:byDate,byUser:byUser,total:total,dates:dates,projects:projects,count:entries.length,days:dates.length};
   }
 
-  // ── Build all HTML ──
+  // â”€â”€ Build all HTML â”€â”€
   var shopEntries=[];
   var H='';
 
-  // ═══ TAB: OVERVIEW ═══
+  // â•â•â• TAB: OVERVIEW â•â•â•
   H+='<div id="tab-overview" data-subtab="overview">';
   H+='<h2 style="margin-top:0">Billable Summary</h2>';
   H+='<div class="card" id="billableSummary"></div>';
@@ -282,7 +283,7 @@ var FORGE_LOG = [
   H+='<div class="card" id="weeklyDigest"></div>';
   H+='<div class="stat-grid" id="overviewStats"></div>';
   H+='<div class="card" id="overviewProgress"></div>';
-  H+='<h2>Hours by Project — All Sources</h2>';
+  H+='<h2>Hours by Project â€” All Sources</h2>';
   H+='<div class="card" id="overviewBars"></div>';
   H+='<h2>Daily Activity</h2>';
   H+='<div class="card"><div class="chart-wrap"><canvas id="overviewChart"></canvas></div></div>';
@@ -290,7 +291,7 @@ var FORGE_LOG = [
   H+='<div class="card team-grid" id="overviewTeam"></div>';
   H+='</div>';
 
-  // ═══ TAB: FORGE LOG ═══
+  // â•â•â• TAB: FORGE LOG â•â•â•
   H+='<div id="tab-forge" data-subtab="forge">';
   H+='<div class="stat-grid" id="forgeStats"></div>';
   H+='<h2>Forge Hours by Project</h2>';
@@ -304,11 +305,11 @@ var FORGE_LOG = [
   H+='</div>';
   H+='</div>';
 
-  // ═══ TAB: SHOP LOG ═══
+  // â•â•â• TAB: SHOP LOG â•â•â•
   H+='<div id="tab-shop" data-subtab="shop">';
   H+='<h2>Log Shop Time</h2>';
   H+='<div class="card">';
-  H+='<div style="font-size:11px;color:#8b949e;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Quick Templates — 1-click prefill</div>';
+  H+='<div style="font-size:11px;color:#8b949e;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Quick Templates â€” 1-click prefill</div>';
   H+='<div class="filter-bar" id="quickAddRow" style="margin-bottom:16px;"></div>';
   H+='<div class="form-row">';
   H+='<div class="form-group"><label>Date</label><input type="date" id="shopDate"></div>';
@@ -329,7 +330,7 @@ var FORGE_LOG = [
   H+='<table id="shopTable"><thead><tr><th>Date</th><th>Project</th><th>Hours</th><th>Client</th><th>Description</th><th></th></tr></thead><tbody></tbody></table>';
   H+='</div>';
 
-  // ── Invoice Generator (on Shop tab) ──
+  // â”€â”€ Invoice Generator (on Shop tab) â”€â”€
   H+='<h2>Invoice Generator</h2>';
   H+='<div class="card">';
   H+='<div class="form-row" style="grid-template-columns:180px 160px 120px auto;">';
@@ -345,16 +346,16 @@ var FORGE_LOG = [
 
   // Footer
   H+='<hr style="border:none;border-top:1px solid #21262d;margin:32px 0;">';
-  H+='<p style="font-size:12px;color:#8b949e;text-align:center;">AZCK Timesheet — Command Centre<br>Forge entries auto-logged during Save All &middot; Shop entries via Supabase &middot; ENGINE + DATA BLOCK architecture</p>';
+  H+='<p style="font-size:12px;color:#8b949e;text-align:center;">AZCK Timesheet â€” Command Centre<br>Forge entries auto-logged during Save All &middot; Shop entries via Supabase &middot; ENGINE + DATA BLOCK architecture</p>';
 
   $('app').innerHTML=H;
 
-  // ── Populate shop dropdown ──
+  // â”€â”€ Populate shop dropdown â”€â”€
   var sel=$('shopProject');
   SHOP_PROJECTS.forEach(function(p){var o=document.createElement('option');o.value=p;o.textContent=p;sel.appendChild(o)});
   $('shopDate').valueAsDate=new Date();
 
-  // ── Render functions ──
+  // â”€â”€ Render functions â”€â”€
   function renderStats(id,agg){
     var h='';
     h+='<div class="stat-box"><div class="stat-value">'+fmt(agg.total)+'</div><div class="stat-label">Total Hours</div></div>';
@@ -366,7 +367,7 @@ var FORGE_LOG = [
   }
 
   function renderProgress(id,agg){
-    // Progress bar showing hours distribution — Forge vs Shop
+    // Progress bar showing hours distribution â€” Forge vs Shop
     var forgeH=0,shopH=0;
     FORGE_LOG.forEach(function(e){forgeH+=e.hours});
     shopEntries.forEach(function(e){shopH+=e.hours});
@@ -442,12 +443,12 @@ var FORGE_LOG = [
         if(!showDelete) rows+='<td>'+e.user+'</td>';
         rows+='<td><span class="tag" style="background:'+c+'22;color:'+c+';border:1px solid '+c+'44;">'+e.project+'</span></td>';
         rows+='<td style="font-weight:700;color:#58a6ff;">'+parseFloat(e.hours).toFixed(1)+'</td>';
-        if(showDelete) rows+='<td>'+(e.client||'—')+'</td>';
+        if(showDelete) rows+='<td>'+(e.client||'â€”')+'</td>';
         rows+='<td style="max-width:300px;">'+(e.desc||e.description||'')+'</td>';
-        if(showDelete) rows+='<td><button class="btn btn-danger btn-sm" data-del="'+e.id+'">✕</button></td>';
+        if(showDelete) rows+='<td><button class="btn btn-danger btn-sm" data-del="'+e.id+'">âœ•</button></td>';
         rows+='</tr>';
       });
-      tbody.innerHTML=rows||'<tr><td colspan="6" style="text-align:center;color:#8b949e;padding:24px;">No entries yet — add your first shop entry above!</td></tr>';
+      tbody.innerHTML=rows||'<tr><td colspan="6" style="text-align:center;color:#8b949e;padding:24px;">No entries yet â€” add your first shop entry above!</td></tr>';
 
       if(showDelete){
         tbody.querySelectorAll('[data-del]').forEach(function(btn){
@@ -468,7 +469,7 @@ var FORGE_LOG = [
     });
   }
 
-  // ── Billable Summary (3 time windows) ──
+  // â”€â”€ Billable Summary (3 time windows) â”€â”€
   function renderBillableSummary(id, allEntries){
     var wk  = billableBreakdown(allEntries, daysAgo(7));
     var mo  = billableBreakdown(allEntries, startOfMonth());
@@ -481,10 +482,10 @@ var FORGE_LOG = [
         '<div style="font-size:24px;font-weight:700;color:#58a6ff;margin-top:6px;">'+fmt(sumHrs(b))+' <span style="font-size:12px;color:#8b949e;font-weight:400;">hrs</span></div>'+
         '<div style="font-size:16px;font-weight:700;color:#3fb950;margin-top:2px;">$'+sumDol(b).toFixed(0)+' <span style="font-size:11px;color:#8b949e;font-weight:400;">billable</span></div>'+
         '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #21262d;font-size:11px;line-height:1.6;">'+
-          '<div style="display:flex;justify-content:space-between;"><span style="color:#f85149;">● Kyran</span><span style="color:#c9d1d9;">'+fmt(b.kyran.hrs)+'h &middot; $'+b.kyran.dollars.toFixed(0)+'</span></div>'+
-          '<div style="display:flex;justify-content:space-between;"><span style="color:#f778ba;">● Custom</span><span style="color:#c9d1d9;">'+fmt(b.custom.hrs)+'h &middot; $'+b.custom.dollars.toFixed(0)+'</span></div>'+
-          '<div style="display:flex;justify-content:space-between;"><span style="color:#d29922;">● SR&amp;ED</span><span style="color:#c9d1d9;">'+fmt(b.sred.hrs)+'h</span></div>'+
-          '<div style="display:flex;justify-content:space-between;"><span style="color:#79c0ff;">● Internal</span><span style="color:#c9d1d9;">'+fmt(b.internal.hrs)+'h</span></div>'+
+          '<div style="display:flex;justify-content:space-between;"><span style="color:#f85149;">â— Kyran</span><span style="color:#c9d1d9;">'+fmt(b.kyran.hrs)+'h &middot; $'+b.kyran.dollars.toFixed(0)+'</span></div>'+
+          '<div style="display:flex;justify-content:space-between;"><span style="color:#f778ba;">â— Custom</span><span style="color:#c9d1d9;">'+fmt(b.custom.hrs)+'h &middot; $'+b.custom.dollars.toFixed(0)+'</span></div>'+
+          '<div style="display:flex;justify-content:space-between;"><span style="color:#d29922;">â— SR&amp;ED</span><span style="color:#c9d1d9;">'+fmt(b.sred.hrs)+'h</span></div>'+
+          '<div style="display:flex;justify-content:space-between;"><span style="color:#79c0ff;">â— Internal</span><span style="color:#c9d1d9;">'+fmt(b.internal.hrs)+'h</span></div>'+
         '</div>'+
       '</div>';
     }
@@ -493,7 +494,7 @@ var FORGE_LOG = [
       '<div style="font-size:11px;color:#8b949e;margin-top:12px;text-align:right;">Rates: Kyran $'+BILLABLE_RATES.kyran+'/hr &middot; Custom $'+BILLABLE_RATES.custom+'/hr &middot; edit in DATA BLOCK</div>';
   }
 
-  // ── Weekly Digest (project breakdown, last 7 days) ──
+  // â”€â”€ Weekly Digest (project breakdown, last 7 days) â”€â”€
   function renderWeeklyDigest(id, allEntries){
     var from = daysAgo(7);
     var byProj = {}, byUser = {}, total = 0;
@@ -518,7 +519,7 @@ var FORGE_LOG = [
     $(id).innerHTML = h;
   }
 
-  // ── Quick-Add Template bar (Shop tab) ──
+  // â”€â”€ Quick-Add Template bar (Shop tab) â”€â”€
   function wireQuickAdd(){
     var row = $('quickAddRow');
     var h = '';
@@ -538,7 +539,7 @@ var FORGE_LOG = [
     });
   }
 
-  // ── Invoice Generator (Shop tab) ──
+  // â”€â”€ Invoice Generator (Shop tab) â”€â”€
   function wireInvoice(){
     var invMonth = $('invMonth');
     invMonth.value = (new Date().toISOString()).slice(0,7);
@@ -621,7 +622,7 @@ var FORGE_LOG = [
           '<td style="padding:12px 8px;text-align:right;font-weight:700;border-top:2px solid #990000;color:#990000;font-size:17px;">$'+totalDol.toFixed(2)+'</td>'+
         '</tr></tfoot>'+
       '</table>'+
-      '<div style="margin-top:28px;font-size:11px;color:#777;border-top:1px solid #ddd;padding-top:12px;"><em>DRAFT — review line items, rate, and client details before sending. Generated from AZCK Timesheet.</em></div>'+
+      '<div style="margin-top:28px;font-size:11px;color:#777;border-top:1px solid #ddd;padding-top:12px;"><em>DRAFT â€” review line items, rate, and client details before sending. Generated from AZCK Timesheet.</em></div>'+
       '</div>'+
       '<div style="margin-top:12px;display:flex;gap:8px;">'+
         '<button class="btn btn-primary" onclick="(function(){var w=window.open(\'\',\'_blank\');w.document.write(document.getElementById(\'invDoc\').outerHTML);w.document.close();setTimeout(function(){w.print();},250);})();">Print / Save PDF</button>'+
@@ -631,14 +632,14 @@ var FORGE_LOG = [
     $('invPreview').innerHTML = html;
   }
 
-  // ── FORGE TAB ──
+  // â”€â”€ FORGE TAB â”€â”€
   var forgeAgg=aggregate(FORGE_LOG);
   renderStats('forgeStats',forgeAgg);
   renderBars('forgeBars',forgeAgg);
   renderChart('forgeChart',forgeAgg);
   renderFilterTable('forgeFilter','forgeTable',FORGE_LOG,false);
 
-  // ── SHOP TAB — load from Supabase ──
+  // â”€â”€ SHOP TAB â€” load from Supabase â”€â”€
   async function loadShop(){
     var {data,error}=await sb.from('shop_timesheet').select('*').order('date',{ascending:false});
     if(error){console.error(error);return}
@@ -666,7 +667,7 @@ var FORGE_LOG = [
     renderTeam('overviewTeam',allAgg,combined);
   }
 
-  // ── Add shop entry ──
+  // â”€â”€ Add shop entry â”€â”€
   $('shopAdd').addEventListener('click',async function(){
     var date=$('shopDate').value;
     var project=$('shopProject').value;
@@ -689,7 +690,7 @@ var FORGE_LOG = [
     if(error){console.error(error);return}
 
     var msg=$('shopFormMsg');
-    msg.textContent='✓ Logged '+hours+'h to '+project;
+    msg.textContent='âœ“ Logged '+hours+'h to '+project;
     msg.style.color='#3fb950';msg.style.display='block';
     setTimeout(function(){msg.style.display='none'},3000);
 
@@ -701,15 +702,15 @@ var FORGE_LOG = [
     loadShop();
   });
 
-  // ── Wire quick-add + invoice ──
+  // â”€â”€ Wire quick-add + invoice â”€â”€
   wireQuickAdd();
   wireInvoice();
 
-  // ── Initial load ──
+  // â”€â”€ Initial load â”€â”€
   loadShop();
 
 })();
-/* Tab switching is handled by cc-shell.js via [data-subtab] — no page-level logic needed. */
+/* Tab switching is handled by cc-shell.js via [data-subtab] â€” no page-level logic needed. */
 </script>
 </body>
 </html>

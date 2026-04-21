@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Command Centre — Alessio</title>
+<title>Command Centre â€” Alessio</title>
 <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&family=Lexend+Mega:wght@700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -149,6 +149,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:16
   .fr{grid-template-columns:1fr}
 }
 </style>
+  <script defer src="auth.js"></script>
 </head>
 <body>
 <div class="app" id="main-app">
@@ -163,7 +164,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:16
         <div class="stat"><div class="stat-n s-today" id="s-today">0</div><div class="stat-l">Today</div></div>
         <div class="stat"><div class="stat-n s-done" id="s-done">0</div><div class="stat-l">Done</div></div>
       </div>
-      <button class="sync-btn" onclick="openSync()"><span class="sync-icon">⇄</span> Sync / Export</button>
+      <button class="sync-btn" onclick="openSync()"><span class="sync-icon">â‡„</span> Sync / Export</button>
     </div>
   </div>
   <div class="tabs">
@@ -173,14 +174,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:16
     <button class="tab" id="tab-td" onclick="go('td')">3D Printing <span class="tc tc-td" id="tc-td">0</span></button>
     <button class="tab" id="tab-fam" onclick="go('fam')">Family <span class="tc tc-fam" id="tc-fam">0</span></button>
   </div>
-  <div class="main" id="main"><div class="loading-main"><div class="spinner"></div>Loading tasks…</div></div>
+  <div class="main" id="main"><div class="loading-main"><div class="spinner"></div>Loading tasksâ€¦</div></div>
 </div>
 
 <div class="mo" id="mo">
   <div class="md">
     <div class="md-title" id="md-title">Add Task</div>
     <div class="fg"><label class="fl">Task Title</label><input class="fi" id="i-title" placeholder="What needs to get done?"></div>
-    <div class="fg"><label class="fl">Notes (optional)</label><textarea class="fta" id="i-notes" placeholder="Details, context, next steps…"></textarea></div>
+    <div class="fg"><label class="fl">Notes (optional)</label><textarea class="fta" id="i-notes" placeholder="Details, context, next stepsâ€¦"></textarea></div>
     <div class="fr">
       <div class="fg"><label class="fl">Priority</label>
         <select class="fsl" id="i-pri"><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option></select>
@@ -189,7 +190,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:16
     </div>
     <div class="fg" id="nozzle-row" style="display:none">
       <label class="fl">Nozzle Size</label>
-      <select class="fsl" id="i-nozzle"><option value="0.4">0.4 mm — standard</option><option value="0.2">0.2 mm — fine detail</option></select>
+      <select class="fsl" id="i-nozzle"><option value="0.4">0.4 mm â€” standard</option><option value="0.2">0.2 mm â€” fine detail</option></select>
     </div>
     <div class="ma">
       <button class="bc" onclick="closeM()">Cancel</button>
@@ -204,7 +205,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:16
     <p>Your tasks are stored in Supabase and sync live across all your devices automatically. Use Export Backup to save a copy of your data.</p>
     <div class="sync-status-row">
       <div class="dot" id="sync-dot"></div>
-      <span id="sync-lbl">connecting…</span>
+      <span id="sync-lbl">connectingâ€¦</span>
     </div>
     <div class="stabs">
       <button class="stab son" id="stab-exp" onclick="switchSync('export')">Export Backup</button>
@@ -220,7 +221,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:16
     <div id="sync-import" style="display:none">
       <div class="sync-section">
         <h3>Restore from backup</h3>
-        <textarea class="fta-sm" id="import-ta" placeholder="Paste your backup JSON here…"></textarea>
+        <textarea class="fta-sm" id="import-ta" placeholder="Paste your backup JSON hereâ€¦"></textarea>
         <button class="import-btn" onclick="importCode()">Restore Tasks</button>
       </div>
     </div>
@@ -249,18 +250,18 @@ const SEED=[
 {id:'p13',pillar:'per',title:'Basement: paint walls',notes:'',priority:'low',due:'',done:false,nozzle:''},
 {id:'p14',pillar:'per',title:'Basement: redo ceiling',notes:'',priority:'low',due:'',done:false,nozzle:''},
 {id:'a1',pillar:'az',title:'Warranty / restoration: rusty custom knife',notes:'Rust treatment and full restoration needed',priority:'high',due:'',done:false,nozzle:''},
-{id:'a2',pillar:'az',title:"Norm's knife — finish",notes:'Has been in the shop a couple of years. Low priority.',priority:'low',due:'',done:false,nozzle:''},
-{id:'a3',pillar:'az',title:"Michelle's Culinary Crew plate — pre-order",notes:'Pre-ordered. 3-week deadline.',priority:'high',due:'2026-04-14',done:false,nozzle:''},
-{id:'a4',pillar:'az',title:"Franco's Culinary Crew plate — pre-order",notes:'Pre-ordered. 3-week deadline.',priority:'high',due:'2026-04-14',done:false,nozzle:''},
-{id:'a5',pillar:'az',title:"Mike's knife (Surri's order) — finish",notes:'Same 3-week window as the Culinary Crew plates.',priority:'high',due:'2026-04-14',done:false,nozzle:''},
-{id:'a6',pillar:'az',title:"Tel's wife — new custom knife",notes:"First client's wife. Raptor or Raptor Elite in Crew Wear steel.",priority:'medium',due:'',done:false,nozzle:''},
-{id:'a7',pillar:'az',title:"Chase's Tanuki — custom order",notes:'Timeline unknown.',priority:'low',due:'',done:false,nozzle:''},
-{id:'a8',pillar:'az',title:'Raptor series — future batch',notes:'No pressing timeline.',priority:'low',due:'',done:false,nozzle:''},
-{id:'a9',pillar:'az',title:'Badger series — future batch',notes:'Future project.',priority:'low',due:'',done:false,nozzle:''},
+{id:'a2',pillar:'az',title:"Norm's knife â€” finish",notes:'Has been in the shop a couple of years. Low priority.',priority:'low',due:'',done:false,nozzle:''},
+{id:'a3',pillar:'az',title:"Michelle's Culinary Crew plate â€” pre-order",notes:'Pre-ordered. 3-week deadline.',priority:'high',due:'2026-04-14',done:false,nozzle:''},
+{id:'a4',pillar:'az',title:"Franco's Culinary Crew plate â€” pre-order",notes:'Pre-ordered. 3-week deadline.',priority:'high',due:'2026-04-14',done:false,nozzle:''},
+{id:'a5',pillar:'az',title:"Mike's knife (Surri's order) â€” finish",notes:'Same 3-week window as the Culinary Crew plates.',priority:'high',due:'2026-04-14',done:false,nozzle:''},
+{id:'a6',pillar:'az',title:"Tel's wife â€” new custom knife",notes:"First client's wife. Raptor or Raptor Elite in Crew Wear steel.",priority:'medium',due:'',done:false,nozzle:''},
+{id:'a7',pillar:'az',title:"Chase's Tanuki â€” custom order",notes:'Timeline unknown.',priority:'low',due:'',done:false,nozzle:''},
+{id:'a8',pillar:'az',title:'Raptor series â€” future batch',notes:'No pressing timeline.',priority:'low',due:'',done:false,nozzle:''},
+{id:'a9',pillar:'az',title:'Badger series â€” future batch',notes:'Future project.',priority:'low',due:'',done:false,nozzle:''},
 {id:'a10',pillar:'az',title:'Rewrite After Hours Program',notes:'',priority:'medium',due:'',done:false,nozzle:''},
 {id:'a11',pillar:'az',title:'Rewrite Sharpening Seminar curriculum',notes:'',priority:'medium',due:'',done:false,nozzle:''},
 {id:'a12',pillar:'az',title:'Write Advanced Sharpening Seminar curriculum',notes:'',priority:'medium',due:'',done:false,nozzle:''},
-{id:'a13',pillar:'az',title:'Write Advanced After Hours Program — kitchen knife',notes:'',priority:'medium',due:'',done:false,nozzle:''},
+{id:'a13',pillar:'az',title:'Write Advanced After Hours Program â€” kitchen knife',notes:'',priority:'medium',due:'',done:false,nozzle:''},
 {id:'a14',pillar:'az',title:'Write Procedures Book',notes:'Document: drilling, cutting, cleaning, gluing, grinding, laser engraving, safety protocols.',priority:'medium',due:'',done:false,nozzle:''},
 {id:'q1',pillar:'qf',title:'Finalize Quad Fang website',notes:'',priority:'high',due:'',done:false,nozzle:''},
 {id:'q2',pillar:'qf',title:'Follow up with foundry re: casting',notes:'Casting may not be viable. May pivot to machining.',priority:'high',due:'',done:false,nozzle:''},
@@ -271,8 +272,8 @@ const SEED=[
 {id:'qtax4',pillar:'qf',title:'TAX: Set up bookkeeping system',notes:'Separate QF bank account. Wave (free) or QuickBooks.',priority:'high',due:'',done:false,nozzle:''},
 {id:'qtax5',pillar:'qf',title:'TAX: Document all startup expenses',notes:'Every receipt from day one is a deduction.',priority:'high',due:'',done:false,nozzle:''},
 {id:'qtax6',pillar:'qf',title:'TAX: Consult accountant re: business structure',notes:'Sole proprietor vs incorporation.',priority:'medium',due:'',done:false,nozzle:''},
-{id:'qg1',pillar:'qf',title:'GRANT: Research Alberta startup grants',notes:'alberta.ca/business-grants — also Alberta Innovates.',priority:'high',due:'',done:false,nozzle:''},
-{id:'qg2',pillar:'qf',title:'GRANT: Apply — Canada Digital Adoption Program (CDAP)',notes:'Federal grant up to $15,000. ised-isde.canada.ca',priority:'high',due:'',done:false,nozzle:''},
+{id:'qg1',pillar:'qf',title:'GRANT: Research Alberta startup grants',notes:'alberta.ca/business-grants â€” also Alberta Innovates.',priority:'high',due:'',done:false,nozzle:''},
+{id:'qg2',pillar:'qf',title:'GRANT: Apply â€” Canada Digital Adoption Program (CDAP)',notes:'Federal grant up to $15,000. ised-isde.canada.ca',priority:'high',due:'',done:false,nozzle:''},
 {id:'qg3',pillar:'qf',title:'GRANT: Research IRAP (NRC Industrial Research)',notes:'Strong fit for product R&D. nrc-cnrc.gc.ca/irap',priority:'high',due:'',done:false,nozzle:''},
 {id:'qg4',pillar:'qf',title:'GRANT: Check BDC startup financing',notes:'Business Development Bank of Canada. bdc.ca',priority:'high',due:'',done:false,nozzle:''},
 {id:'qg5',pillar:'qf',title:'GRANT: Research Futurpreneur Canada',notes:'Up to $60,000 for entrepreneurs under 40. futurpreneur.ca',priority:'medium',due:'',done:false,nozzle:''},
@@ -284,7 +285,7 @@ const SEED=[
 {id:'q7',pillar:'qf',title:'Set up Microsoft 365 account',notes:'Separate from AZ Custom Knives accounts.',priority:'medium',due:'',done:false,nozzle:''},
 {id:'qbc1',pillar:'qf',title:'Business cards: Design for Alessio',notes:'QF branding, name, title, contact, website.',priority:'medium',due:'',done:false,nozzle:''},
 {id:'qbc2',pillar:'qf',title:'Business cards: Design for Kyren',notes:"Confirm Kyren's title and contact before designing.",priority:'medium',due:'',done:false,nozzle:''},
-{id:'qbc3',pillar:'qf',title:'Business cards: Print run — Alessio & Kyren',notes:'Once designs approved — VistaPrint or local GP print shop.',priority:'medium',due:'',done:false,nozzle:''},
+{id:'qbc3',pillar:'qf',title:'Business cards: Print run â€” Alessio & Kyren',notes:'Once designs approved â€” VistaPrint or local GP print shop.',priority:'medium',due:'',done:false,nozzle:''},
 {id:'q8',pillar:'qf',title:'Product: QF 100 grain broadhead',notes:'',priority:'medium',due:'',done:false,nozzle:''},
 {id:'q9',pillar:'qf',title:'Product: QF 125 grain broadhead',notes:'',priority:'medium',due:'',done:false,nozzle:''},
 {id:'q10',pillar:'qf',title:'Product: QF 150 grain broadhead',notes:'',priority:'medium',due:'',done:false,nozzle:''},
@@ -292,7 +293,7 @@ const SEED=[
 {id:'q12',pillar:'qf',title:"Product: Kids' knife",notes:'Future.',priority:'low',due:'',done:false,nozzle:''},
 {id:'q13',pillar:'qf',title:'Product: Exchangeable blade holder',notes:'Future.',priority:'low',due:'',done:false,nozzle:''},
 {id:'q14',pillar:'qf',title:'Product: Alpha high-end folding knife',notes:'Future.',priority:'low',due:'',done:false,nozzle:''},
-{id:'t1',pillar:'td',title:'Curtain rod bracket — living room',notes:'Custom bracket for living room curtain rod.',priority:'medium',due:'',done:false,nozzle:'0.4'},
+{id:'t1',pillar:'td',title:'Curtain rod bracket â€” living room',notes:'Custom bracket for living room curtain rod.',priority:'medium',due:'',done:false,nozzle:'0.4'},
 {id:'t2',pillar:'td',title:'AZ shopping cart key tags',notes:'Multi-part print. Must use 0.2 nozzle.',priority:'medium',due:'',done:false,nozzle:'0.2'},
 {id:'f1',pillar:'fam',title:'Pick up Mom from airport',notes:'Arriving from Switzerland 8:21 PM Thursday. Leave by 8 PM. Calendar reminder set.',priority:'high',due:'2026-03-26',done:false,nozzle:''},
 ];
@@ -302,24 +303,24 @@ function dueCls(d){if(!d)return'';const diff=Math.round((new Date(d)-new Date(to
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function toast(msg,dur=2200){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
 function syncStatus(state,lbl){const d=document.getElementById('sync-dot');const l=document.getElementById('sync-lbl');if(d)d.className='dot'+(state?' '+state:'');if(l)l.textContent=lbl;}
-async function boot(){document.getElementById('datelbl').textContent=new Date().toLocaleDateString('en-CA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});document.getElementById('i-due').min=today();syncStatus('busy','connecting…');await load();go('per');}
-async function load(){try{const{data,error}=await sb.from('cc_tasks').select('*');if(error)throw error;tasks={per:[],az:[],qf:[],td:[],fam:[]};if(!data||data.length===0){syncStatus('busy','seeding…');const{error:e2}=await sb.from('cc_tasks').insert(SEED);if(e2)throw e2;SEED.forEach(t=>{if(tasks[t.pillar])tasks[t.pillar].push(t);});}else{data.forEach(t=>{if(tasks[t.pillar])tasks[t.pillar].push(t);});}syncStatus('live','live sync');}catch(e){syncStatus('err','sync error');toast('Could not load tasks',3000);}}
-async function saveTask(){const title=document.getElementById('i-title').value.trim();if(!title)return;const notes=document.getElementById('i-notes').value.trim();const priority=document.getElementById('i-pri').value;const due=document.getElementById('i-due').value;const nozzle=tab==='td'?document.getElementById('i-nozzle').value:'';syncStatus('busy','saving…');try{if(editId){const{error}=await sb.from('cc_tasks').update({title,notes,priority,due,nozzle}).eq('id',editId);if(error)throw error;const i=tasks[tab].findIndex(x=>x.id===editId);if(i>-1)tasks[tab][i]={...tasks[tab][i],title,notes,priority,due,nozzle};toast('Task updated');}else{const id=Date.now().toString(36)+Math.random().toString(36).slice(2);const task={id,pillar:tab,title,notes,priority,due,nozzle,done:false};const{error}=await sb.from('cc_tasks').insert(task);if(error)throw error;tasks[tab].push(task);toast('Task saved');}syncStatus('live','live sync');}catch(e){syncStatus('err','sync error');toast('Save failed',3000);}closeM();render();}
-async function tog(id){const t=tasks[tab].find(x=>x.id===id);if(!t)return;const nd=!t.done;syncStatus('busy','saving…');try{const{error}=await sb.from('cc_tasks').update({done:nd}).eq('id',id);if(error)throw error;t.done=nd;syncStatus('live','live sync');}catch(e){syncStatus('err','sync error');}render();}
-async function del(id){if(!confirm('Delete this task?'))return;syncStatus('busy','deleting…');try{const{error}=await sb.from('cc_tasks').delete().eq('id',id);if(error)throw error;tasks[tab]=tasks[tab].filter(x=>x.id!==id);syncStatus('live','live sync');toast('Deleted');}catch(e){syncStatus('err','sync error');toast('Delete failed',3000);}render();}
+async function boot(){document.getElementById('datelbl').textContent=new Date().toLocaleDateString('en-CA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});document.getElementById('i-due').min=today();syncStatus('busy','connectingâ€¦');await load();go('per');}
+async function load(){try{const{data,error}=await sb.from('cc_tasks').select('*');if(error)throw error;tasks={per:[],az:[],qf:[],td:[],fam:[]};if(!data||data.length===0){syncStatus('busy','seedingâ€¦');const{error:e2}=await sb.from('cc_tasks').insert(SEED);if(e2)throw e2;SEED.forEach(t=>{if(tasks[t.pillar])tasks[t.pillar].push(t);});}else{data.forEach(t=>{if(tasks[t.pillar])tasks[t.pillar].push(t);});}syncStatus('live','live sync');}catch(e){syncStatus('err','sync error');toast('Could not load tasks',3000);}}
+async function saveTask(){const title=document.getElementById('i-title').value.trim();if(!title)return;const notes=document.getElementById('i-notes').value.trim();const priority=document.getElementById('i-pri').value;const due=document.getElementById('i-due').value;const nozzle=tab==='td'?document.getElementById('i-nozzle').value:'';syncStatus('busy','savingâ€¦');try{if(editId){const{error}=await sb.from('cc_tasks').update({title,notes,priority,due,nozzle}).eq('id',editId);if(error)throw error;const i=tasks[tab].findIndex(x=>x.id===editId);if(i>-1)tasks[tab][i]={...tasks[tab][i],title,notes,priority,due,nozzle};toast('Task updated');}else{const id=Date.now().toString(36)+Math.random().toString(36).slice(2);const task={id,pillar:tab,title,notes,priority,due,nozzle,done:false};const{error}=await sb.from('cc_tasks').insert(task);if(error)throw error;tasks[tab].push(task);toast('Task saved');}syncStatus('live','live sync');}catch(e){syncStatus('err','sync error');toast('Save failed',3000);}closeM();render();}
+async function tog(id){const t=tasks[tab].find(x=>x.id===id);if(!t)return;const nd=!t.done;syncStatus('busy','savingâ€¦');try{const{error}=await sb.from('cc_tasks').update({done:nd}).eq('id',id);if(error)throw error;t.done=nd;syncStatus('live','live sync');}catch(e){syncStatus('err','sync error');}render();}
+async function del(id){if(!confirm('Delete this task?'))return;syncStatus('busy','deletingâ€¦');try{const{error}=await sb.from('cc_tasks').delete().eq('id',id);if(error)throw error;tasks[tab]=tasks[tab].filter(x=>x.id!==id);syncStatus('live','live sync');toast('Deleted');}catch(e){syncStatus('err','sync error');toast('Delete failed',3000);}render();}
 function stats(){let o=0,td=0,dn=0;const t=today();['per','az','qf','td','fam'].forEach(k=>tasks[k].forEach(x=>{if(x.done)dn++;else{o++;if(x.due===t)td++;}}));document.getElementById('s-open').textContent=o;document.getElementById('s-today').textContent=td;document.getElementById('s-done').textContent=dn;['per','az','qf','td','fam'].forEach(k=>document.getElementById('tc-'+k).textContent=tasks[k].filter(x=>!x.done).length);}
 function go(t){tab=t;filter='all';['per','az','qf','td','fam'].forEach(k=>document.getElementById('tab-'+k).className='tab'+(k===t?' a-'+k:''));render();}
 function setF(f){filter=f;render();}
-function cardHTML(x,cls){const dl=x.due?fmtDate(x.due):'';const dc=x.due?dueCls(x.due):'';const ck=x.done?`chk ck-${cls}`:'chk';const noz=cls==='td'&&x.nozzle?`<span class="ntag">${x.nozzle}mm</span>`:'';const pb=`p${x.priority[0]}-b`;return`<div class="card bl-${cls}${x.done?' done':''}"><button class="${ck}" onclick="tog('${x.id}')">${x.done?'✓':''}</button><div class="tb"><div class="tt">${esc(x.title)}</div>${x.notes?`<div class="tn">${esc(x.notes)}</div>`:''}<div class="tm"><span class="pbadge ${pb}">${x.priority}</span>${noz}${dl?`<span class="due ${dc}">${dl}</span>`:''}</div></div><div class="ta"><button class="ib" onclick="openEdit('${x.id}')">✎</button><button class="ib" onclick="del('${x.id}')">✕</button></div></div>`;}
-function render(){const cls=tab,list=tasks[tab]||[];const dn=list.filter(x=>x.done).length;const pct=list.length?Math.round(dn/list.length*100):0;const t=today();const srt=(a,b)=>{if(a.done!==b.done)return a.done?1:-1;const p={high:0,medium:1,low:2};if(p[a.priority]!==p[b.priority])return p[a.priority]-p[b.priority];if(a.due&&b.due)return a.due.localeCompare(b.due);if(a.due)return-1;if(b.due)return 1;return 0;};let fl=[...list];if(filter==='active')fl=fl.filter(x=>!x.done);else if(filter==='done')fl=fl.filter(x=>x.done);else if(filter==='high')fl=fl.filter(x=>!x.done&&x.priority==='high');fl.sort(srt);let cards='';if(tab==='td'){const f4=fl.filter(x=>!x.nozzle||x.nozzle==='0.4'),f2=fl.filter(x=>x.nozzle==='0.2');if(f4.length){cards+=`<div class="nozh">0.4 mm — standard nozzle</div>`;f4.forEach(x=>{cards+=cardHTML(x,cls);});}if(f2.length){cards+=`<div class="nozh">0.2 mm — fine detail nozzle</div>`;f2.forEach(x=>{cards+=cardHTML(x,cls);});}if(!f4.length&&!f2.length)cards=`<div class="empty"><div class="empty-i">◯</div><div class="empty-m">Nothing here right now</div></div>`;}else if(fl.length){fl.forEach(x=>{cards+=cardHTML(x,cls);});}else cards=`<div class="empty"><div class="empty-i">◯</div><div class="empty-m">${filter==='all'?'No tasks yet — hit Add Task':'Nothing here right now'}</div></div>`;document.getElementById('main').innerHTML=`<div class="ph"><div class="pt" style="color:var(--${cls})">${LABELS[tab]}<small>${list.length} task${list.length!==1?'s':''}</small></div><button class="add-btn ab-${cls}" onclick="openAdd()">+ Add Task</button></div><div class="sr"><span><strong>${list.filter(x=>!x.done).length}</strong> open</span><span><strong>${dn}</strong> done</span><span><strong>${list.filter(x=>!x.done&&x.due===t).length}</strong> due today</span></div><div class="pb-wrap"><div class="pb pb-${cls}" style="width:${pct}%"></div></div><div class="fb"><button class="fb-btn fb-${cls}${filter==='all'?' on':''}" onclick="setF('all')">All</button><button class="fb-btn fb-${cls}${filter==='active'?' on':''}" onclick="setF('active')">Open</button><button class="fb-btn fb-${cls}${filter==='high'?' on':''}" onclick="setF('high')">High Priority</button><button class="fb-btn fb-${cls}${filter==='done'?' on':''}" onclick="setF('done')">Done</button></div><div class="tg">${cards}</div>`;stats();}
-function openAdd(){editId=null;document.getElementById('md-title').textContent='Add Task — '+LABELS[tab];['i-title','i-notes'].forEach(id=>document.getElementById(id).value='');document.getElementById('i-pri').value='medium';document.getElementById('i-due').value='';document.getElementById('nozzle-row').style.display=tab==='td'?'block':'none';document.getElementById('i-nozzle').value='0.4';document.getElementById('bs-main').className='bs bs-'+tab;document.getElementById('mo').classList.add('open');setTimeout(()=>document.getElementById('i-title').focus(),60);}
+function cardHTML(x,cls){const dl=x.due?fmtDate(x.due):'';const dc=x.due?dueCls(x.due):'';const ck=x.done?`chk ck-${cls}`:'chk';const noz=cls==='td'&&x.nozzle?`<span class="ntag">${x.nozzle}mm</span>`:'';const pb=`p${x.priority[0]}-b`;return`<div class="card bl-${cls}${x.done?' done':''}"><button class="${ck}" onclick="tog('${x.id}')">${x.done?'âœ“':''}</button><div class="tb"><div class="tt">${esc(x.title)}</div>${x.notes?`<div class="tn">${esc(x.notes)}</div>`:''}<div class="tm"><span class="pbadge ${pb}">${x.priority}</span>${noz}${dl?`<span class="due ${dc}">${dl}</span>`:''}</div></div><div class="ta"><button class="ib" onclick="openEdit('${x.id}')">âœŽ</button><button class="ib" onclick="del('${x.id}')">âœ•</button></div></div>`;}
+function render(){const cls=tab,list=tasks[tab]||[];const dn=list.filter(x=>x.done).length;const pct=list.length?Math.round(dn/list.length*100):0;const t=today();const srt=(a,b)=>{if(a.done!==b.done)return a.done?1:-1;const p={high:0,medium:1,low:2};if(p[a.priority]!==p[b.priority])return p[a.priority]-p[b.priority];if(a.due&&b.due)return a.due.localeCompare(b.due);if(a.due)return-1;if(b.due)return 1;return 0;};let fl=[...list];if(filter==='active')fl=fl.filter(x=>!x.done);else if(filter==='done')fl=fl.filter(x=>x.done);else if(filter==='high')fl=fl.filter(x=>!x.done&&x.priority==='high');fl.sort(srt);let cards='';if(tab==='td'){const f4=fl.filter(x=>!x.nozzle||x.nozzle==='0.4'),f2=fl.filter(x=>x.nozzle==='0.2');if(f4.length){cards+=`<div class="nozh">0.4 mm â€” standard nozzle</div>`;f4.forEach(x=>{cards+=cardHTML(x,cls);});}if(f2.length){cards+=`<div class="nozh">0.2 mm â€” fine detail nozzle</div>`;f2.forEach(x=>{cards+=cardHTML(x,cls);});}if(!f4.length&&!f2.length)cards=`<div class="empty"><div class="empty-i">â—¯</div><div class="empty-m">Nothing here right now</div></div>`;}else if(fl.length){fl.forEach(x=>{cards+=cardHTML(x,cls);});}else cards=`<div class="empty"><div class="empty-i">â—¯</div><div class="empty-m">${filter==='all'?'No tasks yet â€” hit Add Task':'Nothing here right now'}</div></div>`;document.getElementById('main').innerHTML=`<div class="ph"><div class="pt" style="color:var(--${cls})">${LABELS[tab]}<small>${list.length} task${list.length!==1?'s':''}</small></div><button class="add-btn ab-${cls}" onclick="openAdd()">+ Add Task</button></div><div class="sr"><span><strong>${list.filter(x=>!x.done).length}</strong> open</span><span><strong>${dn}</strong> done</span><span><strong>${list.filter(x=>!x.done&&x.due===t).length}</strong> due today</span></div><div class="pb-wrap"><div class="pb pb-${cls}" style="width:${pct}%"></div></div><div class="fb"><button class="fb-btn fb-${cls}${filter==='all'?' on':''}" onclick="setF('all')">All</button><button class="fb-btn fb-${cls}${filter==='active'?' on':''}" onclick="setF('active')">Open</button><button class="fb-btn fb-${cls}${filter==='high'?' on':''}" onclick="setF('high')">High Priority</button><button class="fb-btn fb-${cls}${filter==='done'?' on':''}" onclick="setF('done')">Done</button></div><div class="tg">${cards}</div>`;stats();}
+function openAdd(){editId=null;document.getElementById('md-title').textContent='Add Task â€” '+LABELS[tab];['i-title','i-notes'].forEach(id=>document.getElementById(id).value='');document.getElementById('i-pri').value='medium';document.getElementById('i-due').value='';document.getElementById('nozzle-row').style.display=tab==='td'?'block':'none';document.getElementById('i-nozzle').value='0.4';document.getElementById('bs-main').className='bs bs-'+tab;document.getElementById('mo').classList.add('open');setTimeout(()=>document.getElementById('i-title').focus(),60);}
 function openEdit(id){const x=tasks[tab].find(t=>t.id===id);if(!x)return;editId=id;document.getElementById('md-title').textContent='Edit Task';document.getElementById('i-title').value=x.title;document.getElementById('i-notes').value=x.notes||'';document.getElementById('i-pri').value=x.priority;document.getElementById('i-due').value=x.due||'';document.getElementById('nozzle-row').style.display=tab==='td'?'block':'none';document.getElementById('i-nozzle').value=x.nozzle||'0.4';document.getElementById('bs-main').className='bs bs-'+tab;document.getElementById('mo').classList.add('open');setTimeout(()=>document.getElementById('i-title').focus(),60);}
 function closeM(){document.getElementById('mo').classList.remove('open');editId=null;}
 function openSync(){document.getElementById('stab-exp').className='stab son';document.getElementById('stab-imp').className='stab';document.getElementById('sync-export').style.display='block';document.getElementById('sync-import').style.display='none';document.getElementById('export-code').textContent=JSON.stringify(tasks,null,2);document.getElementById('sync-mo').classList.add('open');}
 function switchSync(mode){document.getElementById('stab-exp').className='stab'+(mode==='export'?' son':'');document.getElementById('stab-imp').className='stab'+(mode==='import'?' son':'');document.getElementById('sync-export').style.display=mode==='export'?'block':'none';document.getElementById('sync-import').style.display=mode==='import'?'block':'none';if(mode==='export')document.getElementById('export-code').textContent=JSON.stringify(tasks,null,2);else document.getElementById('import-ta').value='';}
 function closeSyncM(){document.getElementById('sync-mo').classList.remove('open');}
 function copyCode(){navigator.clipboard.writeText(document.getElementById('export-code').textContent).then(()=>toast('Backup copied to clipboard')).catch(()=>{});}
-async function importCode(){const raw=document.getElementById('import-ta').value.trim();if(!raw){toast('Paste backup JSON first');return;}try{const parsed=JSON.parse(raw);if(!parsed.per&&!parsed.az&&!parsed.qf)throw new Error('Invalid');if(!confirm('This will replace all tasks in your database. Continue?'))return;syncStatus('busy','importing…');const allTasks=[];['per','az','qf','td','fam'].forEach(k=>{if(parsed[k])parsed[k].forEach(t=>allTasks.push({...t,pillar:k}));});await sb.from('cc_tasks').delete().neq('id','__never__');const{error}=await sb.from('cc_tasks').insert(allTasks);if(error)throw error;tasks=parsed;['per','az','qf','td','fam'].forEach(k=>{if(!tasks[k])tasks[k]=[];});syncStatus('live','live sync');closeSyncM();go(tab);toast('Tasks restored successfully');}catch(e){toast('Invalid backup — check you copied it fully');}}
+async function importCode(){const raw=document.getElementById('import-ta').value.trim();if(!raw){toast('Paste backup JSON first');return;}try{const parsed=JSON.parse(raw);if(!parsed.per&&!parsed.az&&!parsed.qf)throw new Error('Invalid');if(!confirm('This will replace all tasks in your database. Continue?'))return;syncStatus('busy','importingâ€¦');const allTasks=[];['per','az','qf','td','fam'].forEach(k=>{if(parsed[k])parsed[k].forEach(t=>allTasks.push({...t,pillar:k}));});await sb.from('cc_tasks').delete().neq('id','__never__');const{error}=await sb.from('cc_tasks').insert(allTasks);if(error)throw error;tasks=parsed;['per','az','qf','td','fam'].forEach(k=>{if(!tasks[k])tasks[k]=[];});syncStatus('live','live sync');closeSyncM();go(tab);toast('Tasks restored successfully');}catch(e){toast('Invalid backup â€” check you copied it fully');}}
 document.getElementById('mo').addEventListener('click',e=>{if(e.target===document.getElementById('mo'))closeM();});
 document.getElementById('sync-mo').addEventListener('click',e=>{if(e.target===document.getElementById('sync-mo'))closeSyncM();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeM();closeSyncM();}});

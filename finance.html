@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://twrlvnfszohyrmivdhre.supabase.co wss://twrlvnfszohyrmivdhre.supabase.co; img-src 'self' data: https:;">
-<title>Finance — AZCK Command Centre</title>
+<title>Finance â€” AZCK Command Centre</title>
 <link rel="stylesheet" href="cc-shell.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -68,41 +68,42 @@
   .login-shell button { width:100%; padding:10px; background:#238636; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:500; }
   .login-msg { color:#f85149; font-size:0.85rem; margin-top:10px; min-height:1.2em; }
 </style>
+  <script defer src="auth.js"></script>
 </head>
 <body>
 
-<div id="app" class="app-wrap"><div class="loading">Loading…</div></div>
+<div id="app" class="app-wrap"><div class="loading">Loadingâ€¦</div></div>
 
 <script>
-  // ─── DATA BLOCK ─────────────────────────────────────────────────────────
+  // â”€â”€â”€ DATA BLOCK â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Update this block to add categories, change labels, or tweak the 2025
-  // insurance baseline. The ENGINE below reads from here — never edit the
+  // insurance baseline. The ENGINE below reads from here â€” never edit the
   // renderers without good reason.
   window.FINANCE_DATA = {
     updated: '2026-04-19',
     categoryLabels: {
       // Revenue
       'core':              'Core Revenue',
-      'tier-1':            'Tier 1 — Near-Term Streams',
-      'tier-2':            'Tier 2 — Audience Monetisation',
-      'tier-3':            'Tier 3 — Premium Experiences',
-      'tier-4':            'Tier 4 — Passive / Side Streams',
+      'tier-1':            'Tier 1 â€” Near-Term Streams',
+      'tier-2':            'Tier 2 â€” Audience Monetisation',
+      'tier-3':            'Tier 3 â€” Premium Experiences',
+      'tier-4':            'Tier 4 â€” Passive / Side Streams',
       'partnership':       'Partnerships (QuadFang)',
       // Expenses
       'ops-shop':          'Shop Operations',
       'admin-digital':     'Admin & Digital',
       'quadfang-rnd':      'QuadFang R&D',
       'fc-tier-1':         'Tier 1 Build Costs',
-      'tier-5-insurance':  'Tier 5 — Wealth Protection (Insurance)',
-      'tier-5-wealth':     'Tier 5 — Wealth Protection (Savings)',
+      'tier-5-insurance':  'Tier 5 â€” Wealth Protection (Insurance)',
+      'tier-5-wealth':     'Tier 5 â€” Wealth Protection (Savings)',
       'variable':          'Variable / Ad-Hoc'
     },
     categoryOrder: {
       revenue: ['core','tier-1','tier-2','tier-3','tier-4','partnership'],
       expense: ['ops-shop','admin-digital','quadfang-rnd','fc-tier-1','tier-5-insurance','tier-5-wealth','variable']
     },
-    // Combined Insurance addendum — 2025 calibration reference.
-    // Dollars local-only per Spec §9; these numbers live in the page, not Supabase.
+    // Combined Insurance addendum â€” 2025 calibration reference.
+    // Dollars local-only per Spec Â§9; these numbers live in the page, not Supabase.
     insurance2025: {
       premiumMonthly: 600,
       premiumAnnual: 7200,
@@ -116,11 +117,11 @@
 </script>
 
 <script>
-  // PAGE declaration — consumed by cc-shell.js
+  // PAGE declaration â€” consumed by cc-shell.js
   window.PAGE = {
     id: 'finance',
     title: 'Finance',
-    subtitle: 'Projections · private net mode · ratios-to-cloud / dollars-local',
+    subtitle: 'Projections Â· private net mode Â· ratios-to-cloud / dollars-local',
     subtabs: [
       { id:'net',       label:'Net' },
       { id:'revenue',   label:'Revenue' },
@@ -161,12 +162,12 @@
   const banner = `
     <div class="privacy-banner">
       <span class="dot"></span>
-      <div><strong>Private Net mode</strong> — projections only. No dollar actuals are stored in Supabase.
+      <div><strong>Private Net mode</strong> â€” projections only. No dollar actuals are stored in Supabase.
         <span style="color:#8b949e;"> Ratios to cloud, dollars local. Updated ${esc(D.updated)}.</span>
       </div>
     </div>`;
 
-  // ─── BOOT ───────────────────────────────────────────────────────────────
+  // â”€â”€â”€ BOOT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function boot(){
     const { data:{ session } } = await supa.auth.getSession();
     if (!session) return renderLogin();
@@ -195,7 +196,7 @@
     return projections;
   }
 
-  // ─── helpers ────────────────────────────────────────────────────────────
+  // â”€â”€â”€ helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function curvePoints(row){
     const c = row && row.curve_json;
     if (!c || !Array.isArray(c.points)) return [];
@@ -227,9 +228,9 @@
     app.innerHTML = fail('Unknown subtab: '+id);
   }
 
-  // ─── NET TAB ────────────────────────────────────────────────────────────
+  // â”€â”€â”€ NET TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function renderNet(){
-    app.innerHTML = banner + '<div class="loading">Loading projections…</div>';
+    app.innerHTML = banner + '<div class="loading">Loading projectionsâ€¦</div>';
     let rows;
     try { rows = await ensureProjections(); }
     catch(e){ return app.innerHTML = banner + fail(e.message); }
@@ -263,7 +264,7 @@
         <div class="hero-card">
           <div class="lbl">12-mo Projected Net</div>
           <div class="val ${totalNet>=0?'pos':'neg'}">${fmt$(totalNet)}</div>
-          <div class="sub">${labels[0]||'—'} → ${labels[labels.length-1]||'—'}</div>
+          <div class="sub">${labels[0]||'â€”'} â†’ ${labels[labels.length-1]||'â€”'}</div>
         </div>
         <div class="hero-card">
           <div class="lbl">Active Streams</div>
@@ -274,14 +275,14 @@
 
       <div class="section">
         <div class="section-header">
-          <h2>Monthly Cashflow — Projected</h2>
-          <span class="meta">Revenue (green) · Expenses (red) · Net (blue line)</span>
+          <h2>Monthly Cashflow â€” Projected</h2>
+          <span class="meta">Revenue (green) Â· Expenses (red) Â· Net (blue line)</span>
         </div>
         <div class="chart-wrap"><canvas id="net-chart"></canvas></div>
       </div>
 
       <div class="todo">
-        TODO (future session): confirmation workflow · drill-down modal per stream · ratio-mode toggle · quarterly breakdown table.
+        TODO (future session): confirmation workflow Â· drill-down modal per stream Â· ratio-mode toggle Â· quarterly breakdown table.
         See <code>AI/Business/Projects/Command-Centre/Financial_Projections_Spec_v1_2026-04-18.md</code>.
       </div>`;
 
@@ -312,9 +313,9 @@
     });
   }
 
-  // ─── REVENUE / EXPENSES TAB ────────────────────────────────────────────
+  // â”€â”€â”€ REVENUE / EXPENSES TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function renderStreams(type){
-    app.innerHTML = banner + '<div class="loading">Loading…</div>';
+    app.innerHTML = banner + '<div class="loading">Loadingâ€¦</div>';
     let rows;
     try { rows = await ensureProjections(); }
     catch(e){ return app.innerHTML = banner + fail(e.message); }
@@ -382,9 +383,9 @@
       </div>`;
   }
 
-  // ─── COMBINED INSURANCE TAB ────────────────────────────────────────────
+  // â”€â”€â”€ COMBINED INSURANCE TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function renderInsurance(){
-    app.innerHTML = banner + '<div class="loading">Loading insurance streams…</div>';
+    app.innerHTML = banner + '<div class="loading">Loading insurance streamsâ€¦</div>';
     let rows;
     try { rows = await ensureProjections(); }
     catch(e){ return app.innerHTML = banner + fail(e.message); }
@@ -396,17 +397,17 @@
       <div class="section">
         <div class="section-header">
           <h2>2025 Calibration Baseline</h2>
-          <span class="meta">reference for EV framing — dollars live in-page, not in Supabase</span>
+          <span class="meta">reference for EV framing â€” dollars live in-page, not in Supabase</span>
         </div>
         <div class="ins-baseline">
           <div class="hero-card"><div class="lbl">Premium / Month</div><div class="val neg">${fmt$(B.premiumMonthly)}</div><div class="sub">wage-loss / accident / sickness</div></div>
           <div class="hero-card"><div class="lbl">Premium / Year</div><div class="val neg">${fmt$(B.premiumAnnual)}</div><div class="sub">2025 outflow</div></div>
           <div class="hero-card"><div class="lbl">2025 Payouts Received</div><div class="val pos">${fmt$(B.payoutsReceived)}+</div><div class="sub">${B.surgeries} minor surgeries</div></div>
-          <div class="hero-card"><div class="lbl">Net 2025 Position</div><div class="val pos">+${fmt$(B.netPosition)}</div><div class="sub">payouts − premiums</div></div>
+          <div class="hero-card"><div class="lbl">Net 2025 Position</div><div class="val pos">+${fmt$(B.netPosition)}</div><div class="sub">payouts âˆ’ premiums</div></div>
         </div>
         <div class="ins-note">
           Payout schedule per cut: <strong>${fmt$(B.payoutPerCut.suture)}</strong> (modern suture) / <strong>${fmt$(B.payoutPerCut.stitches)}</strong> (actual stitches).
-          Alessio frames insurance as an <strong>EV-positive investment category</strong>, not a cost category —
+          Alessio frames insurance as an <strong>EV-positive investment category</strong>, not a cost category â€”
           premiums paired with expected-payout curves, not sunk.
         </div>
         <div class="ins-note" style="font-style:italic;color:#8b949e;">&ldquo;${esc(B.quote)}&rdquo;</div>
@@ -415,16 +416,16 @@
       <div class="section">
         <div class="section-header">
           <h2>Insurance Streams <span class="meta">(${insRows.length})</span></h2>
-          <span class="meta">premium outflow only — expected-payout inflow rows pending policy review</span>
+          <span class="meta">premium outflow only â€” expected-payout inflow rows pending policy review</span>
         </div>
         ${insRows.length ? insRows.map(rowStream).join('') : '<div class="empty">No insurance streams seeded yet.</div>'}
       </div>
 
       <div class="section">
-        <div class="section-header"><h2>Policy Attachments</h2><span class="meta">local-only per Spec §9 privacy rule</span></div>
+        <div class="section-header"><h2>Policy Attachments</h2><span class="meta">local-only per Spec Â§9 privacy rule</span></div>
         <div class="todo">
           TODO: drop-zone for Alessio's policy PDFs. Stored locally (not Supabase Storage) unless privacy call changes.
-          See <code>AI/Business/Projects/Command-Centre/Financial_Projections_Spec_v1_ADDENDUM_Combined_Insurance_2026-04-18.md</code> §3.
+          See <code>AI/Business/Projects/Command-Centre/Financial_Projections_Spec_v1_ADDENDUM_Combined_Insurance_2026-04-18.md</code> Â§3.
         </div>
       </div>
 
@@ -434,11 +435,11 @@
       </div>
 
       <div class="todo">
-        TODO (future session): paired premium/payout charts per stream · policy PDF viewer · net insurance position card per quarter.
+        TODO (future session): paired premium/payout charts per stream Â· policy PDF viewer Â· net insurance position card per quarter.
       </div>`;
   }
 
-  // ─── LOGIN ─────────────────────────────────────────────────────────────
+  // â”€â”€â”€ LOGIN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function renderLogin(){
     app.innerHTML = `
       <div class="login-shell">
@@ -455,7 +456,7 @@
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('pw').value;
       const msg = document.getElementById('login-msg');
-      msg.textContent = 'Signing in…';
+      msg.textContent = 'Signing inâ€¦';
       const { error } = await supa.auth.signInWithPassword({ email, password });
       if (error) { msg.textContent = error.message; return; }
       location.reload();
