@@ -144,8 +144,18 @@
   }
 
   // ---- Guard ----------------------------------------------------------
+  function _currentPage() {
+    return (window.location.pathname.split('/').pop() || 'index.html').toLowerCase();
+  }
   function _isLoginPage() {
-    return /\/(index\.html)?($|\?)/i.test(window.location.pathname + window.location.search);
+    var p = _currentPage();
+    return p === '' || p === 'index.html';
+  }
+  // Public pages â€” never guard. password.html must be reachable without a
+  // session so a locked-out user can reset to the baked default code.
+  function _isPublicPage() {
+    var p = _currentPage();
+    return _isLoginPage() || p === 'password.html';
   }
 
   function ccGuard() {
@@ -159,8 +169,9 @@
       }
       return;
     }
-    // Not authenticated â€” preserve intended URL and bounce to login
-    if (!_isLoginPage()) {
+    // Not authenticated â€” preserve intended URL and bounce to login,
+    // unless we're on a public page (login, password reset).
+    if (!_isPublicPage()) {
       sessionStorage.setItem(
         CC_AUTH.REDIRECT_KEY,
         window.location.pathname + window.location.search + window.location.hash
