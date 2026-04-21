@@ -1,21 +1,23 @@
 /* ═══════════════════════════════════════════════════════════════
    cc-shell.js — AZCK Command Centre unified shell engine
+   v2.2 — 2026-04-21 (Pass 1 rebuild: device-label pill in banner)
    v2.1 — 2026-04-18 (Forge v0.9.5 The Operator, Track B rebuild)
    v2.0 — 2026-04-18 (grouped nav)
    v1.0 — 2026-04-17 (initial)
 
+   v2.2 changes:
+   - Renders a clickable device-label pill in .cc-banner-actions,
+     left of Reset-nav and Log-out. Pill links to devices.html.
+     Falls back gracefully if auth.js (v4+) didn't load.
+
    v2.1 changes:
    - Loads cc-theme.json on boot and applies it as CSS custom
      properties on :root BEFORE rendering. Missing file = no-op
-     (cc-shell.css defaults apply). This means Alessio can re-skin
-     the entire CC by editing one JSON file — no code touching.
+     (cc-shell.css defaults apply).
 
    v2.0 changes:
-   - Supports GROUPED nav via cc-config.json `navGroups`
-     (TODAY/OPERATIONS/SYSTEMS/STRATEGY/REFERENCE). Falls back to
-     flat `nav` if `navGroups` absent, so legacy configs keep working.
-   - Nav items inside groups remain drag-reorderable; group headers
-     are visual separators, not drag targets.
+   - Supports GROUPED nav via cc-config.json `navGroups`.
+     Falls back to flat `nav` if `navGroups` absent.
 
    On load:
    1. Fetch cc-theme.json → inject CSS variables on :root
@@ -35,7 +37,7 @@
 
   // ─── 1. DEFAULTS + STATE ─────────────────────────────────
   var DEFAULT_CONFIG = {
-    brand: { text: 'AZCK', sub: 'Command Centre', link: 'alessio.html' },
+    brand: { text: 'AZCK', sub: 'Command Centre', link: 'dashboard.html' },
     nav: [
       { id: 'tasks',     label: 'Tasks',     href: 'alessio.html' },
       { id: 'shared',    label: 'Shared',    href: 'shared.html' },
@@ -73,7 +75,7 @@
     if (opts.text !== undefined) e.textContent = opts.text;
     if (opts.attrs) Object.keys(opts.attrs).forEach(function (k) { e.setAttribute(k, opts.attrs[k]); });
     if (opts.on) Object.keys(opts.on).forEach(function (k) { e.addEventListener(k, opts.on[k]); });
-    if (opts.children) opts.children.forEach(function (c) { e.appendChild(c); });
+    if (opts.children) opts.children.forEach(function (c) { if (c) e.appendChild(c); });
     return e;
   }
   function readLS(k, fallback) {
@@ -91,7 +93,6 @@
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (cfg) {
         state.config = cfg || DEFAULT_CONFIG;
-        // Merge sensible defaults for missing keys
         if (!state.config.brand) state.config.brand = DEFAULT_CONFIG.brand;
         if (!state.config.nav) state.config.nav = DEFAULT_CONFIG.nav;
         if (!state.config.quickview) state.config.quickview = DEFAULT_CONFIG.quickview;
@@ -101,15 +102,6 @@
   }
 
   // ─── 3b. THEME LOAD (CSS variable injection) ─────────────
-  // cc-theme.json → CSS custom property map. Keys translate:
-  //   color.bg          → --cc-bg
-  //   color.bg-card     → --cc-bg-card
-  //   radius.sm         → --cc-r-sm
-  //   spacing.md        → --cc-pad-md
-  //   font.body         → --cc-font
-  //   font.mono         → --cc-font-mono
-  // Unknown keys silently ignored. Missing theme file = no-op;
-  // cc-shell.css defaults apply.
   var THEME_MAP = {
     'color.bg':          '--cc-bg',
     'color.bg-card':     '--cc-bg-card',
@@ -195,11 +187,24 @@
         var before = (e.clientX - rect.left) < rect.width / 2;
         container.insertBefore(dragging, before ? item : item.nextSibling);
         item.classList.remove('drop-before', 'drop-after');
-        // Persist new order
         var ids = $$(itemSel, container).map(function (x) { return x.dataset.id; });
         onReorder(ids);
       });
     });
+  }
+
+  // ─── 4b. DEVICE PILL (Pass 1 — v2.2) ─────────────────────
+  function makeDevicePill() {
+    try {
+      if (typeof window.ccGetDeviceInfo !== 'function') return null;
+      var info = window.ccGetDeviceInfo();
+      if (!info || !info.label) return null;
+      return el('a', {
+        cls: 'cc-device-pill',
+        attrs: { href: 'devices.html', title: 'Devices · ' + info.label },
+        text: info.label
+      });
+    } catch (e) { return null; }
   }
 
   // ─── 5. BANNER + MAIN NAV ────────────────────────────────
@@ -207,9 +212,6 @@
     var cfg = state.config;
     var savedOrder = readLS(KEY_NAV, null);
 
-    // Backward compatibility: if `navGroups` exists use grouped render,
-    // else fall back to flat `nav`. Flat nav items become a single
-    // pseudo-group with no label.
     var groups;
     if (cfg.navGroups && Array.isArray(cfg.navGroups)) {
       groups = cfg.navGroups.map(function (g) {
@@ -219,9 +221,6 @@
       groups = [{ id: '_flat', label: null, items: (cfg.nav || []).slice() }];
     }
 
-    // Apply saved order: savedOrder is a flat list of ids across all groups.
-    // Re-sort each group's items by the saved order; items not in savedOrder
-    // stay in their config position.
     if (savedOrder && Array.isArray(savedOrder)) {
       var orderIndex = {};
       savedOrder.forEach(function (id, i) { orderIndex[id] = i; });
@@ -267,6 +266,7 @@
     });
 
     var actions = el('div', { cls: 'cc-banner-actions', children: [
+      makeDevicePill(),
       el('button', { text: 'Reset nav', attrs: { title: 'Clear saved order — restore JSON defaults' },
         on: { click: function () { removeLS(KEY_NAV); location.reload(); } } }),
       el('button', { text: 'Log out', attrs: { title: 'Sign out of the Command Centre', 'data-cc-logout': '1' },
@@ -279,8 +279,6 @@
     var banner = el('header', { cls: 'cc-banner', children: [brand, nav, actions] });
     document.body.insertBefore(banner, document.body.firstChild);
 
-    // Drag-reorder only the <a.cc-nav-item> links (not labels/separators).
-    // Persist as flat id list — render() re-slots into groups by id.
     makeDraggable('#cc-nav', 'a.cc-nav-item', function (ids) { writeLS(KEY_NAV, ids); });
   }
 
@@ -343,7 +341,6 @@
 
     makeDraggable('#cc-subtabs', '.cc-subtab', function (ids) { writeLS(KEY_SUBTAB_ORDER(page.id), ids); });
 
-    // Apply initial visibility
     applySubtabVisibility(activeId);
   }
 
@@ -357,11 +354,8 @@
   }
 
   function applySubtabVisibility(id) {
-    // Pages may mark content sections with data-subtab="<id>".
-    // Shell hides non-matching, shows matching. If page has its own
-    // tab-switching logic, this is additive (no conflict).
     var sections = $$('[data-subtab]');
-    if (!sections.length) return;  // page handles its own
+    if (!sections.length) return;
     sections.forEach(function (s) {
       s.style.display = (s.dataset.subtab === id) ? '' : 'none';
     });
@@ -374,7 +368,7 @@
     var bar = el('div', { cls: 'cc-statsbar', attrs: { id: 'cc-statsbar' } });
     updateStatsContent(bar, stats);
     var anchor = $('.cc-subtabs') || $('.cc-quickview') || $('.cc-banner');
-    if (!anchor || !anchor.parentNode) return;  // shell not ready yet — skip; next updateStats call will retry
+    if (!anchor || !anchor.parentNode) return;
     anchor.parentNode.insertBefore(bar, anchor.nextSibling);
   }
   function updateStatsContent(bar, stats) {
@@ -395,7 +389,6 @@
     var hasActions = page.actions && page.actions.length;
     if (!hasViews && !hasActions) return;
 
-    // Find content area — conventionally #cc-content or <main>
     var content = $('#cc-content') || $('main') || document.body;
     var toolbar = el('div', { cls: 'cc-view-toolbar' });
 
@@ -433,7 +426,6 @@
       toolbar.appendChild(actions);
     }
 
-    // Insert at top of content
     content.insertBefore(toolbar, content.firstChild);
   }
 
@@ -447,14 +439,10 @@
   }
 
   // ─── 10. WRAP CONTENT ────────────────────────────────────
-  // If the page doesn't already have #cc-content, wrap everything
-  // between the shell-injected elements and </body> in a container
-  // so margins/max-width behave consistently.
   function wrapContent() {
     if ($('#cc-content')) return;
     var existing = $('main');
     if (existing) { existing.id = 'cc-content'; existing.classList.add('cc-content'); return; }
-    // Otherwise wrap loose body children
     var wrap = el('main', { cls: 'cc-content', attrs: { id: 'cc-content' } });
     var nodes = [];
     for (var i = 0; i < document.body.children.length; i++) {
@@ -469,17 +457,14 @@
 
   // ─── 11. PUBLIC API ──────────────────────────────────────
   window.CC = {
-    // Sub-tabs
     getSubtab: function () { return readLS(KEY_ACTIVE_SUBTAB(state.page.id), (state.page.subtabs[0] || {}).id); },
     setSubtab: setSubtab,
     onSubtabChange: function (fn) { state.subtabListeners.push(fn); },
 
-    // Views
     getView: function () { return state.currentView; },
     setView: setView,
     onViewChange: function (fn) { state.viewListeners.push(fn); },
 
-    // Stats bar updates
     updateStats: function (stats) {
       state.page.stats = stats || [];
       var bar = $('#cc-statsbar');
@@ -487,10 +472,8 @@
       else renderStatsBar();
     },
 
-    // Action registration (for +Add Task etc.)
     registerAction: function (name, fn) { state.actionRegistry[name] = fn; },
 
-    // Reset helpers
     resetNav: function () { removeLS(KEY_NAV); location.reload(); },
     resetSubtabOrder: function () { removeLS(KEY_SUBTAB_ORDER(state.page.id)); location.reload(); },
     resetAll: function () {
@@ -498,13 +481,11 @@
       location.reload();
     },
 
-    // Introspection (for debugging)
     _state: state
   };
 
   // ─── 12. BOOT ────────────────────────────────────────────
   function boot() {
-    // Theme first (so first paint uses Alessio's tokens), then config+render.
     loadTheme(function () {
       loadConfig(function () {
         renderBanner();
@@ -513,7 +494,6 @@
         renderStatsBar();
         wrapContent();
         renderViewToolbar();
-        // Ready signal
         document.dispatchEvent(new CustomEvent('cc-shell-ready', { detail: { page: state.page } }));
       });
     });

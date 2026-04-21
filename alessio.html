@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://twrlvnfszohyrmivdhre.supabase.co wss://twrlvnfszohyrmivdhre.supabase.co; img-src 'self' data: https:;">
-<title>Tasks — AZCK Command Centre</title>
+<title>Tasks â€” AZCK Command Centre</title>
 <link rel="stylesheet" href="cc-shell.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
@@ -81,16 +81,17 @@
   .loading, .empty { color:#8b949e; padding:20px; text-align:center; }
   .error { background:#5a1d1d; color:#ffb3b3; padding:12px 16px; border-radius:6px; margin-bottom:12px; }
 </style>
+  <script defer src="auth.js"></script>
 </head>
 <body>
 
-<div id="app" class="app-wrap"><div class="loading">Loading…</div></div>
+<div id="app" class="app-wrap"><div class="loading">Loadingâ€¦</div></div>
 
 <script>
   window.PAGE = {
     id: 'tasks',
     title: 'Tasks',
-    subtitle: 'Projects + tasks · inline edit · list / kanban / detail',
+    subtitle: 'Projects + tasks Â· inline edit Â· list / kanban / detail',
     subtabs: [
       { id:'open',      label:'Open' },
       { id:'week',      label:'This Week' },
@@ -181,7 +182,7 @@
     return Object.values(groups).filter(g => g.tasks.length > 0 || g.id !== '__inbox');
   }
 
-  // ─── RENDER ────
+  // â”€â”€â”€ RENDER â”€â”€â”€â”€
   function render(){
     const filtered = filterTasks();
     app.innerHTML = `
@@ -205,7 +206,7 @@
 
   window.setView = (v) => { STATE.view = v; localStorage.setItem('tasks.view', v); render(); };
 
-  // ─── LIST VIEW ────
+  // â”€â”€â”€ LIST VIEW â”€â”€â”€â”€
   function renderList(root, tasks){
     if (!tasks.length) return root.innerHTML = '<div class="empty">No tasks in this view.</div>';
     const groups = groupByProject(tasks);
@@ -216,7 +217,7 @@
           <span class="dot" style="background:${esc(g.color)}"></span>
           <span class="name">${esc(g.name)}</span>
           <span class="meta">${g.tasks.length} task${g.tasks.length===1?'':'s'}</span>
-          <span class="chev">▾</span>
+          <span class="chev">â–¾</span>
         </div>
         <div class="group-body">${g.tasks.map(rowList).join('')}</div>
       </div>`;
@@ -225,7 +226,7 @@
   function rowList(t){
     const done = t.status === 'done';
     const dueClass = t.due_date && !done ? (t.due_date < todayISO() ? 'due-overdue' : (t.due_date === todayISO() ? 'due-today' : '')) : '';
-    const projOpts = ['<option value="">— no project —</option>']
+    const projOpts = ['<option value="">â€” no project â€”</option>']
       .concat(STATE.projects.map(p=>`<option value="${esc(p.id)}"${t.project_id===p.id?' selected':''}>${esc(p.name)}</option>`))
       .join('');
     return `<div class="task-row ${done?'done':''}" data-id="${t.id}">
@@ -241,11 +242,11 @@
       </select>
       <input type="date" class="${dueClass}" value="${esc(t.due_date||'')}" onchange="taskInlineSave(${t.id}, 'due_date', this.value||null)">
       <select onchange="taskInlineSave(${t.id}, 'project_id', this.value||null)">${projOpts}</select>
-      <button class="delete" onclick="taskDelete(${t.id})" title="Delete">×</button>
+      <button class="delete" onclick="taskDelete(${t.id})" title="Delete">Ã—</button>
     </div>`;
   }
 
-  // ─── KANBAN VIEW ────
+  // â”€â”€â”€ KANBAN VIEW â”€â”€â”€â”€
   function renderKanban(root, tasks){
     const cols = [
       { id:'open',        label:'To Do' },
@@ -256,7 +257,7 @@
       const bucket = tasks.filter(t => t.status === c.id);
       return `<div class="kanban-col">
         <h3>${esc(c.label)} <span class="cnt">${bucket.length}</span></h3>
-        ${bucket.map(t => kanCard(t)).join('') || '<div class="empty" style="padding:10px;font-size:0.85rem;">—</div>'}
+        ${bucket.map(t => kanCard(t)).join('') || '<div class="empty" style="padding:10px;font-size:0.85rem;">â€”</div>'}
       </div>`;
     }).join('')}</div>`;
   }
@@ -265,7 +266,7 @@
     return `<div class="kanban-card" onclick="taskDetail(${t.id})">
       <div class="t">${esc(t.title||'(untitled)')}</div>
       <div class="meta">
-        ${proj ? `<span style="color:${esc(proj.color)};">● ${esc(proj.name)}</span>` : '<span>Inbox</span>'}
+        ${proj ? `<span style="color:${esc(proj.color)};">â— ${esc(proj.name)}</span>` : '<span>Inbox</span>'}
         ${t.due_date ? `<span>${esc(t.due_date)}</span>` : ''}
         <span class="prio-${esc(t.priority||'medium')}">${esc((t.priority||'medium').toUpperCase())}</span>
         <select onclick="event.stopPropagation();" onchange="taskInlineSave(${t.id}, 'status', this.value)">
@@ -277,7 +278,7 @@
     </div>`;
   }
 
-  // ─── DETAIL VIEW ────
+  // â”€â”€â”€ DETAIL VIEW â”€â”€â”€â”€
   function renderDetail(root, tasks){
     if (!tasks.length) return root.innerHTML = '<div class="empty">No tasks in this view.</div>';
     const groups = groupByProject(tasks);
@@ -289,7 +290,7 @@
   }
   function rowDetail(t){
     const done = t.status==='done';
-    const projOpts = ['<option value="">— no project —</option>']
+    const projOpts = ['<option value="">â€” no project â€”</option>']
       .concat(STATE.projects.map(p=>`<option value="${esc(p.id)}"${t.project_id===p.id?' selected':''}>${esc(p.name)}</option>`)).join('');
     return `<div class="detail-card" data-id="${t.id}">
       <h3>
@@ -321,7 +322,7 @@
     </div>`;
   }
 
-  // ─── ACTIONS ────
+  // â”€â”€â”€ ACTIONS â”€â”€â”€â”€
   window.toggleGroup = function(id){
     STATE.collapsedGroups[id] = !STATE.collapsedGroups[id];
     localStorage.setItem('tasks.collapsed', JSON.stringify(STATE.collapsedGroups));
@@ -356,7 +357,7 @@
   };
 
   window.taskAdd = function(){
-    const projOpts = ['<option value="">— no project —</option>']
+    const projOpts = ['<option value="">â€” no project â€”</option>']
       .concat(STATE.projects.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`)).join('');
     showModal('New Task', `
       <input id="m-title" placeholder="What needs doing?" autofocus>
@@ -388,7 +389,7 @@
     showModal('New Project', `
       <input id="m-name" placeholder="Project name" autofocus>
       <div class="row">
-        <input id="m-icon" placeholder="Icon (optional, e.g. 🔨)">
+        <input id="m-icon" placeholder="Icon (optional, e.g. ðŸ”¨)">
         <input id="m-color" type="color" value="#58a6ff" style="height:42px;padding:4px;">
       </div>
     `, async ()=>{
@@ -417,7 +418,7 @@
     }, 50);
   };
 
-  // ─── LOGIN ────
+  // â”€â”€â”€ LOGIN â”€â”€â”€â”€
   function renderLogin(){
     app.innerHTML = `
       <div class="login-shell">
@@ -434,14 +435,14 @@
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('pw').value;
       const msg = document.getElementById('login-msg');
-      msg.textContent = 'Signing in…';
+      msg.textContent = 'Signing inâ€¦';
       const { error } = await supa.auth.signInWithPassword({ email, password });
       if (error) { msg.textContent = error.message; return; }
       location.reload();
     });
   }
 
-  // ─── MODAL ────
+  // â”€â”€â”€ MODAL â”€â”€â”€â”€
   function showModal(title, bodyHtml, onSave){
     const bd = document.createElement('div');
     bd.className = 'modal-backdrop';

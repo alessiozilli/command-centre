@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — AZCK Command Centre</title>
+  <link rel="icon" type="image/svg+xml" href="assets/az-sigil.svg">
+  <link rel="stylesheet" href="cc-shell.css">
+  <script defer src="auth.js"></script>
+  <script>
+    window.PAGE = { id: 'dashboard', title: 'Dashboard', group: 'HOME' };
+  </script>
+  <script defer src="cc-shell.js"></script>
+  <style>
+    .dash-wrap { max-width: 1200px; margin: 2rem auto; padding: 0 1.25rem; }
+
+    .hero {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .hero-stat {
+      background: #161b22; border: 1px solid #30363d; border-radius: 10px;
+      padding: 1.1rem 1.25rem;
+    }
+    .hero-stat .lbl {
+      color: #8b949e; font-size: 0.72rem; text-transform: uppercase;
+      letter-spacing: 0.08em; margin-bottom: 0.5rem;
+    }
+    .hero-stat .val {
+      color: #e6edf3; font-size: 1.65rem; font-weight: 600;
+    }
+    .hero-stat .delta { color: #8b949e; font-size: 0.82rem; margin-top: 0.2rem; }
+    .hero-stat .delta.up { color: #3fb950; }
+    .hero-stat .delta.down { color: #f85149; }
+
+    .section-title {
+      color: #e6edf3; font-size: 0.95rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      margin: 0 0 1rem; padding-bottom: 0.5rem;
+      border-bottom: 1px solid #30363d;
+    }
+
+    .tiles {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+    .tile {
+      background: #161b22; border: 1px solid #30363d; border-radius: 10px;
+      padding: 1.25rem 1.35rem;
+      text-decoration: none; color: inherit;
+      transition: border-color 0.15s, transform 0.15s;
+      display: block;
+    }
+    .tile:hover {
+      border-color: #58a6ff; transform: translateY(-2px);
+    }
+    .tile h3 {
+      margin: 0 0 0.4rem; font-size: 1.02rem; color: #e6edf3;
+    }
+    .tile p {
+      margin: 0; color: #8b949e; font-size: 0.88rem; line-height: 1.4;
+    }
+    .tile .tag {
+      display: inline-block; font-size: 0.68rem; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: #8b949e; margin-bottom: 0.5rem;
+    }
+
+    .welcome {
+      background: #161b22; border-left: 3px solid #58a6ff; border-radius: 4px;
+      padding: 1rem 1.25rem; margin-bottom: 2rem;
+      color: #c9d1d9; font-size: 0.95rem;
+    }
+    .welcome strong { color: #e6edf3; }
+  </style>
+</head>
+<body>
+  <main class="dash-wrap">
+    <div class="welcome">
+      <strong>Welcome back.</strong> <span id="dash-greeting">Everything in one place. Use the nav up top or the tiles below.</span>
+    </div>
+
+    <div class="hero">
+      <div class="hero-stat">
+        <div class="lbl">My open tasks</div>
+        <div class="val" id="stat-tasks">—</div>
+        <div class="delta" id="stat-tasks-delta">Live data in Phase 3</div>
+      </div>
+      <div class="hero-stat">
+        <div class="lbl">Roadmap — active</div>
+        <div class="val" id="stat-roadmap">—</div>
+        <div class="delta" id="stat-roadmap-delta">Live data in Phase 3</div>
+      </div>
+      <div class="hero-stat">
+        <div class="lbl">Forge version</div>
+        <div class="val" id="stat-forge">v0.9.6</div>
+        <div class="delta">The Remembered</div>
+      </div>
+      <div class="hero-stat">
+        <div class="lbl">This month spend</div>
+        <div class="val" id="stat-spend">—</div>
+        <div class="delta">$280 CAD ceiling</div>
+      </div>
+    </div>
+
+    <h2 class="section-title">People</h2>
+    <div class="tiles">
+      <a href="alessio.html" class="tile">
+        <span class="tag">PEOPLE</span>
+        <h3>Alessio</h3>
+        <p>Shop, R&amp;D, design, teaching. List / Kanban / Detail views.</p>
+      </a>
+      <a href="reanna.html" class="tile">
+        <span class="tag">PEOPLE</span>
+        <h3>Reanna</h3>
+        <p>Clients, orders, store, social, grants, admin.</p>
+      </a>
+      <a href="shared.html" class="tile">
+        <span class="tag">PEOPLE</span>
+        <h3>Shared</h3>
+        <p>Joint tasks, projects, nav links both use.</p>
+      </a>
+    </div>
+
+    <h2 class="section-title">Operations</h2>
+    <div class="tiles">
+      <a href="finance.html" class="tile">
+        <span class="tag">OPS</span>
+        <h3>Finance</h3>
+        <p>Invoices, expenses, GST, financial snapshots.</p>
+      </a>
+      <a href="forge.html" class="tile">
+        <span class="tag">OPS</span>
+        <h3>Forge</h3>
+        <p>Forge version history, radar scores, metrics.</p>
+      </a>
+      <a href="roadmap.html" class="tile">
+        <span class="tag">OPS</span>
+        <h3>Roadmap</h3>
+        <p>Active initiatives across AZCK + QuadFang + Forge.</p>
+      </a>
+      <a href="network.html" class="tile">
+        <span class="tag">OPS</span>
+        <h3>Network</h3>
+        <p>Contacts, partners, suppliers, mentors.</p>
+      </a>
+      <a href="timesheet.html" class="tile">
+        <span class="tag">OPS</span>
+        <h3>Timesheet</h3>
+        <p>SR&amp;ED + billable time log. Master activity.</p>
+      </a>
+      <a href="usage.html" class="tile">
+        <span class="tag">OPS</span>
+        <h3>Usage</h3>
+        <p>Claude / Forge usage tracker. Monthly budget.</p>
+      </a>
+    </div>
+
+    <h2 class="section-title">Reference &amp; Tools</h2>
+    <div class="tiles">
+      <a href="devices.html" class="tile">
+        <span class="tag">REF</span>
+        <h3>Devices</h3>
+        <p>This device's ID, label, last seen. Cross-device in Pass 5.</p>
+      </a>
+      <a href="access-permissions.html" class="tile">
+        <span class="tag">REF</span>
+        <h3>Access &amp; Permissions</h3>
+        <p>Who can see what. Permission matrix.</p>
+      </a>
+      <a href="azck_tech_roadmap.html" class="tile">
+        <span class="tag">REF</span>
+        <h3>Tech Roadmap</h3>
+        <p>AZCK technical build plan.</p>
+      </a>
+      <a href="reanna_roadmap.html" class="tile">
+        <span class="tag">REF</span>
+        <h3>Reanna Roadmap</h3>
+        <p>Reanna-focused plan view.</p>
+      </a>
+      <a href="claude-usage-guide.html" class="tile">
+        <span class="tag">TOOL</span>
+        <h3>Claude Usage Guide</h3>
+        <p>How to use Forge efficiently.</p>
+      </a>
+      <a href="password.html" class="tile">
+        <span class="tag">TOOL</span>
+        <h3>Change Code</h3>
+        <p>Rotate the per-device access code.</p>
+      </a>
+    </div>
+  </main>
+
+  <script>
+    // Dashboard hero stats — hardcoded for Pass 1. Phase 3 wires these to Supabase.
+    // Intentionally left as placeholders so the wiring surface is obvious.
+  </script>
+</body>
+</html>

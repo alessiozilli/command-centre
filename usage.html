@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:;">
-<title>Usage Tracker — AZCK Command Centre</title>
+<title>Usage Tracker â€” AZCK Command Centre</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link rel="stylesheet" href="cc-shell.css">
 <script src="cc-shell.js" defer></script>
@@ -60,20 +60,21 @@ tr:hover td{background:#1c2128}
 .placeholder-card .ph-title{font-size:18px;color:#8b949e;margin-bottom:8px}
 .placeholder-card .ph-desc{font-size:13px;color:#484f58}
 @media(max-width:600px){body{padding:12px}.stat-grid{grid-template-columns:1fr 1fr}.platform-grid{grid-template-columns:1fr}h1{font-size:24px}.tab-btn{padding:6px 12px;font-size:13px}}
-/* Shell-integrated: hide the engine's internal tab-bar — sub-tabs live in the unified shell now */
+/* Shell-integrated: hide the engine's internal tab-bar â€” sub-tabs live in the unified shell now */
 .tab-bar{display:none !important}
-/* Body default padding collides with shell's own layout — let shell own the chrome */
+/* Body default padding collides with shell's own layout â€” let shell own the chrome */
 body{padding:0;max-width:none}
 #cc-content{max-width:1200px;margin:0 auto;padding:24px}
 </style>
+  <script defer src="auth.js"></script>
 </head>
 <body>
-<!-- ═══ PAGE CONFIG (shell reads this) ═══ -->
+<!-- â•â•â• PAGE CONFIG (shell reads this) â•â•â• -->
 <script>
 window.PAGE = {
   id: 'usage',
   title: 'Usage Tracker',
-  subtitle: 'Self-reported session data — updated every Save All. All costs in CAD.',
+  subtitle: 'Self-reported session data â€” updated every Save All. All costs in CAD.',
   subtabs: [
     { id: 'usage',         label: 'Usage' },
     { id: 'projections',   label: 'Projections' },
@@ -87,31 +88,31 @@ window.PAGE = {
     { id: 'custom',        label: 'Custom' }
   ],
   stats: [
-    { label: 'Sessions',    value: '—' },
-    { label: 'Spent (CAD)', value: '—' },
-    { label: 'Remaining',   value: '—' },
-    { label: 'Avg / day',   value: '—' },
+    { label: 'Sessions',    value: 'â€”' },
+    { label: 'Spent (CAD)', value: 'â€”' },
+    { label: 'Remaining',   value: 'â€”' },
+    { label: 'Avg / day',   value: 'â€”' },
     { label: 'Last update', value: 'Apr 17' }
   ]
 };
 </script>
 
 <h1>Usage Tracker</h1>
-<p class="subtitle">Self-reported session data — updated every Save All. All costs in CAD.</p>
+<p class="subtitle">Self-reported session data â€” updated every Save All. All costs in CAD.</p>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     DATA BLOCK — UPDATE THIS SECTION ONLY
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+     DATA BLOCK â€” UPDATE THIS SECTION ONLY
      Everything below the ENGINE line is generic. It renders
      whatever is defined here. To add a tab: add to the tabs array.
      To add a section: add to a tab's sections array.
      To add a placeholder: set sections to [].
      The engine skips null values and renders placeholders for
      empty section arrays.
-     ═══════════════════════════════════════════════════════════════ -->
+     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <script>
 var DATA = {
 
-  /* ─── PLAN ─── */
+  /* â”€â”€â”€ PLAN â”€â”€â”€ */
   plan: {
     name: 'Max 20x',
     costCAD: 280,
@@ -126,28 +127,28 @@ var DATA = {
     }
   },
 
-  /* ─── CONDENSED BRAIN VERSIONS ─── */
+  /* â”€â”€â”€ CONDENSED BRAIN VERSIONS â”€â”€â”€ */
   versions: [
     { version:'v0.0', date:'2026-04-10', codename:'Trigger Only',
       tokens:332, bytes:2000, lines:15,
       startupReads:6, startupCostCAD:0.55, saveCostCAD:0.08,
-      changes:'Original — just a startup trigger file' },
+      changes:'Original â€” just a startup trigger file' },
     { version:'v1.0', date:'2026-04-12', codename:'Condensed Brain',
       tokens:3200, bytes:13055, lines:263,
       startupReads:6, startupCostCAD:0.50, saveCostCAD:0.08,
-      changes:'Full knowledge cached — identity, business, brand, rules, instincts, protocols' },
+      changes:'Full knowledge cached â€” identity, business, brand, rules, instincts, protocols' },
     { version:'v1.1', date:'2026-04-12', codename:'Zero-Read Startup',
       tokens:5400, bytes:17823, lines:334,
       startupReads:0, startupCostCAD:0.01, saveCostCAD:0.10,
       changes:'Greeting rules + session snapshot folded in. All startup reads eliminated. Model tiering + DATA BLOCK philosophy added.' }
   ],
 
-  /* ─── FILE SIZE REGISTRY ─── */
+  /* â”€â”€â”€ FILE SIZE REGISTRY â”€â”€â”€ */
   fileSizes: {
     asOf: '2026-04-12',
     maxRecommendedTokens: 8000,
     cached: [
-      { name:'CLAUDE.md', lines:334, bytes:17823, tokens:5400, role:'Condensed Brain — everything Forge needs from turn 1' }
+      { name:'CLAUDE.md', lines:334, bytes:17823, tokens:5400, role:'Condensed Brain â€” everything Forge needs from turn 1' }
     ],
     onDemand: [
       { name:'SuperBrain.md',    lines:1388, bytes:91499, tokens:22000, role:'Full session history + deliverable log' },
@@ -155,7 +156,7 @@ var DATA = {
       { name:'Forge_Lessons.md', lines:224,  bytes:20373, tokens:5000,  role:'Earned lessons archive' },
       { name:'handoff.md',       lines:141,  bytes:6542,  tokens:1600,  role:'Session continuity (detailed)' },
       { name:'tasks.md',         lines:89,   bytes:5190,  tokens:1300,  role:'Full task list + history' },
-      { name:'greetings.md',     lines:216,  bytes:8234,  tokens:2000,  role:'Archive — folded into CLAUDE.md v1.1' },
+      { name:'greetings.md',     lines:216,  bytes:8234,  tokens:2000,  role:'Archive â€” folded into CLAUDE.md v1.1' },
       { name:'messages.md',      lines:58,   bytes:1899,  tokens:500,   role:'Cross-user messages' },
       { name:'usage-log.md',     lines:99,   bytes:5500,  tokens:1400,  role:'Session log + version tracking' }
     ],
@@ -172,7 +173,7 @@ var DATA = {
     ]
   },
 
-  /* ─── SESSIONS ─── */
+  /* â”€â”€â”€ SESSIONS â”€â”€â”€ */
   sessions: [
     { date:'2026-04-10', user:'Alessio', model:'opus', project:'Website', tags:['website'],
       turns:35, durationMin:180, tokensInK:650, tokensCachedK:100, tokensOutK:100,
@@ -212,7 +213,7 @@ var DATA = {
       notes:'Zero-Read Startup rebuild (v1.1), master dashboard engine, projections, system principles' }
   ],
 
-  /* ─── PROTOCOL COSTS BY VERSION ─── */
+  /* â”€â”€â”€ PROTOCOL COSTS BY VERSION â”€â”€â”€ */
   protocols: [
     { cbVersion:'v0.0',
       startup:{ tokens:7843, costCAD:0.55 }, saveAll:{ tokens:15000, costCAD:5.25 },
@@ -228,7 +229,7 @@ var DATA = {
       forgeLoad:{ tokens:21343, costCAD:0.53 } }
   ],
 
-  /* ─── PLATFORMS & INTEGRATIONS ─── */
+  /* â”€â”€â”€ PLATFORMS & INTEGRATIONS â”€â”€â”€ */
   platforms: [
     { name:'GitHub', status:'active', url:'https://github.com/alessiozilli', plan:'Free', monthlyCostCAD:0,
       repos:[{name:'azck-site',pages:true,purpose:'Main website (18 pages)'},{name:'command-centre',pages:true,purpose:'Forge dashboard'}],
@@ -247,7 +248,7 @@ var DATA = {
     { name:'Wix', status:'active', url:'https://manage.wix.com', plan:'Business', monthlyCostCAD:null,
       sites:[{name:'AZCK Shop',url:'shop.azcustomknives.com',products:183},{name:'QuadFang',url:'alessiozilli.wixsite.com/quadfang'}],
       limits:{products:'Unlimited',storage:'50GB',bandwidth:'Unlimited'},
-      connectedTo:['GitHub Pages (headless checkout — parked)'],
+      connectedTo:['GitHub Pages (headless checkout â€” parked)'],
       notes:'Headless checkout viable via Cart API + Redirect Session API. MCP connected.' },
     { name:'Formspree', status:'active', url:'https://formspree.io', plan:'Free', monthlyCostCAD:0,
       limits:{submissions:'50/month'},
@@ -269,14 +270,14 @@ var DATA = {
       connectedTo:['Claude (MCP)','All comms'], notes:'admin@azcustomknives.com' }
   ],
 
-  /* ─── TABS — defines what tabs exist and what sections they contain ───
+  /* â”€â”€â”€ TABS â€” defines what tabs exist and what sections they contain â”€â”€â”€
        Each tab: { id, label, sections[] }
        Each section: { type, title, description?, config? }
        Section types: 'stats-progress', 'bar-chart', 'line-chart', 'doughnut',
                       'table', 'comparison-table', 'card-grid', 'tip-list',
                       'placeholder', 'custom-html'
        Empty sections array [] = placeholder tab ("Coming Soon")
-  ─── */
+  â”€â”€â”€ */
   tabs: [
     { id:'usage', label:'Usage', sections:[
       { type:'stats-progress', title:'Monthly Allowance', source:'computed-allowance' },
@@ -313,16 +314,16 @@ var DATA = {
       { type:'tip-list', title:'Efficiency Rules', source:'computed-tips' },
       { type:'stats-progress', title:'Condensed Brain Ceiling Monitor', source:'computed-ceiling' }
     ]},
-    /* ─── PLACEHOLDER TABS — populate sections to activate ─── */
+    /* â”€â”€â”€ PLACEHOLDER TABS â€” populate sections to activate â”€â”€â”€ */
     { id:'worker-usage', label:'Worker Usage', sections:[
       { type:'bar-chart', title:'Worker Load Frequency', source:'computed-worker-freq' },
       { type:'table', title:'Worker Load Log', source:'computed-worker-log' }
     ]},
     { id:'grant-tracker', label:'Grant Tracker', sections:[], description:'SR&ED hours, expenses, and grant application progress.' },
-    { id:'custom', label:'Custom', sections:[], description:'Add any future tracking here — new JSON sections, zero HTML changes.' }
+    { id:'custom', label:'Custom', sections:[], description:'Add any future tracking here â€” new JSON sections, zero HTML changes.' }
   ],
 
-  /* ─── TIPS ─── */
+  /* â”€â”€â”€ TIPS â”€â”€â”€ */
   tips: [
     'Keep sessions under 30 turns. Context replay means turn 50 costs ~10x more than turn 1.',
     'Start fresh when work shifts topic. New session = clean context = cheaper turns.',
@@ -336,15 +337,15 @@ var DATA = {
   ]
 };
 </script>
-<!-- ═══ END DATA BLOCK ═══ -->
+<!-- â•â•â• END DATA BLOCK â•â•â• -->
 
 
-<!-- ═══════════════════════════════════════════════════════════════
-     ENGINE — DO NOT EDIT BELOW
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+     ENGINE â€” DO NOT EDIT BELOW
      Generic dashboard renderer. Reads DATA.tabs and DATA.tabs[].sections.
      Each section type has a renderer. Unknown types render as placeholders.
      Tabs with empty sections[] render as "Coming Soon" placeholders.
-     ═══════════════════════════════════════════════════════════════ -->
+     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div id="app"></div>
 
 <script>
@@ -531,7 +532,7 @@ R['table']=function(sec){
       var ml=P.models[s.model]?P.models[s.model].label:s.model;
       H+='<tr><td>'+s.date+'</td><td>'+s.user+'</td><td><span class="tag tag-'+s.model+'">'+ml+'</span></td>';
       H+='<td>'+vBadge(s.cbVersion)+'</td><td>'+tags(s.tags)+' '+s.project+'</td>';
-      H+='<td>'+s.turns+'</td><td>'+(s.tokensInK||'—')+'</td><td>'+(s.tokensCachedK||'—')+'</td><td>'+(s.tokensOutK||'—')+'</td>';
+      H+='<td>'+s.turns+'</td><td>'+(s.tokensInK||'â€”')+'</td><td>'+(s.tokensCachedK||'â€”')+'</td><td>'+(s.tokensOutK||'â€”')+'</td>';
       H+='<td>$'+fmt(s.estCostCAD)+'</td><td style="font-size:13px;color:#8b949e;">'+s.notes+'</td></tr>';
     });
     H+='</tbody></table></div>';
@@ -551,7 +552,7 @@ R['table']=function(sec){
     H+='<table><thead><tr><th>Model</th><th>Input/MTok</th><th>Output/MTok</th><th>Cached/MTok</th><th>vs Opus</th></tr></thead><tbody>';
     Object.keys(P.models).forEach(function(k){var m=P.models[k];var sv=Math.round((1-m.output/P.models.opus.output)*100);
       H+='<tr><td><span class="tag tag-'+k+'">'+m.label+'</span></td><td>$'+fmt(m.input)+'</td><td>$'+fmt(m.output)+'</td><td>$'+fmt(m.cached)+'</td>';
-      H+='<td>'+(sv>0?'<span class="green">↓'+sv+'% cheaper</span>':'Baseline')+'</td></tr>'});
+      H+='<td>'+(sv>0?'<span class="green">â†“'+sv+'% cheaper</span>':'Baseline')+'</td></tr>'});
     H+='</tbody></table>';
   }
   return H;
@@ -572,7 +573,7 @@ R['comparison-table']=function(sec){
     H+='<th>Change</th></tr></thead><tbody>';
     pKeys.forEach(function(k){H+='<tr><td style="font-weight:600;">'+pLabels[k]+'</td>';
       var f=null,l=null;D.protocols.forEach(function(p){var v=p[k];if(!f)f=v.costCAD;l=v.costCAD;H+='<td>$'+fmt(v.costCAD)+'<br><span style="font-size:11px;color:#8b949e;">'+v.tokens.toLocaleString()+' tok</span></td>'});
-      var ch=f>0?Math.round((1-l/f)*100):0;H+='<td class="'+(ch>0?'green':ch<0?'danger':'')+'">'+(ch>0?'↓':ch<0?'↑':'—')+Math.abs(ch)+'%</td></tr>'});
+      var ch=f>0?Math.round((1-l/f)*100):0;H+='<td class="'+(ch>0?'green':ch<0?'danger':'')+'">'+(ch>0?'â†“':ch<0?'â†‘':'â€”')+Math.abs(ch)+'%</td></tr>'});
     H+='</tbody></table>';
   }
   else if(sec.source==='computed-cb-efficiency'){
@@ -590,8 +591,8 @@ R['card-grid']=function(sec){
     D.platforms.forEach(function(p){
       H+='<div class="platform-card"><h4>'+sDot(p.status)+p.name+'</h4>';
       H+='<div class="meta">'+p.plan;
-      if(p.monthlyCostCAD!==null&&p.monthlyCostCAD>0)H+=' — $'+fmt(p.monthlyCostCAD)+'/mo';
-      else if(p.monthlyCostCAD===0)H+=' — Free';
+      if(p.monthlyCostCAD!==null&&p.monthlyCostCAD>0)H+=' â€” $'+fmt(p.monthlyCostCAD)+'/mo';
+      else if(p.monthlyCostCAD===0)H+=' â€” Free';
       H+='</div>';
       if(p.url)H+='<div class="meta"><a href="'+p.url+'" style="color:#58a6ff;" target="_blank">'+p.url+'</a></div>';
       if(p.repos){H+='<div class="limits"><strong>Repos:</strong> '+p.repos.map(function(r){return r.name+(r.pages?' (Pages)':'')}).join(', ')+'</div>'}
@@ -599,7 +600,7 @@ R['card-grid']=function(sec){
       else if(p.sites){H+='<div class="limits"><strong>Sites:</strong> '+p.sites.join(', ')+'</div>'}
       if(p.mcpConnections)H+='<div class="limits"><strong>MCP:</strong> '+p.mcpConnections.join(', ')+'</div>';
       if(p.services)H+='<div class="limits"><strong>Services:</strong> '+p.services.join(', ')+'</div>';
-      if(p.limits){H+='<div class="limits"><strong>Limits:</strong> '+Object.keys(p.limits).map(function(k){return k+': '+p.limits[k]}).join(' · ')+'</div>'}
+      if(p.limits){H+='<div class="limits"><strong>Limits:</strong> '+Object.keys(p.limits).map(function(k){return k+': '+p.limits[k]}).join(' Â· ')+'</div>'}
       if(p.connectedTo)H+='<div class="limits"><strong>Connected:</strong> '+p.connectedTo.join(', ')+'</div>';
       if(p.notes)H+='<div class="meta" style="margin-top:6px;font-style:italic;">'+p.notes+'</div>';
       H+='</div>';
@@ -617,7 +618,7 @@ R['tip-list']=function(sec){
 };
 
 R['placeholder']=function(sec){
-  return'<div class="placeholder-card"><div class="ph-title">'+(sec.title||'Coming Soon')+'</div><div class="ph-desc">'+(sec.description||'This section will be populated via JSON — zero HTML changes needed.')+'</div></div>';
+  return'<div class="placeholder-card"><div class="ph-title">'+(sec.title||'Coming Soon')+'</div><div class="ph-desc">'+(sec.description||'This section will be populated via JSON â€” zero HTML changes needed.')+'</div></div>';
 };
 
 /* === RENDER TABS === */
@@ -644,9 +645,9 @@ D.tabs.forEach(function(tab,i){
 
 /* Footer */
 H+='<hr style="border:none;border-top:1px solid #21262d;margin:32px 0;">';
-H+='<p style="font-size:12px;color:#8b949e;text-align:center;">AZCK Command Centre — Usage Tracker v3.0 — JSON-Driven Master Engine<br>';
-H+=P.name+' ($'+P.costCAD+' CAD/month) — CB '+curCB.version+' "'+curCB.codename+'"<br>';
-H+='Tabs: '+D.tabs.length+' ('+D.tabs.filter(function(t){return!t.sections||t.sections.length===0}).length+' placeholders) — Add tabs and sections via JSON only</p>';
+H+='<p style="font-size:12px;color:#8b949e;text-align:center;">AZCK Command Centre â€” Usage Tracker v3.0 â€” JSON-Driven Master Engine<br>';
+H+=P.name+' ($'+P.costCAD+' CAD/month) â€” CB '+curCB.version+' "'+curCB.codename+'"<br>';
+H+='Tabs: '+D.tabs.length+' ('+D.tabs.filter(function(t){return!t.sections||t.sections.length===0}).length+' placeholders) â€” Add tabs and sections via JSON only</p>';
 
 $('app').innerHTML=H;
 

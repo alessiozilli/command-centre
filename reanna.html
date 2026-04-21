@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:;">
-    <title>Reanna — AZCK Command Centre</title>
+    <title>Reanna â€” AZCK Command Centre</title>
     <link rel="stylesheet" href="cc-shell.css">
     <style>
         /* Page-specific overrides so cc-shell banner and her existing header coexist cleanly */
@@ -646,7 +646,7 @@
                 width: 100%;
             }
         }
-        /* Login gate removed — gateway handles all auth */
+        /* Login gate removed â€” gateway handles all auth */
         /* User bar in header */
         .user-bar {
             display: flex;
@@ -712,7 +712,7 @@
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script>
-      // === window.PAGE declaration — consumed by cc-shell ===
+      // === window.PAGE declaration â€” consumed by cc-shell ===
       // JSON-editable: add/remove subtabs, swap stats, declare views later.
       window.PAGE = {
         id: 'reanna',
@@ -722,18 +722,19 @@
           { id: 'tasks', label: 'Tasks' }
         ],
         stats: [
-          { id: 'open',     label: 'Open',      value: '—' },
-          { id: 'today',    label: 'Today',     value: '—' },
-          { id: 'done',     label: 'Done',      value: '—' },
-          { id: 'synced',   label: 'Synced',    value: '—' }
+          { id: 'open',     label: 'Open',      value: 'â€”' },
+          { id: 'today',    label: 'Today',     value: 'â€”' },
+          { id: 'done',     label: 'Done',      value: 'â€”' },
+          { id: 'synced',   label: 'Synced',    value: 'â€”' }
         ],
         // Reserved for future JSON-driven layout extension (List/Kanban/Detail like Alessio's).
-        // Shape mirrors alessio.html PAGE — empty here by design.
+        // Shape mirrors alessio.html PAGE â€” empty here by design.
         views: [],
         actions: []
       };
     </script>
     <script src="cc-shell.js" defer></script>
+  <script defer src="auth.js"></script>
 </head>
 <body>
     <!-- ===== APP CONTENT ===== -->
@@ -875,7 +876,7 @@
             </form>
         </div>
     </div>
-    <!-- +Add Project modal (projects layer — optional grouping above tasks, mirrors alessio.html) -->
+    <!-- +Add Project modal (projects layer â€” optional grouping above tasks, mirrors alessio.html) -->
     <div class="modal-overlay" id="projectModal">
         <div class="modal">
             <h2 class="modal-title">Add Project</h2>
@@ -886,7 +887,7 @@
                 </div>
                 <div class="form-group">
                     <label for="projectIcon">Icon (optional)</label>
-                    <input type="text" id="projectIcon" placeholder="e.g., 📝 or ✨" maxlength="2">
+                    <input type="text" id="projectIcon" placeholder="e.g., ðŸ“ or âœ¨" maxlength="2">
                 </div>
                 <div class="form-group">
                     <label>Color</label>
@@ -912,7 +913,7 @@
     <script>
         // ===== cc-shell bridge: stats sync + +Add Project wiring =====
         // Fires after cc-shell injects the banner + stats bar. Does NOT interfere with
-        // Reanna's existing layout — just forwards stat values up to the shell.
+        // Reanna's existing layout â€” just forwards stat values up to the shell.
         document.addEventListener('cc-shell-ready', () => {
             // Sync her existing status-bar values into shell stats whenever they change.
             const keys = { open: 'statusOpen', today: 'statusToday', done: 'statusDone', synced: 'statusSynced' };
@@ -925,7 +926,7 @@
                 }
                 window.CC.updateStats(out);
             }
-            // Observe the existing status elements — push shell updates whenever engine updates them.
+            // Observe the existing status elements â€” push shell updates whenever engine updates them.
             const obs = new MutationObserver(pushStats);
             for (const elId of Object.values(keys)) {
                 const el = document.getElementById(elId);
@@ -934,7 +935,7 @@
             pushStats();
         });
 
-        // ===== +Add Project — mirrors alessio.html project CRUD (JSON-editable via PAGE) =====
+        // ===== +Add Project â€” mirrors alessio.html project CRUD (JSON-editable via PAGE) =====
         async function openAddProjectModal() {
             const modal = document.getElementById('projectModal');
             document.getElementById('projectName').value = '';
@@ -1009,7 +1010,7 @@
             { id: 3, name: 'Baby & Family', color: '#3fb950', sortOrder: 3 },
             { id: 4, name: 'AZCK Admin', color: '#990000', sortOrder: 4 }
         ];
-        // (Grant seed data removed — tasks now live in Supabase)
+        // (Grant seed data removed â€” tasks now live in Supabase)
         // ===== STATE MANAGEMENT =====
         let appState = {
             categories: [],
@@ -1070,7 +1071,7 @@
             document.getElementById('userRole').textContent = currentUser.role || '';
         }
         function unlockApp() {
-            // App is visible by default — nothing to unlock
+            // App is visible by default â€” nothing to unlock
         }
         // ===== SUPABASE DATA =====
         async function loadFromSupabase() {
@@ -1112,7 +1113,7 @@
                 appState.activeCategory = appState.categories[0].id;
             }
         }
-        // (seedDefaultData removed — tasks now live in Supabase)
+        // (seedDefaultData removed â€” tasks now live in Supabase)
         async function saveTaskToSupabase(task) {
             const payload = {
                 category_id: task.categoryId, owner_id: currentUser?.id || null,
@@ -1814,11 +1815,11 @@
         document.addEventListener('DOMContentLoaded', async () => {
             updateHeaderDate();
 
-            // FIX: Don't redirect on first null session — Supabase needs time to restore from localStorage
+            // FIX: Don't redirect on first null session â€” Supabase needs time to restore from localStorage
             // Don't use await inside onAuthStateChange (can deadlock with Supabase internal locks)
             sb.auth.onAuthStateChange((event, session) => {
                 if (session?.user) {
-                    bootDashboard(session);  // no await — prevents deadlock
+                    bootDashboard(session);  // no await â€” prevents deadlock
                 } else if (event === 'SIGNED_OUT') {
                     window.location.href = 'index.html';
                 }
@@ -1830,7 +1831,7 @@
             if (existingSession?.user) {
                 bootDashboard(existingSession);
             } else {
-                // No session found yet — give Supabase 2 seconds to restore, then redirect if still nothing
+                // No session found yet â€” give Supabase 2 seconds to restore, then redirect if still nothing
                 setTimeout(async () => {
                     if (authResolved) return;
                     const { data: { session: retrySession } } = await sb.auth.getSession();
@@ -1885,10 +1886,10 @@
     </div><!-- end #appContent -->
     <!--
     ============================================================
-    DATA BLOCK — editable JSON. Change this without touching code.
+    DATA BLOCK â€” editable JSON. Change this without touching code.
     Mirrors alessio.html shape so Reanna's page can adopt Alessio's
     layout (List / Kanban / Detail + extra subtabs + project groups)
-    later with zero HTML rewrites — flip fields here and cc-shell
+    later with zero HTML rewrites â€” flip fields here and cc-shell
     (+ a future renderer) will pick them up.
     ============================================================
     -->

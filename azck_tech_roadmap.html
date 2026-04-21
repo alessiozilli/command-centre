@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AZCK Tech Roadmap — GitHub + Supabase + Netlify</title>
+<title>AZCK Tech Roadmap â€” GitHub + Supabase + Netlify</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -198,17 +198,18 @@
   .revenue-card .source { font-size: 13px; color: #c9d1d9; margin-top: 4px; }
   .revenue-card .how { font-size: 11px; color: #8b949e; margin-top: 6px; }
 </style>
+  <script defer src="auth.js"></script>
 </head>
 <body>
 
 <h1>AZCK Tech Roadmap</h1>
-<p class="subtitle">GitHub + Supabase + Netlify — Strategic plan for AZ Custom Knives Ltd. | April 5, 2026</p>
+<p class="subtitle">GitHub + Supabase + Netlify â€” Strategic plan for AZ Custom Knives Ltd. | April 5, 2026</p>
 
 <!-- THE BIG PICTURE -->
 <div class="card">
   <h3>The Big Picture</h3>
-  <p>AZCK already uses <span class="hl">Netlify</span> (Command Centres), <span class="hl">GitHub</span> (source code), and <span class="hl">Wix</span> (websites). The gap is a <strong>real backend</strong> — a database, user accounts, real-time sync, and file storage. <span class="hl-green">Supabase fills that gap</span> and connects everything.</p>
-  <p>The Hunt Gallery project (tasks 31–37) already requires Supabase setup. <strong>That setup becomes the foundation for everything else.</strong> One Supabase project powers: Hunt Gallery, Command Centre upgrade, customer portal, inventory, and order tracking.</p>
+  <p>AZCK already uses <span class="hl">Netlify</span> (Command Centres), <span class="hl">GitHub</span> (source code), and <span class="hl">Wix</span> (websites). The gap is a <strong>real backend</strong> â€” a database, user accounts, real-time sync, and file storage. <span class="hl-green">Supabase fills that gap</span> and connects everything.</p>
+  <p>The Hunt Gallery project (tasks 31â€“37) already requires Supabase setup. <strong>That setup becomes the foundation for everything else.</strong> One Supabase project powers: Hunt Gallery, Command Centre upgrade, customer portal, inventory, and order tracking.</p>
   <div class="quote">"Build the foundation once. Every feature after that is just a new table and a new page."</div>
 </div>
 
@@ -222,7 +223,7 @@
       <div class="what">Task dashboard with categories, priorities, Gist sync</div>
       <div class="detail"><strong>URL:</strong> az-command-centre.netlify.app</div>
       <div class="detail"><strong>Stack:</strong> HTML + GitHub Gist + Netlify</div>
-      <div class="detail"><strong>Upgrade path:</strong> Swap Gist → Supabase for real-time + auth</div>
+      <div class="detail"><strong>Upgrade path:</strong> Swap Gist â†’ Supabase for real-time + auth</div>
     </div>
     <div class="project project-green">
       <div class="title">Forge Evolution <span class="tag tag-exists">LIVE</span></div>
@@ -232,12 +233,12 @@
     </div>
     <div class="project project-green">
       <div class="title">Correspondence App <span class="tag tag-exists">BUILT</span></div>
-      <div class="what">Branded email generator — 4 types, 4 tones, 4 languages</div>
+      <div class="what">Branded email generator â€” 4 types, 4 tones, 4 languages</div>
       <div class="detail"><strong>Upgrade path:</strong> Add to Command Centre as a tab</div>
     </div>
     <div class="project project-green">
       <div class="title">Hunt Gallery Code <span class="tag tag-exists">BUILT</span></div>
-      <div class="what">Customer photo portal for QuadFang — code done, needs Supabase setup</div>
+      <div class="what">Customer photo portal for QuadFang â€” code done, needs Supabase setup</div>
       <div class="detail"><strong>Files:</strong> 3 files in Hunt Gallery Build/</div>
       <div class="detail"><strong>Blocker:</strong> Supabase project creation (task #31)</div>
     </div>
@@ -248,7 +249,7 @@
     </div>
     <div class="project project-green">
       <div class="title">QuadFang Deliverables <span class="tag tag-exists">BUILT</span></div>
-      <div class="what">Business plan, budget, pitch deck, tracker — all created Apr 1</div>
+      <div class="what">Business plan, budget, pitch deck, tracker â€” all created Apr 1</div>
       <div class="detail"><strong>Next:</strong> Review with Reanna, update with real numbers</div>
     </div>
   </div>
@@ -267,12 +268,12 @@
   <div class="tl-block">
     <div class="tl-phase" style="color:#f0883e;">Phase 2</div>
     <div class="tl-name">Connect</div>
-    <div class="tl-when" style="color:#f0883e;">May–Jun 2026</div>
+    <div class="tl-when" style="color:#f0883e;">Mayâ€“Jun 2026</div>
   </div>
   <div class="tl-block">
     <div class="tl-phase" style="color:#58a6ff;">Phase 3</div>
     <div class="tl-name">Monetize</div>
-    <div class="tl-when" style="color:#58a6ff;">Jul–Sep 2026 (QuadFang launch)</div>
+    <div class="tl-when" style="color:#58a6ff;">Julâ€“Sep 2026 (QuadFang launch)</div>
   </div>
   <div class="tl-block">
     <div class="tl-phase" style="color:#bc8cff;">Phase 4</div>
@@ -284,37 +285,37 @@
 <hr class="divider">
 
 <!-- PHASE 1 -->
-<h2 style="color:#3fb950;">Phase 1 — Foundation <span class="phase-badge badge-now">NOW</span></h2>
-<p>Set up Supabase once. Everything else plugs into it. This phase costs <span class="hl-green">$0</span> and unlocks Phases 2–4.</p>
+<h2 style="color:#3fb950;">Phase 1 â€” Foundation <span class="phase-badge badge-now">NOW</span></h2>
+<p>Set up Supabase once. Everything else plugs into it. This phase costs <span class="hl-green">$0</span> and unlocks Phases 2â€“4.</p>
 
 <div class="card">
   <h3>1A. Create the AZCK Supabase Project</h3>
-  <p>One project for the entire business. Hunt Gallery, Command Centre, customer tools — all share this backend.</p>
+  <p>One project for the entire business. Hunt Gallery, Command Centre, customer tools â€” all share this backend.</p>
   <ol class="step-list">
-    <li class="active"><strong>Create project</strong> at supabase.com — name it <code>azck-platform</code>. Region: US East or Canada.</li>
-    <li>Run the Hunt Gallery SQL setup (supabase-setup.sql from task #31) — this creates the first tables.</li>
+    <li class="active"><strong>Create project</strong> at supabase.com â€” name it <code>azck-platform</code>. Region: US East or Canada.</li>
+    <li>Run the Hunt Gallery SQL setup (supabase-setup.sql from task #31) â€” this creates the first tables.</li>
     <li>Add Supabase keys to Hunt Gallery HTML files (task #32).</li>
-    <li>Create admin accounts — Alessio (admin), Reanna (admin), Kyran (partner) — task #33.</li>
+    <li>Create admin accounts â€” Alessio (admin), Reanna (admin), Kyran (partner) â€” task #33.</li>
     <li>Add a <code>tasks</code> table for the Command Centre upgrade (replaces Gist sync).</li>
     <li>Add an <code>orders</code> table for future order tracking.</li>
     <li>Add a <code>forge_scores</code> table so Forge Evolution pulls live data.</li>
   </ol>
-  <div class="detail" style="margin-top:12px;"><strong>Time estimate:</strong> 2–3 hours total</div>
+  <div class="detail" style="margin-top:12px;"><strong>Time estimate:</strong> 2â€“3 hours total</div>
   <div class="detail"><strong>Cost:</strong> <span class="tag tag-free">FREE</span> 500MB database, 50K users, 1GB storage</div>
-  <div class="detail"><strong>Unblocks:</strong> Hunt Gallery (tasks 31–37), Command Centre upgrade, all Phase 2 projects</div>
+  <div class="detail"><strong>Unblocks:</strong> Hunt Gallery (tasks 31â€“37), Command Centre upgrade, all Phase 2 projects</div>
 </div>
 
 <div class="card">
-  <h3>1B. Command Centre → Supabase</h3>
+  <h3>1B. Command Centre â†’ Supabase</h3>
   <p>Swap GitHub Gist for Supabase. Same UI, better backend. Adds: <span class="hl-green">real-time sync</span>, <span class="hl-green">dynamic categories</span> (add/delete from the UI), and <span class="hl-green">user-specific views</span> (Alessio sees his tasks, Reanna sees hers).</p>
   <ol class="step-list">
     <li>Create <code>tasks</code> and <code>categories</code> tables in Supabase.</li>
     <li>Update index.html to read/write from Supabase instead of Gist.</li>
     <li>Add "New Category" and "Delete Category" buttons to the UI.</li>
-    <li>Add user authentication — Alessio and Reanna log in with their emails.</li>
-    <li>Push to GitHub → auto-deploys to Netlify.</li>
+    <li>Add user authentication â€” Alessio and Reanna log in with their emails.</li>
+    <li>Push to GitHub â†’ auto-deploys to Netlify.</li>
   </ol>
-  <div class="detail" style="margin-top:12px;"><strong>Time estimate:</strong> 3–4 hours</div>
+  <div class="detail" style="margin-top:12px;"><strong>Time estimate:</strong> 3â€“4 hours</div>
   <div class="detail"><strong>What changes for you:</strong> Categories become dynamic. No more redeploying to add/remove them. Tasks sync between devices instantly.</div>
 </div>
 
@@ -324,7 +325,7 @@
   <ol class="step-list">
     <li>Add hunt-gallery.html to Shopify as Custom Liquid section (task #34).</li>
     <li>Host admin panel on Netlify or as hidden Shopify page (task #35).</li>
-    <li>Test full flow — signup, upload, moderate, comment, share (task #36).</li>
+    <li>Test full flow â€” signup, upload, moderate, comment, share (task #36).</li>
     <li>Launch + announce on socials (task #37).</li>
   </ol>
   <div class="detail" style="margin-top:12px;"><strong>Time estimate:</strong> 2 hours (code is done)</div>
@@ -333,13 +334,13 @@
 <hr class="divider">
 
 <!-- PHASE 2 -->
-<h2 style="color:#f0883e;">Phase 2 — Connect <span class="phase-badge badge-next">May–Jun</span></h2>
+<h2 style="color:#f0883e;">Phase 2 â€” Connect <span class="phase-badge badge-next">Mayâ€“Jun</span></h2>
 <p>Wire the business tools together. Customer-facing features that save time and look professional.</p>
 
 <div class="project-grid">
   <div class="project project-orange">
     <div class="title">Customer Order Portal</div>
-    <div class="what">Customers log in, see their order status moving through stages (inquiry → deposit → production → done)</div>
+    <div class="what">Customers log in, see their order status moving through stages (inquiry â†’ deposit â†’ production â†’ done)</div>
     <div class="detail"><strong>Stack:</strong> Supabase auth + orders table + Netlify page</div>
     <div class="detail"><strong>Maps to:</strong> Your 9-stage custom knife workflow from Operations</div>
     <div class="detail"><strong>Win:</strong> Reanna stops answering "where's my knife?" messages</div>
@@ -347,29 +348,29 @@
   </div>
   <div class="project project-orange">
     <div class="title">Sharpening Tracker</div>
-    <div class="what">Drop-off → intake form → Job ID → status updates → pickup notification</div>
+    <div class="what">Drop-off â†’ intake form â†’ Job ID â†’ status updates â†’ pickup notification</div>
     <div class="detail"><strong>Stack:</strong> Existing intake form + Supabase + email webhook</div>
     <div class="detail"><strong>Win:</strong> Customers get auto-notifications when knives are ready</div>
     <div class="detail"><strong>Cost:</strong> <span class="tag tag-free">FREE</span></div>
   </div>
   <div class="project project-orange">
     <div class="title">Unified Dashboard</div>
-    <div class="what">Command Centre becomes AZCK HQ — tasks, orders, sharpening queue, course bookings, all in one view</div>
+    <div class="what">Command Centre becomes AZCK HQ â€” tasks, orders, sharpening queue, course bookings, all in one view</div>
     <div class="detail"><strong>Stack:</strong> Command Centre + new Supabase tables</div>
     <div class="detail"><strong>Win:</strong> One place for everything. Morning check-in takes 30 seconds.</div>
     <div class="detail"><strong>Cost:</strong> <span class="tag tag-free">FREE</span></div>
   </div>
   <div class="project project-orange">
     <div class="title">Custom Knife Quote Builder</div>
-    <div class="what">Customer selects steel, blade style, handle material → instant quote based on your pricing framework</div>
-    <div class="detail"><strong>Stack:</strong> HTML form + your pricing table from Operations → Supabase saves quote</div>
+    <div class="what">Customer selects steel, blade style, handle material â†’ instant quote based on your pricing framework</div>
+    <div class="detail"><strong>Stack:</strong> HTML form + your pricing table from Operations â†’ Supabase saves quote</div>
     <div class="detail"><strong>Win:</strong> Professional quoting. Auto-follow-up after 3 days if not confirmed.</div>
     <div class="detail"><strong>Cost:</strong> <span class="tag tag-free">FREE</span></div>
   </div>
   <div class="project project-orange">
     <div class="title">Email Automation</div>
     <div class="what">Auto-send: order confirmations, progress updates, pickup notifications, follow-up requests</div>
-    <div class="detail"><strong>Stack:</strong> Supabase trigger → Edge Function → SendGrid (100/day free)</div>
+    <div class="detail"><strong>Stack:</strong> Supabase trigger â†’ Edge Function â†’ SendGrid (100/day free)</div>
     <div class="detail"><strong>Maps to:</strong> Your 5 client communication templates</div>
     <div class="detail"><strong>Win:</strong> Reanna's response time targets hit automatically</div>
     <div class="detail"><strong>Cost:</strong> <span class="tag tag-free">FREE</span> (under 100 emails/day)</div>
@@ -386,24 +387,24 @@
 <hr class="divider">
 
 <!-- PHASE 3 -->
-<h2 style="color:#58a6ff;">Phase 3 — Monetize <span class="phase-badge badge-later">Jul–Sep (QuadFang Launch)</span></h2>
-<p>Turn the tech stack into revenue. QuadFang launches Q3–Q4 2026 — the platform should be ready.</p>
+<h2 style="color:#58a6ff;">Phase 3 â€” Monetize <span class="phase-badge badge-later">Julâ€“Sep (QuadFang Launch)</span></h2>
+<p>Turn the tech stack into revenue. QuadFang launches Q3â€“Q4 2026 â€” the platform should be ready.</p>
 
 <div class="revenue-grid">
   <div class="revenue-card">
-    <div class="amount">$500–2K/mo</div>
+    <div class="amount">$500â€“2K/mo</div>
     <div class="source">Digital Products</div>
     <div class="how">Knife templates, sharpening guides, course previews</div>
   </div>
   <div class="revenue-card">
-    <div class="amount">$500–2K/mo</div>
+    <div class="amount">$500â€“2K/mo</div>
     <div class="source">Online Courses</div>
-    <div class="how">Video knife-making courses (beginner → advanced)</div>
+    <div class="how">Video knife-making courses (beginner â†’ advanced)</div>
   </div>
   <div class="revenue-card">
-    <div class="amount">$450–1.5K/mo</div>
+    <div class="amount">$450â€“1.5K/mo</div>
     <div class="source">Memberships</div>
-    <div class="how">"The Forge" community — $9–15/mo per member</div>
+    <div class="how">"The Forge" community â€” $9â€“15/mo per member</div>
   </div>
   <div class="revenue-card">
     <div class="amount">Direct Sales</div>
@@ -417,13 +418,13 @@
     <div class="title">Digital Product Store</div>
     <div class="what">Sell knife templates, design files, sharpening guides, PDF courses</div>
     <div class="detail"><strong>Platform:</strong> Lemon Squeezy (5% + $0.50) or Payhip (free tier, 5%)</div>
-    <div class="detail"><strong>Content:</strong> Alessio's teaching material → digital products</div>
-    <div class="detail"><strong>First products:</strong> 3–5 items (template pack, sharpening guide, steel selection cheat sheet)</div>
+    <div class="detail"><strong>Content:</strong> Alessio's teaching material â†’ digital products</div>
+    <div class="detail"><strong>First products:</strong> 3â€“5 items (template pack, sharpening guide, steel selection cheat sheet)</div>
     <div class="detail"><strong>Cost:</strong> <span class="tag tag-free">FREE</span> to start (fees on sales only)</div>
   </div>
   <div class="project project-blue">
     <div class="title">Video Course Platform</div>
-    <div class="what">Film knife-making courses. Sell access. Alessio already teaches in-person — this is the online version.</div>
+    <div class="what">Film knife-making courses. Sell access. Alessio already teaches in-person â€” this is the online version.</div>
     <div class="detail"><strong>Tiers:</strong> Intro ($49), Intermediate ($149), Masterclass ($299)</div>
     <div class="detail"><strong>Platform:</strong> Teachable or self-hosted with Supabase auth + Netlify</div>
     <div class="detail"><strong>Content:</strong> Film 1 course first. Test demand. Scale from there.</div>
@@ -432,15 +433,15 @@
   <div class="project project-blue">
     <div class="title">"The Forge" Membership</div>
     <div class="what">Monthly access to: new designs, behind-the-scenes, community, exclusive content, early access</div>
-    <div class="detail"><strong>Price:</strong> $9–15/month</div>
-    <div class="detail"><strong>Target:</strong> 50 members = $450–750/mo recurring</div>
+    <div class="detail"><strong>Price:</strong> $9â€“15/month</div>
+    <div class="detail"><strong>Target:</strong> 50 members = $450â€“750/mo recurring</div>
     <div class="detail"><strong>Platform:</strong> Patreon (5%) or Ko-fi (0%) to start</div>
     <div class="detail"><strong>Content:</strong> Weekly post + monthly live session + exclusive access</div>
   </div>
   <div class="project project-blue">
     <div class="title">QuadFang Inventory + Sales</div>
     <div class="what">Manage broadhead inventory in Supabase. Sync with Wix/Shopify storefront.</div>
-    <div class="detail"><strong>Stack:</strong> Supabase inventory table → API → Wix product sync</div>
+    <div class="detail"><strong>Stack:</strong> Supabase inventory table â†’ API â†’ Wix product sync</div>
     <div class="detail"><strong>Win:</strong> Stock levels update automatically. No overselling.</div>
     <div class="detail"><strong>Cost:</strong> <span class="tag tag-free">FREE</span> (Supabase) + Wix/Shopify fees</div>
   </div>
@@ -456,7 +457,7 @@
 <hr class="divider">
 
 <!-- PHASE 4 -->
-<h2 style="color:#bc8cff;">Phase 4 — Scale <span class="phase-badge badge-future">Q4 2026+</span></h2>
+<h2 style="color:#bc8cff;">Phase 4 â€” Scale <span class="phase-badge badge-future">Q4 2026+</span></h2>
 <p>Advanced features that make sense once there's traffic, revenue, and data.</p>
 
 <div class="project-grid">
@@ -468,7 +469,7 @@
   <div class="project project-purple">
     <div class="title">Smart Recommendations</div>
     <div class="what">"Customers who bought this knife also bought..." using Supabase pgvector</div>
-    <div class="detail"><strong>Stack:</strong> AI embeddings in Supabase → display on product pages</div>
+    <div class="detail"><strong>Stack:</strong> AI embeddings in Supabase â†’ display on product pages</div>
   </div>
   <div class="project project-purple">
     <div class="title">Affiliate Program</div>
@@ -477,7 +478,7 @@
   </div>
   <div class="project project-purple">
     <div class="title">Cross-Platform Sync</div>
-    <div class="what">Wix ↔ Supabase ↔ Command Centre ↔ Email — everything talks to everything</div>
+    <div class="what">Wix â†” Supabase â†” Command Centre â†” Email â€” everything talks to everything</div>
     <div class="detail"><strong>Stack:</strong> Supabase webhooks + Netlify Edge Functions</div>
   </div>
 </div>
@@ -486,7 +487,7 @@
 
 <!-- COST BREAKDOWN -->
 <h2 style="color:#990000;">Cost Breakdown</h2>
-<p>The entire Phase 1–2 roadmap runs on <span class="hl-green">free tiers</span>. The only paid upgrade worth considering early is Supabase Pro ($25/mo) to prevent the free tier's 1-week inactivity pause.</p>
+<p>The entire Phase 1â€“2 roadmap runs on <span class="hl-green">free tiers</span>. The only paid upgrade worth considering early is Supabase Pro ($25/mo) to prevent the free tier's 1-week inactivity pause.</p>
 
 <div class="card">
 <table class="cost-table">
@@ -524,9 +525,9 @@
       <td>$20/mo</td>
     </tr>
     <tr>
-      <td style="font-weight:700; color:#3fb950;">TOTAL (Phase 1–2)</td>
-      <td colspan="2" style="font-weight:700; color:#3fb950;">$0/month — everything on free tiers</td>
-      <td style="font-weight:700; color:#f0883e;">$25–44/mo if upgraded</td>
+      <td style="font-weight:700; color:#3fb950;">TOTAL (Phase 1â€“2)</td>
+      <td colspan="2" style="font-weight:700; color:#3fb950;">$0/month â€” everything on free tiers</td>
+      <td style="font-weight:700; color:#f0883e;">$25â€“44/mo if upgraded</td>
     </tr>
   </tbody>
 </table>
@@ -535,17 +536,17 @@
 <hr class="divider">
 
 <!-- FIRST STEPS -->
-<h2 style="color:#990000;">First Steps — This Week</h2>
+<h2 style="color:#990000;">First Steps â€” This Week</h2>
 <p>The single most impactful thing: <span class="hl">create the Supabase project</span>. It unblocks Hunt Gallery (already built) AND the Command Centre upgrade (dynamic categories).</p>
 
 <div class="card" style="border-color:#3fb95044;">
   <h3 style="color:#3fb950;">Immediate Actions (Today/This Week)</h3>
   <ol class="step-list">
-    <li class="active"><strong>Create Supabase project</strong> — go to supabase.com, sign up with admin@azcustomknives.com, create project "azck-platform"</li>
-    <li><strong>Run Hunt Gallery SQL</strong> — paste supabase-setup.sql into the SQL editor. Tables created in 10 seconds.</li>
-    <li><strong>Add tasks + categories tables</strong> — I'll write the SQL for the Command Centre upgrade.</li>
-    <li><strong>Update Command Centre</strong> — I'll rebuild index.html to use Supabase instead of Gist. Dynamic categories included.</li>
-    <li><strong>Deploy</strong> — push to GitHub, Netlify auto-deploys. Done.</li>
+    <li class="active"><strong>Create Supabase project</strong> â€” go to supabase.com, sign up with admin@azcustomknives.com, create project "azck-platform"</li>
+    <li><strong>Run Hunt Gallery SQL</strong> â€” paste supabase-setup.sql into the SQL editor. Tables created in 10 seconds.</li>
+    <li><strong>Add tasks + categories tables</strong> â€” I'll write the SQL for the Command Centre upgrade.</li>
+    <li><strong>Update Command Centre</strong> â€” I'll rebuild index.html to use Supabase instead of Gist. Dynamic categories included.</li>
+    <li><strong>Deploy</strong> â€” push to GitHub, Netlify auto-deploys. Done.</li>
   </ol>
   <p style="margin-top:16px;margin-bottom:0;"><strong>End result:</strong> Hunt Gallery unblocked. Command Centre upgraded with dynamic categories + real-time sync. Forge Evolution on the Command Centre. All on one Supabase backend. <span class="hl-green">Cost: $0.</span></p>
 </div>
@@ -554,10 +555,10 @@
   <h3>What I Can Build Right Now</h3>
   <p>With your go-ahead, I can start building these in our next session:</p>
   <ol class="step-list">
-    <li><strong>Supabase SQL schema</strong> — tables for tasks, categories, orders, sharpening jobs, forge scores</li>
-    <li><strong>Command Centre v2</strong> — Supabase-powered with dynamic categories, auth, real-time</li>
-    <li><strong>Quote Builder</strong> — based on your pricing framework from Operations</li>
-    <li><strong>Order Tracker page</strong> — maps to your 9-stage workflow</li>
+    <li><strong>Supabase SQL schema</strong> â€” tables for tasks, categories, orders, sharpening jobs, forge scores</li>
+    <li><strong>Command Centre v2</strong> â€” Supabase-powered with dynamic categories, auth, real-time</li>
+    <li><strong>Quote Builder</strong> â€” based on your pricing framework from Operations</li>
+    <li><strong>Order Tracker page</strong> â€” maps to your 9-stage workflow</li>
   </ol>
 </div>
 
@@ -580,7 +581,7 @@
     <tr>
       <td><strong>CDAP</strong></td>
       <td>$15K</td>
-      <td>Digital tools + e-commerce — covers Supabase Pro, course platform, email marketing setup</td>
+      <td>Digital tools + e-commerce â€” covers Supabase Pro, course platform, email marketing setup</td>
     </tr>
     <tr>
       <td><strong>AI Micro-Voucher</strong></td>
@@ -590,7 +591,7 @@
     <tr>
       <td><strong>AI Voucher</strong></td>
       <td>$100K</td>
-      <td>Full AI-powered business platform — Forge, analytics, automation</td>
+      <td>Full AI-powered business platform â€” Forge, analytics, automation</td>
     </tr>
     <tr>
       <td><strong>SR&ED</strong></td>
@@ -600,7 +601,7 @@
     <tr>
       <td><strong>County of GP</strong></td>
       <td>$2K/yr</td>
-      <td>Infrastructure/tech — covers Supabase Pro annual cost easily</td>
+      <td>Infrastructure/tech â€” covers Supabase Pro annual cost easily</td>
     </tr>
   </tbody>
 </table>
@@ -610,15 +611,15 @@
 <hr class="divider">
 
 <div class="card" style="border-color:#99000044;">
-  <h3 style="color:#990000;">Summary — One Supabase Project Changes Everything</h3>
-  <p><strong>Phase 1 (April):</strong> Create Supabase → unblock Hunt Gallery + upgrade Command Centre → dynamic categories live. <span class="hl-green">Cost: $0.</span></p>
-  <p><strong>Phase 2 (May–Jun):</strong> Customer portal, order tracking, sharpening tracker, quote builder, email automation. <span class="hl-green">Cost: $0.</span></p>
-  <p><strong>Phase 3 (Jul–Sep):</strong> Digital products, video courses, memberships, QuadFang e-commerce. <span class="hl-orange">Revenue: $1,500–5,500/mo potential.</span></p>
+  <h3 style="color:#990000;">Summary â€” One Supabase Project Changes Everything</h3>
+  <p><strong>Phase 1 (April):</strong> Create Supabase â†’ unblock Hunt Gallery + upgrade Command Centre â†’ dynamic categories live. <span class="hl-green">Cost: $0.</span></p>
+  <p><strong>Phase 2 (Mayâ€“Jun):</strong> Customer portal, order tracking, sharpening tracker, quote builder, email automation. <span class="hl-green">Cost: $0.</span></p>
+  <p><strong>Phase 3 (Julâ€“Sep):</strong> Digital products, video courses, memberships, QuadFang e-commerce. <span class="hl-orange">Revenue: $1,500â€“5,500/mo potential.</span></p>
   <p><strong>Phase 4 (Q4+):</strong> Analytics, recommendations, affiliates, full platform integration.</p>
-  <p style="margin-bottom:0;">The foundation step — creating the Supabase project — takes <strong>30 minutes</strong> and unblocks <strong>everything</strong>.</p>
+  <p style="margin-bottom:0;">The foundation step â€” creating the Supabase project â€” takes <strong>30 minutes</strong> and unblocks <strong>everything</strong>.</p>
 </div>
 
-<p style="text-align:center;color:#8b949e;font-size:12px;margin-top:40px;">AZCK Tech Roadmap v1.0 — April 5, 2026 — Built by Forge for Alessio</p>
+<p style="text-align:center;color:#8b949e;font-size:12px;margin-top:40px;">AZCK Tech Roadmap v1.0 â€” April 5, 2026 â€” Built by Forge for Alessio</p>
 
 </body>
 </html>
