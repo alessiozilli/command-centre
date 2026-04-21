@@ -18,7 +18,7 @@
   // in the browser console on any CC page, then pasting the printed hash here.
   const CC_AUTH = {
     PASSWORD_HASH: '455c59944e7fd33667fe9a3b8cc3e91c200174a14065913a06e2013fe2e37bd0',
-    SESSION_KEY:   'azck_cc_session',
+    SESSION_KEY:   'azck_cc_auth',
     OVERRIDE_KEY:  'azck_cc_pw_override',
     REDIRECT_KEY:  'azck_cc_redirect',
     DEVICE_ID:     'azck_device_id',
@@ -26,12 +26,16 @@
     DEVICE_FIRST:  'azck_device_first_seen',
     DEVICE_LAST:   'azck_device_last_seen',
     LOGIN_PAGE:    'index.html',
-    HOME_PAGE:     'dashboard.html'
+    HOME_PAGE:     'dashboard.html',
+    SALT:          '_azck_salt_2026'
   };
 
   // ---- Hashing ---------------------------------------------------------
+  // CRITICAL: must match v3's ccHash exactly â€” same salt, same encoding,
+  // same hex output. PASSWORD_HASH on disk was produced by v3 for Alessio's
+  // code; if we change this algorithm, existing hash no longer matches.
   async function sha256(str) {
-    const buf = new TextEncoder().encode(str);
+    const buf = new TextEncoder().encode(str + CC_AUTH.SALT);
     const hash = await crypto.subtle.digest('SHA-256', buf);
     return Array.from(new Uint8Array(hash))
       .map(b => b.toString(16).padStart(2, '0')).join('');
