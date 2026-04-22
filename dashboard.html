@@ -3,201 +3,614 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://twrlvnfszohyrmivdhre.supabase.co wss://twrlvnfszohyrmivdhre.supabase.co; img-src 'self' data: https:;">
   <title>Dashboard — AZCK Command Centre</title>
   <link rel="icon" type="image/svg+xml" href="assets/az-sigil.svg">
   <link rel="stylesheet" href="cc-shell.css">
+
+  <!-- GridStack CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack.min.css">
+
   <script defer src="auth.js"></script>
   <script>
-    window.PAGE = { id: 'dashboard', title: 'Dashboard', group: 'HOME' };
+    window.PAGE = {
+      id: 'dashboard',
+      title: 'Dashboard',
+      group: 'HOME',
+      views: [
+        { id: 'view', label: 'View' },
+        { id: 'edit', label: 'Edit' }
+      ],
+      activeView: 'view',
+      actions: [
+        { label: 'Reset layout', variant: 'ghost', onClick: 'dash_resetLayout' }
+      ]
+    };
   </script>
   <script defer src="cc-shell.js"></script>
+
+  <!-- Supabase UMD client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <!-- GridStack JS (with jQuery-free HTML5 drag) -->
+  <script src="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack-all.js"></script>
+
   <style>
-    .dash-wrap { max-width: 1200px; margin: 2rem auto; padding: 0 1.25rem; }
+    /* ─── Dashboard-scoped styles ──────────────────────────── */
+    .dash-wrap { max-width: 1280px; margin: 1.25rem auto 3rem; padding: 0 1rem; }
 
-    .hero {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2rem;
+    /* GridStack overrides to match CC dark theme */
+    .grid-stack { background: transparent; }
+    .grid-stack-item-content {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      padding: 0.9rem 1.1rem;
+      color: #e6edf3;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
     }
-    .hero-stat {
-      background: #161b22; border: 1px solid #30363d; border-radius: 10px;
-      padding: 1.1rem 1.25rem;
+    /* Edit-mode affordances */
+    .grid-stack.dash-edit .grid-stack-item-content {
+      border-color: #58a6ff;
+      cursor: move;
     }
-    .hero-stat .lbl {
-      color: #8b949e; font-size: 0.72rem; text-transform: uppercase;
-      letter-spacing: 0.08em; margin-bottom: 0.5rem;
-    }
-    .hero-stat .val {
-      color: #e6edf3; font-size: 1.65rem; font-weight: 600;
-    }
-    .hero-stat .delta { color: #8b949e; font-size: 0.82rem; margin-top: 0.2rem; }
-    .hero-stat .delta.up { color: #3fb950; }
-    .hero-stat .delta.down { color: #f85149; }
-
-    .section-title {
-      color: #e6edf3; font-size: 0.95rem; font-weight: 600;
-      text-transform: uppercase; letter-spacing: 0.06em;
-      margin: 0 0 1rem; padding-bottom: 0.5rem;
-      border-bottom: 1px solid #30363d;
+    .grid-stack.dash-edit .grid-stack-item-content::before {
+      content: "✥ drag · resize bottom-right";
+      position: absolute; top: 6px; right: 10px;
+      font-size: 0.65rem; color: #58a6ff; opacity: 0.6;
+      pointer-events: none;
     }
 
-    .tiles {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2.5rem;
+    /* Widget header */
+    .w-head {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 0.5rem; margin: 0; padding-bottom: 0.4rem;
+      border-bottom: 1px solid #21262d;
     }
-    .tile {
-      background: #161b22; border: 1px solid #30363d; border-radius: 10px;
-      padding: 1.25rem 1.35rem;
-      text-decoration: none; color: inherit;
-      transition: border-color 0.15s, transform 0.15s;
-      display: block;
+    .w-head .w-title {
+      font-size: 0.78rem; font-weight: 600; letter-spacing: 0.06em;
+      text-transform: uppercase; color: #8b949e; margin: 0;
     }
-    .tile:hover {
-      border-color: #58a6ff; transform: translateY(-2px);
+    .w-head .w-tag {
+      font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase;
+      color: #58a6ff; background: rgba(88,166,255,0.1);
+      padding: 2px 6px; border-radius: 3px;
     }
-    .tile h3 {
-      margin: 0 0 0.4rem; font-size: 1.02rem; color: #e6edf3;
-    }
-    .tile p {
-      margin: 0; color: #8b949e; font-size: 0.88rem; line-height: 1.4;
-    }
-    .tile .tag {
-      display: inline-block; font-size: 0.68rem; font-weight: 600;
-      letter-spacing: 0.08em; text-transform: uppercase;
-      color: #8b949e; margin-bottom: 0.5rem;
-    }
+    .w-body { flex: 1; overflow: auto; font-size: 0.88rem; color: #c9d1d9; min-height: 0; }
+    .w-body .empty { color: #6e7681; font-style: italic; text-align: center; padding: 1.2rem 0.5rem; font-size: 0.82rem; }
+    .w-body .err   { color: #f85149; font-size: 0.78rem; padding: 0.6rem; background: rgba(248,81,73,0.08); border-radius: 4px; }
 
-    .welcome {
-      background: #161b22; border-left: 3px solid #58a6ff; border-radius: 4px;
-      padding: 1rem 1.25rem; margin-bottom: 2rem;
-      color: #c9d1d9; font-size: 0.95rem;
+    /* Hero stats — inline grid in one widget */
+    .hero-inline { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.8rem; }
+    .hero-cell { background: #0d1117; border: 1px solid #21262d; border-radius: 6px; padding: 0.7rem 0.85rem; }
+    .hero-cell .lbl { color: #8b949e; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.3rem; }
+    .hero-cell .val { color: #e6edf3; font-size: 1.35rem; font-weight: 600; line-height: 1.1; }
+    .hero-cell .sub { color: #6e7681; font-size: 0.72rem; margin-top: 0.2rem; }
+
+    /* Task rows */
+    .task-li { display: flex; align-items: center; gap: 0.55rem; padding: 0.35rem 0; border-top: 1px solid #21262d; font-size: 0.85rem; }
+    .task-li:first-child { border-top: none; }
+    .task-li .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+    .task-li .t { flex: 1; color: #e6edf3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .task-li .due { color: #8b949e; font-size: 0.72rem; flex: none; }
+    .task-li .due.overdue { color: #f85149; }
+    .task-li .due.today { color: #d29922; }
+
+    /* Forge Status */
+    .forge-ver { font-size: 1.2rem; font-weight: 600; color: #e6edf3; }
+    .forge-sub { color: #8b949e; font-size: 0.82rem; }
+    .forge-ring { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.7rem; font-weight: 600; background: rgba(88,166,255,0.1); color: #58a6ff; margin-top: 0.3rem; }
+
+    /* Radar canvas */
+    .radar-wrap { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
+    .radar-wrap svg { max-width: 100%; max-height: 100%; }
+
+    /* Quick Links */
+    .ql-list { display: flex; flex-direction: column; gap: 0.3rem; }
+    .ql-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.55rem; background: #0d1117; border: 1px solid #21262d; border-radius: 5px; color: #e6edf3; text-decoration: none; font-size: 0.85rem; }
+    .ql-item:hover { border-color: #58a6ff; }
+    .ql-item .remove { color: #6e7681; font-size: 1rem; margin-left: auto; cursor: pointer; display: none; background: none; border: none; padding: 0; }
+    body.dash-edit-mode .ql-item .remove { display: inline; }
+    .ql-add { display: none; flex-direction: column; gap: 0.3rem; margin-top: 0.4rem; }
+    body.dash-edit-mode .ql-add { display: flex; }
+    .ql-add input { background: #0d1117; border: 1px solid #30363d; color: #e6edf3; padding: 5px 8px; border-radius: 4px; font-size: 0.82rem; }
+    .ql-add button { background: #238636; color: #fff; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.82rem; }
+
+    /* Meter bar (Usage / Finance) */
+    .meter { background: #0d1117; border: 1px solid #21262d; border-radius: 5px; height: 10px; overflow: hidden; margin: 0.4rem 0; }
+    .meter-fill { height: 100%; background: linear-gradient(90deg, #3fb950, #d29922, #f85149); transition: width 0.3s; }
+    .meter-label { display: flex; justify-content: space-between; font-size: 0.78rem; color: #8b949e; }
+
+    /* Placeholder widgets */
+    .placeholder-center {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; text-align: center; padding: 1rem;
     }
-    .welcome strong { color: #e6edf3; }
+    .placeholder-center .icon { font-size: 1.8rem; opacity: 0.5; }
+    .placeholder-center .msg { color: #8b949e; font-size: 0.85rem; }
+    .placeholder-center .note { color: #6e7681; font-size: 0.72rem; }
+
+    /* Sign-in prompt (when no Supabase session) */
+    .signin-prompt { color: #8b949e; font-size: 0.82rem; }
+    .signin-prompt a { color: #58a6ff; text-decoration: none; }
+    .signin-prompt a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
   <main class="dash-wrap">
-    <div class="welcome">
-      <strong>Welcome back.</strong> <span id="dash-greeting">Everything in one place. Use the nav up top or the tiles below.</span>
-    </div>
-
-    <div class="hero">
-      <div class="hero-stat">
-        <div class="lbl">My open tasks</div>
-        <div class="val" id="stat-tasks">—</div>
-        <div class="delta" id="stat-tasks-delta">Live data in Phase 3</div>
-      </div>
-      <div class="hero-stat">
-        <div class="lbl">Roadmap — active</div>
-        <div class="val" id="stat-roadmap">—</div>
-        <div class="delta" id="stat-roadmap-delta">Live data in Phase 3</div>
-      </div>
-      <div class="hero-stat">
-        <div class="lbl">Forge version</div>
-        <div class="val" id="stat-forge">v0.9.6</div>
-        <div class="delta">The Remembered</div>
-      </div>
-      <div class="hero-stat">
-        <div class="lbl">This month spend</div>
-        <div class="val" id="stat-spend">—</div>
-        <div class="delta">$280 CAD ceiling</div>
-      </div>
-    </div>
-
-    <h2 class="section-title">People</h2>
-    <div class="tiles">
-      <a href="alessio.html" class="tile">
-        <span class="tag">PEOPLE</span>
-        <h3>Alessio</h3>
-        <p>Shop, R&amp;D, design, teaching. List / Kanban / Detail views.</p>
-      </a>
-      <a href="reanna.html" class="tile">
-        <span class="tag">PEOPLE</span>
-        <h3>Reanna</h3>
-        <p>Clients, orders, store, social, grants, admin.</p>
-      </a>
-      <a href="shared.html" class="tile">
-        <span class="tag">PEOPLE</span>
-        <h3>Shared</h3>
-        <p>Joint tasks, projects, nav links both use.</p>
-      </a>
-    </div>
-
-    <h2 class="section-title">Operations</h2>
-    <div class="tiles">
-      <a href="finance.html" class="tile">
-        <span class="tag">OPS</span>
-        <h3>Finance</h3>
-        <p>Invoices, expenses, GST, financial snapshots.</p>
-      </a>
-      <a href="forge.html" class="tile">
-        <span class="tag">OPS</span>
-        <h3>Forge</h3>
-        <p>Forge version history, radar scores, metrics.</p>
-      </a>
-      <a href="roadmap.html" class="tile">
-        <span class="tag">OPS</span>
-        <h3>Roadmap</h3>
-        <p>Active initiatives across AZCK + QuadFang + Forge.</p>
-      </a>
-      <a href="network.html" class="tile">
-        <span class="tag">OPS</span>
-        <h3>Network</h3>
-        <p>Contacts, partners, suppliers, mentors.</p>
-      </a>
-      <a href="timesheet.html" class="tile">
-        <span class="tag">OPS</span>
-        <h3>Timesheet</h3>
-        <p>SR&amp;ED + billable time log. Master activity.</p>
-      </a>
-      <a href="usage.html" class="tile">
-        <span class="tag">OPS</span>
-        <h3>Usage</h3>
-        <p>Claude / Forge usage tracker. Monthly budget.</p>
-      </a>
-    </div>
-
-    <h2 class="section-title">Reference &amp; Tools</h2>
-    <div class="tiles">
-      <a href="devices.html" class="tile">
-        <span class="tag">REF</span>
-        <h3>Devices</h3>
-        <p>This device's ID, label, last seen. Cross-device in Pass 5.</p>
-      </a>
-      <a href="access-permissions.html" class="tile">
-        <span class="tag">REF</span>
-        <h3>Access &amp; Permissions</h3>
-        <p>Who can see what. Permission matrix.</p>
-      </a>
-      <a href="azck_tech_roadmap.html" class="tile">
-        <span class="tag">REF</span>
-        <h3>Tech Roadmap</h3>
-        <p>AZCK technical build plan.</p>
-      </a>
-      <a href="reanna_roadmap.html" class="tile">
-        <span class="tag">REF</span>
-        <h3>Reanna Roadmap</h3>
-        <p>Reanna-focused plan view.</p>
-      </a>
-      <a href="claude-usage-guide.html" class="tile">
-        <span class="tag">TOOL</span>
-        <h3>Claude Usage Guide</h3>
-        <p>How to use Forge efficiently.</p>
-      </a>
-      <a href="password.html" class="tile">
-        <span class="tag">TOOL</span>
-        <h3>Change Code</h3>
-        <p>Rotate the per-device access code.</p>
-      </a>
-    </div>
+    <div class="grid-stack" id="dash-grid"></div>
   </main>
 
   <script>
-    // Dashboard hero stats — hardcoded for Pass 1. Phase 3 wires these to Supabase.
-    // Intentionally left as placeholders so the wiring surface is obvious.
+  (function(){
+    'use strict';
+
+    // ─── Config ──────────────────────────────────────────────
+    const SUPABASE_URL = 'https://twrlvnfszohyrmivdhre.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3cmx2bmZzem9oeXJtaXZkaHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NjkxMTMsImV4cCI6MjA5MDE0NTExM30.o96DFNbBObst0EAmX51rnRFXzu8oTN1o-HNAxN7MY8A';
+    const LS_LAYOUT = 'cc.dashboard.layout.v1';
+    const LS_LINKS  = 'cc.dashboard.quickLinks.v1';
+
+    const supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth: { storageKey: 'sb-twrlvnfszohyrmivdhre-auth-token', persistSession: true, autoRefreshToken: true }
+    });
+    window.supa = supa;
+
+    const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+    const todayISO = () => new Date().toISOString().slice(0,10);
+    const daysLeftInMonth = () => {
+      const n = new Date();
+      const last = new Date(n.getFullYear(), n.getMonth()+1, 0).getDate();
+      return last - n.getDate();
+    };
+
+    // ─── Widget registry + default layout (12-col grid) ──────
+    const WIDGETS = {
+      hero:     { title: 'Hero Stats',       tag: 'LIVE',     pos: { x:0,  y:0,  w:12, h:2 } },
+      tasks:    { title: "Today's Tasks",    tag: 'LIVE',     pos: { x:0,  y:2,  w:6,  h:4 } },
+      forge:    { title: 'Forge Status',     tag: 'LIVE',     pos: { x:6,  y:2,  w:6,  h:4 } },
+      roadmap:  { title: 'Roadmap · Active', tag: 'LIVE',     pos: { x:0,  y:6,  w:6,  h:4 } },
+      usage:    { title: 'Usage Meter',      tag: 'STATIC',   pos: { x:6,  y:6,  w:6,  h:4 } },
+      radar:    { title: 'Forge Radar',      tag: 'LIVE',     pos: { x:0,  y:10, w:4,  h:5 } },
+      calendar: { title: 'Upcoming Events',  tag: 'PHASE 4',  pos: { x:4,  y:10, w:4,  h:5 } },
+      finance:  { title: 'Finance Snapshot', tag: 'STATIC',   pos: { x:8,  y:10, w:4,  h:5 } },
+      links:    { title: 'Quick Links',      tag: 'LOCAL',    pos: { x:0,  y:15, w:6,  h:4 } },
+      messages: { title: 'Pending Messages', tag: 'PHASE 5',  pos: { x:6,  y:15, w:6,  h:4 } }
+    };
+    const WIDGET_ORDER = ['hero','tasks','forge','roadmap','usage','radar','calendar','finance','links','messages'];
+
+    // ─── LocalStorage helpers ────────────────────────────────
+    const readLS = (k, fb) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : fb; } catch(e) { return fb; } };
+    const writeLS = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
+    const getSavedLayout = () => readLS(LS_LAYOUT, null);
+    function saveLayout() {
+      if (!window.dashGrid) return;
+      const items = window.dashGrid.save(false);
+      writeLS(LS_LAYOUT, items);
+    }
+
+    // ─── GridStack init ──────────────────────────────────────
+    let grid = null;
+
+    function buildWidgetEl(id) {
+      const def = WIDGETS[id];
+      const saved = getSavedLayout();
+      const layoutItem = saved ? saved.find(it => it.id === id) : null;
+      const pos = layoutItem || def.pos;
+
+      const wrap = document.createElement('div');
+      wrap.className = 'grid-stack-item';
+      wrap.setAttribute('gs-id', id);
+      wrap.setAttribute('gs-x', pos.x); wrap.setAttribute('gs-y', pos.y);
+      wrap.setAttribute('gs-w', pos.w); wrap.setAttribute('gs-h', pos.h);
+      wrap.setAttribute('gs-min-w', 3); wrap.setAttribute('gs-min-h', 2);
+
+      const content = document.createElement('div');
+      content.className = 'grid-stack-item-content';
+      content.innerHTML = `
+        <div class="w-head">
+          <span class="w-title">${esc(def.title)}</span>
+          <span class="w-tag">${esc(def.tag)}</span>
+        </div>
+        <div class="w-body" id="w-body-${id}"><div class="empty">Loading…</div></div>`;
+      wrap.appendChild(content);
+      return wrap;
+    }
+
+    function initGrid() {
+      const container = document.getElementById('dash-grid');
+      WIDGET_ORDER.forEach(id => container.appendChild(buildWidgetEl(id)));
+
+      grid = GridStack.init({
+        column: 12,
+        cellHeight: 60,
+        margin: 8,
+        float: false,
+        animate: true,
+        handle: '.grid-stack-item-content',
+        resizable: { handles: 'se' },
+        staticGrid: true // start locked (View mode)
+      }, '#dash-grid');
+      window.dashGrid = grid;
+
+      grid.on('change', saveLayout);
+      grid.on('resizestop', saveLayout);
+    }
+
+    // ─── Edit/View toggle ────────────────────────────────────
+    function applyViewMode(mode) {
+      const container = document.getElementById('dash-grid');
+      const isEdit = mode === 'edit';
+      if (grid) grid.setStatic(!isEdit);
+      container.classList.toggle('dash-edit', isEdit);
+      document.body.classList.toggle('dash-edit-mode', isEdit);
+    }
+
+    // ─── Helpers ─────────────────────────────────────────────
+    function setBody(id, html) {
+      const el = document.getElementById('w-body-' + id);
+      if (el) el.innerHTML = html;
+    }
+    async function hasSession() {
+      const { data:{ session } } = await supa.auth.getSession();
+      return !!session;
+    }
+    function signinPrompt() {
+      return `<div class="signin-prompt">Sign in on <a href="alessio.html">tasks</a> or <a href="shared.html">shared</a> first to see live data.</div>`;
+    }
+
+    // ─── Widget: Hero Stats (10) ─────────────────────────────
+    async function mountHero() {
+      const signed = await hasSession();
+      let myTasks = '—', roadActive = '—';
+      let forgeVer = 'v0.9.7', forgeName = 'The Road';
+
+      if (signed) {
+        try {
+          const { count } = await supa.from('tasks').select('id', { count:'exact', head:true }).neq('status','done');
+          if (count != null) myTasks = count;
+        } catch(e) {}
+        try {
+          const { count } = await supa.from('roadmap').select('id', { count:'exact', head:true }).in('status', ['pending','future']);
+          if (count != null) roadActive = count;
+        } catch(e) {}
+      }
+      try {
+        const fd = await fetch('forge-data.json', { cache:'no-cache' }).then(r=>r.json());
+        if (fd && fd.versions && fd.versions.length) {
+          const last = fd.versions[fd.versions.length - 1];
+          forgeVer = last.version; forgeName = last.name;
+        }
+      } catch(e) {}
+
+      setBody('hero', `
+        <div class="hero-inline">
+          <div class="hero-cell">
+            <div class="lbl">My open tasks</div>
+            <div class="val">${esc(myTasks)}</div>
+            <div class="sub">${signed ? 'Live · all except done' : 'Sign in required'}</div>
+          </div>
+          <div class="hero-cell">
+            <div class="lbl">Roadmap · active</div>
+            <div class="val">${esc(roadActive)}</div>
+            <div class="sub">${signed ? 'Status = active' : 'Sign in required'}</div>
+          </div>
+          <div class="hero-cell">
+            <div class="lbl">Forge version</div>
+            <div class="val">${esc(forgeVer)}</div>
+            <div class="sub">${esc(forgeName)}</div>
+          </div>
+          <div class="hero-cell">
+            <div class="lbl">This month spend</div>
+            <div class="val">—</div>
+            <div class="sub">$280 CAD ceiling</div>
+          </div>
+        </div>`);
+    }
+
+    // ─── Widget: Today's Tasks (1) ───────────────────────────
+    async function mountTasks() {
+      if (!(await hasSession())) { setBody('tasks', signinPrompt()); return; }
+      try {
+        const { data, error } = await supa.from('tasks')
+          .select('id,title,priority,due_date,status')
+          .neq('status','done')
+          .order('due_date', { ascending:true, nullsFirst:false })
+          .limit(8);
+        if (error) throw error;
+        if (!data || !data.length) { setBody('tasks', '<div class="empty">Nothing open. 🎯</div>'); return; }
+        const today = todayISO();
+        const rows = data.map(t => {
+          let dueClass = '', dueTxt = '—';
+          if (t.due_date) {
+            dueTxt = t.due_date;
+            if (t.due_date < today) dueClass = 'overdue';
+            else if (t.due_date === today) dueClass = 'today';
+          }
+          const dotColor = t.priority==='high' ? '#f85149' : t.priority==='low' ? '#3fb950' : '#d29922';
+          return `<div class="task-li">
+            <span class="dot" style="background:${dotColor}"></span>
+            <span class="t">${esc(t.title||'(untitled)')}</span>
+            <span class="due ${dueClass}">${esc(dueTxt)}</span>
+          </div>`;
+        }).join('');
+        setBody('tasks', rows + `<div style="margin-top:0.5rem;"><a href="alessio.html" style="color:#58a6ff;font-size:0.78rem;text-decoration:none;">Open full list →</a></div>`);
+      } catch(e) {
+        setBody('tasks', `<div class="err">Load failed: ${esc(e.message||e)}</div>`);
+      }
+    }
+
+    // ─── Widget: Forge Status (3) ────────────────────────────
+    async function mountForge() {
+      try {
+        const fd = await fetch('forge-data.json', { cache:'no-cache' }).then(r=>r.json());
+        if (!fd || !fd.versions || !fd.versions.length) { setBody('forge', '<div class="empty">No Forge data</div>'); return; }
+        const last = fd.versions[fd.versions.length - 1];
+        const scores = last.scores || [];
+        const nonZero = scores.filter(s => s > 0);
+        const min = nonZero.length ? Math.min(...nonZero) : 0;
+        const max = scores.length ? Math.max(...scores) : 0;
+        const avg = nonZero.length ? (nonZero.reduce((a,b)=>a+b,0) / nonZero.length).toFixed(1) : '—';
+        const ringName = min >= 51 ? 'Heirloom' : min >= 41 ? 'Finished' : min >= 31 ? 'Heat Treated' : min >= 21 ? 'Ground' : min >= 11 ? 'Forged' : 'Raw Steel';
+        setBody('forge', `
+          <div>
+            <div class="forge-ver">${esc(last.version)} — ${esc(last.name)}</div>
+            <div class="forge-sub">${esc(last.desc || '')}</div>
+            <div class="forge-ring">Ring: ${esc(ringName)} · Weakest link rule</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-top:0.6rem;">
+            <div class="hero-cell"><div class="lbl">Min</div><div class="val" style="font-size:1.1rem;">${min}</div></div>
+            <div class="hero-cell"><div class="lbl">Avg</div><div class="val" style="font-size:1.1rem;">${avg}</div></div>
+            <div class="hero-cell"><div class="lbl">Max</div><div class="val" style="font-size:1.1rem;">${max}</div></div>
+          </div>
+          <div style="margin-top:0.5rem;"><a href="forge.html" style="color:#58a6ff;font-size:0.78rem;text-decoration:none;">Open Forge chart →</a></div>`);
+      } catch(e) {
+        setBody('forge', `<div class="err">Load failed: ${esc(e.message||e)}</div>`);
+      }
+    }
+
+    // ─── Widget: Forge Radar (4) — inline SVG ────────────────
+    async function mountRadar() {
+      try {
+        const fd = await fetch('forge-data.json', { cache:'no-cache' }).then(r=>r.json());
+        if (!fd || !fd.versions || !fd.versions.length) { setBody('radar', '<div class="empty">No Forge data</div>'); return; }
+        const last = fd.versions[fd.versions.length - 1];
+        const metrics = fd.metrics || [];
+        const scores = last.scores || [];
+        const n = Math.min(metrics.length, scores.length);
+        if (!n) { setBody('radar', '<div class="empty">No scores</div>'); return; }
+
+        const bodyEl = document.getElementById('w-body-radar');
+        const W = Math.max(180, bodyEl.clientWidth - 20), H = Math.max(180, bodyEl.clientHeight - 40);
+        const size = Math.min(W, H);
+        const cx = size/2, cy = size/2, R = size/2 - 22;
+        const max = 10;
+
+        let gridRings = '';
+        for (let r=1; r<=5; r++) {
+          const pr = R * (r/5);
+          let pts = [];
+          for (let i=0; i<n; i++) {
+            const ang = -Math.PI/2 + (2*Math.PI*i/n);
+            pts.push(`${(cx + pr*Math.cos(ang)).toFixed(1)},${(cy + pr*Math.sin(ang)).toFixed(1)}`);
+          }
+          gridRings += `<polygon points="${pts.join(' ')}" fill="none" stroke="#21262d" stroke-width="1"/>`;
+        }
+        let axes = '', labels = '', polyPts = [];
+        for (let i=0; i<n; i++) {
+          const ang = -Math.PI/2 + (2*Math.PI*i/n);
+          const xE = cx + R*Math.cos(ang), yE = cy + R*Math.sin(ang);
+          axes += `<line x1="${cx}" y1="${cy}" x2="${xE.toFixed(1)}" y2="${yE.toFixed(1)}" stroke="#21262d" stroke-width="1"/>`;
+          const pr = R * (Math.min(scores[i], max)/max);
+          polyPts.push(`${(cx + pr*Math.cos(ang)).toFixed(1)},${(cy + pr*Math.sin(ang)).toFixed(1)}`);
+          const lx = cx + (R+14)*Math.cos(ang), ly = cy + (R+14)*Math.sin(ang);
+          const lbl = metrics[i].length > 10 ? metrics[i].slice(0,9)+'…' : metrics[i];
+          labels += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="8" fill="#8b949e">${esc(lbl)}</text>`;
+        }
+        const nonZero = scores.filter(s=>s>0);
+        const svg = `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
+          ${gridRings}${axes}
+          <polygon points="${polyPts.join(' ')}" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="2"/>
+          ${labels}
+        </svg>`;
+        setBody('radar', `<div class="radar-wrap">${svg}</div>
+          <div style="text-align:center;font-size:0.72rem;color:#6e7681;">${esc(last.version)} · min ${nonZero.length ? Math.min(...nonZero) : 0} / max ${scores.length ? Math.max(...scores) : 0}</div>`);
+      } catch(e) {
+        setBody('radar', `<div class="err">Load failed: ${esc(e.message||e)}</div>`);
+      }
+    }
+
+    // ─── Widget: Roadmap Active (5) ──────────────────────────
+    async function mountRoadmap() {
+      if (!(await hasSession())) { setBody('roadmap', signinPrompt()); return; }
+      try {
+        const { data, error } = await supa.from('roadmap')
+          .select('id,text,status,category,display_date,sort_date,sort_order')
+          .in('status', ['pending','future'])
+          .order('sort_order', { ascending:true })
+          .order('sort_date', { ascending:true, nullsFirst:false })
+          .limit(10);
+        if (error) throw error;
+        if (!data || !data.length) { setBody('roadmap', '<div class="empty">No pending / future items.</div>'); return; }
+        const dotByCat = { AZCK:'#58a6ff', QuadFang:'#f0883e', CC:'#bc8cff', Email:'#d29922', Other:'#8b949e' };
+        const rows = data.map(r => {
+          const title = r.text || '(untitled)';
+          const target = r.display_date || r.sort_date || '';
+          const dot = dotByCat[r.category] || '#3fb950';
+          return `<div class="task-li">
+            <span class="dot" style="background:${dot}"></span>
+            <span class="t">${esc(title)}</span>
+            ${target ? `<span class="due">${esc(target)}</span>` : ''}
+          </div>`;
+        }).join('');
+        setBody('roadmap', rows + `<div style="margin-top:0.5rem;"><a href="roadmap.html" style="color:#58a6ff;font-size:0.78rem;text-decoration:none;">Open roadmap →</a></div>`);
+      } catch(e) {
+        setBody('roadmap', `<div class="err">Load failed: ${esc(e.message||e)}</div>`);
+      }
+    }
+
+    // ─── Widget: Usage Meter (7) ─────────────────────────────
+    async function mountUsage() {
+      try {
+        const html = await fetch('usage.html', { cache:'no-cache' }).then(r=>r.text());
+        const m = html.match(/<script[^>]*id=["']cc-usage-data["'][^>]*>([\s\S]*?)<\/script>/);
+        if (m) {
+          try {
+            const data = JSON.parse(m[1]);
+            const total = data.monthTotal || data.total || 0;
+            const ceiling = data.ceiling || 280;
+            const pct = Math.min(100, Math.round((total/ceiling)*100));
+            const days = daysLeftInMonth();
+            setBody('usage', `
+              <div style="font-size:1.2rem;font-weight:600;">$${total.toFixed(2)} <span style="color:#8b949e;font-size:0.85rem;">/ $${ceiling} CAD</span></div>
+              <div class="meter"><div class="meter-fill" style="width:${pct}%"></div></div>
+              <div class="meter-label"><span>${pct}% used</span><span>${days} days left</span></div>
+              <div style="margin-top:0.3rem;"><a href="usage.html" style="color:#58a6ff;font-size:0.78rem;text-decoration:none;">Open usage →</a></div>`);
+            return;
+          } catch(e) {}
+        }
+        setBody('usage', `<div class="placeholder-center">
+          <div class="icon">📊</div>
+          <div class="msg">Usage data lives on the Usage page.</div>
+          <div class="note"><a href="usage.html" style="color:#58a6ff;">Open usage →</a></div>
+        </div>`);
+      } catch(e) {
+        setBody('usage', `<div class="err">Load failed: ${esc(e.message||e)}</div>`);
+      }
+    }
+
+    // ─── Widget: Finance Snapshot (6) ────────────────────────
+    async function mountFinance() {
+      try {
+        const html = await fetch('finance.html', { cache:'no-cache' }).then(r=>r.text());
+        const m = html.match(/<script[^>]*id=["']cc-finance-data["'][^>]*>([\s\S]*?)<\/script>/);
+        if (m) {
+          try {
+            const data = JSON.parse(m[1]);
+            const revenue = data.revenue || data.monthRevenue || 0;
+            const expenses = data.expenses || data.monthExpenses || 0;
+            const net = revenue - expenses;
+            setBody('finance', `
+              <div style="display:grid;grid-template-columns:1fr;gap:0.4rem;">
+                <div class="hero-cell"><div class="lbl">Revenue</div><div class="val" style="font-size:1.05rem;color:#3fb950;">$${revenue.toLocaleString()}</div></div>
+                <div class="hero-cell"><div class="lbl">Expenses</div><div class="val" style="font-size:1.05rem;color:#f85149;">$${expenses.toLocaleString()}</div></div>
+                <div class="hero-cell"><div class="lbl">Net</div><div class="val" style="font-size:1.05rem;">$${net.toLocaleString()}</div></div>
+              </div>
+              <div style="margin-top:0.3rem;"><a href="finance.html" style="color:#58a6ff;font-size:0.78rem;text-decoration:none;">Open finance →</a></div>`);
+            return;
+          } catch(e) {}
+        }
+        setBody('finance', `<div class="placeholder-center">
+          <div class="icon">💰</div>
+          <div class="msg">Projections + invoices live on the Finance page.</div>
+          <div class="note"><a href="finance.html" style="color:#58a6ff;">Open finance →</a></div>
+        </div>`);
+      } catch(e) {
+        setBody('finance', `<div class="err">Load failed: ${esc(e.message||e)}</div>`);
+      }
+    }
+
+    // ─── Widget: Calendar placeholder (2) ────────────────────
+    function mountCalendar() {
+      setBody('calendar', `<div class="placeholder-center">
+        <div class="icon">📅</div>
+        <div class="msg">Google Calendar widget ships in Phase 4.</div>
+        <div class="note">Reads admin@azcustomknives.com · today + 7 days</div>
+      </div>`);
+      return Promise.resolve();
+    }
+
+    // ─── Widget: Pending Messages placeholder (8) ────────────
+    function mountMessages() {
+      setBody('messages', `<div class="placeholder-center">
+        <div class="icon">✉️</div>
+        <div class="msg">No pending messages.</div>
+        <div class="note">Live sync ships in Phase 5 (Supabase Auth + RLS)</div>
+      </div>`);
+      return Promise.resolve();
+    }
+
+    // ─── Widget: Quick Links (9) — user-editable ─────────────
+    function getLinks() {
+      return readLS(LS_LINKS, [
+        { href: 'alessio.html',   label: '📝 My tasks' },
+        { href: 'shared.html',    label: '🤝 Shared' },
+        { href: 'forge.html',     label: '⚒️ Forge' },
+        { href: 'roadmap.html',   label: '🗺️ Roadmap' },
+        { href: 'timesheet.html', label: '⏱️ Timesheet' }
+      ]);
+    }
+    function saveLinks(links) { writeLS(LS_LINKS, links); }
+    function renderLinks() {
+      const links = getLinks();
+      const list = links.map((l, i) => `
+        <a class="ql-item" href="${esc(l.href)}">
+          <span>${esc(l.label)}</span>
+          <button class="remove" data-idx="${i}" title="Remove">×</button>
+        </a>`).join('');
+      setBody('links', `
+        <div class="ql-list">${list || '<div class="empty">No quick links.</div>'}</div>
+        <div class="ql-add">
+          <input id="ql-new-label" placeholder="Label (with emoji)" maxlength="40">
+          <input id="ql-new-href" placeholder="Link (e.g. alessio.html)" maxlength="120">
+          <button id="ql-add-btn">Add link</button>
+        </div>`);
+      const body = document.getElementById('w-body-links');
+      body.querySelectorAll('.remove').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault(); e.stopPropagation();
+          const idx = parseInt(btn.dataset.idx, 10);
+          const arr = getLinks(); arr.splice(idx, 1); saveLinks(arr); renderLinks();
+        });
+      });
+      const addBtn = body.querySelector('#ql-add-btn');
+      if (addBtn) addBtn.addEventListener('click', () => {
+        const label = body.querySelector('#ql-new-label').value.trim();
+        const href = body.querySelector('#ql-new-href').value.trim();
+        if (!label || !href) return;
+        const arr = getLinks(); arr.push({ label, href }); saveLinks(arr); renderLinks();
+      });
+    }
+    function mountLinks() { renderLinks(); return Promise.resolve(); }
+
+    // ─── Reset layout action ─────────────────────────────────
+    window.dash_resetLayout = function() {
+      if (!confirm('Reset dashboard layout to default? This only affects this device.')) return;
+      localStorage.removeItem(LS_LAYOUT);
+      location.reload();
+    };
+
+    const mountFns = {
+      hero: mountHero, tasks: mountTasks, forge: mountForge, roadmap: mountRoadmap,
+      usage: mountUsage, radar: mountRadar, calendar: mountCalendar, finance: mountFinance,
+      links: mountLinks, messages: mountMessages
+    };
+
+    // ─── Boot ────────────────────────────────────────────────
+    function boot() {
+      if (!window.GridStack) { console.error('GridStack not loaded'); return; }
+      if (!window.supabase)  { console.error('Supabase not loaded'); return; }
+
+      initGrid();
+      WIDGET_ORDER.forEach(id => {
+        try { mountFns[id](); } catch(e) { setBody(id, `<div class="err">${esc(e.message||e)}</div>`); }
+      });
+
+      function wireShell() {
+        if (window.CC && window.CC.onViewChange) window.CC.onViewChange(applyViewMode);
+        if (window.CC && window.CC.registerAction) window.CC.registerAction('dash_resetLayout', window.dash_resetLayout);
+      }
+      if (window.CC && window.CC.onViewChange) wireShell();
+      else document.addEventListener('cc-shell-ready', wireShell, { once:true });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', boot);
+    } else {
+      boot();
+    }
+  })();
   </script>
 </body>
 </html>
