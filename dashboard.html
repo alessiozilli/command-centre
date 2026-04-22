@@ -176,9 +176,9 @@
       calendar: { title: 'Upcoming Events',  tag: 'LIVE',     pos: { x:4,  y:10, w:4,  h:5 } },
       finance:  { title: 'Finance Snapshot', tag: 'STATIC',   pos: { x:8,  y:10, w:4,  h:5 } },
       links:    { title: 'Quick Links',      tag: 'LOCAL',    pos: { x:0,  y:15, w:6,  h:4 } },
-      messages: { title: 'Pending Messages', tag: 'PHASE 5',  pos: { x:6,  y:15, w:6,  h:4 } }
+      buildProgress: { title: 'Build Progress', tag: 'LIVE',  pos: { x:6,  y:15, w:6,  h:4 } }
     };
-    const WIDGET_ORDER = ['hero','tasks','forge','roadmap','usage','radar','calendar','finance','links','messages'];
+    const WIDGET_ORDER = ['hero','tasks','forge','roadmap','usage','radar','calendar','finance','links','buildProgress'];
 
     // ─── LocalStorage helpers ────────────────────────────────
     const readLS = (k, fb) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : fb; } catch(e) { return fb; } };
@@ -571,56 +571,22 @@
     }
 
     // ─── Widget: Pending Messages placeholder (8) ────────────
-    function mountMessages() {
-      setBody('messages', `<div class="placeholder-center">
-        <div class="icon">✉️</div>
-        <div class="msg">No pending messages.</div>
-        <div class="note">Live sync ships in Phase 5 (Supabase Auth + RLS)</div>
-      </div>`);
-      return Promise.resolve();
+    // --- Widget: Build Progress (8) --- reads roadmap_pass
+    async function mountBuildProgress() {
+      try {
+        const { data, error } = await supa.from("roadmap_pass")
+          .select("pass_number,name,status,completed_at,model_used")
+          .order("id", { ascending: true });
+        if (error) throw error;
+        if (!data || !data.length) { setBody("buildProgress", "<div class=\"empty\">No passes yet.</div>"); return; }
+        const dotColor = s => ({complete:"#3fb950",in_progress:"#58a6ff",pending:"#6e7681",blocked:"#d29922",parked:"#bc8cff"}[s]||"#6e7681");
+        const rows = data.map(r => "<div class=\"task-li\"><span class=\"dot\" style=\"background:"+dotColor(r.status)+"\"></span><span class=\"t\">Pass "+esc(r.pass_number)+" â "+esc(r.name)+"</span><span class=\"due\">"+esc(r.status)+"</span></div>").join("");
+        setBody("buildProgress", rows);
+      } catch(e) {
+        setBody("buildProgress", "<div class=\"err\">Load failed: "+esc(e.message||e)+"</div>");
+      }
     }
 
-    // ─── Widget: Quick Links (9) — user-editable ─────────────
-    function getLinks() {
-      return readLS(LS_LINKS, [
-        { href: 'alessio.html',   label: '📝 My tasks' },
-        { href: 'shared.html',    label: '🤝 Shared' },
-        { href: 'forge.html',     label: '⚒️ Forge' },
-        { href: 'roadmap.html',   label: '🗺️ Roadmap' },
-        { href: 'timesheet.html', label: '⏱️ Timesheet' }
-      ]);
-    }
-    function saveLinks(links) { writeLS(LS_LINKS, links); }
-    function renderLinks() {
-      const links = getLinks();
-      const list = links.map((l, i) => `
-        <a class="ql-item" href="${esc(l.href)}">
-          <span>${esc(l.label)}</span>
-          <button class="remove" data-idx="${i}" title="Remove">×</button>
-        </a>`).join('');
-      setBody('links', `
-        <div class="ql-list">${list || '<div class="empty">No quick links.</div>'}</div>
-        <div class="ql-add">
-          <input id="ql-new-label" placeholder="Label (with emoji)" maxlength="40">
-          <input id="ql-new-href" placeholder="Link (e.g. alessio.html)" maxlength="120">
-          <button id="ql-add-btn">Add link</button>
-        </div>`);
-      const body = document.getElementById('w-body-links');
-      body.querySelectorAll('.remove').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.preventDefault(); e.stopPropagation();
-          const idx = parseInt(btn.dataset.idx, 10);
-          const arr = getLinks(); arr.splice(idx, 1); saveLinks(arr); renderLinks();
-        });
-      });
-      const addBtn = body.querySelector('#ql-add-btn');
-      if (addBtn) addBtn.addEventListener('click', () => {
-        const label = body.querySelector('#ql-new-label').value.trim();
-        const href = body.querySelector('#ql-new-href').value.trim();
-        if (!label || !href) return;
-        const arr = getLinks(); arr.push({ label, href }); saveLinks(arr); renderLinks();
-      });
-    }
     function mountLinks() { renderLinks(); return Promise.resolve(); }
 
     // ─── Reset layout action ─────────────────────────────────
@@ -633,7 +599,7 @@
     const mountFns = {
       hero: mountHero, tasks: mountTasks, forge: mountForge, roadmap: mountRoadmap,
       usage: mountUsage, radar: mountRadar, calendar: mountCalendar, finance: mountFinance,
-      links: mountLinks, messages: mountMessages
+      links: mountLinks, buildProgress: mountBuildProgress
     };
 
     // ─── Boot ────────────────────────────────────────────────

@@ -102,11 +102,13 @@ tr:hover td{background:#1c2128}
      Engine below auto-generates everything from this data.
      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <script>
-var SUPABASE_URL = 'https://bsiycfypzhfbqeibfwma.supabase.co';
-var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzaXljZnlwemhmYnFlaWJmd21hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyODEyNzEsImV4cCI6MjA5MDg1NzI3MX0.E9tZLgWGWW6j5R4LoB5uBkriDHVsxyJ95auf3OBTlIM';
+var SUPABASE_URL = 'https://twrlvnfszohyrmivdhre.supabase.co';
+var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3cmx2bmZzem9oeXJtaXZkaHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NjkxMTMsImV4cCI6MjA5MDE0NTExM30.o96DFNbBObst0EAmX51rnRFXzu8oTN1o-HNAxN7MY8A';
 
 // â”€â”€ FORGE PROJECT COLORS â”€â”€
 var PROJECT_COLORS = {
+  'AZCK':               '#79c0ff',
+  'AZCC':               '#3fb950',
   'Website':            '#58a6ff',
   'QuadFang R&D':       '#f85149',
   'QuadFang Website':   '#FC4C02',
@@ -155,61 +157,11 @@ var QUICK_TEMPLATES = [
   { label:'Shipping/Admin',  project:'Shipping / Packaging',   hours:0.5, client:'',        desc:'' }
 ];
 
-// â”€â”€ FORGE LOG (auto-logged by Forge during Save All) â”€â”€
-var FORGE_LOG = [
-  // â•â•â• PRE-TRACKING ERA (Mar 31 â€“ Apr 9) â•â•â•
-  { date:'2026-03-31', user:'Alessio', project:'Forge System', hours:5.0, desc:'First Forge session â€” initial AI system exploration, prompt engineering' },
-  { date:'2026-04-01', user:'Alessio', project:'Forge System', hours:4.0, desc:'Shared Brain established, first startup protocol, Single Source of Truth, gist sync' },
-  { date:'2026-04-01', user:'Alessio', project:'Grants', hours:3.0, desc:'SR&ED Activity Log template, IRAP Prep Guide, Open Tasks Guide' },
-  { date:'2026-04-01', user:'Alessio', project:'Grants', hours:4.0, desc:'QuadFang business plan, budget financials, pitch deck, project tracker' },
-  { date:'2026-04-01', user:'Alessio', project:'QuadFang R&D', hours:2.0, desc:'QuadFang deliverables review, product documentation' },
-  { date:'2026-04-02', user:'Alessio', project:'Forge System', hours:3.0, desc:'Brain file organization, worker concept development' },
-  { date:'2026-04-03', user:'Alessio', project:'Forge System', hours:5.0, desc:'Security audit, 20-page risk report, folder restructure' },
-  { date:'2026-04-03', user:'Alessio', project:'Admin', hours:2.0, desc:'File organization, backup protocols, system hardening' },
-  { date:'2026-04-04', user:'Alessio', project:'Forge System', hours:3.0, desc:'Everything broke. FUSE bug discovered' },
-  { date:'2026-04-04', user:'Alessio', project:'Forge System', hours:4.0, desc:'Easter Saturday debug session, FUSE bug root cause found and fixed' },
-  { date:'2026-04-04', user:'Alessio', project:'Forge System', hours:5.0, desc:'Named Forge. Tiered startup built. Super Brain created. Identity born.' },
-  { date:'2026-04-04', user:'Alessio', project:'Forge System', hours:4.0, desc:'Three independent databases designed. Modular hub-and-spoke architecture.' },
-  { date:'2026-04-05', user:'Alessio', project:'Forge System', hours:3.0, desc:'Brain file refinement, worker templates, system testing' },
-  { date:'2026-04-06', user:'Alessio', project:'Website', hours:2.0, desc:'Website planning, content review, architecture research' },
-  { date:'2026-04-06', user:'Alessio', project:'QuadFang R&D', hours:2.0, desc:'QuadFang brand guidelines, product strategy' },
-  { date:'2026-04-07', user:'Alessio', project:'Forge System', hours:3.0, desc:'Pre-Forge Office prep, worker files drafted' },
-  { date:'2026-04-08', user:'Alessio', project:'Forge System', hours:8.0, desc:'Hub-and-spoke model. 9 specialist workers. Full ops layer. 22 Shared Brain files.' },
-  { date:'2026-04-08', user:'Alessio', project:'Grants', hours:3.0, desc:'Grant-writer worker, grant roadmap PDF, 6 deliverables' },
-  { date:'2026-04-08', user:'Reanna', project:'Grants', hours:1.5, desc:'First Forge session. Grant roadmap, 7 programs researched, CDAP confirmed dead' },
-  { date:'2026-04-08', user:'Alessio', project:'Forge System', hours:2.0, desc:'Clock check system, session logging, evolution chart accountability' },
-  { date:'2026-04-09', user:'Alessio', project:'Forge System', hours:4.0, desc:'Two failed Save Alls reconstructed. Grant pipeline activated.' },
+// -- FORGE LOG (live from time_log -- populated on load) --
+var FORGE_LOG = [];
+var FORGE_PROJECTS = ['AZCK','AZCC','Forge System','Command Centre','Website','QuadFang Website','QuadFang R&D','Grants','Admin','Booking System','Clients'];
+var SHOP_PROJECTS_TL = ['Custom Knife Build','Sharpening Service','Heat Treatment','Engraving','Blacksmithing','Teaching / Classes','QuadFang Prototyping','Equipment / Maintenance','Photography','Shipping / Packaging'];
 
-  // â•â•â• TRACKED ERA (Apr 10+) â•â•â•
-  { date:'2026-04-10', user:'Alessio', project:'Website', hours:3.0, desc:'Tech plan delivered, booking page planning, site architecture review' },
-  { date:'2026-04-10', user:'Alessio', project:'Booking System', hours:7.0, desc:'All 6 booking pages built â€” Family Events, knife details, sharpening, blacksmithing, team building, private' },
-  { date:'2026-04-11', user:'Alessio', project:'Booking System', hours:2.0, desc:'Instructions doc, folder cleanup, final verification' },
-  { date:'2026-04-11', user:'Alessio', project:'Booking System', hours:4.0, desc:'Booking system published LIVE, repo cleanup, deep-links verified' },
-  { date:'2026-04-11', user:'Alessio', project:'Website', hours:4.0, desc:'Wix gift card, full architecture audit, headless checkout research, Wix API deep-dive' },
-  { date:'2026-04-12', user:'Alessio', project:'Website', hours:4.0, desc:'Shared nav/footer deployed to all 18 pages, CMS architecture parked' },
-  { date:'2026-04-12', user:'Alessio', project:'Command Centre', hours:5.0, desc:'Forge chart, usage guide, CLAUDE.md Condensed Brain v1.0 rebuilt' },
-  { date:'2026-04-12', user:'Alessio', project:'Command Centre', hours:1.5, desc:'usage.html dashboard built, Condensed Brain deployed' },
-  { date:'2026-04-12', user:'Alessio', project:'Forge System', hours:1.0, desc:'Zero-Read Startup rebuild â€” v1.1, all startup reads eliminated' },
-  { date:'2026-04-12', user:'Alessio', project:'Command Centre', hours:3.0, desc:'usage.html v3.0 JSON-driven master dashboard, community research, model awareness' },
-  { date:'2026-04-12', user:'Alessio', project:'Forge System', hours:2.5, desc:'Renderer failure, lessons learned, plans system created' },
-  { date:'2026-04-13', user:'Alessio', project:'Forge System', hours:2.0, desc:'Late night session â€” startup testing, system verification' },
-  { date:'2026-04-14', user:'Alessio', project:'QuadFang R&D', hours:2.0, desc:'Meeting with Matt Runhart (Terra Machine) â€” Fusion 360 design, manufacturing options' },
-  { date:'2026-04-14', user:'Alessio', project:'Website', hours:2.0, desc:'Website master plan (9 phases), folder reorg, CLAUDE.md updates' },
-  { date:'2026-04-14', user:'Alessio', project:'Admin', hours:1.0, desc:'Folder restructure, handoff for Phase 0 audit' },
-  { date:'2026-04-14', user:'Alessio', project:'Website', hours:2.0, desc:'Phase 0 Website Audit â€” 22 pages, 11 issues found (4 critical)' },
-  { date:'2026-04-14', user:'Reanna', project:'Website', hours:1.5, desc:'Photo category list (8 categories + Legacy Knives), session passoff' },
-  { date:'2026-04-14', user:'Alessio', project:'Forge System', hours:2.0, desc:'Full brain load, CLAUDE.md fixes, Forge lessons, auto-memory' },
-  { date:'2026-04-15', user:'Alessio', project:'Clients', hours:2.0, desc:'Avalon Research HT invoice ($829.50), trade agreement, invoice template' },
-  { date:'2026-04-15', user:'Alessio', project:'Admin', hours:2.0, desc:'AI folder restructure, CLAUDE.md v1.2, 15+ calendar events' },
-  { date:'2026-04-15', user:'Alessio', project:'Website', hours:2.0, desc:'Waiver PDF links fixed, blog refactored to ENGINE+DATA BLOCK' },
-  { date:'2026-04-15', user:'Alessio', project:'QuadFang Website', hours:1.0, desc:'"Coming Soonr" typo fixed in Shopify, billing structure documented' },
-  { date:'2026-04-15', user:'Alessio', project:'Clients', hours:1.0, desc:'Kyran client folder, reimbursement billing plan ($500/mo)' },
-  { date:'2026-04-15', user:'Alessio', project:'QuadFang Website', hours:1.5, desc:'GitHub Pages site build â€” 19 files, ENGINE+DATA BLOCK architecture' },
-  { date:'2026-04-15', user:'Alessio', project:'Website', hours:1.5, desc:'Homepage fade-in bug fixed, v2 CSS deployed LIVE' },
-  { date:'2026-04-15', user:'Alessio', project:'QuadFang Website', hours:4.0, desc:'Full GitHub Pages deployment, DNS migration, Hunt Gallery colors, newsletter table' },
-  { date:'2026-04-15', user:'Alessio', project:'Command Centre', hours:1.5, desc:'Timesheet page built â€” unified Forge + Shop tracker' }
-];
-</script>
 <!-- â•â•â• END DATA BLOCK â•â•â• -->
 
 <div id="app"></div>
@@ -273,6 +225,27 @@ var FORGE_LOG = [
 
   // â”€â”€ Build all HTML â”€â”€
   var shopEntries=[];
+  function mapTL(r){
+    return {
+      id: r.id,
+      date: (r.start_time||'').slice(0,10),
+      user: r.source==='session'?'Forge':r.source==='cowork'?'Cowork':(r.source||'Forge'),
+      project: r.project||'',
+      hours: (r.minutes||0)/60,
+      client:'',
+      desc: r.topic||''
+    };
+  }
+  async function loadForge(){
+    var {data,error}=await sb.from('time_log').select('*').in('project',FORGE_PROJECTS).order('start_time',{ascending:true});
+    if(error){console.error('Forge load:',error);FORGE_LOG=[];}else{FORGE_LOG=(data||[]).map(mapTL);}
+    var fa=aggregate(FORGE_LOG);
+    renderStats('forgeStats',fa);
+    renderBars('forgeBars',fa);
+    renderChart('forgeChart',fa);
+    renderFilterTable('forgeFilter','forgeTable',FORGE_LOG,false);
+    renderOverview();
+  }
   var H='';
 
   // â•â•â• TAB: OVERVIEW â•â•â•
@@ -454,7 +427,7 @@ var FORGE_LOG = [
         tbody.querySelectorAll('[data-del]').forEach(function(btn){
           btn.addEventListener('click',async function(){
             if(!confirm('Delete this entry?'))return;
-            await sb.from('shop_timesheet').delete().eq('id',btn.dataset.del);
+            await sb.from('time_log').delete().eq('id',btn.dataset.del);
             loadShop();
           });
         });
@@ -560,9 +533,7 @@ var FORGE_LOG = [
     var from = month + '-01';
     var to   = month + '-31';
 
-    var allCombined = shopEntries.concat(
-      FORGE_LOG.map(function(e){return {date:e.date,user:e.user,project:e.project,hours:e.hours,client:e.client||'',desc:e.desc};})
-    );
+    var allCombined = shopEntries.concat(FORGE_LOG);
 
     var matches = allCombined.filter(function(e){
       if (!inRange(e.date, from, to)) return false;
@@ -632,20 +603,12 @@ var FORGE_LOG = [
     $('invPreview').innerHTML = html;
   }
 
-  // â”€â”€ FORGE TAB â”€â”€
-  var forgeAgg=aggregate(FORGE_LOG);
-  renderStats('forgeStats',forgeAgg);
-  renderBars('forgeBars',forgeAgg);
-  renderChart('forgeChart',forgeAgg);
-  renderFilterTable('forgeFilter','forgeTable',FORGE_LOG,false);
-
-  // â”€â”€ SHOP TAB â€” load from Supabase â”€â”€
+  // -- FORGE TAB + SHOP TAB -- both load from time_log --
+    // â”€â”€ SHOP TAB â€” load from Supabase â”€â”€
   async function loadShop(){
-    var {data,error}=await sb.from('shop_timesheet').select('*').order('date',{ascending:false});
+    var {data,error}=await sb.from('time_log').select('*').in('project',SHOP_PROJECTS_TL).order('start_time',{ascending:false});
     if(error){console.error(error);return}
-    shopEntries=data.map(function(r){
-      return {id:r.id,date:r.date,user:r.user_name,project:r.project,hours:parseFloat(r.hours),client:r.client,desc:r.description};
-    });
+    shopEntries=(data||[]).map(mapTL);
 
     var shopAgg=aggregate(shopEntries);
     renderStats('shopStats',shopAgg);
@@ -655,8 +618,7 @@ var FORGE_LOG = [
   }
 
   function renderOverview(){
-    var combined=FORGE_LOG.map(function(e){return {date:e.date,user:e.user,project:e.project,hours:e.hours,client:e.client||'',desc:e.desc}})
-      .concat(shopEntries.map(function(e){return {date:e.date,user:e.user,project:e.project,hours:e.hours,client:e.client||'',desc:e.desc}}));
+    var combined=FORGE_LOG.concat(shopEntries);
     renderBillableSummary('billableSummary', combined);
     renderWeeklyDigest('weeklyDigest', combined);
     var allAgg=aggregate(combined);
@@ -683,8 +645,8 @@ var FORGE_LOG = [
       return;
     }
 
-    var {error}=await sb.from('shop_timesheet').insert({
-      date:date,user_name:'Alessio',project:project,hours:hours,client:client||null,description:desc||null
+    var {error}=await sb.from('time_log').insert({
+      start_time:date+'T00:00:00+00:00',minutes:Math.round(hours*60),source:'shop',project:project,topic:desc||null,notes:client||null
     });
 
     if(error){console.error(error);return}
@@ -706,7 +668,8 @@ var FORGE_LOG = [
   wireQuickAdd();
   wireInvoice();
 
-  // â”€â”€ Initial load â”€â”€
+  // -- Initial load --
+  loadForge();
   loadShop();
 
 })();
