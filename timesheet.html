@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:;">
-<title>AZCK Timesheet â€” Command Centre</title>
+<title>AZCK Timesheet &mdash; Command Centre</title>
 <link rel="stylesheet" href="cc-shell.css">
 <script>
   window.PAGE = {
     id: 'timesheet',
     title: 'AZCK Timesheet',
-    subtitle: 'All project hours â€” Forge sessions + Shop work. Updated every Save All + manual entries.',
+    subtitle: 'All project hours &mdash; Forge sessions + Shop work. Updated every Save All + manual entries.',
     subtabs: [
       { id: 'overview', label: 'Overview' },
       { id: 'forge',    label: 'Forge Log' },
@@ -31,14 +31,14 @@ h2 { margin: 32px 0 16px; }
 .green{color:var(--cc-success);font-weight:600}
 .card{background:var(--cc-bg-card);border:1px solid var(--cc-border);border-radius:var(--cc-r-lg);padding:24px;margin-bottom:20px}
 
-/* Stats â€” match cc-shell visual idiom */
+/* Stats &mdash; match cc-shell visual idiom */
 .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;margin-bottom:20px}
 .stat-box{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:16px;text-align:center}
 .stat-value{font-size:28px;font-weight:700;color:#58a6ff}
 .stat-value.green{color:#3fb950}.stat-value.warn{color:#d29922}.stat-value.danger{color:#f85149}
 .stat-label{font-size:12px;color:#8b949e;margin-top:4px}
 
-/* Progress bar â€” EXACT match to usage.html */
+/* Progress bar &mdash; EXACT match to usage.html */
 .progress-track{width:100%;height:28px;background:#21262d;border-radius:14px;overflow:hidden;position:relative;margin:12px 0}
 .progress-fill{height:100%;border-radius:14px;transition:width 1s ease;background:linear-gradient(90deg,#3fb950,#58a6ff)}
 .progress-fill.warn-bg{background:linear-gradient(90deg,#d29922,#f0883e)}
@@ -96,7 +96,7 @@ tr:hover td{background:#1c2128}
 <body>
 
 <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-     DATA BLOCK â€” UPDATE THIS SECTION ONLY (Forge auto-logged entries)
+     DATA BLOCK &mdash; UPDATE THIS SECTION ONLY (Forge auto-logged entries)
      To add an entry: add to FORGE_LOG array during Save All.
      To add a project: add color to PROJECT_COLORS.
      Engine below auto-generates everything from this data.
@@ -139,7 +139,7 @@ var ALL_COLORS = Object.assign({}, PROJECT_COLORS, SHOP_COLORS);
 // â”€â”€ SHOP PROJECT LIST (for dropdown) â”€â”€
 var SHOP_PROJECTS = Object.keys(SHOP_COLORS);
 
-// â”€â”€ BILLABLE RATES ($/hr) â€” EDIT ME to set real invoice rates â”€â”€
+// â”€â”€ BILLABLE RATES ($/hr) &mdash; EDIT ME to set real invoice rates â”€â”€
 var BILLABLE_RATES = {
   'kyran':    100,  // Kyran QuadFang reimbursement billing
   'custom':   150,  // Custom knife clients (premium rate)
@@ -147,7 +147,7 @@ var BILLABLE_RATES = {
   'internal':   0   // own-business (Forge, Admin, Website, etc.)
 };
 
-// â”€â”€ QUICK-ADD TEMPLATES â€” 1-click prefill on Shop tab form â”€â”€
+// â”€â”€ QUICK-ADD TEMPLATES &mdash; 1-click prefill on Shop tab form â”€â”€
 var QUICK_TEMPLATES = [
   { label:'Shop Day',        project:'Custom Knife Build',     hours:6,   client:'',        desc:'' },
   { label:'R&D QuadFang',    project:'QuadFang Prototyping',   hours:2,   client:'Kyran',   desc:'QuadFang R&D session' },
@@ -166,7 +166,7 @@ var SHOP_PROJECTS_TL = ['Custom Knife Build','Sharpening Service','Heat Treatmen
 
 <div id="app"></div>
 
-<!-- â•â•â• ENGINE â€” DO NOT EDIT BELOW â•â•â• -->
+<!-- â•â•â• ENGINE &mdash; DO NOT EDIT BELOW â•â•â• -->
 <script>
 (function(){
   // â”€â”€ Supabase client â”€â”€
@@ -256,7 +256,7 @@ var SHOP_PROJECTS_TL = ['Custom Knife Build','Sharpening Service','Heat Treatmen
   H+='<div class="card" id="weeklyDigest"></div>';
   H+='<div class="stat-grid" id="overviewStats"></div>';
   H+='<div class="card" id="overviewProgress"></div>';
-  H+='<h2>Hours by Project â€” All Sources</h2>';
+  H+='<h2>Hours by Project &mdash; All Sources</h2>';
   H+='<div class="card" id="overviewBars"></div>';
   H+='<h2>Daily Activity</h2>';
   H+='<div class="card"><div class="chart-wrap"><canvas id="overviewChart"></canvas></div></div>';
@@ -282,7 +282,7 @@ var SHOP_PROJECTS_TL = ['Custom Knife Build','Sharpening Service','Heat Treatmen
   H+='<div id="tab-shop" data-subtab="shop">';
   H+='<h2>Log Shop Time</h2>';
   H+='<div class="card">';
-  H+='<div style="font-size:11px;color:#8b949e;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Quick Templates â€” 1-click prefill</div>';
+  H+='<div style="font-size:11px;color:#8b949e;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Quick Templates &mdash; 1-click prefill</div>';
   H+='<div class="filter-bar" id="quickAddRow" style="margin-bottom:16px;"></div>';
   H+='<div class="form-row">';
   H+='<div class="form-group"><label>Date</label><input type="date" id="shopDate"></div>';
@@ -319,7 +319,7 @@ var SHOP_PROJECTS_TL = ['Custom Knife Build','Sharpening Service','Heat Treatmen
 
   // Footer
   H+='<hr style="border:none;border-top:1px solid #21262d;margin:32px 0;">';
-  H+='<p style="font-size:12px;color:#8b949e;text-align:center;">AZCK Timesheet â€” Command Centre<br>Forge entries auto-logged during Save All &middot; Shop entries via Supabase &middot; ENGINE + DATA BLOCK architecture</p>';
+  H+='<p style="font-size:12px;color:#8b949e;text-align:center;">AZCK Timesheet &mdash; Command Centre<br>Forge entries auto-logged during Save All &middot; Shop entries via Supabase &middot; ENGINE + DATA BLOCK architecture</p>';
 
   $('app').innerHTML=H;
 
@@ -349,7 +349,7 @@ var SHOP_PROJECTS_TL = ['Custom Knife Build','Sharpening Service','Heat Treatmen
   }
 
   function renderProgress(id,agg){
-    // Progress bar showing hours distribution â€” Forge vs Shop
+    // Progress bar showing hours distribution &mdash; Forge vs Shop
     var forgeH=0,shopH=0;
     FORGE_LOG.forEach(function(e){forgeH+=e.hours});
     shopEntries.forEach(function(e){shopH+=e.hours});
@@ -425,12 +425,12 @@ var SHOP_PROJECTS_TL = ['Custom Knife Build','Sharpening Service','Heat Treatmen
         if(!showDelete) rows+='<td>'+e.user+'</td>';
         rows+='<td><span class="tag" style="background:'+c+'22;color:'+c+';border:1px solid '+c+'44;">'+e.project+'</span></td>';
         rows+='<td style="font-weight:700;color:#58a6ff;">'+parseFloat(e.hours).toFixed(1)+'</td>';
-        if(showDelete) rows+='<td>'+(e.client||'â€”')+'</td>';
+        if(showDelete) rows+='<td>'+(e.client||'&mdash;')+'</td>';
         rows+='<td style="max-width:300px;">'+(e.desc||e.description||'')+'</td>';
         if(showDelete) rows+='<td><button class="btn btn-danger btn-sm" data-del="'+e.id+'">âœ•</button></td>';
         rows+='</tr>';
       });
-      tbody.innerHTML=rows||'<tr><td colspan="6" style="text-align:center;color:#8b949e;padding:24px;">No entries yet â€” add your first shop entry above!</td></tr>';
+      tbody.innerHTML=rows||'<tr><td colspan="6" style="text-align:center;color:#8b949e;padding:24px;">No entries yet &mdash; add your first shop entry above!</td></tr>';
 
       if(showDelete){
         tbody.querySelectorAll('[data-del]').forEach(function(btn){
@@ -464,10 +464,10 @@ var SHOP_PROJECTS_TL = ['Custom Knife Build','Sharpening Service','Heat Treatmen
         '<div style="font-size:24px;font-weight:700;color:#58a6ff;margin-top:6px;">'+fmt(sumHrs(b))+' <span style="font-size:12px;color:#8b949e;font-weight:400;">hrs</span></div>'+
         '<div style="font-size:16px;font-weight:700;color:#3fb950;margin-top:2px;">$'+sumDol(b).toFixed(0)+' <span style="font-size:11px;color:#8b949e;font-weight:400;">billable</span></div>'+
         '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #21262d;font-size:11px;line-height:1.6;">'+
-          '<div style="display:flex;justify-content:space-between;"><span style="color:#f85149;">â— Kyran</span><span style="color:#c9d1d9;">'+fmt(b.kyran.hrs)+'h &middot; $'+b.kyran.dollars.toFixed(0)+'</span></div>'+
-          '<div style="display:flex;justify-content:space-between;"><span style="color:#f778ba;">â— Custom</span><span style="color:#c9d1d9;">'+fmt(b.custom.hrs)+'h &middot; $'+b.custom.dollars.toFixed(0)+'</span></div>'+
-          '<div style="display:flex;justify-content:space-between;"><span style="color:#d29922;">â— SR&amp;ED</span><span style="color:#c9d1d9;">'+fmt(b.sred.hrs)+'h</span></div>'+
-          '<div style="display:flex;justify-content:space-between;"><span style="color:#79c0ff;">â— Internal</span><span style="color:#c9d1d9;">'+fmt(b.internal.hrs)+'h</span></div>'+
+          '<div style="display:flex;justify-content:space-between;"><span style="color:#f85149;">â&mdash; Kyran</span><span style="color:#c9d1d9;">'+fmt(b.kyran.hrs)+'h &middot; $'+b.kyran.dollars.toFixed(0)+'</span></div>'+
+          '<div style="display:flex;justify-content:space-between;"><span style="color:#f778ba;">â&mdash; Custom</span><span style="color:#c9d1d9;">'+fmt(b.custom.hrs)+'h &middot; $'+b.custom.dollars.toFixed(0)+'</span></div>'+
+          '<div style="display:flex;justify-content:space-between;"><span style="color:#d29922;">â&mdash; SR&amp;ED</span><span style="color:#c9d1d9;">'+fmt(b.sred.hrs)+'h</span></div>'+
+          '<div style="display:flex;justify-content:space-between;"><span style="color:#79c0ff;">â&mdash; Internal</span><span style="color:#c9d1d9;">'+fmt(b.internal.hrs)+'h</span></div>'+
         '</div>'+
       '</div>';
     }
@@ -602,7 +602,7 @@ var SHOP_PROJECTS_TL = ['Custom Knife Build','Sharpening Service','Heat Treatmen
           '<td style="padding:12px 8px;text-align:right;font-weight:700;border-top:2px solid #990000;color:#990000;font-size:17px;">$'+totalDol.toFixed(2)+'</td>'+
         '</tr></tfoot>'+
       '</table>'+
-      '<div style="margin-top:28px;font-size:11px;color:#777;border-top:1px solid #ddd;padding-top:12px;"><em>DRAFT â€” review line items, rate, and client details before sending. Generated from AZCK Timesheet.</em></div>'+
+      '<div style="margin-top:28px;font-size:11px;color:#777;border-top:1px solid #ddd;padding-top:12px;"><em>DRAFT &mdash; review line items, rate, and client details before sending. Generated from AZCK Timesheet.</em></div>'+
       '</div>'+
       '<div style="margin-top:12px;display:flex;gap:8px;">'+
         '<button class="btn btn-primary" onclick="(function(){var w=window.open(\'\',\'_blank\');w.document.write(document.getElementById(\'invDoc\').outerHTML);w.document.close();setTimeout(function(){w.print();},250);})();">Print / Save PDF</button>'+
@@ -613,7 +613,7 @@ var SHOP_PROJECTS_TL = ['Custom Knife Build','Sharpening Service','Heat Treatmen
   }
 
   // -- FORGE TAB + SHOP TAB -- both load from time_log --
-    // â”€â”€ SHOP TAB â€” load from Supabase â”€â”€
+    // â”€â”€ SHOP TAB &mdash; load from Supabase â”€â”€
   async function loadShop(){
     var {data,error}=await sb.from('time_log').select('*').in('project',SHOP_PROJECTS_TL).order('start_time',{ascending:false});
     if(error){console.error(error);return}
@@ -682,7 +682,7 @@ var SHOP_PROJECTS_TL = ['Custom Knife Build','Sharpening Service','Heat Treatmen
   loadShop();
 
 })();
-/* Tab switching is handled by cc-shell.js via [data-subtab] â€” no page-level logic needed. */
+/* Tab switching is handled by cc-shell.js via [data-subtab] &mdash; no page-level logic needed. */
 </script>
 </body>
 </html>
