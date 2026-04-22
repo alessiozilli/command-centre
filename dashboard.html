@@ -272,7 +272,7 @@
           if (count != null) myTasks = count;
         } catch(e) {}
         try {
-          const { count } = await supa.from('roadmap').select('id', { count:'exact', head:true }).eq('status','active');
+          const { count } = await supa.from('roadmap').select('id', { count:'exact', head:true }).in('status', ['pending','future']);
           if (count != null) roadActive = count;
         } catch(e) {}
       }
@@ -425,14 +425,21 @@
     async function mountRoadmap() {
       if (!(await hasSession())) { setBody('roadmap', signinPrompt()); return; }
       try {
-        const { data, error } = await supa.from('roadmap').select('*').eq('status','active').limit(10);
+        const { data, error } = await supa.from('roadmap')
+          .select('id,text,status,category,display_date,sort_date,sort_order')
+          .in('status', ['pending','future'])
+          .order('sort_order', { ascending:true })
+          .order('sort_date', { ascending:true, nullsFirst:false })
+          .limit(10);
         if (error) throw error;
-        if (!data || !data.length) { setBody('roadmap', '<div class="empty">No active roadmap items.</div>'); return; }
+        if (!data || !data.length) { setBody('roadmap', '<div class="empty">No pending / future items.</div>'); return; }
+        const dotByCat = { AZCK:'#58a6ff', QuadFang:'#f0883e', CC:'#bc8cff', Email:'#d29922', Other:'#8b949e' };
         const rows = data.map(r => {
-          const title = r.title || r.name || r.play || r.play_title || '(untitled)';
-          const target = r.target || r.target_date || r.due || '';
+          const title = r.text || '(untitled)';
+          const target = r.display_date || r.sort_date || '';
+          const dot = dotByCat[r.category] || '#3fb950';
           return `<div class="task-li">
-            <span class="dot" style="background:#3fb950"></span>
+            <span class="dot" style="background:${dot}"></span>
             <span class="t">${esc(title)}</span>
             ${target ? `<span class="due">${esc(target)}</span>` : ''}
           </div>`;
