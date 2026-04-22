@@ -273,7 +273,7 @@ var SHOP_PROJECTS_TL = ['Custom Knife Build','Sharpening Service','Heat Treatmen
   H+='<div class="card"><div class="chart-wrap"><canvas id="forgeChart"></canvas></div></div>';
   H+='<h2>Full Forge Log</h2>';
   H+='<div class="filter-bar" id="forgeFilter"></div>';
-  H+='<div class="card" style="overflow-x:auto;max-height:600px;overflow-y:auto;">';
+  H+='<div class="card" style="overflow-x:auto;resize:vertical;overflow:auto;min-height:200px;">';
   H+='<table id="forgeTable"><thead><tr><th>Date</th><th>User</th><th>Project</th><th>Hours</th><th>Description</th></tr></thead><tbody></tbody></table>';
   H+='</div>';
   H+='</div>';
@@ -289,7 +289,7 @@ var SHOP_PROJECTS_TL = ['Custom Knife Build','Sharpening Service','Heat Treatmen
   H+='<div class="form-group"><label>Project</label><select id="shopProject"></select></div>';
   H+='<div class="form-group"><label>Hours</label><input type="number" id="shopHours" step="0.25" min="0.25" max="24" placeholder="2.5"></div>';
   H+='<div class="form-group"><label>Client / Order</label><input type="text" id="shopClient" placeholder="e.g. Avalon, Walk-in"></div>';
-  H+='<div class="form-group"><label>Description</label><input type="text" id="shopDesc" placeholder="What did you do?"></div>';
+  H+='<div class="form-group"><label>Description</label><textarea id="shopDesc" placeholder="What did you do?" rows="1" style="resize:none;overflow:hidden;min-height:36px;max-height:200px;background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:8px 10px;color:#e6edf3;font-size:13px;width:100%;font-family:inherit;box-sizing:border-box;"></textarea></div>';
   H+='<div class="form-group"><label>&nbsp;</label><button class="btn btn-primary" id="shopAdd">Add</button></div>';
   H+='</div>';
   H+='<div id="shopFormMsg" style="font-size:12px;color:#3fb950;margin-top:-8px;margin-bottom:8px;display:none;"></div>';
@@ -299,7 +299,7 @@ var SHOP_PROJECTS_TL = ['Custom Knife Build','Sharpening Service','Heat Treatmen
   H+='<div class="card" id="shopBars"></div>';
   H+='<h2>Shop Entries</h2>';
   H+='<div class="filter-bar" id="shopFilter"></div>';
-  H+='<div class="card" style="overflow-x:auto;max-height:600px;overflow-y:auto;">';
+  H+='<div class="card" style="overflow-x:auto;resize:vertical;overflow:auto;min-height:200px;">';
   H+='<table id="shopTable"><thead><tr><th>Date</th><th>Project</th><th>Hours</th><th>Client</th><th>Description</th><th></th></tr></thead><tbody></tbody></table>';
   H+='</div>';
 
@@ -327,6 +327,15 @@ var SHOP_PROJECTS_TL = ['Custom Knife Build','Sharpening Service','Heat Treatmen
   var sel=$('shopProject');
   SHOP_PROJECTS.forEach(function(p){var o=document.createElement('option');o.value=p;o.textContent=p;sel.appendChild(o)});
   $('shopDate').valueAsDate=new Date();
+
+  // Auto-resize shopDesc textarea as user types
+  var shopDescEl=$('shopDesc');
+  if(shopDescEl){
+    shopDescEl.addEventListener('input',function(){
+      this.style.height='auto';
+      this.style.height=Math.min(this.scrollHeight,200)+'px';
+    });
+  }
 
   // â”€â”€ Render functions â”€â”€
   function renderStats(id,agg){
