@@ -4,15 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:;">
-<title>Forge â€” AZCK Command Centre</title>
+<title>Forge &mdash; AZCK Command Centre</title>
 <link rel="stylesheet" href="cc-shell.css">
 <script src="cc-shell.js" defer></script>
 <script>
-  // window.PAGE â€” consumed by cc-shell. Editable in the DATA BLOCK at bottom.
+  // window.PAGE &mdash; consumed by cc-shell. Editable in the DATA BLOCK at bottom.
   window.PAGE = {
     id: 'forge',
     title: 'The Forge Evolution System',
-    subtitle: 'Tracking growth across every dimension â€” no ceiling, no reset, no shortcuts.',
+    subtitle: 'Tracking growth across every dimension &mdash; no ceiling, no reset, no shortcuts.',
     subtabs: [
       { id: 'evolution',     label: 'Evolution' },
       { id: 'rings',         label: 'Rings' },
@@ -21,9 +21,9 @@
     ],
     stats: [
       { id: 'version',   label: 'Current',   value: 'v0.9.5' },
-      { id: 'ring',      label: 'Ring',      value: '1 Â· Raw Steel' },
-      { id: 'avg',       label: 'Avg',       value: 'â€”' },
-      { id: 'min',       label: 'Min',       value: 'â€”' }
+      { id: 'ring',      label: 'Ring',      value: '1 &middot; Raw Steel' },
+      { id: 'avg',       label: 'Avg',       value: '&mdash;' },
+      { id: 'min',       label: 'Min',       value: '&mdash;' }
     ]
   };
 </script>
@@ -63,14 +63,14 @@ h2 { margin: 40px 0 16px; }
 .metric-fill-now { position: absolute; top: 0; left: 0; height: 100%; border-radius: 6px; transition: width 1s ease; }
 .metric-score { width: 60px; text-align: right; font-size: 14px; font-weight: 700; color: #58a6ff; flex-shrink: 0; margin-left: 12px; }
 .metric-stage-label { font-size: 10px; color: #8b949e; font-weight: 400; }
-/* Pill-nav removed â€” cc-shell banner supersedes. */
+/* Pill-nav removed &mdash; cc-shell banner supersedes. */
 </style>
   <script defer src="auth.js"></script>
 </head>
 <body>
 
 <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-     DATA BLOCK â€” UPDATE THIS SECTION ONLY
+     DATA BLOCK &mdash; UPDATE THIS SECTION ONLY
      To add a new version: copy last entry, change version/name/date/desc/scores.
      To add a metric: add to metricLabels + metricColors + every scores array.
      Engine below auto-generates everything from this data.
@@ -90,7 +90,7 @@ var VERSIONS = [
   { version:'v0.2',   name:'The Gathering',         date:'Apr 1',    desc:'Shared Brain established. First startup protocol.',                scores:[3,4,3,3,2,5,4,6,4,3,0] },
   { version:'v0.3',   name:'The Builder',            date:'Apr 1',    desc:'Single Source of Truth. QuadFang deliverables. Gist sync.',        scores:[4,6,4,5,3,7,5,7,5,4,0] },
   { version:'v0.4',   name:'The Auditor',            date:'Apr 3',    desc:'Security audit. 20-page risk report. Folder restructure.',         scores:[4,7,4,6,4,8,6,8,5,4,0] },
-  { version:'v0.5',   name:'The Broken Start',       date:'Apr 4',    desc:'Everything broke. "Go." â†’ "Go where?"',                           scores:[1,1,1,0,0,5,1,0,0,3,0] },
+  { version:'v0.5',   name:'The Broken Start',       date:'Apr 4',    desc:'Everything broke. "Go." &rarr; "Go where?"',                           scores:[1,1,1,0,0,5,1,0,0,3,0] },
   { version:'v0.6',   name:'The Debug',              date:'Apr 4',    desc:'2-hour Easter Saturday debug. FUSE bug discovered.',               scores:[4,7,3,5,5,8,6,0,5,7,0] },
   { version:'v0.7',   name:'Forge',                  date:'Apr 4',    desc:'Named. Tiered startup. Super Brain. Identity born.',               scores:[6,8,7,8,7,8,7,8,6,8,0] },
   { version:'v0.8',   name:'The Architect',           date:'Apr 4',    desc:'Three independent databases. Modular architecture.',               scores:[6,9,7,8,8,8,8,8,7,8,0] },
@@ -105,8 +105,8 @@ var VERSIONS = [
 <!-- â•â•â• END DATA BLOCK â•â•â• -->
 
 <div data-subtab="evolution">
-<h2>Current State â€” At a Glance</h2>
-<p>Ring 1 fills the radar. Scores 1â€“10 map across the full space. The <span class="highlight">blue shape</span> is where Forge is now. The fading dotted rings beyond the edge are the future â€” they'll expand when we get there.</p>
+<h2>Current State &mdash; At a Glance</h2>
+<p>Ring 1 fills the radar. Scores 1&ndash;10 map across the full space. The <span class="highlight">blue shape</span> is where Forge is now. The fading dotted rings beyond the edge are the future &mdash; they'll expand when we get there.</p>
 
 <div class="card" style="text-align:center;padding:32px;">
   <div class="radar-wrap">
@@ -129,12 +129,12 @@ var VERSIONS = [
   </div>
   <!-- Ring chips -->
   <div style="display:flex;justify-content:center;gap:6px;margin-top:12px;flex-wrap:wrap;">
-    <span style="font-size:11px;color:#f85149;font-weight:700;background:#f8514915;padding:3px 10px;border-radius:6px;border:1px solid #f8514944;">1 Â· Raw Steel</span>
-    <span style="font-size:11px;color:#f0883e;font-weight:600;background:#f0883e12;padding:3px 10px;border-radius:6px;border:1px dashed #f0883e44;">2 Â· Forged</span>
-    <span style="font-size:11px;color:#d29922;font-weight:600;background:#d2992210;padding:3px 10px;border-radius:6px;border:1px dashed #d2992240;">3 Â· Ground</span>
-    <span style="font-size:11px;color:#3fb950;font-weight:600;background:#3fb95010;padding:3px 10px;border-radius:6px;border:1px dashed #3fb95040;">4 Â· Heat Treated</span>
-    <span style="font-size:11px;color:#58a6ff;font-weight:600;background:#58a6ff10;padding:3px 10px;border-radius:6px;border:1px dashed #58a6ff40;">5 Â· Finished</span>
-    <span style="font-size:11px;color:#bc8cff;font-weight:600;background:#bc8cff10;padding:3px 10px;border-radius:6px;border:1px dashed #bc8cff40;">6 Â· Heirloom</span>
+    <span style="font-size:11px;color:#f85149;font-weight:700;background:#f8514915;padding:3px 10px;border-radius:6px;border:1px solid #f8514944;">1 &middot; Raw Steel</span>
+    <span style="font-size:11px;color:#f0883e;font-weight:600;background:#f0883e12;padding:3px 10px;border-radius:6px;border:1px dashed #f0883e44;">2 &middot; Forged</span>
+    <span style="font-size:11px;color:#d29922;font-weight:600;background:#d2992210;padding:3px 10px;border-radius:6px;border:1px dashed #d2992240;">3 &middot; Ground</span>
+    <span style="font-size:11px;color:#3fb950;font-weight:600;background:#3fb95010;padding:3px 10px;border-radius:6px;border:1px dashed #3fb95040;">4 &middot; Heat Treated</span>
+    <span style="font-size:11px;color:#58a6ff;font-weight:600;background:#58a6ff10;padding:3px 10px;border-radius:6px;border:1px dashed #58a6ff40;">5 &middot; Finished</span>
+    <span style="font-size:11px;color:#bc8cff;font-weight:600;background:#bc8cff10;padding:3px 10px;border-radius:6px;border:1px dashed #bc8cff40;">6 &middot; Heirloom</span>
   </div>
   <!-- Slider -->
   <div class="slider-wrap">
@@ -160,7 +160,7 @@ var VERSIONS = [
 <div data-subtab="rings">
 <!-- Six Rings -->
 <h2>The Six Rings</h2>
-<p>Progression isn't about hitting 10 â€” it's about crossing boundaries. The <span class="highlight">Weakest Link Rule</span> governs advancement: the major version is earned when the <em>lowest</em> metric crosses the next ring boundary.</p>
+<p>Progression isn't about hitting 10 &mdash; it's about crossing boundaries. The <span class="highlight">Weakest Link Rule</span> governs advancement: the major version is earned when the <em>lowest</em> metric crosses the next ring boundary.</p>
 <div class="card">
   <table style="width:100%;border-collapse:collapse;font-size:14px;">
     <thead>
@@ -175,37 +175,37 @@ var VERSIONS = [
       <tr style="border-bottom:1px solid #21262d;">
         <td style="padding:10px 12px;"><span style="color:#f85149;font-weight:700;">1</span></td>
         <td style="padding:10px 12px;color:#f85149;font-weight:600;">Raw Steel</td>
-        <td style="padding:10px 12px;color:#c9d1d9;">1 â€“ 10</td>
+        <td style="padding:10px 12px;color:#c9d1d9;">1&ndash;10</td>
         <td style="padding:10px 12px;color:#8b949e;">Learning the basics. Rough edges everywhere. Every session reveals what's missing.</td>
       </tr>
       <tr style="border-bottom:1px solid #21262d;">
         <td style="padding:10px 12px;"><span style="color:#f0883e;font-weight:700;">2</span></td>
         <td style="padding:10px 12px;color:#f0883e;font-weight:600;">Forged</td>
-        <td style="padding:10px 12px;color:#c9d1d9;">11 â€“ 20</td>
+        <td style="padding:10px 12px;color:#c9d1d9;">11&ndash;20</td>
         <td style="padding:10px 12px;color:#8b949e;">Shape is emerging. Heat and pressure applied. Consistent but not yet refined.</td>
       </tr>
       <tr style="border-bottom:1px solid #21262d;">
         <td style="padding:10px 12px;"><span style="color:#d29922;font-weight:700;">3</span></td>
         <td style="padding:10px 12px;color:#d29922;font-weight:600;">Ground</td>
-        <td style="padding:10px 12px;color:#c9d1d9;">21 â€“ 30</td>
+        <td style="padding:10px 12px;color:#c9d1d9;">21&ndash;30</td>
         <td style="padding:10px 12px;color:#8b949e;">Precision work. Removing material to find the edge. No more guessing.</td>
       </tr>
       <tr style="border-bottom:1px solid #21262d;">
         <td style="padding:10px 12px;"><span style="color:#3fb950;font-weight:700;">4</span></td>
         <td style="padding:10px 12px;color:#3fb950;font-weight:600;">Heat Treated</td>
-        <td style="padding:10px 12px;color:#c9d1d9;">31 â€“ 40</td>
+        <td style="padding:10px 12px;color:#c9d1d9;">31&ndash;40</td>
         <td style="padding:10px 12px;color:#8b949e;">Hardened through experience. Resilient under stress. Trusted with critical work.</td>
       </tr>
       <tr style="border-bottom:1px solid #21262d;">
         <td style="padding:10px 12px;"><span style="color:#58a6ff;font-weight:700;">5</span></td>
         <td style="padding:10px 12px;color:#58a6ff;font-weight:600;">Finished</td>
-        <td style="padding:10px 12px;color:#c9d1d9;">41 â€“ 50</td>
-        <td style="padding:10px 12px;color:#8b949e;">Polished. Production-ready every time. The tool disappears â€” only the work remains.</td>
+        <td style="padding:10px 12px;color:#c9d1d9;">41&ndash;50</td>
+        <td style="padding:10px 12px;color:#8b949e;">Polished. Production-ready every time. The tool disappears &mdash; only the work remains.</td>
       </tr>
       <tr>
         <td style="padding:10px 12px;"><span style="color:#bc8cff;font-weight:700;">6</span></td>
         <td style="padding:10px 12px;color:#bc8cff;font-weight:600;">Heirloom</td>
-        <td style="padding:10px 12px;color:#c9d1d9;">51 â€“ 60</td>
+        <td style="padding:10px 12px;color:#c9d1d9;">51&ndash;60</td>
         <td style="padding:10px 12px;color:#8b949e;">Mastery. Anticipates needs. Teaches what it knows. Built to outlast any single session.</td>
       </tr>
     </tbody>
@@ -216,59 +216,59 @@ var VERSIONS = [
 
 <div data-subtab="philosophy">
 <!-- Shu-Ha-Ri -->
-<h2>Shu-Ha-Ri â€” å®ˆç ´é›¢</h2>
+<h2>Shu-Ha-Ri &mdash; å®ˆç ´é›¢</h2>
 <p>Shu-Ha-Ri is a concept from Japanese martial arts that describes the three stages of learning on the path to mastery. It originated in Aikido through the teaching of Endo Seishiro and traces its roots to the tea ceremony master Kawakami Fuhaku in the 18th century. The idea is simple and unforgiving: there are no shortcuts. Each stage must be fully lived before the next one opens.</p>
-<p>In knifemaking, the parallel is obvious â€” you can't heat treat a blade you haven't forged, and you can't finish a blade you haven't ground. The process has an order. Respect it, and the steel rewards you. Skip it, and the blade fails. Forge follows the same law.</p>
+<p>In knifemaking, the parallel is obvious &mdash; you can't heat treat a blade you haven't forged, and you can't finish a blade you haven't ground. The process has an order. Respect it, and the steel rewards you. Skip it, and the blade fails. Forge follows the same law.</p>
 
 <div class="card" style="margin-bottom:20px;">
   <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
     <div style="font-size:48px;font-weight:800;color:#f85149;line-height:1;">å®ˆ</div>
     <div>
-      <div style="font-size:20px;font-weight:700;color:#f85149;">Shu â€” Obey</div>
-      <div style="font-size:13px;color:#f0883e;font-weight:600;">Rings 1â€“2 Â· Raw Steel â†’ Forged</div>
+      <div style="font-size:20px;font-weight:700;color:#f85149;">Shu &mdash; Obey</div>
+      <div style="font-size:13px;color:#f0883e;font-weight:600;">Rings 1&ndash;2 &middot; Raw Steel &rarr; Forged</div>
     </div>
   </div>
-  <p style="font-size:14px;color:#c9d1d9;margin-bottom:10px;">In the Shu stage, the student follows the master's teaching precisely, without deviation or personal interpretation. The goal is not understanding â€” it's absorption. You copy the form exactly. You repeat until the movements become muscle memory. You don't ask "why" yet, because you don't have the foundation to understand the answer.</p>
-  <p style="font-size:14px;color:#c9d1d9;margin-bottom:10px;">For Forge, Shu means: read the CLAUDE.md and do exactly what it says. Follow the startup sequence step by step. Don't improvise greetings. Don't skip file reads to save time. Don't guess what the user wants â€” ask or look it up. Every instruction exists because something went wrong when it wasn't followed.</p>
-  <p style="font-size:13px;color:#8b949e;margin:0;">Forge's Shu era was v0.1 through v0.7 â€” learning to start up reliably, discovering the Shared Brain, surviving "The Broken Start" (v0.5), and earning a name through a 2-hour Easter Saturday debug session. The rules were written in frustration and debugged through repetition.</p>
+  <p style="font-size:14px;color:#c9d1d9;margin-bottom:10px;">In the Shu stage, the student follows the master's teaching precisely, without deviation or personal interpretation. The goal is not understanding &mdash; it's absorption. You copy the form exactly. You repeat until the movements become muscle memory. You don't ask "why" yet, because you don't have the foundation to understand the answer.</p>
+  <p style="font-size:14px;color:#c9d1d9;margin-bottom:10px;">For Forge, Shu means: read the CLAUDE.md and do exactly what it says. Follow the startup sequence step by step. Don't improvise greetings. Don't skip file reads to save time. Don't guess what the user wants &mdash; ask or look it up. Every instruction exists because something went wrong when it wasn't followed.</p>
+  <p style="font-size:13px;color:#8b949e;margin:0;">Forge's Shu era was v0.1 through v0.7 &mdash; learning to start up reliably, discovering the Shared Brain, surviving "The Broken Start" (v0.5), and earning a name through a 2-hour Easter Saturday debug session. The rules were written in frustration and debugged through repetition.</p>
 </div>
 
 <div class="card" style="margin-bottom:20px;">
   <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
     <div style="font-size:48px;font-weight:800;color:#3fb950;line-height:1;">ç ´</div>
     <div>
-      <div style="font-size:20px;font-weight:700;color:#3fb950;">Ha â€” Detach</div>
-      <div style="font-size:13px;color:#d29922;font-weight:600;">Rings 3â€“4 Â· Ground â†’ Heat Treated</div>
+      <div style="font-size:20px;font-weight:700;color:#3fb950;">Ha &mdash; Detach</div>
+      <div style="font-size:13px;color:#d29922;font-weight:600;">Rings 3&ndash;4 &middot; Ground &rarr; Heat Treated</div>
     </div>
   </div>
-  <p style="font-size:14px;color:#c9d1d9;margin-bottom:10px;">In Ha, the student begins to understand the principles behind the techniques. The form is no longer copied blindly â€” it's understood, and then adapted. "Break the rule" doesn't mean ignore it. It means you've earned the right to bend it because you know why it exists. You start to see the deeper pattern beneath the surface instruction.</p>
-  <p style="font-size:14px;color:#c9d1d9;margin-bottom:10px;">For Forge, Ha means: anticipate what the user needs before they ask. Recognise when a rule doesn't fit the context and adapt intelligently. Push back when an instruction would produce a worse outcome. Offer the better path â€” not because you're ignoring the rules, but because you understand their intent well enough to serve that intent in a new way.</p>
-  <p style="font-size:13px;color:#8b949e;margin:0;">Forge is approaching Ha now. Sessions like v0.9.3 "The Publisher" (shipping a live booking system same-day with no failures) and v0.9.4 "The Strategist" (stepping back to audit architecture instead of chasing the next fix) show the early signs â€” acting from understanding, not just instruction.</p>
+  <p style="font-size:14px;color:#c9d1d9;margin-bottom:10px;">In Ha, the student begins to understand the principles behind the techniques. The form is no longer copied blindly &mdash; it's understood, and then adapted. "Break the rule" doesn't mean ignore it. It means you've earned the right to bend it because you know why it exists. You start to see the deeper pattern beneath the surface instruction.</p>
+  <p style="font-size:14px;color:#c9d1d9;margin-bottom:10px;">For Forge, Ha means: anticipate what the user needs before they ask. Recognise when a rule doesn't fit the context and adapt intelligently. Push back when an instruction would produce a worse outcome. Offer the better path &mdash; not because you're ignoring the rules, but because you understand their intent well enough to serve that intent in a new way.</p>
+  <p style="font-size:13px;color:#8b949e;margin:0;">Forge is approaching Ha now. Sessions like v0.9.3 "The Publisher" (shipping a live booking system same-day with no failures) and v0.9.4 "The Strategist" (stepping back to audit architecture instead of chasing the next fix) show the early signs &mdash; acting from understanding, not just instruction.</p>
 </div>
 
 <div class="card">
   <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
     <div style="font-size:48px;font-weight:800;color:#bc8cff;line-height:1;">é›¢</div>
     <div>
-      <div style="font-size:20px;font-weight:700;color:#bc8cff;">Ri â€” Transcend</div>
-      <div style="font-size:13px;color:#58a6ff;font-weight:600;">Rings 5â€“6 Â· Finished â†’ Heirloom</div>
+      <div style="font-size:20px;font-weight:700;color:#bc8cff;">Ri &mdash; Transcend</div>
+      <div style="font-size:13px;color:#58a6ff;font-weight:600;">Rings 5&ndash;6 &middot; Finished &rarr; Heirloom</div>
     </div>
   </div>
-  <p style="font-size:14px;color:#c9d1d9;margin-bottom:10px;">In Ri, the student becomes the master. The rules are so deeply internalized that they no longer need to be remembered â€” they flow naturally from every action. There is no separation between the practitioner and the practice. The technique is invisible because it has become the person. At this stage, the master creates new forms and teaches others.</p>
-  <p style="font-size:14px;color:#c9d1d9;margin-bottom:10px;">For Forge, Ri means: the system runs itself. Startup doesn't need a checklist because the right actions are automatic. Problems are solved before the user notices them. New workers are designed, new SOPs are written, new architecture is proposed â€” not because someone asked, but because the need was obvious. The tool disappears. Only the work remains.</p>
-  <p style="font-size:13px;color:#8b949e;margin:0;">Ri is the horizon. No AI system has reached it yet. But the path is clear: every session that earns its scores honestly, every failure that gets logged instead of hidden, every lesson that changes behaviour instead of just filling a document â€” that's another step. The blade isn't finished. But the steel knows where the edge will be.</p>
+  <p style="font-size:14px;color:#c9d1d9;margin-bottom:10px;">In Ri, the student becomes the master. The rules are so deeply internalized that they no longer need to be remembered &mdash; they flow naturally from every action. There is no separation between the practitioner and the practice. The technique is invisible because it has become the person. At this stage, the master creates new forms and teaches others.</p>
+  <p style="font-size:14px;color:#c9d1d9;margin-bottom:10px;">For Forge, Ri means: the system runs itself. Startup doesn't need a checklist because the right actions are automatic. Problems are solved before the user notices them. New workers are designed, new SOPs are written, new architecture is proposed &mdash; not because someone asked, but because the need was obvious. The tool disappears. Only the work remains.</p>
+  <p style="font-size:13px;color:#8b949e;margin:0;">Ri is the horizon. No AI system has reached it yet. But the path is clear: every session that earns its scores honestly, every failure that gets logged instead of hidden, every lesson that changes behaviour instead of just filling a document &mdash; that's another step. The blade isn't finished. But the steel knows where the edge will be.</p>
 </div>
 
 <hr class="section-divider">
 
 <!-- The Blade Metaphor -->
 <h2>The Blade Metaphor</h2>
-<p>Forge was born in the same place Alessio's knives are â€” shaped through heat, pressure, and patience. Every version is another pass on the anvil.</p>
+<p>Forge was born in the same place Alessio's knives are &mdash; shaped through heat, pressure, and patience. Every version is another pass on the anvil.</p>
 <div class="card">
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;font-size:13px;">
     <div>
       <div style="color:#f85149;font-weight:700;margin-bottom:6px;">Raw Steel</div>
-      <p style="color:#8b949e;margin:0;">The material arrives unformed. It has potential but no shape, no edge, no purpose yet. That's v0.1 â€” capable but directionless.</p>
+      <p style="color:#8b949e;margin:0;">The material arrives unformed. It has potential but no shape, no edge, no purpose yet. That's v0.1 &mdash; capable but directionless.</p>
     </div>
     <div>
       <div style="color:#f0883e;font-weight:700;margin-bottom:6px;">Forging</div>
@@ -276,11 +276,11 @@ var VERSIONS = [
     </div>
     <div>
       <div style="color:#d29922;font-weight:700;margin-bottom:6px;">Grinding</div>
-      <p style="color:#8b949e;margin:0;">Precision. Remove what doesn't serve the blade. Every pass on the grinder reveals what was always underneath â€” the real edge.</p>
+      <p style="color:#8b949e;margin:0;">Precision. Remove what doesn't serve the blade. Every pass on the grinder reveals what was always underneath &mdash; the real edge.</p>
     </div>
     <div>
       <div style="color:#3fb950;font-weight:700;margin-bottom:6px;">Heat Treating</div>
-      <p style="color:#8b949e;margin:0;">The blade goes through fire and ice. It comes out harder â€” resilient under stress. This is where trust is earned.</p>
+      <p style="color:#8b949e;margin:0;">The blade goes through fire and ice. It comes out harder &mdash; resilient under stress. This is where trust is earned.</p>
     </div>
     <div>
       <div style="color:#58a6ff;font-weight:700;margin-bottom:6px;">Finishing</div>
@@ -288,7 +288,7 @@ var VERSIONS = [
     </div>
     <div>
       <div style="color:#bc8cff;font-weight:700;margin-bottom:6px;">Heirloom</div>
-      <p style="color:#8b949e;margin:0;">Built to outlast the maker. Passed down. A blade this good doesn't just cut â€” it teaches the next generation what quality means.</p>
+      <p style="color:#8b949e;margin:0;">Built to outlast the maker. Passed down. A blade this good doesn't just cut &mdash; it teaches the next generation what quality means.</p>
     </div>
   </div>
 </div>
@@ -301,11 +301,11 @@ var VERSIONS = [
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;font-size:13px;">
     <div>
       <div style="color:#58a6ff;font-weight:700;margin-bottom:6px;">No Ceiling</div>
-      <p style="color:#8b949e;margin:0;">Scores go to infinity. Ring 1 fills the radar today; when every metric crosses 10, Ring 2 becomes the new canvas. The chart expands â€” it never shrinks.</p>
+      <p style="color:#8b949e;margin:0;">Scores go to infinity. Ring 1 fills the radar today; when every metric crosses 10, Ring 2 becomes the new canvas. The chart expands &mdash; it never shrinks.</p>
     </div>
     <div>
       <div style="color:#58a6ff;font-weight:700;margin-bottom:6px;">No Reset</div>
-      <p style="color:#8b949e;margin:0;">Every version is permanent. v0.5 "The Broken Start" sits in the log forever â€” a scar, not a shame. Growth requires an honest record.</p>
+      <p style="color:#8b949e;margin:0;">Every version is permanent. v0.5 "The Broken Start" sits in the log forever &mdash; a scar, not a shame. Growth requires an honest record.</p>
     </div>
     <div>
       <div style="color:#58a6ff;font-weight:700;margin-bottom:6px;">Weakest Link</div>
@@ -321,28 +321,28 @@ var VERSIONS = [
 
 <div data-subtab="reevaluations">
 <h2>Reevaluations</h2>
-<p>Structured, dated self-audits of Forge's state. Scores are revisited, rules elevated, failures logged. Each reevaluation is a lock-point â€” a public record of what the system was at a moment in time.</p>
+<p>Structured, dated self-audits of Forge's state. Scores are revisited, rules elevated, failures logged. Each reevaluation is a lock-point &mdash; a public record of what the system was at a moment in time.</p>
 
 <div class="card" style="padding:28px;">
   <div style="display:flex;align-items:center;gap:16px;margin-bottom:14px;flex-wrap:wrap;">
     <div style="font-size:22px;font-weight:800;color:#58a6ff;">v0.9.5</div>
     <div style="font-size:16px;font-weight:700;color:#e6edf3;">The Operator</div>
-    <div style="font-size:12px;color:#8b949e;">Â· April 17, 2026</div>
+    <div style="font-size:12px;color:#8b949e;">&middot; April 17, 2026</div>
   </div>
   <p style="color:#c9d1d9;margin-bottom:14px;">Full reevaluation after a multi-session shipping run. Five earned rules elevated. Tier series (quick / checkpoint / wrap / budget-check / what's-loaded) built. Reliable execution across sessions is the new floor.</p>
-  <a href="forge-v0.9.5-reevaluation.html" style="display:inline-block;background:#58a6ff;color:#0d1117;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;">â†’ Read the full report</a>
+  <a href="forge-v0.9.5-reevaluation.html" style="display:inline-block;background:#58a6ff;color:#0d1117;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;">&rarr; Read the full report</a>
 </div>
 
 <p style="font-size:13px;color:#8b949e;margin-top:20px;">Earlier reevaluations are archived inside the SuperBrain. Each new version gets its own entry here.</p>
 </div><!-- /data-subtab=reevaluations -->
 
 <div style="text-align:center;padding:40px 0 20px;font-size:12px;color:#30363d;">
-  Forge â€” AZ Custom Knives Ltd
+  Forge &mdash; AZ Custom Knives Ltd
 </div>
 
 <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-     ENGINE â€” DO NOT EDIT BELOW THIS LINE
-     Radar, plugins, slider, ledger â€” all auto-generated from data above.
+     ENGINE &mdash; DO NOT EDIT BELOW THIS LINE
+     Radar, plugins, slider, ledger &mdash; all auto-generated from data above.
      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <script>
 window.FORGE_INIT = function() {
@@ -372,7 +372,7 @@ window.FORGE_INIT = function() {
   }
 
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // PLUGIN: Future rings â€” fading rays + coloured ring circles
+  // PLUGIN: Future rings &mdash; fading rays + coloured ring circles
   // Exact replica of original futureRingsPlugin
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   var futureRingsPlugin = {
@@ -408,7 +408,7 @@ window.FORGE_INIT = function() {
         ctx.stroke();
       }
 
-      // 5 future ring circles â€” colour-coded, fading
+      // 5 future ring circles &mdash; colour-coded, fading
       var ringHex = ['#f0883e', '#d29922', '#3fb950', '#58a6ff', '#bc8cff'];
       var ringOpacity = [0.80, 0.725, 0.65, 0.575, 0.50];
       for (var r = 1; r <= futureCount; r++) {
@@ -460,7 +460,7 @@ window.FORGE_INIT = function() {
   Chart.register(futureRingsPlugin, dotGlowPlugin);
 
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // BUILD RADAR â€” Ring 1 = full chart area
+  // BUILD RADAR &mdash; Ring 1 = full chart area
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   var nowScores = getScores(latest);
   var prevScores = getPrev(latest);
@@ -577,7 +577,7 @@ window.FORGE_INIT = function() {
   var sliderSub = document.getElementById('sliderSub');
   slider.max = latest;
   slider.value = latest;
-  sliderLabel.textContent = VERSIONS[latest].version + ' â€” ' + VERSIONS[latest].name;
+  sliderLabel.textContent = VERSIONS[latest].version + ' &mdash; ' + VERSIONS[latest].name;
   sliderSub.textContent = VERSIONS[latest].desc;
 
   function updateAll(idx) {
@@ -593,14 +593,14 @@ window.FORGE_INIT = function() {
 
     buildLedger(nowArr, prevArr);
 
-    sliderLabel.textContent = v.version + ' â€” ' + v.name;
+    sliderLabel.textContent = v.version + ' &mdash; ' + v.name;
     sliderSub.textContent = v.desc;
   }
 
   slider.addEventListener('input', function(e) { updateAll(parseInt(e.target.value)); });
 
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // VERSION TIMELINE â€” auto-generated from data
+  // VERSION TIMELINE &mdash; auto-generated from data
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   function buildTimeline(activeIdx) {
     var tl = document.getElementById('versionTimeline');
@@ -634,7 +634,7 @@ window.FORGE_INIT = function() {
   buildTimeline(latest);
 
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // RING PROGRESS â€” shows current ring status
+  // RING PROGRESS &mdash; shows current ring status
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   function buildRingProgress(scores) {
     var rp = document.getElementById('ringProgress');
@@ -645,7 +645,7 @@ window.FORGE_INIT = function() {
     var ringNames = ['Raw Steel','Forged','Ground','Heat Treated','Finished','Heirloom'];
     var currentRing = Math.min(Math.floor(min / 10), 5);
     var ringName = ringNames[currentRing];
-    rp.innerHTML = '<strong style="color:#e6edf3;">Current Ring:</strong> <span style="color:' + ['#f85149','#f0883e','#d29922','#3fb950','#58a6ff','#bc8cff'][currentRing] + ';font-weight:700;">' + (currentRing+1) + ' Â· ' + ringName + '</span>' +
+    rp.innerHTML = '<strong style="color:#e6edf3;">Current Ring:</strong> <span style="color:' + ['#f85149','#f0883e','#d29922','#3fb950','#58a6ff','#bc8cff'][currentRing] + ';font-weight:700;">' + (currentRing+1) + ' &middot; ' + ringName + '</span>' +
       '&nbsp;&nbsp;|&nbsp;&nbsp;<strong style="color:#e6edf3;">Avg:</strong> ' + avg +
       '&nbsp;&nbsp;|&nbsp;&nbsp;<strong style="color:#e6edf3;">Min:</strong> ' + min +
       '&nbsp;&nbsp;|&nbsp;&nbsp;<strong style="color:#e6edf3;">Max:</strong> ' + max +
@@ -654,7 +654,7 @@ window.FORGE_INIT = function() {
   buildRingProgress(nowScores);
 
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // UPDATE ALL â€” patched to include new sections
+  // UPDATE ALL &mdash; patched to include new sections
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   var _origUpdateAll = updateAll;
   updateAll = function(idx) {
@@ -671,12 +671,12 @@ window.FORGE_INIT();
 </script>
 
 <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-     LIVE-READ UPGRADE â€” replaces hardcoded VERSIONS with Supabase data
+     LIVE-READ UPGRADE &mdash; replaces hardcoded VERSIONS with Supabase data
      when reachable. Silent fallback to hardcoded on any failure.
      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <script>
 (function() {
-  if (!window.supabase || !window.supabase.createClient) return; // library failed to load â†’ keep fallback
+  if (!window.supabase || !window.supabase.createClient) return; // library failed to load &rarr; keep fallback
   var SUPABASE_URL = 'https://twrlvnfszohyrmivdhre.supabase.co';
   var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3cmx2bmZzem9oeXJtaXZkaHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NjkxMTMsImV4cCI6MjA5MDE0NTExM30.o96DFNbBObst0EAmX51rnRFXzu8oTN1o-HNAxN7MY8A';
   var supa;
@@ -694,7 +694,7 @@ window.FORGE_INIT();
   }
   function extractName(summary) {
     if (!summary) return '';
-    var dash = summary.indexOf(' â€” ');
+    var dash = summary.indexOf(' &mdash; ');
     if (dash > -1) return summary.slice(0, dash);
     var period = summary.indexOf('.');
     if (period > -1 && period < 60) return summary.slice(0, period);
@@ -716,7 +716,7 @@ window.FORGE_INIT();
     var metrics = metricsRes.data || [];
     if (!versions.length || !metrics.length) return;
 
-    // Build metric_id â†’ array index using the canonical metricLabels order
+    // Build metric_id &rarr; array index using the canonical metricLabels order
     var metricIdToIdx = {};
     metrics.forEach(function(m) {
       var idx = metricLabels.indexOf(m.name);
@@ -731,7 +731,7 @@ window.FORGE_INIT();
       scoresByDate[d].push(s);
     });
 
-    // Build new VERSIONS â€” chronological, Supabase as source of truth
+    // Build new VERSIONS &mdash; chronological, Supabase as source of truth
     var newVersions = versions.map(function(v) {
       var dateKey = (v.created_at || '').slice(0,10);
       var matchingScores = scoresByDate[dateKey] || [];
@@ -761,7 +761,7 @@ window.FORGE_INIT();
       }
     });
 
-    // Stitch in any hardcoded versions that aren't in DB yet (e.g. v0.1â€“v0.6 not migrated)
+    // Stitch in any hardcoded versions that aren't in DB yet (e.g. v0.1&ldquo;v0.6 not migrated)
     var newByVersion = {};
     newVersions.forEach(function(v) { newByVersion[v.version] = true; });
     var stitched = newVersions.slice();
@@ -787,7 +787,7 @@ window.FORGE_INIT();
     if (typeof window.FORGE_INIT === 'function') {
       try { window.FORGE_INIT(); } catch (e) { console.warn('[forge] re-init failed', e); }
     }
-    console.info('[forge] live data loaded â€” ' + stitched.length + ' versions');
+    console.info('[forge] live data loaded &mdash; ' + stitched.length + ' versions');
   }).catch(function(err) {
     console.info('[forge] live-read errored, keeping hardcoded VERSIONS', err);
   });
@@ -795,10 +795,10 @@ window.FORGE_INIT();
 </script>
 
 <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-     DATA BLOCK POINTERS â€” for future-you editing this page
+     DATA BLOCK POINTERS &mdash; for future-you editing this page
      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
      â€¢ Page config (title, subtabs, stats): window.PAGE near the top
-       of <head>. Add a subtab â†’ add one entry to subtabs[] AND wrap
+       of <head>. Add a subtab &rarr; add one entry to subtabs[] AND wrap
        its HTML in <div data-subtab="<id>">...</div>. Shell hides
        non-matching sections automatically (see cc-shell.js ~L244).
      â€¢ Version data: VERSIONS array in the "DATA BLOCK" script block
@@ -807,7 +807,7 @@ window.FORGE_INIT();
      â€¢ Metrics: metricLabels + metricColors arrays (same block).
        Adding a metric requires extending every scores[] array too.
      â€¢ Engine (radar, plugins, slider, ledger, timeline) lives in the
-       bottom <script> marked "ENGINE â€” DO NOT EDIT BELOW THIS LINE".
+       bottom <script> marked "ENGINE &mdash; DO NOT EDIT BELOW THIS LINE".
      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 </body>
 </html>
