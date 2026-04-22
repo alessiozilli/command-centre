@@ -173,7 +173,7 @@
       roadmap:  { title: 'Roadmap · Active', tag: 'LIVE',     pos: { x:0,  y:6,  w:6,  h:4 } },
       usage:    { title: 'Usage Meter',      tag: 'STATIC',   pos: { x:6,  y:6,  w:6,  h:4 } },
       radar:    { title: 'Forge Radar',      tag: 'LIVE',     pos: { x:0,  y:10, w:4,  h:5 } },
-      calendar: { title: 'Upcoming Events',  tag: 'PHASE 4',  pos: { x:4,  y:10, w:4,  h:5 } },
+      calendar: { title: 'Upcoming Events',  tag: 'LIVE',     pos: { x:4,  y:10, w:4,  h:5 } },
       finance:  { title: 'Finance Snapshot', tag: 'STATIC',   pos: { x:8,  y:10, w:4,  h:5 } },
       links:    { title: 'Quick Links',      tag: 'LOCAL',    pos: { x:0,  y:15, w:6,  h:4 } },
       messages: { title: 'Pending Messages', tag: 'PHASE 5',  pos: { x:6,  y:15, w:6,  h:4 } }
@@ -512,13 +512,62 @@
     }
 
     // ─── Widget: Calendar placeholder (2) ────────────────────
-    function mountCalendar() {
-      setBody('calendar', `<div class="placeholder-center">
-        <div class="icon">📅</div>
-        <div class="msg">Google Calendar widget ships in Phase 4.</div>
-        <div class="note">Reads admin@azcustomknives.com · today + 7 days</div>
-      </div>`);
-      return Promise.resolve();
+    async function mountCalendar() {
+      try {
+        const nowIso = new Date().toISOString();
+        const { data, error } = await supa.from('calendar_events')
+          .select('id,summary,description,start_time,end_time,all_day,html_link')
+          .gte('end_time', nowIso)
+          .order('start_time', { ascending: true })
+          .limit(12);
+        if (error) throw error;
+        if (!data || !data.length) {
+          setBody('calendar', `<div class="placeholder-center">
+            <div class="icon">📅</div>
+            <div class="msg">No upcoming events.</div>
+            <div class="note"><a href="https://calendar.google.com/calendar/u/0/r/week" target="_blank" style="color:#58a6ff;">Open Google Calendar →</a></div>
+          </div>`);
+          return;
+        }
+
+        const today = new Date(); today.setHours(0,0,0,0);
+        const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
+        const toLocalDate = (iso) => { const d = new Date(iso); d.setHours(0,0,0,0); return d; };
+        const dateLabel = (d) => {
+          if (d.getTime() === today.getTime()) return 'TODAY';
+          if (d.getTime() === tomorrow.getTime()) return 'TOMORROW';
+          return d.toLocaleDateString('en-CA', { weekday:'short', month:'short', day:'numeric' });
+        };
+        const timeLabel = (iso) => new Date(iso).toLocaleTimeString('en-CA', { hour:'numeric', minute:'2-digit', hour12:true });
+
+        const buckets = new Map();
+        data.forEach(ev => {
+          const d = toLocalDate(ev.start_time);
+          const key = d.getTime();
+          if (!buckets.has(key)) buckets.set(key, { label: dateLabel(d), events: [] });
+          buckets.get(key).events.push(ev);
+        });
+
+        const sections = Array.from(buckets.values()).map(b => {
+          const rows = b.events.map(ev => {
+            const time = ev.all_day ? 'all day' : timeLabel(ev.start_time);
+            const link = ev.html_link || 'https://calendar.google.com/calendar/u/0/r/week';
+            return `<div class="task-li" style="cursor:pointer;" onclick="window.open('${esc(link)}','_blank')">
+              <span class="dot" style="background:#58a6ff"></span>
+              <span class="t">${esc(ev.summary || '(untitled)')}</span>
+              <span class="due">${esc(time)}</span>
+            </div>`;
+          }).join('');
+          return `<div style="margin-bottom:0.6rem;">
+            <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.08em;color:#58a6ff;margin-bottom:0.25rem;">${esc(b.label)}</div>
+            ${rows}
+          </div>`;
+        }).join('');
+
+        setBody('calendar', sections + `<div style="margin-top:0.3rem;"><a href="https://calendar.google.com/calendar/u/0/r/week" target="_blank" style="color:#58a6ff;font-size:0.78rem;text-decoration:none;">Open full calendar →</a></div>`);
+      } catch(e) {
+        setBody('calendar', `<div class="err">Load failed: ${esc(e.message||e)}</div>`);
+      }
     }
 
     // ─── Widget: Pending Messages placeholder (8) ────────────
