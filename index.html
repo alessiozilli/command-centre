@@ -1,21 +1,19 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src 'self' https://twrlvnfszohyrmivdhre.supabase.co wss://twrlvnfszohyrmivdhre.supabase.co; img-src 'self' data: https:;">
   <title>AZCK Command Centre</title>
   <link rel="icon" type="image/svg+xml" href="assets/az-sigil.svg">
+  <!-- Supabase must load before auth.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script defer src="auth.js"></script>
   <style>
     :root {
-      --bg: #0d1117;
-      --card: #161b22;
-      --border: #30363d;
-      --text: #e6edf3;
-      --muted: #8b949e;
-      --accent: #58a6ff;
-      --danger: #f85149;
-      --success: #238636;
+      --bg: #0d1117; --card: #161b22; --border: #30363d;
+      --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff;
+      --danger: #f85149; --success: #238636;
     }
     * { box-sizing: border-box; }
     html, body { height: 100%; margin: 0; }
@@ -27,69 +25,40 @@
     }
     .login-card {
       width: 100%; max-width: 380px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 2.5rem 2rem 2rem;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-      text-align: center;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 2.5rem 2rem 2rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4); text-align: center;
     }
     .sigil-wrap {
       width: 140px; height: 140px; margin: 0 auto 1.25rem;
       display: flex; align-items: center; justify-content: center;
     }
     .sigil-wrap img { width: 100%; height: 100%; }
-    h1 {
-      font-size: 1.15rem; font-weight: 600; letter-spacing: 0.04em;
-      margin: 0 0 0.25rem; color: var(--text);
-    }
-    .subtitle {
-      color: var(--muted); font-size: 0.85rem; letter-spacing: 0.03em;
-      margin: 0 0 1.75rem;
-    }
+    h1 { font-size: 1.15rem; font-weight: 600; letter-spacing: 0.04em; margin: 0 0 0.25rem; }
+    .subtitle { color: var(--muted); font-size: 0.85rem; letter-spacing: 0.03em; margin: 0 0 1.75rem; }
     .field { text-align: left; margin-bottom: 1rem; }
     .field label {
       display: block; font-size: 0.78rem; color: var(--muted);
-      text-transform: uppercase; letter-spacing: 0.08em;
-      margin-bottom: 0.4rem;
+      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.4rem;
     }
-    .field input[type="password"] {
+    .field input {
       width: 100%; background: var(--bg); color: var(--text);
       border: 1px solid var(--border); border-radius: 8px;
-      padding: 0.75rem 0.9rem; font-size: 1rem;
-      transition: border-color 0.15s;
+      padding: 0.75rem 0.9rem; font-size: 1rem; transition: border-color 0.15s;
     }
-    .field input[type="password"]:focus {
-      outline: 0; border-color: var(--accent);
-    }
-    .remember {
-      display: flex; align-items: center; gap: 0.5rem;
-      margin: 0.25rem 0 1.5rem;
-      font-size: 0.9rem; color: var(--muted); cursor: pointer;
-      user-select: none;
-    }
-    .remember input { accent-color: var(--accent); cursor: pointer; }
+    .field input:focus { outline: 0; border-color: var(--accent); }
     .submit {
       width: 100%; background: var(--success); color: #fff; border: 0;
       border-radius: 8px; padding: 0.8rem 1rem; font-size: 1rem;
-      font-weight: 600; cursor: pointer; transition: background 0.15s;
+      font-weight: 600; cursor: pointer; transition: background 0.15s; margin-top: 0.5rem;
     }
     .submit:hover { background: #2ea043; }
     .submit:disabled { opacity: 0.6; cursor: not-allowed; }
-    .error {
-      margin-top: 1rem; color: var(--danger); font-size: 0.88rem;
-      min-height: 1.2em;
-    }
-    .footer-links {
-      margin-top: 1.5rem;
-      font-size: 0.8rem; color: var(--muted);
-    }
-    .footer-links a { color: var(--muted); text-decoration: none; border-bottom: 1px dotted var(--border); }
-    .footer-links a:hover { color: var(--accent); border-color: var(--accent); }
+    .error { margin-top: 1rem; color: var(--danger); font-size: 0.88rem; min-height: 1.2em; }
   </style>
 </head>
 <body>
-  <form class="login-card" id="login-form" autocomplete="off">
+  <form class="login-card" id="login-form" autocomplete="on">
     <div class="sigil-wrap">
       <img src="assets/az-sigil.svg" alt="AZ Custom Knives">
     </div>
@@ -97,48 +66,41 @@
     <p class="subtitle">A Slice of Excellence</p>
 
     <div class="field">
-      <label for="pw">Access code</label>
-      <input type="password" id="pw" autocomplete="current-password" autofocus required>
+      <label for="email">Email</label>
+      <input type="email" id="email" autocomplete="email" autofocus required
+             placeholder="you@azcustomknives.com">
+    </div>
+    <div class="field">
+      <label for="pw">Password</label>
+      <input type="password" id="pw" autocomplete="current-password" required>
     </div>
 
-    <label class="remember">
-      <input type="checkbox" id="remember" checked>
-      <span>Remember me on this device</span>
-    </label>
-
-    <button type="submit" class="submit" id="submit">Enter</button>
+    <button type="submit" class="submit" id="submit">Sign in</button>
     <div class="error" id="error" role="alert"></div>
   </form>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // auth.js guard auto-runs. If we're here and already authed, it redirects us off.
       const form  = document.getElementById('login-form');
+      const email = document.getElementById('email');
       const pw    = document.getElementById('pw');
-      const rem   = document.getElementById('remember');
       const btn   = document.getElementById('submit');
       const err   = document.getElementById('error');
 
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         err.textContent = '';
-        btn.disabled = true; btn.textContent = 'Checkingâ€¦';
+        btn.disabled = true; btn.textContent = 'Signing in…';
         try {
-          const ok = await window.ccLogin(pw.value, rem.checked);
-          if (!ok) {
-            err.textContent = 'Incorrect access code.';
-            pw.select();
-            btn.disabled = false; btn.textContent = 'Enter';
-            return;
-          }
-          // Honour preserved intended URL if any
+          await window.ccLogin(email.value.trim(), pw.value);
           const target = sessionStorage.getItem(window.CC_AUTH.REDIRECT_KEY)
                       || window.CC_AUTH.HOME_PAGE;
           sessionStorage.removeItem(window.CC_AUTH.REDIRECT_KEY);
           window.location.replace(target);
         } catch (ex) {
-          err.textContent = 'Error: ' + (ex.message || ex);
-          btn.disabled = false; btn.textContent = 'Enter';
+          err.textContent = ex.message || 'Sign-in failed. Check your email and password.';
+          pw.select();
+          btn.disabled = false; btn.textContent = 'Sign in';
         }
       });
     });
