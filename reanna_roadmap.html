@@ -4,16 +4,34 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Reanna's Roadmap â€” AZCK Operations & Growth</title>
+<script>
+window.PAGE = {
+  id: 'reanna_roadmap',
+  title: "Reanna's Roadmap",
+  subtitle: 'Operations, Grants & Growth — Strategic plan for AZCK Ltd.',
+  subtabs: [
+    { id: 'overview', label: 'Overview' },
+    { id: 'phase1',   label: 'Phase 1 — Foundation' },
+    { id: 'phase2',   label: 'Phase 2 — Communications' },
+    { id: 'phase3',   label: 'Phase 3 — Social Media' },
+    { id: 'phase4',   label: 'Phase 4 — Scale' },
+    { id: 'align',    label: 'Grants & Actions' }
+  ]
+};
+</script>
+<link rel="stylesheet" href="cc-shell.css">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: #0d1117;
     color: #e6edf3;
+    line-height: 1.7;
+  }
+  .page-wrap {
     padding: 24px;
     max-width: 1200px;
     margin: 0 auto;
-    line-height: 1.7;
   }
   h1 { font-size: 32px; font-weight: 700; color: #f0883e; margin-bottom: 4px; }
   h2 { font-size: 22px; font-weight: 700; margin: 40px 0 16px; }
@@ -216,8 +234,11 @@
   }
 </style>
   <script defer src="auth.js"></script>
+  <script defer src="cc-shell.js"></script>
 </head>
 <body>
+<div class="page-wrap">
+<div data-subtab="overview">
 
 <a href="reanna.html" class="back-link">â† Back to Command Centre</a>
 
@@ -286,6 +307,8 @@
   </div>
 </div>
 
+</div><!-- end overview -->
+<div data-subtab="phase1">
 <hr class="divider">
 
 <!-- PHASE 1 -->
@@ -345,6 +368,8 @@
   </ul>
 </div>
 
+</div><!-- end phase1 -->
+<div data-subtab="phase2">
 <hr class="divider">
 
 <!-- PHASE 2 -->
@@ -377,6 +402,8 @@
   </div>
 </div>
 
+</div><!-- end phase2 -->
+<div data-subtab="phase3">
 <hr class="divider">
 
 <!-- PHASE 3 -->
@@ -414,6 +441,8 @@
   </div>
 </div>
 
+</div><!-- end phase3 -->
+<div data-subtab="phase4">
 <hr class="divider">
 
 <!-- PHASE 4 -->
@@ -446,6 +475,8 @@
   </div>
 </div>
 
+</div><!-- end phase4 -->
+<div data-subtab="align">
 <hr class="divider">
 
 <!-- GRANT ALIGNMENT -->
@@ -495,7 +526,9 @@
 
 <div class="quote">"The grants fund the tech. The tech powers the business. The business earns the revenue. It's a flywheel."</div>
 
-<p style="text-align:center; color:#8b949e; font-size:13px; margin-top:40px;">Reanna's Roadmap v1.0 â€” April 2026 â€” Built by Forge for Reanna</p>
+<p style=”text-align:center; color:#8b949e; font-size:13px; margin-top:40px;”>Reanna's Roadmap v1.0 â€” April 2026 â€” Built by Forge for Reanna</p>
+</div><!-- end align -->
+</div><!-- end page-wrap -->
 
 </body>
 </html>

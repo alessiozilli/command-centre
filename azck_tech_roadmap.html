@@ -4,16 +4,34 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AZCK Tech Roadmap â€” GitHub + Supabase + Netlify</title>
+<script>
+window.PAGE = {
+  id: 'azck_tech_roadmap',
+  title: 'AZCK Tech Roadmap',
+  subtitle: 'GitHub + Supabase + Netlify — Strategic platform plan',
+  subtabs: [
+    { id: 'overview', label: 'Overview' },
+    { id: 'phase1',   label: 'Phase 1 — Foundation' },
+    { id: 'phase2',   label: 'Phase 2 — Connect' },
+    { id: 'phase3',   label: 'Phase 3 — Monetize' },
+    { id: 'phase4',   label: 'Phase 4 — Scale' },
+    { id: 'costs',    label: 'Costs & Grants' }
+  ]
+};
+</script>
+<link rel="stylesheet" href="cc-shell.css">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: #0d1117;
     color: #e6edf3;
+    line-height: 1.7;
+  }
+  .page-wrap {
     padding: 24px;
     max-width: 1200px;
     margin: 0 auto;
-    line-height: 1.7;
   }
   h1 { font-size: 32px; font-weight: 700; color: #990000; margin-bottom: 4px; }
   h2 { font-size: 22px; font-weight: 700; margin: 40px 0 16px; }
@@ -199,9 +217,11 @@
   .revenue-card .how { font-size: 11px; color: #8b949e; margin-top: 6px; }
 </style>
   <script defer src="auth.js"></script>
+  <script src="cc-shell.js" defer></script>
 </head>
 <body>
-
+<div class="page-wrap">
+<div data-subtab="overview">
 <h1>AZCK Tech Roadmap</h1>
 <p class="subtitle">GitHub + Supabase + Netlify â€” Strategic plan for AZ Custom Knives Ltd. | April 5, 2026</p>
 
@@ -282,8 +302,10 @@
   </div>
 </div>
 
-<hr class="divider">
+</div><!-- end overview -->
 
+<div data-subtab="phase1">
+<hr class="divider">
 <!-- PHASE 1 -->
 <h2 style="color:#3fb950;">Phase 1 â€” Foundation <span class="phase-badge badge-now">NOW</span></h2>
 <p>Set up Supabase once. Everything else plugs into it. This phase costs <span class="hl-green">$0</span> and unlocks Phases 2â€“4.</p>
@@ -331,6 +353,8 @@
   <div class="detail" style="margin-top:12px;"><strong>Time estimate:</strong> 2 hours (code is done)</div>
 </div>
 
+</div><!-- end phase1 -->
+<div data-subtab="phase2">
 <hr class="divider">
 
 <!-- PHASE 2 -->
@@ -384,6 +408,8 @@
   </div>
 </div>
 
+</div><!-- end phase2 -->
+<div data-subtab="phase3">
 <hr class="divider">
 
 <!-- PHASE 3 -->
@@ -454,6 +480,8 @@
   </div>
 </div>
 
+</div><!-- end phase3 -->
+<div data-subtab="phase4">
 <hr class="divider">
 
 <!-- PHASE 4 -->
@@ -483,6 +511,8 @@
   </div>
 </div>
 
+</div><!-- end phase4 -->
+<div data-subtab="costs">
 <hr class="divider">
 
 <!-- COST BREAKDOWN -->
@@ -619,7 +649,9 @@
   <p style="margin-bottom:0;">The foundation step â€” creating the Supabase project â€” takes <strong>30 minutes</strong> and unblocks <strong>everything</strong>.</p>
 </div>
 
-<p style="text-align:center;color:#8b949e;font-size:12px;margin-top:40px;">AZCK Tech Roadmap v1.0 â€” April 5, 2026 â€” Built by Forge for Alessio</p>
+<p style=”text-align:center;color:#8b949e;font-size:12px;margin-top:40px;”>AZCK Tech Roadmap v1.0 â€” April 5, 2026 â€” Built by Forge for Alessio</p>
+</div><!-- end costs -->
+</div><!-- end page-wrap -->
 
 </body>
 </html>

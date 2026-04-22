@@ -7,11 +7,6 @@
     <title>Reanna â€” AZCK Command Centre</title>
     <link rel="stylesheet" href="cc-shell.css">
     <style>
-        /* Page-specific overrides so cc-shell banner and her existing header coexist cleanly */
-        #appContent > nav.pill-nav { display: none !important; }
-        #appContent > header { border-top: 1px solid #30363d; }
-    </style>
-    <style>
         /* ===== RESET & GLOBAL ===== */
         * {
             margin: 0;
@@ -727,10 +722,10 @@
           { id: 'done',     label: 'Done',      value: 'â€”' },
           { id: 'synced',   label: 'Synced',    value: 'â€”' }
         ],
-        // Reserved for future JSON-driven layout extension (List/Kanban/Detail like Alessio's).
-        // Shape mirrors alessio.html PAGE â€” empty here by design.
         views: [],
-        actions: []
+        actions: [
+          { label: 'Sign Out', onClick: 'handleLogout' }
+        ]
       };
     </script>
     <script src="cc-shell.js" defer></script>
@@ -739,35 +734,16 @@
 <body>
     <!-- ===== APP CONTENT ===== -->
     <div id="appContent">
-    <header>
-        <h1>Reanna's Command Centre</h1>
-        <div class="header-right">
-            <div class="header-date" id="headerDate"></div>
-            <div class="user-bar">
-                <span class="user-name" id="userName"></span>
-                <span class="user-role" id="userRole"></span>
-                <button class="btn-logout" onclick="handleLogout()">Sign Out</button>
-            </div>
-            <div class="status-bar">
-                <div class="status-item">
-                    <div class="status-label">Open</div>
-                    <div class="status-count" id="statusOpen">0</div>
-                </div>
-                <div class="status-item">
-                    <div class="status-label">Today</div>
-                    <div class="status-count" id="statusToday">0</div>
-                </div>
-                <div class="status-item done">
-                    <div class="status-label">Done</div>
-                    <div class="status-count" id="statusDone">0</div>
-                </div>
-                <div class="status-item synced">
-                    <div class="status-label">Synced</div>
-                    <div class="status-count" id="statusSynced">-</div>
-                </div>
-            </div>
-        </div>
-    </header>
+    <!-- Hidden stat store — JS writes here, pushStats() reads to cc-shell -->
+    <div style="display:none">
+        <span id="headerDate"></span>
+        <span id="userName"></span>
+        <span id="userRole"></span>
+        <span id="statusOpen">0</span>
+        <span id="statusToday">0</span>
+        <span id="statusDone">0</span>
+        <span id="statusSynced">-</span>
+    </div>
 
     <nav class="pill-nav" id="pillNav">
         <a href="#" class="active">Tasks</a>
@@ -915,6 +891,7 @@
         // Fires after cc-shell injects the banner + stats bar. Does NOT interfere with
         // Reanna's existing layout â€” just forwards stat values up to the shell.
         document.addEventListener('cc-shell-ready', () => {
+            CC.registerAction('handleLogout', handleLogout);
             // Sync her existing status-bar values into shell stats whenever they change.
             const keys = { open: 'statusOpen', today: 'statusToday', done: 'statusDone', synced: 'statusSynced' };
             function pushStats() {

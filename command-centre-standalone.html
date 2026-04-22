@@ -1,84 +1,81 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Command Centre â€” Alessio</title>
-<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&family=Lexend+Mega:wght@700&display=swap" rel="stylesheet">
+<title>All Tasks — AZCK Command Centre</title>
+<script>
+window.PAGE = {
+  id: 'standalone',
+  title: 'All Tasks',
+  subtitle: 'Personal · AZ Custom Knives · Quad Fang · 3D Printing · Family',
+  subtabs: [
+    { id: 'per', label: 'Personal' },
+    { id: 'az',  label: 'AZ Custom Knives' },
+    { id: 'qf',  label: 'Quad Fang' },
+    { id: 'td',  label: '3D Printing' },
+    { id: 'fam', label: 'Family' }
+  ],
+  stats: [
+    { label: 'Open',  value: '—' },
+    { label: 'Today', value: '—' },
+    { label: 'Done',  value: '—' }
+  ],
+  actions: [
+    { label: '⇄ Sync / Export', onClick: 'openSync' }
+  ]
+};
+</script>
+<link rel="stylesheet" href="cc-shell.css">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+/* ── PAGE-SPECIFIC: task cards, modals, filter bar ── */
 :root{
   --az:#990000;--qf:#c4922a;--per:#3a7fbf;--td:#2a9e8f;--fam:#9b72cf;
   --bg:#0f0f0f;--surf:#1a1a1a;--surf2:#242424;--surf3:#2e2e2e;
   --text:#f0ede8;--text2:#a09c96;--text3:#6a6762;--border:#2e2e2e;
-  --r:10px;--font:'Lexend',sans-serif;
+  --r:10px;
 }
-body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:16px;line-height:1.75;letter-spacing:0.02em;min-height:100vh}
-.app{display:flex;flex-direction:column;min-height:100vh}
-.hdr{padding:14px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surf);flex-wrap:wrap;gap:12px}
-.hdr-left{display:flex;flex-direction:column}
-.brand{font-family:'Lexend Mega',sans-serif;font-size:15px;letter-spacing:0.07em;color:var(--text)}
-.datelbl{font-size:11px;color:var(--text3);font-weight:300;margin-top:1px}
-.hdr-right{display:flex;align-items:center;gap:20px}
-.hdr-stats{display:flex;gap:20px}
-.stat{text-align:center}
-.stat-n{font-size:20px;font-weight:600;line-height:1}
-.stat-l{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;margin-top:3px}
-.s-open{color:var(--text)}.s-today{color:var(--qf)}.s-done{color:#6ec06e}
-.sync-btn{padding:7px 14px;border-radius:var(--r);font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:var(--font);display:flex;align-items:center;gap:6px;transition:all .15s;white-space:nowrap}
-.sync-btn:hover{background:var(--surf2);border-color:var(--text3);color:var(--text)}
-.sync-icon{font-size:14px}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:background .3s}
-.dot.live{background:#6ec06e}
-.dot.err{background:#e07070}
-.dot.busy{background:var(--qf);animation:blink 1s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-.tabs{display:flex;background:var(--surf);border-bottom:1px solid var(--border);padding:0 24px;gap:2px;overflow-x:auto;scrollbar-width:none}
-.tabs::-webkit-scrollbar{display:none}
-.tab{padding:12px 16px;font-size:12px;font-weight:500;cursor:pointer;border-bottom:3px solid transparent;color:var(--text3);transition:color .15s,border-color .15s;font-family:var(--font);background:none;border-top:none;border-left:none;border-right:none;letter-spacing:0.03em;white-space:nowrap;flex-shrink:0}
-.tab:hover{color:var(--text2)}
-.tab.a-per{color:var(--per);border-bottom-color:var(--per)}
-.tab.a-az{color:var(--az);border-bottom-color:var(--az)}
-.tab.a-qf{color:var(--qf);border-bottom-color:var(--qf)}
-.tab.a-td{color:var(--td);border-bottom-color:var(--td)}
-.tab.a-fam{color:var(--fam);border-bottom-color:var(--fam)}
-.tc{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;padding:0 5px;font-size:10px;font-weight:700;margin-left:5px}
-.tc-per{background:rgba(58,127,191,.18);color:var(--per)}
-.tc-az{background:rgba(153,0,0,.2);color:var(--az)}
-.tc-qf{background:rgba(196,146,42,.18);color:var(--qf)}
-.tc-td{background:rgba(42,158,143,.18);color:var(--td)}
-.tc-fam{background:rgba(155,114,207,.18);color:var(--fam)}
-.main{flex:1;padding:20px 24px}
-.loading-main{display:flex;align-items:center;justify-content:center;padding:60px;color:var(--text3);font-size:14px;gap:10px}
-.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--per);border-radius:50%;animation:spin .7s linear infinite}
+body{font-size:16px;line-height:1.75;letter-spacing:0.02em}
+/* Content area */
+#main{padding:20px 24px}
+/* Loading */
+.loading-main{display:flex;align-items:center;justify-content:center;padding:60px;color:var(--cc-text-muted,#8b949e);font-size:14px;gap:10px}
+.spinner{width:18px;height:18px;border:2px solid var(--cc-border,#30363d);border-top-color:var(--per);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+/* Task list header */
 .ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px}
 .pt{font-size:20px;font-weight:600}
 .pt small{font-weight:300;font-size:13px;color:var(--text3);margin-left:8px}
-.add-btn{padding:8px 16px;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:var(--font);letter-spacing:0.02em;display:flex;align-items:center;gap:6px;transition:opacity .15s;white-space:nowrap}
+.add-btn{padding:8px 16px;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:inherit;letter-spacing:0.02em;display:flex;align-items:center;gap:6px;transition:opacity .15s;white-space:nowrap}
 .add-btn:hover{opacity:.85}
 .ab-per{background:var(--per);color:#fff}.ab-az{background:var(--az);color:#fff}
 .ab-qf{background:var(--qf);color:#1a0e00}.ab-td{background:var(--td);color:#fff}.ab-fam{background:var(--fam);color:#fff}
+/* Summary row */
 .sr{display:flex;gap:14px;margin-bottom:6px;flex-wrap:wrap}
 .sr span{font-size:12px;color:var(--text3)}
 .sr strong{color:var(--text2);font-weight:500}
+/* Progress bar */
 .pb-wrap{height:3px;background:var(--surf3);border-radius:2px;margin-bottom:14px;overflow:hidden}
 .pb{height:100%;border-radius:2px;transition:width .5s cubic-bezier(.4,0,.2,1)}
 .pb-per{background:var(--per)}.pb-az{background:var(--az)}.pb-qf{background:var(--qf)}.pb-td{background:var(--td)}.pb-fam{background:var(--fam)}
+/* Filter bar — secondary row inside content */
 .fb{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
-.fb-btn{padding:4px 12px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text3);font-family:var(--font);transition:all .15s}
+.fb-btn{padding:4px 12px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text3);font-family:inherit;transition:all .15s}
 .fb-btn:hover{border-color:var(--text3);color:var(--text2)}
 .fb-btn.on{border-color:transparent;color:#fff}
 .fb-per.on{background:var(--per)}.fb-az.on{background:var(--az)}.fb-qf.on{background:var(--qf)}
 .fb-td.on{background:var(--td)}.fb-fam.on{background:var(--fam)}
+/* Nozzle group header */
 .nozh{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--td);margin:18px 0 8px;display:flex;align-items:center;gap:8px}
 .nozh::after{content:'';flex:1;height:1px;background:var(--border)}
 .nozh:first-child{margin-top:0}
+/* Task group + cards */
 .tg{display:flex;flex-direction:column;gap:8px}
 .card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:13px 15px;display:flex;align-items:flex-start;gap:11px;transition:border-color .15s,transform .1s;border-left-width:3px}
 .card:hover{transform:translateY(-1px);border-color:var(--surf3)}
 .card.done{opacity:.38}
 .bl-per{border-left-color:var(--per)}.bl-az{border-left-color:var(--az)}.bl-qf{border-left-color:var(--qf)}.bl-td{border-left-color:var(--td)}.bl-fam{border-left-color:var(--fam)}
+/* Checkbox */
 .chk{width:21px;height:21px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;cursor:pointer;margin-top:1px;transition:all .15s;display:flex;align-items:center;justify-content:center;font-size:11px;background:transparent;color:transparent}
 .chk:hover{border-color:var(--text2)}
 .ck-per{background:var(--per);border-color:var(--per);color:#fff}
@@ -86,6 +83,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:16
 .ck-qf{background:var(--qf);border-color:var(--qf);color:#1a0e00}
 .ck-td{background:var(--td);border-color:var(--td);color:#fff}
 .ck-fam{background:var(--fam);border-color:var(--fam);color:#fff}
+/* Task body */
 .tb{flex:1;min-width:0}
 .tt{font-size:14px;font-weight:500;line-height:1.45}
 .done .tt{text-decoration:line-through}
@@ -98,90 +96,74 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:16
 .due{font-size:11px;color:var(--text3)}
 .due.ov{color:#e07070}.due.tod{color:var(--qf)}
 .ntag{font-size:10px;font-weight:600;padding:2px 7px;border-radius:8px;background:rgba(42,158,143,.15);color:var(--td);letter-spacing:0.06em}
+/* Task action buttons */
 .ta{display:flex;gap:3px;margin-left:auto;flex-shrink:0}
-.ib{width:27px;height:27px;border-radius:6px;border:1px solid transparent;background:transparent;cursor:pointer;color:var(--text3);font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .15s;font-family:var(--font)}
+.ib{width:27px;height:27px;border-radius:6px;border:1px solid transparent;background:transparent;cursor:pointer;color:var(--text3);font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .15s;font-family:inherit}
 .ib:hover{background:var(--surf2);color:var(--text);border-color:var(--border)}
+/* Empty state */
 .empty{text-align:center;padding:50px 20px;color:var(--text3)}
 .empty-i{font-size:28px;margin-bottom:10px;opacity:.3}
 .empty-m{font-size:14px;font-weight:300}
+/* Add/Edit modal */
 .mo{position:fixed;inset:0;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;z-index:100;padding:16px}
 .mo.open{display:flex}
 .md{background:var(--surf);border:1px solid var(--surf3);border-radius:16px;padding:24px;width:100%;max-width:480px;max-height:92vh;overflow-y:auto}
 .md-title{font-size:17px;font-weight:600;margin-bottom:20px}
 .fg{margin-bottom:14px}
 .fl{display:block;font-size:11px;color:var(--text2);margin-bottom:5px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase}
-.fi,.fta,.fsl{width:100%;background:var(--surf2);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;outline:none;transition:border-color .15s}
+.fi,.fta,.fsl{width:100%;background:var(--surf2);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;color:var(--text);font-family:inherit;font-size:14px;line-height:1.5;outline:none;transition:border-color .15s}
 .fi:focus,.fta:focus,.fsl:focus{border-color:var(--text3)}
 .fta{resize:vertical;min-height:70px}
 .fsl{appearance:none;cursor:pointer}
 .fr{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .ma{display:flex;gap:8px;margin-top:18px;justify-content:flex-end}
-.bc{padding:9px 16px;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:var(--font)}
+.bc{padding:9px 16px;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:inherit}
 .bc:hover{background:var(--surf2)}
-.bs{padding:9px 20px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:var(--font)}
+.bs{padding:9px 20px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:inherit}
 .bs-per{background:var(--per);color:#fff}.bs-az{background:var(--az);color:#fff}
 .bs-qf{background:var(--qf);color:#1a0e00}.bs-td{background:var(--td);color:#fff}.bs-fam{background:var(--fam);color:#fff}
+/* Sync modal */
 .sync-mo{position:fixed;inset:0;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;z-index:100;padding:16px}
 .sync-mo.open{display:flex}
 .sync-md{background:var(--surf);border:1px solid var(--surf3);border-radius:16px;padding:24px;width:100%;max-width:480px;max-height:92vh;overflow-y:auto}
 .sync-md h2{font-size:17px;font-weight:600;margin-bottom:6px}
 .sync-md p{font-size:12px;color:var(--text2);line-height:1.65;margin-bottom:18px}
 .sync-status-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;font-size:12px;color:var(--text2)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:background .3s}
+.dot.live{background:#6ec06e}.dot.err{background:#e07070}.dot.busy{background:var(--qf);animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 .stabs{display:flex;gap:4px;margin-bottom:20px}
-.stab{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text3);font-family:var(--font);transition:all .15s}
+.stab{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text3);font-family:inherit;transition:all .15s}
 .stab.son{background:var(--surf3);color:var(--text);border-color:var(--surf3)}
 .sync-section h3{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);margin-bottom:10px}
 .code-box{background:var(--surf2);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;font-family:monospace;font-size:11px;color:var(--text2);word-break:break-all;max-height:80px;overflow-y:auto;margin-bottom:10px}
-.copy-btn{padding:7px 16px;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:var(--font);transition:all .15s}
+.copy-btn{padding:7px 16px;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:inherit;transition:all .15s}
 .copy-btn:hover{background:var(--surf2);color:var(--text)}
 .fta-sm{width:100%;background:var(--surf2);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;color:var(--text);font-family:monospace;font-size:12px;line-height:1.5;outline:none;resize:vertical;min-height:80px;transition:border-color .15s}
 .fta-sm:focus{border-color:var(--text3)}
-.import-btn{padding:9px 20px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:var(--font);background:var(--per);color:#fff;margin-top:10px;transition:opacity .15s}
+.import-btn{padding:9px 20px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:inherit;background:var(--per);color:#fff;margin-top:10px;transition:opacity .15s}
 .import-btn:hover{opacity:.85}
-.sync-close{padding:9px 16px;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:var(--font);margin-top:14px;width:100%}
+.sync-close{padding:9px 16px;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:inherit;margin-top:14px;width:100%}
 .sync-close:hover{background:var(--surf2)}
+/* Toast */
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--surf3);border:1px solid var(--border);border-radius:var(--r);padding:9px 18px;font-size:13px;font-weight:500;color:var(--text);z-index:200;transition:transform .3s cubic-bezier(.4,0,.2,1);pointer-events:none}
 .toast.show{transform:translateX(-50%) translateY(0)}
 @media(max-width:600px){
-  .hdr{padding:11px 16px}
-  .main{padding:14px 16px}
-  .tabs{padding:0 16px}
+  #main{padding:14px 16px}
   .fr{grid-template-columns:1fr}
 }
 </style>
-  <script defer src="auth.js"></script>
+<script defer src="auth.js"></script>
 </head>
 <body>
-<div class="app" id="main-app">
-  <div class="hdr">
-    <div class="hdr-left">
-      <div class="brand">COMMAND CENTRE</div>
-      <div class="datelbl" id="datelbl"></div>
-    </div>
-    <div class="hdr-right">
-      <div class="hdr-stats">
-        <div class="stat"><div class="stat-n s-open" id="s-open">0</div><div class="stat-l">Open</div></div>
-        <div class="stat"><div class="stat-n s-today" id="s-today">0</div><div class="stat-l">Today</div></div>
-        <div class="stat"><div class="stat-n s-done" id="s-done">0</div><div class="stat-l">Done</div></div>
-      </div>
-      <button class="sync-btn" onclick="openSync()"><span class="sync-icon">â‡„</span> Sync / Export</button>
-    </div>
-  </div>
-  <div class="tabs">
-    <button class="tab" id="tab-per" onclick="go('per')">Personal <span class="tc tc-per" id="tc-per">0</span></button>
-    <button class="tab" id="tab-az" onclick="go('az')">AZ Custom Knives <span class="tc tc-az" id="tc-az">0</span></button>
-    <button class="tab" id="tab-qf" onclick="go('qf')">Quad Fang <span class="tc tc-qf" id="tc-qf">0</span></button>
-    <button class="tab" id="tab-td" onclick="go('td')">3D Printing <span class="tc tc-td" id="tc-td">0</span></button>
-    <button class="tab" id="tab-fam" onclick="go('fam')">Family <span class="tc tc-fam" id="tc-fam">0</span></button>
-  </div>
-  <div class="main" id="main"><div class="loading-main"><div class="spinner"></div>Loading tasksâ€¦</div></div>
-</div>
+
+<div id="main"><div class="loading-main"><div class="spinner"></div>Loading tasks…</div></div>
 
 <div class="mo" id="mo">
   <div class="md">
     <div class="md-title" id="md-title">Add Task</div>
     <div class="fg"><label class="fl">Task Title</label><input class="fi" id="i-title" placeholder="What needs to get done?"></div>
-    <div class="fg"><label class="fl">Notes (optional)</label><textarea class="fta" id="i-notes" placeholder="Details, context, next stepsâ€¦"></textarea></div>
+    <div class="fg"><label class="fl">Notes (optional)</label><textarea class="fta" id="i-notes" placeholder="Details, context, next steps…"></textarea></div>
     <div class="fr">
       <div class="fg"><label class="fl">Priority</label>
         <select class="fsl" id="i-pri"><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option></select>
@@ -190,7 +172,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:16
     </div>
     <div class="fg" id="nozzle-row" style="display:none">
       <label class="fl">Nozzle Size</label>
-      <select class="fsl" id="i-nozzle"><option value="0.4">0.4 mm â€” standard</option><option value="0.2">0.2 mm â€” fine detail</option></select>
+      <select class="fsl" id="i-nozzle"><option value="0.4">0.4 mm – standard</option><option value="0.2">0.2 mm – fine detail</option></select>
     </div>
     <div class="ma">
       <button class="bc" onclick="closeM()">Cancel</button>
@@ -205,7 +187,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:16
     <p>Your tasks are stored in Supabase and sync live across all your devices automatically. Use Export Backup to save a copy of your data.</p>
     <div class="sync-status-row">
       <div class="dot" id="sync-dot"></div>
-      <span id="sync-lbl">connectingâ€¦</span>
+      <span id="sync-lbl">connecting…</span>
     </div>
     <div class="stabs">
       <button class="stab son" id="stab-exp" onclick="switchSync('export')">Export Backup</button>
@@ -221,7 +203,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:16
     <div id="sync-import" style="display:none">
       <div class="sync-section">
         <h3>Restore from backup</h3>
-        <textarea class="fta-sm" id="import-ta" placeholder="Paste your backup JSON hereâ€¦"></textarea>
+        <textarea class="fta-sm" id="import-ta" placeholder="Paste your backup JSON here…"></textarea>
         <button class="import-btn" onclick="importCode()">Restore Tasks</button>
       </div>
     </div>
@@ -230,7 +212,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:16
 </div>
 
 <div class="toast" id="toast"></div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="cc-shell.js" defer></script>
 <script>
 const LABELS={per:'Personal',az:'AZ Custom Knives',qf:'Quad Fang',td:'3D Printing',fam:'Family'};
 let sb=null,tab='per',tasks={per:[],az:[],qf:[],td:[],fam:[]},filter='all',editId=null;
@@ -250,18 +234,18 @@ const SEED=[
 {id:'p13',pillar:'per',title:'Basement: paint walls',notes:'',priority:'low',due:'',done:false,nozzle:''},
 {id:'p14',pillar:'per',title:'Basement: redo ceiling',notes:'',priority:'low',due:'',done:false,nozzle:''},
 {id:'a1',pillar:'az',title:'Warranty / restoration: rusty custom knife',notes:'Rust treatment and full restoration needed',priority:'high',due:'',done:false,nozzle:''},
-{id:'a2',pillar:'az',title:"Norm's knife â€” finish",notes:'Has been in the shop a couple of years. Low priority.',priority:'low',due:'',done:false,nozzle:''},
-{id:'a3',pillar:'az',title:"Michelle's Culinary Crew plate â€” pre-order",notes:'Pre-ordered. 3-week deadline.',priority:'high',due:'2026-04-14',done:false,nozzle:''},
-{id:'a4',pillar:'az',title:"Franco's Culinary Crew plate â€” pre-order",notes:'Pre-ordered. 3-week deadline.',priority:'high',due:'2026-04-14',done:false,nozzle:''},
-{id:'a5',pillar:'az',title:"Mike's knife (Surri's order) â€” finish",notes:'Same 3-week window as the Culinary Crew plates.',priority:'high',due:'2026-04-14',done:false,nozzle:''},
-{id:'a6',pillar:'az',title:"Tel's wife â€” new custom knife",notes:"First client's wife. Raptor or Raptor Elite in Crew Wear steel.",priority:'medium',due:'',done:false,nozzle:''},
-{id:'a7',pillar:'az',title:"Chase's Tanuki â€” custom order",notes:'Timeline unknown.',priority:'low',due:'',done:false,nozzle:''},
-{id:'a8',pillar:'az',title:'Raptor series â€” future batch',notes:'No pressing timeline.',priority:'low',due:'',done:false,nozzle:''},
-{id:'a9',pillar:'az',title:'Badger series â€” future batch',notes:'Future project.',priority:'low',due:'',done:false,nozzle:''},
+{id:'a2',pillar:'az',title:"Norm's knife – finish",notes:'Has been in the shop a couple of years. Low priority.',priority:'low',due:'',done:false,nozzle:''},
+{id:'a3',pillar:'az',title:"Michelle's Culinary Crew plate – pre-order",notes:'Pre-ordered. 3-week deadline.',priority:'high',due:'2026-04-14',done:false,nozzle:''},
+{id:'a4',pillar:'az',title:"Franco's Culinary Crew plate – pre-order",notes:'Pre-ordered. 3-week deadline.',priority:'high',due:'2026-04-14',done:false,nozzle:''},
+{id:'a5',pillar:'az',title:"Mike's knife (Surri's order) – finish",notes:'Same 3-week window as the Culinary Crew plates.',priority:'high',due:'2026-04-14',done:false,nozzle:''},
+{id:'a6',pillar:'az',title:"Tel's wife – new custom knife",notes:"First client's wife. Raptor or Raptor Elite in Crew Wear steel.",priority:'medium',due:'',done:false,nozzle:''},
+{id:'a7',pillar:'az',title:"Chase's Tanuki – custom order",notes:'Timeline unknown.',priority:'low',due:'',done:false,nozzle:''},
+{id:'a8',pillar:'az',title:'Raptor series – future batch',notes:'No pressing timeline.',priority:'low',due:'',done:false,nozzle:''},
+{id:'a9',pillar:'az',title:'Badger series – future batch',notes:'Future project.',priority:'low',due:'',done:false,nozzle:''},
 {id:'a10',pillar:'az',title:'Rewrite After Hours Program',notes:'',priority:'medium',due:'',done:false,nozzle:''},
 {id:'a11',pillar:'az',title:'Rewrite Sharpening Seminar curriculum',notes:'',priority:'medium',due:'',done:false,nozzle:''},
 {id:'a12',pillar:'az',title:'Write Advanced Sharpening Seminar curriculum',notes:'',priority:'medium',due:'',done:false,nozzle:''},
-{id:'a13',pillar:'az',title:'Write Advanced After Hours Program â€” kitchen knife',notes:'',priority:'medium',due:'',done:false,nozzle:''},
+{id:'a13',pillar:'az',title:'Write Advanced After Hours Program – kitchen knife',notes:'',priority:'medium',due:'',done:false,nozzle:''},
 {id:'a14',pillar:'az',title:'Write Procedures Book',notes:'Document: drilling, cutting, cleaning, gluing, grinding, laser engraving, safety protocols.',priority:'medium',due:'',done:false,nozzle:''},
 {id:'q1',pillar:'qf',title:'Finalize Quad Fang website',notes:'',priority:'high',due:'',done:false,nozzle:''},
 {id:'q2',pillar:'qf',title:'Follow up with foundry re: casting',notes:'Casting may not be viable. May pivot to machining.',priority:'high',due:'',done:false,nozzle:''},
@@ -272,8 +256,8 @@ const SEED=[
 {id:'qtax4',pillar:'qf',title:'TAX: Set up bookkeeping system',notes:'Separate QF bank account. Wave (free) or QuickBooks.',priority:'high',due:'',done:false,nozzle:''},
 {id:'qtax5',pillar:'qf',title:'TAX: Document all startup expenses',notes:'Every receipt from day one is a deduction.',priority:'high',due:'',done:false,nozzle:''},
 {id:'qtax6',pillar:'qf',title:'TAX: Consult accountant re: business structure',notes:'Sole proprietor vs incorporation.',priority:'medium',due:'',done:false,nozzle:''},
-{id:'qg1',pillar:'qf',title:'GRANT: Research Alberta startup grants',notes:'alberta.ca/business-grants â€” also Alberta Innovates.',priority:'high',due:'',done:false,nozzle:''},
-{id:'qg2',pillar:'qf',title:'GRANT: Apply â€” Canada Digital Adoption Program (CDAP)',notes:'Federal grant up to $15,000. ised-isde.canada.ca',priority:'high',due:'',done:false,nozzle:''},
+{id:'qg1',pillar:'qf',title:'GRANT: Research Alberta startup grants',notes:'alberta.ca/business-grants – also Alberta Innovates.',priority:'high',due:'',done:false,nozzle:''},
+{id:'qg2',pillar:'qf',title:'GRANT: Apply – Canada Digital Adoption Program (CDAP)',notes:'Federal grant up to $15,000. ised-isde.canada.ca',priority:'high',due:'',done:false,nozzle:''},
 {id:'qg3',pillar:'qf',title:'GRANT: Research IRAP (NRC Industrial Research)',notes:'Strong fit for product R&D. nrc-cnrc.gc.ca/irap',priority:'high',due:'',done:false,nozzle:''},
 {id:'qg4',pillar:'qf',title:'GRANT: Check BDC startup financing',notes:'Business Development Bank of Canada. bdc.ca',priority:'high',due:'',done:false,nozzle:''},
 {id:'qg5',pillar:'qf',title:'GRANT: Research Futurpreneur Canada',notes:'Up to $60,000 for entrepreneurs under 40. futurpreneur.ca',priority:'medium',due:'',done:false,nozzle:''},
@@ -285,7 +269,7 @@ const SEED=[
 {id:'q7',pillar:'qf',title:'Set up Microsoft 365 account',notes:'Separate from AZ Custom Knives accounts.',priority:'medium',due:'',done:false,nozzle:''},
 {id:'qbc1',pillar:'qf',title:'Business cards: Design for Alessio',notes:'QF branding, name, title, contact, website.',priority:'medium',due:'',done:false,nozzle:''},
 {id:'qbc2',pillar:'qf',title:'Business cards: Design for Kyren',notes:"Confirm Kyren's title and contact before designing.",priority:'medium',due:'',done:false,nozzle:''},
-{id:'qbc3',pillar:'qf',title:'Business cards: Print run â€” Alessio & Kyren',notes:'Once designs approved â€” VistaPrint or local GP print shop.',priority:'medium',due:'',done:false,nozzle:''},
+{id:'qbc3',pillar:'qf',title:'Business cards: Print run – Alessio & Kyren',notes:'Once designs approved – VistaPrint or local GP print shop.',priority:'medium',due:'',done:false,nozzle:''},
 {id:'q8',pillar:'qf',title:'Product: QF 100 grain broadhead',notes:'',priority:'medium',due:'',done:false,nozzle:''},
 {id:'q9',pillar:'qf',title:'Product: QF 125 grain broadhead',notes:'',priority:'medium',due:'',done:false,nozzle:''},
 {id:'q10',pillar:'qf',title:'Product: QF 150 grain broadhead',notes:'',priority:'medium',due:'',done:false,nozzle:''},
@@ -293,7 +277,7 @@ const SEED=[
 {id:'q12',pillar:'qf',title:"Product: Kids' knife",notes:'Future.',priority:'low',due:'',done:false,nozzle:''},
 {id:'q13',pillar:'qf',title:'Product: Exchangeable blade holder',notes:'Future.',priority:'low',due:'',done:false,nozzle:''},
 {id:'q14',pillar:'qf',title:'Product: Alpha high-end folding knife',notes:'Future.',priority:'low',due:'',done:false,nozzle:''},
-{id:'t1',pillar:'td',title:'Curtain rod bracket â€” living room',notes:'Custom bracket for living room curtain rod.',priority:'medium',due:'',done:false,nozzle:'0.4'},
+{id:'t1',pillar:'td',title:'Curtain rod bracket – living room',notes:'Custom bracket for living room curtain rod.',priority:'medium',due:'',done:false,nozzle:'0.4'},
 {id:'t2',pillar:'td',title:'AZ shopping cart key tags',notes:'Multi-part print. Must use 0.2 nozzle.',priority:'medium',due:'',done:false,nozzle:'0.2'},
 {id:'f1',pillar:'fam',title:'Pick up Mom from airport',notes:'Arriving from Switzerland 8:21 PM Thursday. Leave by 8 PM. Calendar reminder set.',priority:'high',due:'2026-03-26',done:false,nozzle:''},
 ];
@@ -303,32 +287,63 @@ function dueCls(d){if(!d)return'';const diff=Math.round((new Date(d)-new Date(to
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function toast(msg,dur=2200){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
 function syncStatus(state,lbl){const d=document.getElementById('sync-dot');const l=document.getElementById('sync-lbl');if(d)d.className='dot'+(state?' '+state:'');if(l)l.textContent=lbl;}
-async function boot(){document.getElementById('datelbl').textContent=new Date().toLocaleDateString('en-CA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});document.getElementById('i-due').min=today();syncStatus('busy','connectingâ€¦');await load();go('per');}
-async function load(){try{const{data,error}=await sb.from('cc_tasks').select('*');if(error)throw error;tasks={per:[],az:[],qf:[],td:[],fam:[]};if(!data||data.length===0){syncStatus('busy','seedingâ€¦');const{error:e2}=await sb.from('cc_tasks').insert(SEED);if(e2)throw e2;SEED.forEach(t=>{if(tasks[t.pillar])tasks[t.pillar].push(t);});}else{data.forEach(t=>{if(tasks[t.pillar])tasks[t.pillar].push(t);});}syncStatus('live','live sync');}catch(e){syncStatus('err','sync error');toast('Could not load tasks',3000);}}
-async function saveTask(){const title=document.getElementById('i-title').value.trim();if(!title)return;const notes=document.getElementById('i-notes').value.trim();const priority=document.getElementById('i-pri').value;const due=document.getElementById('i-due').value;const nozzle=tab==='td'?document.getElementById('i-nozzle').value:'';syncStatus('busy','savingâ€¦');try{if(editId){const{error}=await sb.from('cc_tasks').update({title,notes,priority,due,nozzle}).eq('id',editId);if(error)throw error;const i=tasks[tab].findIndex(x=>x.id===editId);if(i>-1)tasks[tab][i]={...tasks[tab][i],title,notes,priority,due,nozzle};toast('Task updated');}else{const id=Date.now().toString(36)+Math.random().toString(36).slice(2);const task={id,pillar:tab,title,notes,priority,due,nozzle,done:false};const{error}=await sb.from('cc_tasks').insert(task);if(error)throw error;tasks[tab].push(task);toast('Task saved');}syncStatus('live','live sync');}catch(e){syncStatus('err','sync error');toast('Save failed',3000);}closeM();render();}
-async function tog(id){const t=tasks[tab].find(x=>x.id===id);if(!t)return;const nd=!t.done;syncStatus('busy','savingâ€¦');try{const{error}=await sb.from('cc_tasks').update({done:nd}).eq('id',id);if(error)throw error;t.done=nd;syncStatus('live','live sync');}catch(e){syncStatus('err','sync error');}render();}
-async function del(id){if(!confirm('Delete this task?'))return;syncStatus('busy','deletingâ€¦');try{const{error}=await sb.from('cc_tasks').delete().eq('id',id);if(error)throw error;tasks[tab]=tasks[tab].filter(x=>x.id!==id);syncStatus('live','live sync');toast('Deleted');}catch(e){syncStatus('err','sync error');toast('Delete failed',3000);}render();}
-function stats(){let o=0,td=0,dn=0;const t=today();['per','az','qf','td','fam'].forEach(k=>tasks[k].forEach(x=>{if(x.done)dn++;else{o++;if(x.due===t)td++;}}));document.getElementById('s-open').textContent=o;document.getElementById('s-today').textContent=td;document.getElementById('s-done').textContent=dn;['per','az','qf','td','fam'].forEach(k=>document.getElementById('tc-'+k).textContent=tasks[k].filter(x=>!x.done).length);}
-function go(t){tab=t;filter='all';['per','az','qf','td','fam'].forEach(k=>document.getElementById('tab-'+k).className='tab'+(k===t?' a-'+k:''));render();}
+
+async function load(){try{const{data,error}=await sb.from('cc_tasks').select('*');if(error)throw error;tasks={per:[],az:[],qf:[],td:[],fam:[]};if(!data||data.length===0){syncStatus('busy','seeding…');const{error:e2}=await sb.from('cc_tasks').insert(SEED);if(e2)throw e2;SEED.forEach(t=>{if(tasks[t.pillar])tasks[t.pillar].push(t);});}else{data.forEach(t=>{if(tasks[t.pillar])tasks[t.pillar].push(t);});}syncStatus('live','live sync');}catch(e){syncStatus('err','sync error');toast('Could not load tasks',3000);}}
+
+async function saveTask(){const title=document.getElementById('i-title').value.trim();if(!title)return;const notes=document.getElementById('i-notes').value.trim();const priority=document.getElementById('i-pri').value;const due=document.getElementById('i-due').value;const nozzle=tab==='td'?document.getElementById('i-nozzle').value:'';syncStatus('busy','saving…');try{if(editId){const{error}=await sb.from('cc_tasks').update({title,notes,priority,due,nozzle}).eq('id',editId);if(error)throw error;const i=tasks[tab].findIndex(x=>x.id===editId);if(i>-1)tasks[tab][i]={...tasks[tab][i],title,notes,priority,due,nozzle};toast('Task updated');}else{const id=Date.now().toString(36)+Math.random().toString(36).slice(2);const task={id,pillar:tab,title,notes,priority,due,nozzle,done:false};const{error}=await sb.from('cc_tasks').insert(task);if(error)throw error;tasks[tab].push(task);toast('Task saved');}syncStatus('live','live sync');}catch(e){syncStatus('err','sync error');toast('Save failed',3000);}closeM();render();}
+async function tog(id){const t=tasks[tab].find(x=>x.id===id);if(!t)return;const nd=!t.done;syncStatus('busy','saving…');try{const{error}=await sb.from('cc_tasks').update({done:nd}).eq('id',id);if(error)throw error;t.done=nd;syncStatus('live','live sync');}catch(e){syncStatus('err','sync error');}render();}
+async function del(id){if(!confirm('Delete this task?'))return;syncStatus('busy','deleting…');try{const{error}=await sb.from('cc_tasks').delete().eq('id',id);if(error)throw error;tasks[tab]=tasks[tab].filter(x=>x.id!==id);syncStatus('live','live sync');toast('Deleted');}catch(e){syncStatus('err','sync error');toast('Delete failed',3000);}render();}
+
+function stats(){
+  let o=0,td_c=0,dn=0;
+  const t=today();
+  ['per','az','qf','td','fam'].forEach(k=>tasks[k].forEach(x=>{if(x.done)dn++;else{o++;if(x.due===t)td_c++;}}));
+  if(window.CC)CC.updateStats([
+    {label:'Open',value:o},
+    {label:'Today',value:td_c,tone:td_c>0?'warn':''},
+    {label:'Done',value:dn,tone:'success'}
+  ]);
+}
+
+function go(t){tab=t;filter='all';render();}
 function setF(f){filter=f;render();}
-function cardHTML(x,cls){const dl=x.due?fmtDate(x.due):'';const dc=x.due?dueCls(x.due):'';const ck=x.done?`chk ck-${cls}`:'chk';const noz=cls==='td'&&x.nozzle?`<span class="ntag">${x.nozzle}mm</span>`:'';const pb=`p${x.priority[0]}-b`;return`<div class="card bl-${cls}${x.done?' done':''}"><button class="${ck}" onclick="tog('${x.id}')">${x.done?'âœ“':''}</button><div class="tb"><div class="tt">${esc(x.title)}</div>${x.notes?`<div class="tn">${esc(x.notes)}</div>`:''}<div class="tm"><span class="pbadge ${pb}">${x.priority}</span>${noz}${dl?`<span class="due ${dc}">${dl}</span>`:''}</div></div><div class="ta"><button class="ib" onclick="openEdit('${x.id}')">âœŽ</button><button class="ib" onclick="del('${x.id}')">âœ•</button></div></div>`;}
-function render(){const cls=tab,list=tasks[tab]||[];const dn=list.filter(x=>x.done).length;const pct=list.length?Math.round(dn/list.length*100):0;const t=today();const srt=(a,b)=>{if(a.done!==b.done)return a.done?1:-1;const p={high:0,medium:1,low:2};if(p[a.priority]!==p[b.priority])return p[a.priority]-p[b.priority];if(a.due&&b.due)return a.due.localeCompare(b.due);if(a.due)return-1;if(b.due)return 1;return 0;};let fl=[...list];if(filter==='active')fl=fl.filter(x=>!x.done);else if(filter==='done')fl=fl.filter(x=>x.done);else if(filter==='high')fl=fl.filter(x=>!x.done&&x.priority==='high');fl.sort(srt);let cards='';if(tab==='td'){const f4=fl.filter(x=>!x.nozzle||x.nozzle==='0.4'),f2=fl.filter(x=>x.nozzle==='0.2');if(f4.length){cards+=`<div class="nozh">0.4 mm â€” standard nozzle</div>`;f4.forEach(x=>{cards+=cardHTML(x,cls);});}if(f2.length){cards+=`<div class="nozh">0.2 mm â€” fine detail nozzle</div>`;f2.forEach(x=>{cards+=cardHTML(x,cls);});}if(!f4.length&&!f2.length)cards=`<div class="empty"><div class="empty-i">â—¯</div><div class="empty-m">Nothing here right now</div></div>`;}else if(fl.length){fl.forEach(x=>{cards+=cardHTML(x,cls);});}else cards=`<div class="empty"><div class="empty-i">â—¯</div><div class="empty-m">${filter==='all'?'No tasks yet â€” hit Add Task':'Nothing here right now'}</div></div>`;document.getElementById('main').innerHTML=`<div class="ph"><div class="pt" style="color:var(--${cls})">${LABELS[tab]}<small>${list.length} task${list.length!==1?'s':''}</small></div><button class="add-btn ab-${cls}" onclick="openAdd()">+ Add Task</button></div><div class="sr"><span><strong>${list.filter(x=>!x.done).length}</strong> open</span><span><strong>${dn}</strong> done</span><span><strong>${list.filter(x=>!x.done&&x.due===t).length}</strong> due today</span></div><div class="pb-wrap"><div class="pb pb-${cls}" style="width:${pct}%"></div></div><div class="fb"><button class="fb-btn fb-${cls}${filter==='all'?' on':''}" onclick="setF('all')">All</button><button class="fb-btn fb-${cls}${filter==='active'?' on':''}" onclick="setF('active')">Open</button><button class="fb-btn fb-${cls}${filter==='high'?' on':''}" onclick="setF('high')">High Priority</button><button class="fb-btn fb-${cls}${filter==='done'?' on':''}" onclick="setF('done')">Done</button></div><div class="tg">${cards}</div>`;stats();}
-function openAdd(){editId=null;document.getElementById('md-title').textContent='Add Task â€” '+LABELS[tab];['i-title','i-notes'].forEach(id=>document.getElementById(id).value='');document.getElementById('i-pri').value='medium';document.getElementById('i-due').value='';document.getElementById('nozzle-row').style.display=tab==='td'?'block':'none';document.getElementById('i-nozzle').value='0.4';document.getElementById('bs-main').className='bs bs-'+tab;document.getElementById('mo').classList.add('open');setTimeout(()=>document.getElementById('i-title').focus(),60);}
+
+function cardHTML(x,cls){const dl=x.due?fmtDate(x.due):'';const dc=x.due?dueCls(x.due):'';const ck=x.done?`chk ck-${cls}`:'chk';const noz=cls==='td'&&x.nozzle?`<span class="ntag">${x.nozzle}mm</span>`:'';const pb=`p${x.priority[0]}-b`;return`<div class="card bl-${cls}${x.done?' done':''}"><button class="${ck}" onclick="tog('${x.id}')">${x.done?'✓':''}</button><div class="tb"><div class="tt">${esc(x.title)}</div>${x.notes?`<div class="tn">${esc(x.notes)}</div>`:''}<div class="tm"><span class="pbadge ${pb}">${x.priority}</span>${noz}${dl?`<span class="due ${dc}">${dl}</span>`:''}</div></div><div class="ta"><button class="ib" onclick="openEdit('${x.id}')">✎</button><button class="ib" onclick="del('${x.id}')">✕</button></div></div>`;}
+
+function render(){const cls=tab,list=tasks[tab]||[];const dn=list.filter(x=>x.done).length;const pct=list.length?Math.round(dn/list.length*100):0;const t=today();const srt=(a,b)=>{if(a.done!==b.done)return a.done?1:-1;const p={high:0,medium:1,low:2};if(p[a.priority]!==p[b.priority])return p[a.priority]-p[b.priority];if(a.due&&b.due)return a.due.localeCompare(b.due);if(a.due)return-1;if(b.due)return 1;return 0;};let fl=[...list];if(filter==='active')fl=fl.filter(x=>!x.done);else if(filter==='done')fl=fl.filter(x=>x.done);else if(filter==='high')fl=fl.filter(x=>!x.done&&x.priority==='high');fl.sort(srt);let cards='';if(tab==='td'){const f4=fl.filter(x=>!x.nozzle||x.nozzle==='0.4'),f2=fl.filter(x=>x.nozzle==='0.2');if(f4.length){cards+=`<div class="nozh">0.4 mm – standard nozzle</div>`;f4.forEach(x=>{cards+=cardHTML(x,cls);});}if(f2.length){cards+=`<div class="nozh">0.2 mm – fine detail nozzle</div>`;f2.forEach(x=>{cards+=cardHTML(x,cls);});}if(!f4.length&&!f2.length)cards=`<div class="empty"><div class="empty-i">◯</div><div class="empty-m">Nothing here right now</div></div>`;}else if(fl.length){fl.forEach(x=>{cards+=cardHTML(x,cls);});}else cards=`<div class="empty"><div class="empty-i">◯</div><div class="empty-m">${filter==='all'?'No tasks yet – hit Add Task':'Nothing here right now'}</div></div>`;document.getElementById('main').innerHTML=`<div class="ph"><div class="pt" style="color:var(--${cls})">${LABELS[tab]}<small>${list.length} task${list.length!==1?'s':''}</small></div><button class="add-btn ab-${cls}" onclick="openAdd()">+ Add Task</button></div><div class="sr"><span><strong>${list.filter(x=>!x.done).length}</strong> open</span><span><strong>${dn}</strong> done</span><span><strong>${list.filter(x=>!x.done&&x.due===t).length}</strong> due today</span></div><div class="pb-wrap"><div class="pb pb-${cls}" style="width:${pct}%"></div></div><div class="fb"><button class="fb-btn fb-${cls}${filter==='all'?' on':''}" onclick="setF('all')">All</button><button class="fb-btn fb-${cls}${filter==='active'?' on':''}" onclick="setF('active')">Open</button><button class="fb-btn fb-${cls}${filter==='high'?' on':''}" onclick="setF('high')">High Priority</button><button class="fb-btn fb-${cls}${filter==='done'?' on':''}" onclick="setF('done')">Done</button></div><div class="tg">${cards}</div>`;stats();}
+
+function openAdd(){editId=null;document.getElementById('md-title').textContent='Add Task – '+LABELS[tab];['i-title','i-notes'].forEach(id=>document.getElementById(id).value='');document.getElementById('i-pri').value='medium';document.getElementById('i-due').value='';document.getElementById('nozzle-row').style.display=tab==='td'?'block':'none';document.getElementById('i-nozzle').value='0.4';document.getElementById('bs-main').className='bs bs-'+tab;document.getElementById('mo').classList.add('open');setTimeout(()=>document.getElementById('i-title').focus(),60);}
 function openEdit(id){const x=tasks[tab].find(t=>t.id===id);if(!x)return;editId=id;document.getElementById('md-title').textContent='Edit Task';document.getElementById('i-title').value=x.title;document.getElementById('i-notes').value=x.notes||'';document.getElementById('i-pri').value=x.priority;document.getElementById('i-due').value=x.due||'';document.getElementById('nozzle-row').style.display=tab==='td'?'block':'none';document.getElementById('i-nozzle').value=x.nozzle||'0.4';document.getElementById('bs-main').className='bs bs-'+tab;document.getElementById('mo').classList.add('open');setTimeout(()=>document.getElementById('i-title').focus(),60);}
 function closeM(){document.getElementById('mo').classList.remove('open');editId=null;}
 function openSync(){document.getElementById('stab-exp').className='stab son';document.getElementById('stab-imp').className='stab';document.getElementById('sync-export').style.display='block';document.getElementById('sync-import').style.display='none';document.getElementById('export-code').textContent=JSON.stringify(tasks,null,2);document.getElementById('sync-mo').classList.add('open');}
 function switchSync(mode){document.getElementById('stab-exp').className='stab'+(mode==='export'?' son':'');document.getElementById('stab-imp').className='stab'+(mode==='import'?' son':'');document.getElementById('sync-export').style.display=mode==='export'?'block':'none';document.getElementById('sync-import').style.display=mode==='import'?'block':'none';if(mode==='export')document.getElementById('export-code').textContent=JSON.stringify(tasks,null,2);else document.getElementById('import-ta').value='';}
 function closeSyncM(){document.getElementById('sync-mo').classList.remove('open');}
 function copyCode(){navigator.clipboard.writeText(document.getElementById('export-code').textContent).then(()=>toast('Backup copied to clipboard')).catch(()=>{});}
-async function importCode(){const raw=document.getElementById('import-ta').value.trim();if(!raw){toast('Paste backup JSON first');return;}try{const parsed=JSON.parse(raw);if(!parsed.per&&!parsed.az&&!parsed.qf)throw new Error('Invalid');if(!confirm('This will replace all tasks in your database. Continue?'))return;syncStatus('busy','importingâ€¦');const allTasks=[];['per','az','qf','td','fam'].forEach(k=>{if(parsed[k])parsed[k].forEach(t=>allTasks.push({...t,pillar:k}));});await sb.from('cc_tasks').delete().neq('id','__never__');const{error}=await sb.from('cc_tasks').insert(allTasks);if(error)throw error;tasks=parsed;['per','az','qf','td','fam'].forEach(k=>{if(!tasks[k])tasks[k]=[];});syncStatus('live','live sync');closeSyncM();go(tab);toast('Tasks restored successfully');}catch(e){toast('Invalid backup â€” check you copied it fully');}}
+async function importCode(){const raw=document.getElementById('import-ta').value.trim();if(!raw){toast('Paste backup JSON first');return;}try{const parsed=JSON.parse(raw);if(!parsed.per&&!parsed.az&&!parsed.qf)throw new Error('Invalid');if(!confirm('This will replace all tasks in your database. Continue?'))return;syncStatus('busy','importing…');const allTasks=[];['per','az','qf','td','fam'].forEach(k=>{if(parsed[k])parsed[k].forEach(t=>allTasks.push({...t,pillar:k}));});await sb.from('cc_tasks').delete().neq('id','__never__');const{error}=await sb.from('cc_tasks').insert(allTasks);if(error)throw error;tasks=parsed;['per','az','qf','td','fam'].forEach(k=>{if(!tasks[k])tasks[k]=[];});syncStatus('live','live sync');closeSyncM();go(tab);toast('Tasks restored successfully');}catch(e){toast('Invalid backup – check you copied it fully');}}
+
 document.getElementById('mo').addEventListener('click',e=>{if(e.target===document.getElementById('mo'))closeM();});
 document.getElementById('sync-mo').addEventListener('click',e=>{if(e.target===document.getElementById('sync-mo'))closeSyncM();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeM();closeSyncM();}});
+
+/* ── CC-SHELL INTEGRATION ── */
+var _shellReady=false,_dataLoaded=false;
+function tryInit(){
+  if(!_shellReady||!_dataLoaded)return;
+  CC.registerAction('openSync',openSync);
+  CC.onSubtabChange(function(id){go(id);});
+  go(CC.getSubtab()||'per');
+}
+document.addEventListener('cc-shell-ready',function(){_shellReady=true;tryInit();});
+
 (async()=>{
   const SB_URL='https://twrlvnfszohyrmivdhre.supabase.co';
   const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3cmx2bmZzem9oeXJtaXZkaHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NjkxMTMsImV4cCI6MjA5MDE0NTExM30.o96DFNbBObst0EAmX51rnRFXzu8oTN1o-HNAxN7MY8A';
   sb=window.supabase.createClient(SB_URL,SB_KEY);
-  await boot();
+  document.getElementById('i-due').min=today();
+  syncStatus('busy','connecting…');
+  await load();
+  _dataLoaded=true;
+  tryInit();
 })();
 </script>
 </body>
