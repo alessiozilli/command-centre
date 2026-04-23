@@ -19,7 +19,7 @@
     "critical": 3,
     "high": 4,
     "medium": 5,
-    "pass": 11
+    "pass": 16
   },
 
   "findings": [
@@ -117,7 +117,7 @@
       "id": "M3",
       "severity": "medium",
       "title": "Delivery Optimization (port 7680) on all interfaces",
-      "location": "svchost :::7680",
+      "location": "svchost [::]:7680",
       "summary": "Peer-to-peer Windows Update. Signed content only, low risk.",
       "fix": "Optional — Windows Update > Advanced > Delivery Optimization > Off.",
       "effortMin": 1,
@@ -156,10 +156,12 @@
     "SMB2 encryption enforced (RejectUnencrypted=true)",
     "Network profile Public (restrictive)",
     "Brain services (8050/8051/8052/9000) localhost-only",
-    "D:\\Private-Brain on local disc — NOT synced to Google Drive",
+    "D:\\Private-Brain on local disk — NOT synced to Google Drive",
     "Zero .env or credentials.json in Drive folder",
+    "Drive plaintext-secret scan — no real keys (1 false positive in SQL comment)",
     "No VPN leak (none configured)",
-    "DNS sane (router + DoH templates)"
+    "DNS sane (router + DoH templates)",
+    "Minimal local admin accounts (2: Administrator disabled + user active)"
   ],
 
   "deferredChecks": [
