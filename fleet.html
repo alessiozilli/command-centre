@@ -457,7 +457,10 @@
 
     // 7. Safety chips
     const rollbackHtml = task.rollback_command ? `
-      <div class="dr-rollback">${esc(task.rollback_command)}</div>` : '';
+      <details style="margin-top:10px">
+        <summary style="font-size:0.75rem;color:var(--cc-text-muted);cursor:pointer;user-select:none">Rollback command</summary>
+        <div class="dr-rollback">${esc(task.rollback_command)}</div>
+      </details>` : '';
 
     const needsApproval = task.requires_approval && task.requires_approval !== 'none';
     const safetySection = `
@@ -847,6 +850,7 @@
   // ─── Boot ────────────────────────────────────────────────
   async function init() {
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+    document.getElementById('fleet-drawer-overlay').addEventListener('click', closeDrawer);
 
     const { data: { session } } = await supa.auth.getSession();
     if (!session) {
