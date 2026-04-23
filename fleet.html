@@ -38,7 +38,8 @@
 .fleet-empty  { text-align: center; padding: 40px 20px; color: var(--cc-text-muted); font-size: 0.9rem; background: var(--cc-bg-card); border-radius: var(--cc-r-md); }
 .fleet-empty a { color: var(--cc-accent); }
 .fleet-grid   { display: grid; gap: 12px; }
-.fleet-card   { background: var(--cc-bg-card); border: 1px solid var(--cc-border); border-radius: var(--cc-r-md); padding: 14px 16px; }
+.fleet-card   { background: var(--cc-bg-card); border: 1px solid var(--cc-border); border-radius: var(--cc-r-md); padding: 14px 16px; cursor: pointer; transition: border-color 0.15s; }
+.fleet-card:hover { border-color: var(--cc-accent); }
 .fleet-card.urgent { border-color: var(--cc-danger); }
 .fleet-card.blocked-card { border-color: var(--cc-warn); }
 .fleet-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
@@ -60,6 +61,7 @@
 .badge-status-done       { background: rgba(63,185,80,0.12); color: var(--cc-success); border: 1px solid rgba(63,185,80,0.25); }
 .badge-status-queued     { background: rgba(139,148,158,0.12); color: var(--cc-text-muted); border: 1px solid rgba(139,148,158,0.25); }
 .badge-status-parked     { background: rgba(188,140,255,0.12); color: #bc8cff; border: 1px solid rgba(188,140,255,0.25); }
+.badge-status-cancelled  { background: rgba(248,81,73,0.08); color: var(--cc-danger); border: 1px solid rgba(248,81,73,0.2); }
 .badge-cycle-active   { background: rgba(88,166,255,0.12); color: var(--cc-accent); border: 1px solid rgba(88,166,255,0.25); }
 .badge-cycle-budget   { background: rgba(248,81,73,0.12); color: var(--cc-danger); border: 1px solid rgba(248,81,73,0.25); }
 .badge-cycle-done     { background: rgba(63,185,80,0.12); color: var(--cc-success); border: 1px solid rgba(63,185,80,0.25); }
@@ -104,6 +106,80 @@
 .today-cell { background: var(--cc-bg-card); border: 1px solid var(--cc-border); border-radius: var(--cc-r-md); padding: 10px 14px; }
 .today-cell .lbl { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--cc-text-muted); margin-bottom: 4px; }
 .today-cell .val { font-size: 1.3rem; font-weight: 700; color: var(--cc-text); }
+
+/* ─── Drawer ──────────────────────────────────────────── */
+.drawer-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(2px); z-index: 1000;
+  opacity: 0; pointer-events: none; transition: opacity 0.25s;
+}
+.drawer-overlay.open { opacity: 1; pointer-events: all; }
+
+.drawer-panel {
+  position: fixed; top: 0; right: -520px; width: 480px; max-width: 100vw;
+  height: 100dvh; background: var(--cc-bg-card); border-left: 1px solid var(--cc-border);
+  z-index: 1001; overflow-y: auto; transition: right 0.3s ease;
+  display: flex; flex-direction: column;
+}
+.drawer-panel.open { right: 0; }
+
+@media (max-width: 768px) {
+  .drawer-panel { width: 100vw; right: -100vw; }
+}
+
+.drawer-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 20px 20px 16px; border-bottom: 1px solid var(--cc-border);
+  gap: 12px; position: sticky; top: 0; background: var(--cc-bg-card); z-index: 1;
+}
+.drawer-title { font-size: 1.05rem; font-weight: 700; color: var(--cc-text); flex: 1; line-height: 1.4; }
+.drawer-close {
+  background: none; border: 1px solid var(--cc-border); color: var(--cc-text-muted);
+  width: 28px; height: 28px; border-radius: var(--cc-r-sm); cursor: pointer;
+  font-size: 0.9rem; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+}
+.drawer-close:hover { color: var(--cc-text); border-color: var(--cc-accent); }
+.drawer-body { padding: 18px 20px 28px; flex: 1; }
+
+.drawer-section { margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid var(--cc-border); }
+.drawer-section:last-child { border-bottom: none; margin-bottom: 0; }
+.drawer-section-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--cc-text-muted); margin-bottom: 10px; font-weight: 700; }
+
+.drawer-body-text { font-size: 0.84rem; color: var(--cc-text-body); line-height: 1.7; }
+.drawer-body-text p { margin: 0 0 0.6em; }
+.drawer-body-text p:last-child { margin-bottom: 0; }
+.drawer-body-text strong { color: var(--cc-text); }
+.drawer-body-text em { color: var(--cc-text-muted); }
+.drawer-body-text code { background: var(--cc-bg); padding: 1px 5px; border-radius: 3px; font-family: monospace; font-size: 0.82em; color: #e6edf3; }
+.drawer-body-text pre { background: var(--cc-bg); border: 1px solid var(--cc-border); border-radius: var(--cc-r-sm); padding: 10px 14px; overflow-x: auto; margin: 8px 0; }
+.drawer-body-text pre code { background: none; padding: 0; font-size: 0.78rem; }
+.drawer-body-text h3 { font-size: 0.9rem; font-weight: 700; color: var(--cc-text); margin: 10px 0 4px; }
+
+.drawer-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.78rem; }
+.drawer-meta-item { display: flex; flex-direction: column; gap: 2px; }
+.drawer-meta-label { font-size: 0.63rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--cc-text-muted); }
+.drawer-meta-value { color: var(--cc-text-body); }
+
+.drawer-claim-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 0.82rem; padding: 10px 12px; background: var(--cc-bg); border-radius: var(--cc-r-sm); }
+
+.cycle-history-entry { padding: 8px 0; border-bottom: 1px solid var(--cc-border); font-size: 0.8rem; }
+.cycle-history-entry:last-child { border-bottom: none; }
+.cycle-history-head { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; flex-wrap: wrap; }
+
+.exec-entry { padding: 6px 0; border-bottom: 1px solid var(--cc-border); display: flex; gap: 8px; font-size: 0.76rem; align-items: flex-start; }
+.exec-entry:last-child { border-bottom: none; }
+.exec-time   { color: var(--cc-text-muted); min-width: 40px; flex-shrink: 0; padding-top: 1px; }
+.exec-inst   { min-width: 86px; flex-shrink: 0; }
+.exec-action { font-weight: 600; color: var(--cc-text-body); flex-shrink: 0; min-width: 70px; padding-top: 1px; }
+.exec-note   { color: var(--cc-text-muted); flex: 1; }
+.exec-cost   { color: var(--cc-text-muted); flex-shrink: 0; }
+
+.btn-lock-cycle { background: rgba(188,140,255,0.12); border: 1px solid rgba(188,140,255,0.3); color: #bc8cff; padding: 5px 14px; border-radius: var(--cc-r-sm); font-size: 0.78rem; font-weight: 600; cursor: pointer; margin-top: 10px; }
+.btn-lock-cycle:hover { background: rgba(188,140,255,0.22); }
+
+.rollback-expander { background: var(--cc-bg); border: 1px solid var(--cc-border); border-radius: var(--cc-r-sm); margin-top: 8px; }
+.rollback-expander summary { cursor: pointer; padding: 6px 10px; font-size: 0.78rem; color: var(--cc-text-muted); user-select: none; }
+.rollback-expander code { display: block; padding: 8px 12px; font-size: 0.78rem; color: #e6edf3; font-family: monospace; white-space: pre-wrap; word-break: break-all; }
 </style>
 </head>
 <body>
@@ -147,6 +223,16 @@
 
 </main>
 
+<!-- ─── Drawer ─────────────────────────────────────────── -->
+<div class="drawer-overlay" id="fleetDrawerOverlay" onclick="closeDrawer()"></div>
+<div class="drawer-panel" id="fleetDrawerPanel" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+  <div class="drawer-header">
+    <div class="drawer-title" id="drawerTitle">Loading&hellip;</div>
+    <button class="drawer-close" onclick="closeDrawer()" aria-label="Close">&#x2715;</button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+</div>
+
 <script>
 (function () {
   'use strict';
@@ -183,7 +269,7 @@
   const verdictBadge = v => {
     if (!v) return '';
     const cls = v === 'improvements_made' ? 'improved' : v === 'no_changes' ? 'no_changes' : 'blocked';
-    const label = v === 'improvements_made' ? '✓ improved' : v === 'no_changes' ? '— no changes' : '⚠ blocked';
+    const label = v === 'improvements_made' ? '&#x2713; improved' : v === 'no_changes' ? '&#x2014; no changes' : '&#x26A0; blocked';
     return `<span class="badge badge-verdict-${cls}">${label}</span>`;
   };
 
@@ -213,7 +299,7 @@
     if (!data || !data.length) { setEl('fleetLiveList', '<div class="fleet-empty">No active tasks right now. Forge is idle.</div>'); return; }
     setEl('fleetLiveList', data.map(t => {
       const lastExec = t.last_exec_entry ? JSON.parse(typeof t.last_exec_entry === 'string' ? t.last_exec_entry : JSON.stringify(t.last_exec_entry)) : null;
-      return `<div class="fleet-card${t.priority === 'urgent' ? ' urgent' : ''}">
+      return `<div class="fleet-card${t.priority === 'urgent' ? ' urgent' : ''}" onclick="openDrawer('${esc(t.id)}')">
         <div class="fleet-card-head">
           <div class="fleet-card-title">${esc(t.title)}</div>
           ${badgeStatus('in_progress')}
@@ -241,16 +327,16 @@
     _stats.queued = String(data ? data.length : 0);
     pushStats();
     if (!data || !data.length) { setEl('fleetQueueList', '<div class="fleet-empty">Queue is empty.</div>'); return; }
-    setEl('fleetQueueList', data.map(t => `<div class="fleet-card${t.priority === 'urgent' ? ' urgent' : ''}">
+    setEl('fleetQueueList', data.map(t => `<div class="fleet-card${t.priority === 'urgent' ? ' urgent' : ''}" onclick="openDrawer('${esc(t.id)}')">
       <div class="fleet-card-head">
         <div class="fleet-card-title">${esc(t.title)}</div>
         ${badgePriority(t.priority)}
       </div>
       <div class="fleet-card-meta">
         ${t.suggested_to ? badgeInstance(t.suggested_to) : '<span>unassigned</span>'}
-        ${t.suggested_model ? `<span style="color:var(--cc-text-dim)">→ ${esc(t.suggested_model)}</span>` : ''}
+        ${t.suggested_model ? `<span style="color:var(--cc-text-dim)">&#x2192; ${esc(t.suggested_model)}</span>` : ''}
         ${badgeSide(t.side_effects)}
-        ${t.requires_approval !== 'none' ? `<span style="color:var(--cc-warn)">⚠ needs approval</span>` : ''}
+        ${t.requires_approval !== 'none' ? `<span style="color:var(--cc-warn)">&#x26A0; needs approval</span>` : ''}
         ${t.cost_est_cad != null ? `<span>${fmtCost(t.cost_est_cad)}</span>` : ''}
         <span>queued ${fmtAge(t.created_at)}</span>
       </div>
@@ -278,7 +364,7 @@
       const lastCycle = t.last_cycle_entry ? JSON.parse(typeof t.last_cycle_entry === 'string' ? t.last_cycle_entry : JSON.stringify(t.last_cycle_entry)) : null;
       const budgetPct = (t.cycle_budget_cad && t.cycle_cost_actual_cad) ? Math.min(100, Math.round((t.cycle_cost_actual_cad / t.cycle_budget_cad) * 100)) : 0;
       const cycleStatusBadge = t.cycle_status === 'in_cycle' ? 'badge-cycle-active' : t.cycle_status === 'budget_exceeded' ? 'badge-cycle-budget' : 'badge-cycle-done';
-      return `<div class="fleet-card">
+      return `<div class="fleet-card" onclick="openDrawer('${esc(t.id)}')">
         <div class="fleet-card-head">
           <div class="fleet-card-title">${esc(t.title)}</div>
           <span class="badge ${cycleStatusBadge}">${esc(t.cycle_status)}</span>
@@ -322,7 +408,7 @@
       <div class="today-cell"><div class="lbl">Rate</div><div class="val">${data && data.length ? Math.round(done.length / data.length * 100) : 0}%</div></div>
     `);
     if (!data || !data.length) { setEl('fleetTodayList', '<div class="fleet-empty">Nothing completed today yet.</div>'); return; }
-    setEl('fleetTodayList', data.map(t => `<div class="fleet-card">
+    setEl('fleetTodayList', data.map(t => `<div class="fleet-card" onclick="openDrawer('${esc(t.id)}')">
       <div class="fleet-card-head">
         <div class="fleet-card-title">${esc(t.title)}</div>
         ${badgeStatus(t.status)}
@@ -331,7 +417,7 @@
         ${t.assigned_to ? badgeInstance(t.assigned_to) : ''}
         ${t.cost_actual_cad != null ? `<span>${fmtCost(t.cost_actual_cad)}</span>` : ''}
         <span>${fmtDate(t.completed_at)}</span>
-        ${t.last_error ? `<span style="color:var(--cc-danger)">⚠ ${esc(t.last_error.slice(0, 80))}</span>` : ''}
+        ${t.last_error ? `<span style="color:var(--cc-danger)">&#x26A0; ${esc(t.last_error.slice(0, 80))}</span>` : ''}
       </div>
     </div>`).join(''));
   }
@@ -346,7 +432,7 @@
     _stats.blocked = String(data ? data.length : 0);
     pushStats();
     if (!data || !data.length) { setEl('fleetBlockedList', '<div class="fleet-empty">Nothing waiting for approval.</div>'); return; }
-    setEl('fleetBlockedList', data.map(t => `<div class="fleet-card blocked-card">
+    setEl('fleetBlockedList', data.map(t => `<div class="fleet-card blocked-card" onclick="openDrawer('${esc(t.id)}')">
       <div class="fleet-card-head">
         <div class="fleet-card-title">${esc(t.title)}</div>
         ${badgePriority(t.priority)}
@@ -358,8 +444,8 @@
         <span>queued ${fmtAge(t.created_at)}</span>
       </div>
       <div class="fleet-card-footer">
-        <button class="btn-approve" onclick="fleetApprove('${esc(t.id)}')">✓ Approve</button>
-        <button class="btn-reject"  onclick="fleetReject('${esc(t.id)}')">✗ Reject</button>
+        <button class="btn-approve" onclick="event.stopPropagation(); fleetApprove('${esc(t.id)}')">&#x2713; Approve</button>
+        <button class="btn-reject"  onclick="event.stopPropagation(); fleetReject('${esc(t.id)}')">&#x2717; Reject</button>
       </div>
     </div>`).join(''));
   }
@@ -379,14 +465,13 @@
     const { data, error } = await query;
     if (error) { setEl('fleetHistoryList', `<div class="fleet-empty">Error: ${esc(error.message)}</div>`); return; }
 
-    // Build filter bar
     const instances = ['all', ...Object.keys(INSTANCE_COLORS)];
     setEl('historyFilterBar', instances.map(inst =>
       `<button class="filter-btn${_historyFilter === inst ? ' active' : ''}" onclick="fleetHistoryFilter('${inst}')">${esc(inst)}</button>`
     ).join(''));
 
     if (!data || !data.length) { setEl('fleetHistoryList', '<div class="fleet-empty">No history in the last 30 days.</div>'); return; }
-    setEl('fleetHistoryList', data.map(t => `<div class="fleet-card">
+    setEl('fleetHistoryList', data.map(t => `<div class="fleet-card" onclick="openDrawer('${esc(t.id)}')">
       <div class="fleet-card-head">
         <div class="fleet-card-title">${esc(t.title)}</div>
         ${badgeStatus(t.status)}
@@ -461,13 +546,215 @@
   // ─── History filter ──────────────────────────────────────
   window.fleetHistoryFilter = function (instance) { loadHistory(instance); };
 
+  // ─── Drawer ──────────────────────────────────────────────
+  function simpleMarkdown(raw) {
+    // Escape HTML first, then apply markdown transforms
+    let s = esc(raw);
+    // Fenced code blocks
+    s = s.replace(/```([\s\S]*?)```/g, (_, c) => `<pre><code>${c}</code></pre>`);
+    // Inline code
+    s = s.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+    // Bold
+    s = s.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+    // Italic
+    s = s.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
+    // Headings (##, ###)
+    s = s.replace(/^#{1,3} (.+)$/gm, '<h3>$1</h3>');
+    // Paragraphs
+    s = s.split(/\n\n+/).map(p => p.trim() ? `<p>${p.replace(/\n/g, '<br>')}</p>` : '').join('');
+    return s;
+  }
+
+  function renderDrawerBody(t, claim) {
+    const sections = [];
+
+    // 1. Badge row
+    const badgeRow = [
+      badgeStatus(t.status),
+      badgePriority(t.priority),
+      ...(Array.isArray(t.tags) ? t.tags : []).map(tg =>
+        `<span class="badge" style="background:rgba(88,166,255,0.08);color:#79c0ff;border:1px solid rgba(88,166,255,0.2)">${esc(tg)}</span>`)
+    ].join(' ');
+    sections.push(`<div class="drawer-section">${badgeRow}</div>`);
+
+    // 2. The plan (body)
+    if (t.body) {
+      sections.push(`<div class="drawer-section">
+        <div class="drawer-section-label">The Plan</div>
+        <div class="drawer-body-text">${simpleMarkdown(t.body)}</div>
+      </div>`);
+    }
+
+    // 3. Acceptance criteria
+    if (t.acceptance_criteria) {
+      sections.push(`<div class="drawer-section">
+        <div class="drawer-section-label">Acceptance Criteria</div>
+        <div class="drawer-body-text"><em>${esc(t.acceptance_criteria)}</em></div>
+      </div>`);
+    }
+
+    // 4. Active claim
+    if (t.status === 'in_progress' && claim) {
+      const claimAge = claim.claimed_at ? Math.round((Date.now() - new Date(claim.claimed_at).getTime()) / 60000) : null;
+      sections.push(`<div class="drawer-section">
+        <div class="drawer-section-label">Active Claim</div>
+        <div class="drawer-claim-row">
+          ${badgeInstance(claim.instance_name)}
+          ${claimAge != null ? `<span style="color:var(--cc-text-muted)">${claimAge}m ago</span>` : ''}
+          ${t.verify_url ? `<a href="${esc(t.verify_url)}" target="_blank" rel="noopener" style="color:var(--cc-accent);font-size:0.8rem">verify &#x2192;</a>` : ''}
+        </div>
+      </div>`);
+    }
+
+    // 5. Cycle progress
+    if (t.cycle_target != null) {
+      const pct = Math.min(100, Math.round(((t.cycle_count || 0) / t.cycle_target) * 100));
+      const budgetPct = (t.cycle_budget_cad && t.cycle_cost_actual_cad)
+        ? Math.min(100, Math.round((t.cycle_cost_actual_cad / t.cycle_budget_cad) * 100)) : 0;
+      const cycleStatusCls = t.cycle_status === 'in_cycle' ? 'badge-cycle-active'
+        : t.cycle_status === 'budget_exceeded' ? 'badge-cycle-budget' : 'badge-cycle-done';
+
+      const historyArr = Array.isArray(t.cycle_history) ? [...t.cycle_history].reverse() : [];
+      const historyHtml = historyArr.map((c, i) => `
+        <div class="cycle-history-entry">
+          <div class="cycle-history-head">
+            <span style="font-weight:600;color:var(--cc-text-muted);font-size:0.78rem">Cycle ${(t.cycle_count || 0) - i}</span>
+            ${c.instance ? badgeInstance(c.instance) : ''}
+            ${c.verdict ? verdictBadge(c.verdict) : ''}
+            ${c.cost_cad != null ? `<span style="color:var(--cc-text-dim);font-size:0.7rem">${fmtCost(c.cost_cad)}</span>` : ''}
+          </div>
+          ${c.delta_summary ? `<div style="color:var(--cc-text-muted);font-style:italic;font-size:0.76rem;padding-left:2px">&ldquo;${esc(c.delta_summary)}&rdquo;</div>` : ''}
+        </div>`).join('');
+
+      const lockBtn = (t.cycle_status === 'in_cycle' || t.cycle_status === 'converged')
+        ? `<button class="btn-lock-cycle" onclick="fleetDrawerLockCycle('${esc(t.id)}')">Lock now &mdash; final pass</button>` : '';
+
+      sections.push(`<div class="drawer-section">
+        <div class="drawer-section-label">Cycle Progress</div>
+        <div class="cycle-bar-wrap">
+          <div class="cycle-bar-track"><div class="cycle-bar-fill" style="width:${pct}%"></div></div>
+          <div class="cycle-bar-label">${t.cycle_count || 0}/${t.cycle_target} cycles</div>
+        </div>
+        <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          <span class="badge ${cycleStatusCls}">${esc(t.cycle_status || '')}</span>
+          ${t.cycle_mode     ? `<span class="badge badge-priority-normal">${esc(t.cycle_mode)}</span>`     : ''}
+          ${t.cycle_rotation ? `<span class="badge badge-priority-normal">${esc(t.cycle_rotation)}</span>` : ''}
+        </div>
+        ${t.cycle_budget_cad != null ? `<div class="cost-meter" style="margin-top:10px">
+          <div class="cost-meter-track"><div class="cost-meter-fill" style="width:${budgetPct}%;background:${budgetPct >= 80 ? 'var(--cc-danger)' : 'var(--cc-accent)'}"></div></div>
+          <div class="cost-meter-label"><span>${fmtCost(t.cycle_cost_actual_cad)} spent</span><span>budget ${fmtCost(t.cycle_budget_cad)}</span></div>
+        </div>` : ''}
+        ${historyHtml ? `<div style="margin-top:12px">${historyHtml}</div>` : ''}
+        ${lockBtn}
+      </div>`);
+    }
+
+    // 6. Execution log
+    const execLog = Array.isArray(t.execution_log) ? [...t.execution_log].reverse() : [];
+    if (execLog.length) {
+      const execRows = execLog.map(e => {
+        const timeStr = e.timestamp ? new Date(e.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—';
+        return `<div class="exec-entry">
+          <div class="exec-time">${esc(timeStr)}</div>
+          <div class="exec-inst">${e.instance ? badgeInstance(e.instance) : '<span style="color:var(--cc-text-dim)">—</span>'}</div>
+          <div class="exec-action">${esc(e.action || '—')}</div>
+          <div class="exec-note">${e.note ? esc(e.note) : ''}</div>
+          ${e.cost_cad != null ? `<div class="exec-cost">${fmtCost(e.cost_cad)}</div>` : '<div class="exec-cost"></div>'}
+        </div>`;
+      }).join('');
+      sections.push(`<div class="drawer-section">
+        <div class="drawer-section-label">Execution Log</div>
+        ${execRows}
+      </div>`);
+    }
+
+    // 7. Safety chips
+    const safetyChips = [];
+    if (t.side_effects) safetyChips.push(badgeSide(t.side_effects));
+    if (t.requires_approval && t.requires_approval !== 'none')
+      safetyChips.push(`<span class="badge badge-priority-urgent">&#x26A0; ${esc(t.requires_approval)}</span>`);
+    if (t.context_isolated != null)
+      safetyChips.push(`<span class="badge ${t.context_isolated ? 'badge-side-idempotent' : 'badge-priority-normal'}">context ${t.context_isolated ? 'isolated' : 'shared'}</span>`);
+    if (safetyChips.length || t.rollback_command) {
+      sections.push(`<div class="drawer-section">
+        <div class="drawer-section-label">Safety</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">${safetyChips.join('')}</div>
+        ${t.rollback_command ? `<details class="rollback-expander"><summary>Rollback command</summary><code>${esc(t.rollback_command)}</code></details>` : ''}
+      </div>`);
+    }
+
+    // 8. Meta footer
+    sections.push(`<div class="drawer-section">
+      <div class="drawer-section-label">Meta</div>
+      <div class="drawer-meta">
+        <div class="drawer-meta-item"><span class="drawer-meta-label">Created</span><span class="drawer-meta-value">${fmtDate(t.created_at)}</span></div>
+        <div class="drawer-meta-item"><span class="drawer-meta-label">Updated</span><span class="drawer-meta-value">${fmtDate(t.updated_at)}</span></div>
+        ${t.completed_at ? `<div class="drawer-meta-item"><span class="drawer-meta-label">Completed</span><span class="drawer-meta-value">${fmtDate(t.completed_at)}</span></div>` : ''}
+        ${t.created_by ? `<div class="drawer-meta-item"><span class="drawer-meta-label">Created by</span><span class="drawer-meta-value">${esc(t.created_by)}</span></div>` : ''}
+        <div class="drawer-meta-item"><span class="drawer-meta-label">Est cost</span><span class="drawer-meta-value">${fmtCost(t.cost_est_cad)}</span></div>
+        <div class="drawer-meta-item"><span class="drawer-meta-label">Actual cost</span><span class="drawer-meta-value">${fmtCost(t.cost_actual_cad)}</span></div>
+        ${t.type ? `<div class="drawer-meta-item"><span class="drawer-meta-label">Type</span><span class="drawer-meta-value">${esc(t.type)}</span></div>` : ''}
+        <div class="drawer-meta-item"><span class="drawer-meta-label">ID</span><span class="drawer-meta-value" style="font-size:0.68rem;word-break:break-all">${esc(t.id)}</span></div>
+      </div>
+    </div>`);
+
+    return sections.join('');
+  }
+
+  window.openDrawer = async function (id) {
+    const overlay = document.getElementById('fleetDrawerOverlay');
+    const panel   = document.getElementById('fleetDrawerPanel');
+    const titleEl = document.getElementById('drawerTitle');
+    const bodyEl  = document.getElementById('drawerBody');
+
+    overlay.classList.add('open');
+    panel.classList.add('open');
+    titleEl.textContent = 'Loading…';
+    bodyEl.innerHTML = '<div style="padding:30px 0;text-align:center;color:var(--cc-text-muted)">Fetching task…</div>';
+
+    history.replaceState(null, '', '#task=' + id);
+
+    const [taskRes, claimRes] = await Promise.all([
+      supa.from('forge_tasks').select('*').eq('id', id).single(),
+      supa.from('forge_claims').select('*').eq('task_id', id).is('released_at', null).maybeSingle()
+    ]);
+
+    if (taskRes.error) {
+      titleEl.textContent = 'Error';
+      bodyEl.innerHTML = `<div class="fleet-empty">Could not load task: ${esc(taskRes.error.message)}</div>`;
+      return;
+    }
+
+    const t = taskRes.data;
+    const claim = claimRes.data || null;
+    titleEl.textContent = t.title;
+    bodyEl.innerHTML = renderDrawerBody(t, claim);
+  };
+
+  window.closeDrawer = function () {
+    document.getElementById('fleetDrawerOverlay').classList.remove('open');
+    document.getElementById('fleetDrawerPanel').classList.remove('open');
+    history.replaceState(null, '', location.pathname);
+  };
+
+  window.fleetDrawerLockCycle = async function (id) {
+    const { error } = await supa.from('forge_tasks')
+      .update({ cycle_status: 'user_locked', status: 'in_progress' }).eq('id', id);
+    if (error) { alert('Lock failed: ' + error.message); return; }
+    openDrawer(id);
+  };
+
   // ─── Boot ────────────────────────────────────────────────
   async function init() {
+    // Esc closes drawer
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+
     const { data: { session } } = await supa.auth.getSession();
     if (!session) {
       document.querySelectorAll('[data-subtab]').forEach(s => { s.innerHTML = signinNote(); });
       return;
     }
+
     loadLive();
     loadQueue();
     loadCycles();
@@ -475,6 +762,10 @@
     loadBlocked();
     loadHistory();
     loadCost();
+
+    // Hash deep-link: fleet.html#task=<uuid>
+    const hashMatch = location.hash.match(/^#task=([0-9a-f-]{36})$/i);
+    if (hashMatch) openDrawer(hashMatch[1]);
   }
 
   if (document.readyState === 'loading') {
