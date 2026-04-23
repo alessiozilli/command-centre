@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:;">
+<title>Calendar &mdash; AZCK Command Centre</title>
+<link rel="stylesheet" href="cc-shell.css">
+<script src="cc-shell.js" defer></script>
+<script>
+  window.PAGE = {
+    id: 'calendar',
+    title: 'Calendar',
+    subtitle: 'Synced from Google Calendar &middot; live mirror via Supabase',
+    subtabs: [
+      { id: 'day',     label: 'Day' },
+      { id: 'week',    label: 'Week' },
+      { id: 'month',   label: 'Month' },
+      { id: 'year',    label: 'Year' },
+      { id: 'agenda',  label: 'Agenda' },
+      { id: 'alerts',  label: 'Alerts' },
+      { id: 'sources', label: 'Sources' }
+    ],
+    stats: [
+      { id: 'today',     label: 'Today',     value: '&mdash;' },
+      { id: 'thisWeek',  label: 'This week', value: '&mdash;' },
+      { id: 'thisMonth', label: 'This month', value: '&mdash;' },
+      { id: 'next',      label: 'Next event', value: '&mdash;' },
+      { id: 'sync',      label: 'Last sync', value: '&mdash;' }
+    ]
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+<script defer src="auth.js"></script>
+<style>
+/* Page-specific styling. Layout/shell come from cc-shell.css. */
+.calendar-host { background: var(--cc-bg-card); border: 1px solid var(--cc-border); border-radius: var(--cc-r-lg); padding: 16px; min-height: 600px; }
+.alerts-grid { display: grid; gap: 12px; }
+.alert-section { background: var(--cc-bg-card); border: 1px solid var(--cc-border); border-radius: var(--cc-r-lg); padding: 18px; }
+.alert-section h3 { font-size: 0.85rem; font-weight: 700; color: var(--cc-text); margin: 0 0 12px; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px; }
+.alert-section h3 .count { background: rgba(88,166,255,0.15); color: var(--cc-accent); padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: 700; }
+.alert-list { display: grid; gap: 8px; }
+.alert-li { display: grid; grid-template-columns: 8px 1fr auto; gap: 10px; align-items: center; padding: 10px 12px; background: var(--cc-bg); border-radius: var(--cc-r-sm); border: 1px solid var(--cc-border-soft); cursor: pointer; transition: border-color 0.15s; }
+.alert-li:hover { border-color: var(--cc-accent); }
+.alert-li .dot { width: 8px; height: 8px; border-radius: 50%; }
+.alert-li .info .summary { color: var(--cc-text); font-size: 0.9rem; font-weight: 600; }
+.alert-li .info .meta { color: var(--cc-text-muted); font-size: 0.75rem; margin-top: 2px; }
+.alert-li .info .conflict { color: var(--cc-warn); font-size: 0.7rem; margin-top: 2px; font-weight: 600; }
+.alert-li .when { color: var(--cc-text-body); font-size: 0.8rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.alert-empty { text-align: center; padding: 30px; color: var(--cc-text-muted); font-style: italic; font-size: 0.85rem; }
+.sources-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.source-card { background: var(--cc-bg-card); border: 1px solid var(--cc-border); border-radius: var(--cc-r-lg); padding: 20px; }
+.source-card h3 { font-size: 1rem; font-weight: 700; color: var(--cc-text); margin: 0 0 6px; display: flex; align-items: center; gap: 10px; }
+.source-card .badge { padding: 3px 9px; border-radius: var(--cc-r-pill); font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+.source-card .badge.live { background: rgba(63,185,80,0.15); color: var(--cc-success); border: 1px solid rgba(63,185,80,0.3); }
+.source-card .badge.warn { background: rgba(210,153,34,0.15); color: var(--cc-warn); border: 1px solid rgba(210,153,34,0.3); }
+.source-card .badge.off  { background: rgba(139,148,158,0.15); color: var(--cc-text-muted); border: 1px solid rgba(139,148,158,0.3); }
+.source-card .desc { color: var(--cc-text-muted); font-size: 0.82rem; margin: 8px 0 14px; line-height: 1.55; }
+.source-card .row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--cc-border-soft); font-size: 0.82rem; }
+.source-card .row:last-child { border-bottom: none; }
+.source-card .row .k { color: var(--cc-text-muted); }
+.source-card .row .v { color: var(--cc-text); font-variant-numeric: tabular-nums; }
+.source-card .actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.btn { padding: 8px 14px; border-radius: var(--cc-r-sm); border: 1px solid var(--cc-border); background: var(--cc-bg); color: var(--cc-text); font-size: 0.8rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+.btn:hover { border-color: var(--cc-accent); color: var(--cc-accent); }
+.btn.primary { background: var(--cc-accent); color: var(--cc-bg); border-color: var(--cc-accent); }
+.btn.primary:hover { background: #79c0ff; color: var(--cc-bg); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; padding: 10px 14px; background: var(--cc-bg-card); border: 1px solid var(--cc-border-soft); border-radius: var(--cc-r-sm); font-size: 0.75rem; color: var(--cc-text-muted); }
+.legend .swatch { display: inline-flex; align-items: center; gap: 6px; }
+.legend .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.toast { position: fixed; bottom: 20px; right: 20px; padding: 12px 18px; background: var(--cc-bg-card); border: 1px solid var(--cc-accent); border-radius: var(--cc-r-md); color: var(--cc-text); font-size: 0.85rem; box-shadow: 0 4px 16px rgba(0,0,0,0.4); z-index: 1000; opacity: 0; transform: translateY(10px); transition: all 0.25s; }
+.toast.visible { opacity: 1; transform: translateY(0); }
+.toast.err { border-color: var(--cc-danger); }
+
+/* FullCalendar dark-theme overrides */
+.fc { color: var(--cc-text); font-family: inherit; }
+.fc .fc-toolbar-title { color: var(--cc-text); font-size: 1.15rem; font-weight: 700; }
+.fc .fc-button { background: var(--cc-bg); border: 1px solid var(--cc-border); color: var(--cc-text-body); font-weight: 600; text-transform: capitalize; padding: 6px 12px; transition: all 0.15s; }
+.fc .fc-button:hover { background: var(--cc-bg-raised); border-color: var(--cc-accent); color: var(--cc-text); }
+.fc .fc-button-primary:not(:disabled).fc-button-active, .fc .fc-button-primary:not(:disabled):active { background: var(--cc-accent); border-color: var(--cc-accent); color: var(--cc-bg); }
+.fc .fc-button:focus, .fc .fc-button-primary:focus { box-shadow: 0 0 0 2px rgba(88,166,255,0.35); }
+.fc-theme-standard td, .fc-theme-standard th, .fc-theme-standard .fc-scrollgrid { border-color: var(--cc-border-soft); }
+.fc .fc-col-header-cell-cushion, .fc .fc-daygrid-day-number, .fc .fc-list-day-cushion a, .fc .fc-list-event-time, .fc .fc-list-event-title a { color: var(--cc-text-body); text-decoration: none; }
+.fc .fc-day-today { background-color: rgba(88,166,255,0.06) !important; }
+.fc .fc-list-day-cushion { background-color: var(--cc-bg-card) !important; }
+.fc .fc-list-event:hover td { background-color: var(--cc-bg-raised) !important; }
+.fc .fc-event { border: none; padding: 1px 4px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.fc .fc-timegrid-slot { height: 2.5em; }
+.fc .fc-list-empty { background-color: var(--cc-bg-card); color: var(--cc-text-muted); }
+.fc .fc-popover { background: var(--cc-bg-card); border-color: var(--cc-border); color: var(--cc-text); }
+.fc .fc-popover-header { background: var(--cc-bg-raised); color: var(--cc-text); }
+.fc .fc-multimonth { background: var(--cc-bg); }
+.fc .fc-multimonth-title { color: var(--cc-text); }
+</style>
+</head>
+<body>
+
+<main id="cc-content" class="cc-content">
+
+<!-- Day / Week / Month / Year / Agenda — all share the SAME FullCalendar instance, view switches on subtab change -->
+<section data-subtab="day">
+  <div class="legend" id="legend-day"></div>
+  <div class="calendar-host" id="cal-host-day"></div>
+</section>
+<section data-subtab="week">
+  <div class="legend" id="legend-week"></div>
+  <div class="calendar-host" id="cal-host-week"></div>
+</section>
+<section data-subtab="month">
+  <div class="legend" id="legend-month"></div>
+  <div class="calendar-host" id="cal-host-month"></div>
+</section>
+<section data-subtab="year">
+  <div class="legend" id="legend-year"></div>
+  <div class="calendar-host" id="cal-host-year"></div>
+</section>
+<section data-subtab="agenda">
+  <div class="legend" id="legend-agenda"></div>
+  <div class="calendar-host" id="cal-host-agenda"></div>
+</section>
+
+<section data-subtab="alerts">
+  <div class="alerts-grid">
+    <div class="alert-section">
+      <h3>⚠️ Today &mdash; deadlines &amp; meetings <span class="count" id="cnt-today">0</span></h3>
+      <div class="alert-list" id="list-today"></div>
+    </div>
+    <div class="alert-section">
+      <h3>⏰ Next 24 hours <span class="count" id="cnt-24h">0</span></h3>
+      <div class="alert-list" id="list-24h"></div>
+    </div>
+    <div class="alert-section">
+      <h3>⚡ Conflicts &mdash; overlapping events <span class="count" id="cnt-conflicts">0</span></h3>
+      <div class="alert-list" id="list-conflicts"></div>
+    </div>
+    <div class="alert-section">
+      <h3>📅 This week ahead <span class="count" id="cnt-week">0</span></h3>
+      <div class="alert-list" id="list-week"></div>
+    </div>
+  </div>
+</section>
+
+<section data-subtab="sources">
+  <div class="sources-grid">
+    <div class="source-card">
+      <h3>Google Calendar <span class="badge live" id="srcGoogleBadge">Connected</span></h3>
+      <div class="desc">Primary source. AZCK calendar at <code>alessio.zilli@azcustomknives.com</code>. Events flow Google → sync → Supabase → CC.</div>
+      <div class="row"><span class="k">Total events synced</span><span class="v" id="srcTotal">&mdash;</span></div>
+      <div class="row"><span class="k">Future events</span><span class="v" id="srcFuture">&mdash;</span></div>
+      <div class="row"><span class="k">Last sync</span><span class="v" id="srcLastSync">&mdash;</span></div>
+      <div class="row"><span class="k">Sync method</span><span class="v">Manual via Forge (auto: planned)</span></div>
+      <div class="actions">
+        <a class="btn primary" href="https://calendar.google.com/calendar/u/0/r/week" target="_blank" rel="noopener">Open Google Calendar →</a>
+        <button class="btn" id="btnRefresh">Refresh data</button>
+      </div>
+    </div>
+
+    <div class="source-card">
+      <h3>Supabase mirror <span class="badge live">Live</span></h3>
+      <div class="desc">Read-only mirror of Google Calendar in <code>calendar_events</code>. RLS-protected (knifemaker/admin only). Used by every CC widget that shows calendar data.</div>
+      <div class="row"><span class="k">Table</span><span class="v">public.calendar_events</span></div>
+      <div class="row"><span class="k">Rows</span><span class="v" id="srcRows">&mdash;</span></div>
+      <div class="row"><span class="k">RLS</span><span class="v">on (knifemaker_read)</span></div>
+      <div class="row"><span class="k">Editing</span><span class="v">Read-only in v1</span></div>
+    </div>
+
+    <div class="source-card">
+      <h3>Auto sync <span class="badge warn" id="srcAutoBadge">Planned</span></h3>
+      <div class="desc">Edge Function on Supabase, scheduled every 30 min via pg_cron. Pulls Google Calendar API → upserts <code>calendar_events</code>. Needs Google service account + OAuth setup.</div>
+      <div class="row"><span class="k">Status</span><span class="v">Not deployed yet</span></div>
+      <div class="row"><span class="k">Frequency</span><span class="v">30 min (planned)</span></div>
+      <div class="row"><span class="k">Window</span><span class="v">Today + 90 days</span></div>
+      <div class="actions">
+        <button class="btn" disabled title="Build pending — task #8 in CC backlog">Trigger sync (planned)</button>
+      </div>
+    </div>
+
+    <div class="source-card">
+      <h3>Two-way edits <span class="badge off">v2</span></h3>
+      <div class="desc">Drag-to-reschedule and inline edit will write back to Google. Requires OAuth write scope. Tracked separately.</div>
+      <div class="row"><span class="k">Status</span><span class="v">Not started</span></div>
+      <div class="row"><span class="k">Estimated</span><span class="v">~2 sessions</span></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     ENGINE — reads window.SB (set by auth.js) or builds its own
+     ═══════════════════════════════════════════════════════════════ -->
+<script>
+(function() {
+  // Supabase config — same as other CC pages
+  const SUPABASE_URL = 'https://twrlvnfszohyrmivdhre.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3cmx2bmZzem9oeXJtaXZkaHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMwMzExMTMsImV4cCI6MjA1ODYwNzExM30.ja8ENRPfUuzZ5GixedGFzcvUONhrVpY8Ww9DXMG4Vog';
+  const supa = (window.SB && window.SB.client) || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, { auth: { persistSession: true } });
+
+  const COLOURS = {
+    'shop':       '#f0883e',
+    'forge':      '#bc8cff',
+    'personal ai':'#58a6ff',
+    'family':     '#3fb950',
+    'invoice':    '#d29922',
+    'other':      '#8b949e'
+  };
+  function classify(summary) {
+    const s = (summary || '').toLowerCase();
+    if (s.startsWith('shop')) return 'shop';
+    if (s.includes('forge'))  return 'forge';
+    if (s.includes('personal ai')) return 'personal ai';
+    if (s.includes('family')) return 'family';
+    if (s.includes('invoice')) return 'invoice';
+    return 'other';
+  }
+  function colourFor(summary) { return COLOURS[classify(summary)]; }
+
+  function renderLegend() {
+    const items = Object.keys(COLOURS).map(k =>
+      `<span class="swatch"><span class="dot" style="background:${COLOURS[k]}"></span>${k}</span>`
+    ).join('');
+    document.querySelectorAll('[id^="legend-"]').forEach(el => { el.innerHTML = items; });
+  }
+
+  let calendar = null;
+  let lastEvents = [];
+  let lastSyncedAt = null;
+
+  // FullCalendar view per subtab
+  const VIEW_MAP = {
+    day:    'timeGridDay',
+    week:   'timeGridWeek',
+    month:  'dayGridMonth',
+    year:   'multiMonthYear',
+    agenda: 'listMonth'
+  };
+
+  function initCalendar(targetEl) {
+    calendar = new FullCalendar.Calendar(targetEl, {
+      initialView: 'dayGridMonth',
+      firstDay: 1, // Monday
+      timeZone: 'America/Edmonton',
+      nowIndicator: true,
+      navLinks: true,
+      dayMaxEvents: 3,
+      height: 'auto',
+      headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
+      buttonText: { today: 'Today' },
+      events: [],
+      eventDidMount: function(info) {
+        info.el.style.background = colourFor(info.event.title);
+        info.el.style.color = '#0d1117';
+      },
+      eventClick: function(info) {
+        info.jsEvent.preventDefault();
+        const link = info.event.extendedProps.html_link || 'https://calendar.google.com/calendar/u/0/r/week';
+        window.open(link, '_blank');
+      }
+    });
+    calendar.render();
+  }
+
+  function moveCalendarTo(subtabId) {
+    const targetHost = document.getElementById('cal-host-' + subtabId);
+    if (!targetHost) return; // alerts/sources subtabs don't host the calendar
+    if (!calendar) {
+      initCalendar(targetHost);
+    } else if (calendar.el.parentNode !== targetHost) {
+      targetHost.innerHTML = '';
+      targetHost.appendChild(calendar.el);
+      calendar.updateSize();
+    }
+    const view = VIEW_MAP[subtabId];
+    if (view && calendar.view.type !== view) calendar.changeView(view);
+  }
+
+  function fmtTimeShort(d) {
+    return d.toLocaleTimeString('en-CA', { hour:'numeric', minute:'2-digit', hour12:true });
+  }
+  function fmtRange(start, end, allDay) {
+    if (allDay) return 'all day';
+    return fmtTimeShort(start) + (end ? ' – ' + fmtTimeShort(end) : '');
+  }
+  function fmtRelative(d) {
+    const mins = Math.floor((Date.now() - d.getTime()) / 60000);
+    if (Math.abs(mins) < 1)        return 'just now';
+    if (mins > 0  && mins < 60)    return mins + 'm ago';
+    if (mins > 0  && mins < 1440)  return Math.floor(mins/60) + 'h ago';
+    if (mins > 0)                  return Math.floor(mins/1440) + 'd ago';
+    if (mins < 0  && mins > -60)   return 'in ' + (-mins) + 'm';
+    if (mins < 0  && mins > -1440) return 'in ' + Math.floor(-mins/60) + 'h';
+    return 'in ' + Math.floor(-mins/1440) + 'd';
+  }
+
+  async function loadEvents() {
+    const fromIso = new Date(Date.now() - 7*24*3600*1000).toISOString();
+    const { data, error } = await supa.from('calendar_events')
+      .select('id,google_event_id,summary,description,location,start_time,end_time,all_day,html_link,synced_at')
+      .gte('end_time', fromIso)
+      .order('start_time', { ascending: true });
+    if (error) { showToast('Load failed: ' + error.message, true); return; }
+    lastEvents = data || [];
+    lastSyncedAt = lastEvents.reduce((max, e) => {
+      const t = e.synced_at ? new Date(e.synced_at).getTime() : 0;
+      return t > max ? t : max;
+    }, 0);
+
+    // feed FullCalendar
+    const fcEvents = lastEvents.map(e => ({
+      id: String(e.id),
+      title: e.summary || '(untitled)',
+      start: e.start_time,
+      end: e.end_time,
+      allDay: !!e.all_day,
+      extendedProps: { html_link: e.html_link, description: e.description, location: e.location }
+    }));
+    if (calendar) {
+      calendar.removeAllEvents();
+      fcEvents.forEach(ev => calendar.addEvent(ev));
+    }
+
+    renderStats();
+    renderAlerts();
+    renderSources();
+  }
+
+  function renderStats() {
+    if (!window.CC || !window.CC.setStats) return;
+    const now = new Date();
+    const today0 = new Date(now); today0.setHours(0,0,0,0);
+    const today1 = new Date(today0); today1.setDate(today1.getDate()+1);
+    const week1 = new Date(today0); week1.setDate(week1.getDate() + 7);
+    const month1 = new Date(today0); month1.setMonth(month1.getMonth() + 1);
+    const future = lastEvents.filter(e => new Date(e.end_time || e.start_time) >= now);
+
+    const todayCount = future.filter(e => new Date(e.start_time) >= today0 && new Date(e.start_time) < today1).length;
+    const weekCount  = future.filter(e => new Date(e.start_time) >= today0 && new Date(e.start_time) < week1).length;
+    const monthCount = future.filter(e => new Date(e.start_time) >= today0 && new Date(e.start_time) < month1).length;
+    const next = future[0];
+    const nextLabel = next
+      ? (next.summary || '(untitled)').slice(0, 18) + ' · ' + fmtRelative(new Date(next.start_time))
+      : 'none';
+    const syncLabel = lastSyncedAt ? fmtRelative(new Date(lastSyncedAt)) : '—';
+
+    window.CC.setStats([
+      { id:'today',     label:'Today',      value: String(todayCount) },
+      { id:'thisWeek',  label:'Week',       value: String(weekCount) },
+      { id:'thisMonth', label:'Month',      value: String(monthCount) },
+      { id:'next',      label:'Next',       value: nextLabel },
+      { id:'sync',      label:'Last sync',  value: syncLabel }
+    ]);
+  }
+
+  function renderAlerts() {
+    const now = new Date();
+    const today0 = new Date(now); today0.setHours(0,0,0,0);
+    const today1 = new Date(today0); today1.setDate(today1.getDate()+1);
+    const next24 = new Date(now.getTime() + 24*3600*1000);
+    const week1 = new Date(today0); week1.setDate(week1.getDate() + 7);
+
+    const todays  = lastEvents.filter(e => { const s = new Date(e.start_time); return s >= today0 && s < today1; });
+    const upcoming = lastEvents.filter(e => { const s = new Date(e.start_time); return s >= now && s <= next24; });
+    const weekly  = lastEvents.filter(e => { const s = new Date(e.start_time); return s >= today0 && s < week1; });
+    const conflicts = findConflicts(lastEvents.filter(e => new Date(e.end_time || e.start_time) >= now));
+
+    paintList('list-today',     todays,   'No deadlines or meetings today.');
+    paintList('list-24h',       upcoming, 'Nothing in the next 24 hours.');
+    paintList('list-week',      weekly,   'Nothing scheduled this week.');
+    paintConflicts('list-conflicts', conflicts, 'No overlapping events. Schedule looks clean.');
+
+    document.getElementById('cnt-today').textContent = todays.length;
+    document.getElementById('cnt-24h').textContent = upcoming.length;
+    document.getElementById('cnt-week').textContent = weekly.length;
+    document.getElementById('cnt-conflicts').textContent = conflicts.length;
+  }
+
+  function paintList(id, events, emptyMsg) {
+    const el = document.getElementById(id);
+    if (!events.length) { el.innerHTML = `<div class="alert-empty">${emptyMsg}</div>`; return; }
+    el.innerHTML = events.map(e => {
+      const s = new Date(e.start_time);
+      const colour = colourFor(e.summary);
+      const when = e.all_day ? 'all day · ' + s.toLocaleDateString('en-CA',{weekday:'short',month:'short',day:'numeric'})
+                             : fmtTimeShort(s) + ' · ' + s.toLocaleDateString('en-CA',{weekday:'short',month:'short',day:'numeric'});
+      return `<div class="alert-li" data-link="${e.html_link || ''}">
+        <span class="dot" style="background:${colour}"></span>
+        <div class="info">
+          <div class="summary">${escapeHtml(e.summary || '(untitled)')}</div>
+          ${e.location ? `<div class="meta">📍 ${escapeHtml(e.location)}</div>` : ''}
+        </div>
+        <div class="when">${escapeHtml(when)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function paintConflicts(id, pairs, emptyMsg) {
+    const el = document.getElementById(id);
+    if (!pairs.length) { el.innerHTML = `<div class="alert-empty">${emptyMsg}</div>`; return; }
+    el.innerHTML = pairs.map(([a, b]) => {
+      const s = new Date(a.start_time);
+      return `<div class="alert-li" data-link="${a.html_link || ''}">
+        <span class="dot" style="background:#f85149"></span>
+        <div class="info">
+          <div class="summary">${escapeHtml(a.summary || '(untitled)')}</div>
+          <div class="conflict">⚡ overlaps with: ${escapeHtml(b.summary || '(untitled)')}</div>
+        </div>
+        <div class="when">${escapeHtml(fmtTimeShort(s))}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function findConflicts(events) {
+    const sorted = events.slice().sort((x,y) => new Date(x.start_time) - new Date(y.start_time));
+    const pairs = [];
+    for (let i = 0; i < sorted.length; i++) {
+      for (let j = i+1; j < sorted.length; j++) {
+        const aEnd = new Date(sorted[i].end_time || sorted[i].start_time);
+        const bStart = new Date(sorted[j].start_time);
+        if (bStart >= aEnd) break;
+        // Skip if either is "Family evening" or "Personal AI" — those are deliberately overlap-allowed time-blocks
+        const aType = classify(sorted[i].summary);
+        const bType = classify(sorted[j].summary);
+        if (['family','personal ai'].includes(aType) && ['family','personal ai'].includes(bType)) continue;
+        pairs.push([sorted[i], sorted[j]]);
+      }
+    }
+    return pairs;
+  }
+
+  function renderSources() {
+    document.getElementById('srcTotal').textContent = lastEvents.length;
+    const future = lastEvents.filter(e => new Date(e.end_time || e.start_time) >= new Date()).length;
+    document.getElementById('srcFuture').textContent = future;
+    document.getElementById('srcRows').textContent = lastEvents.length;
+    document.getElementById('srcLastSync').textContent = lastSyncedAt
+      ? new Date(lastSyncedAt).toLocaleString('en-CA') + ' (' + fmtRelative(new Date(lastSyncedAt)) + ')'
+      : 'never';
+    const ageMins = lastSyncedAt ? Math.floor((Date.now() - lastSyncedAt) / 60000) : Infinity;
+    const badge = document.getElementById('srcGoogleBadge');
+    if (ageMins < 360) { badge.className = 'badge live'; badge.textContent = 'Connected'; }
+    else if (ageMins < 1440) { badge.className = 'badge warn'; badge.textContent = 'Stale (>6h)'; }
+    else { badge.className = 'badge off'; badge.textContent = 'Stale (>24h)'; }
+  }
+
+  function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+
+  let toastTimer = null;
+  function showToast(msg, isErr) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast visible' + (isErr ? ' err' : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.className = 'toast' + (isErr ? ' err' : ''); }, 3500);
+  }
+
+  // delegated clicks for alert rows
+  document.body.addEventListener('click', function(e) {
+    const li = e.target.closest('.alert-li');
+    if (li && li.dataset.link) window.open(li.dataset.link, '_blank');
+    if (e.target.id === 'btnRefresh') { e.preventDefault(); loadEvents().then(() => showToast('Refreshed from Supabase mirror.')); }
+  });
+
+  // shell wiring
+  function wireShell() {
+    if (!window.CC) { setTimeout(wireShell, 50); return; }
+    if (window.CC.onSubtabChange) {
+      window.CC.onSubtabChange(function(id){ moveCalendarTo(id); });
+    }
+    // initial mount: pick whichever subtab is active
+    const active = (window.CC.getSubtab && window.CC.getSubtab()) || 'month';
+    moveCalendarTo(active);
+    renderStats();
+  }
+
+  // boot
+  renderLegend();
+  loadEvents();
+  wireShell();
+})();
+</script>
+</body>
+</html>

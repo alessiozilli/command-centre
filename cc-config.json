@@ -1,6 +1,6 @@
 {
-  "_comment": "AZCK Command Centre — global config. Edit this, changes propagate on next page load. v2.6 (2026-04-22): Bugs added to SYSTEMS group. v2.5 (Pass 1 rebuild 2026-04-21): brand.link + home nav point at dashboard.html (login lives at index.html). Devices added to REFERENCE group.",
-  "_version": "2.6",
+  "_comment": "AZCK Command Centre — global config. Edit this, changes propagate on next page load. v2.7 (2026-04-22): Calendar added to TODAY group. v2.6 (2026-04-22): Bugs added to SYSTEMS group. v2.5 (Pass 1 rebuild 2026-04-21): brand.link + home nav point at dashboard.html (login lives at index.html). Devices added to REFERENCE group.",
+  "_version": "2.7",
   "_updated": "2026-04-22",
 
   "brand": {
@@ -24,6 +24,7 @@
       "label": "TODAY",
       "items": [
         { "id": "tasks",     "label": "Tasks",      "href": "alessio.html" },
+        { "id": "calendar",  "label": "Calendar",   "href": "calendar.html" },
         { "id": "shared",    "label": "Shared",     "href": "shared.html" }
       ]
     },
