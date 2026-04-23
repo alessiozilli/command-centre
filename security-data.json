@@ -1,0 +1,214 @@
+{
+  "_comment": "AZCK Command Centre — security page data block. Updated by forge-code after each audit. Engine in security.html reads this on load.",
+  "_version": "1.0",
+  "_updated": "2026-04-23",
+
+  "taskId": "cd71596d-2309-4a78-9c46-2530f65f9667",
+  "taskTitle": "PC Security Audit + Hardening",
+  "planFile": "AI/Ops/Plans/PC_Security_Hardening_Plan_v1_2026-04-23.md",
+  "findingsFile": "AI/Ops/Plans/PC_Security_Findings_2026-04-23.md",
+  "lastAuditRun": "2026-04-23T01:47:00-06:00",
+  "auditHost": "TORTUGA",
+  "auditModel": "sonnet-4.6",
+
+  "currentPhase": 1,
+  "phasesTotal": 5,
+  "phase1Complete": true,
+
+  "severityCounts": {
+    "critical": 3,
+    "high": 4,
+    "medium": 5,
+    "pass": 11
+  },
+
+  "findings": [
+    {
+      "id": "C1",
+      "severity": "critical",
+      "title": "ForgeWatcher password stored plaintext on disk",
+      "location": "C:\\Users\\user\\Documents\\Claude\\.forge-watcher.config.json",
+      "summary": "Supabase login password stored plaintext. 9 chars, ACL restricts to user/admin/SYSTEM but any process as user can read.",
+      "fix": "Move to Windows Credential Manager (DPAPI-encrypted). Delete the JSON config.",
+      "effortMin": 15,
+      "phase": 2
+    },
+    {
+      "id": "C2",
+      "severity": "critical",
+      "title": "Ollama listening on all IPv6 interfaces (LAN-reachable)",
+      "location": "Port 11434 on ::",
+      "summary": "Local LLM server is queryable by any device on home LAN — no auth.",
+      "fix": "Set OLLAMA_HOST=127.0.0.1:11434, restart Ollama.",
+      "effortMin": 2,
+      "phase": 2
+    },
+    {
+      "id": "C3",
+      "severity": "critical",
+      "title": "Chrome Remote Desktop extension installed",
+      "location": "Extension inomeogfingihgjfjlpeplalcfajhgai",
+      "summary": "If unintentional or unused, this is a remote-access path. Native messaging host present.",
+      "fix": "Confirm intent. If unused → uninstall. If used → verify account + 2FA.",
+      "effortMin": 1,
+      "phase": 2
+    },
+    {
+      "id": "H1",
+      "severity": "high",
+      "title": "Outbound firewall = allow-by-default, logging off",
+      "location": "All 3 firewall profiles",
+      "summary": "Nothing stops a rogue process from phoning home. No log trail.",
+      "fix": "Phase 3 proper — deny-by-default + whitelist + block logging.",
+      "effortMin": 60,
+      "phase": 3
+    },
+    {
+      "id": "H2",
+      "severity": "high",
+      "title": "Adobe Acrobat extension with <all_urls> host permission",
+      "location": "Extension efaidnbmnnnibpcajpcglclefindmkaj",
+      "summary": "Can inject scripts into every visited site. Widest-permission extension installed.",
+      "fix": "Remove if you don't use the browser save-to-PDF feature.",
+      "effortMin": 1,
+      "phase": 2
+    },
+    {
+      "id": "H3",
+      "severity": "high",
+      "title": ".claude local history contains JWT-pattern strings",
+      "location": "C:\\Users\\user\\.claude\\file-history + projects\\*.jsonl",
+      "summary": "53 files contain JWT-shaped strings (likely public anon keys, but 1 mentions service_role). 0 Anthropic keys found.",
+      "fix": "Confirm .claude is not Drive-synced. Optionally purge history older than N days.",
+      "effortMin": 10,
+      "phase": 2
+    },
+    {
+      "id": "H4",
+      "severity": "high",
+      "title": "Local admin 'user' has PasswordRequired = false",
+      "location": "Local account 'user'",
+      "summary": "Likely a Microsoft account login with PIN/Hello (PasswordRequired reports local-only). Warrants confirmation.",
+      "fix": "Verify MS account has strong password + 2FA at account.microsoft.com.",
+      "effortMin": 2,
+      "phase": 2
+    },
+    {
+      "id": "M1",
+      "severity": "medium",
+      "title": "SMB Users share exposed",
+      "location": "C:\\Users shared as 'Users'",
+      "summary": "Anyone with local creds + network access can browse. SMB2 encryption enforced, but unnecessary surface.",
+      "fix": "Remove-SmbShare -Name Users -Force (unless actively used for cross-PC file sharing).",
+      "effortMin": 1,
+      "phase": 2
+    },
+    {
+      "id": "M2",
+      "severity": "medium",
+      "title": "Windows Connected Devices Platform (port 5040) on all interfaces",
+      "location": "svchost 0.0.0.0:5040",
+      "summary": "Nearby Sharing to Surface/Xbox devices. Low risk on home LAN.",
+      "fix": "Settings > System > Nearby sharing > Off (if unused).",
+      "effortMin": 1,
+      "phase": 2
+    },
+    {
+      "id": "M3",
+      "severity": "medium",
+      "title": "Delivery Optimization (port 7680) on all interfaces",
+      "location": "svchost :::7680",
+      "summary": "Peer-to-peer Windows Update. Signed content only, low risk.",
+      "fix": "Optional — Windows Update > Advanced > Delivery Optimization > Off.",
+      "effortMin": 1,
+      "phase": 2
+    },
+    {
+      "id": "M4",
+      "severity": "medium",
+      "title": "Logitech Options+ agent (port 59869) on all interfaces",
+      "location": "logioptionsplus_agent 0.0.0.0:59869",
+      "summary": "Used for Logitech Flow keyboard/mouse roaming between PCs. Logitech has had historical CVEs.",
+      "fix": "Disable Flow in Options+ or firewall-block 59869 if unused.",
+      "effortMin": 2,
+      "phase": 2
+    },
+    {
+      "id": "M5",
+      "severity": "medium",
+      "title": "Razer services running as LocalSystem",
+      "location": "RzSDKServer, RzChromaStreamServer, RzDiagnosticService",
+      "summary": "Overprivileged for RGB lighting. All bind 127.0.0.1 only (good). Note only.",
+      "fix": "Uninstall if not using Razer peripherals. Else accept.",
+      "effortMin": 0,
+      "phase": 2
+    }
+  ],
+
+  "passChecks": [
+    "Windows Defender ON · all protections active",
+    "Antivirus signatures current",
+    "Hotfixes current (April 15, 2026)",
+    "No third-party AV",
+    "Guest account disabled",
+    "RDP disabled (fDenyTSConnections=1)",
+    "SMB1 disabled",
+    "SMB2 encryption enforced (RejectUnencrypted=true)",
+    "Network profile Public (restrictive)",
+    "Brain services (8050/8051/8052/9000) localhost-only",
+    "D:\\Private-Brain on local disc — NOT synced to Google Drive",
+    "Zero .env or credentials.json in Drive folder",
+    "No VPN leak (none configured)",
+    "DNS sane (router + DoH templates)"
+  ],
+
+  "deferredChecks": [
+    "Confirm-SecureBootUEFI (needs elevated PowerShell)",
+    "Get-BitLockerVolume (needs elevated PowerShell)",
+    "Get-TpmEndorsementKeyInfo (needs elevated PowerShell)",
+    "Firewall rule-level enumeration (profile-level only done)"
+  ],
+
+  "phases": [
+    {
+      "id": 1,
+      "name": "Audit",
+      "status": "complete",
+      "completedAt": "2026-04-23T01:47:00-06:00",
+      "summary": "Read-only Windows Defender, firewall, ports, browser, Cowork/Forge, Drive checks. Findings saved.",
+      "estMin": 30
+    },
+    {
+      "id": 2,
+      "name": "Hardening",
+      "status": "awaiting_approval",
+      "summary": "Apply the approved fixes one by one. Per-item approval.",
+      "estMin": 60,
+      "requiresApproval": true
+    },
+    {
+      "id": 3,
+      "name": "Outbound firewall whitelist",
+      "status": "queued",
+      "summary": "Deny-by-default outbound + whitelist Anthropic/Supabase/GitHub/Google/mem0 + log blocked attempts.",
+      "estMin": 90,
+      "requiresApproval": true
+    },
+    {
+      "id": 4,
+      "name": "Forge sandbox rules",
+      "status": "queued",
+      "summary": "CLAUDE.md update restricting write paths + forge-audit-log.md + toast on out-of-bounds writes.",
+      "estMin": 45,
+      "requiresApproval": true
+    },
+    {
+      "id": 5,
+      "name": "Reporting layer",
+      "status": "queued",
+      "summary": "ForgeWatcher extension: toast on firewall blocks, RLS violations, new device logins, service offline.",
+      "estMin": 60,
+      "requiresApproval": true
+    }
+  ]
+}
