@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:;">
+<title>Forge Fleet &mdash; AZCK Command Centre</title>
+<link rel="stylesheet" href="cc-shell.css">
+<script src="cc-shell.js" defer></script>
+<script>
+  window.PAGE = {
+    id: 'fleet',
+    title: 'Forge Fleet',
+    subtitle: 'Multi-instance task dispatch, cycles, and cost tracking.',
+    subtabs: [
+      { id: 'live',    label: 'Live'    },
+      { id: 'queue',   label: 'Queue'   },
+      { id: 'cycles',  label: 'Cycles'  },
+      { id: 'today',   label: 'Today'   },
+      { id: 'blocked', label: 'Blocked' },
+      { id: 'history', label: 'History' },
+      { id: 'cost',    label: 'Cost'    }
+    ],
+    stats: [
+      { id: 'stat-active',  label: 'Active',   value: '—' },
+      { id: 'stat-queued',  label: 'Queued',   value: '—' },
+      { id: 'stat-blocked', label: 'Blocked',  value: '—' },
+      { id: 'stat-cycles',  label: 'Cycles ↻', value: '—' },
+      { id: 'stat-cost',    label: 'Today $',  value: '—' }
+    ]
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script defer src="auth.js"></script>
+<style>
+/* Fleet-scoped styles — shell + base from cc-shell.css */
+.fleet-section-intro { font-size: 0.85rem; color: var(--cc-text-muted); margin: 0 0 16px; padding: 10px 14px; background: var(--cc-bg-card); border-radius: var(--cc-r-md); border-left: 3px solid var(--cc-accent); }
+.fleet-empty  { text-align: center; padding: 40px 20px; color: var(--cc-text-muted); font-size: 0.9rem; background: var(--cc-bg-card); border-radius: var(--cc-r-md); }
+.fleet-empty a { color: var(--cc-accent); }
+.fleet-grid   { display: grid; gap: 12px; }
+.fleet-card   { background: var(--cc-bg-card); border: 1px solid var(--cc-border); border-radius: var(--cc-r-md); padding: 14px 16px; }
+.fleet-card.urgent { border-color: var(--cc-danger); }
+.fleet-card.blocked-card { border-color: var(--cc-warn); }
+.fleet-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.fleet-card-title { font-size: 0.97rem; font-weight: 700; color: var(--cc-text); flex: 1; min-width: 180px; }
+.fleet-card-meta  { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-size: 0.75rem; color: var(--cc-text-muted); margin-bottom: 6px; }
+.fleet-card-body  { font-size: 0.82rem; color: var(--cc-text-muted); line-height: 1.5; }
+.fleet-card-footer { display: flex; gap: 8px; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--cc-border); flex-wrap: wrap; }
+
+/* Badges */
+.badge { display: inline-block; padding: 2px 8px; border-radius: var(--cc-r-pill); font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
+.badge-instance { background: rgba(88,166,255,0.12); color: #79c0ff; border: 1px solid rgba(88,166,255,0.25); }
+.badge-priority-urgent  { background: rgba(248,81,73,0.12); color: var(--cc-danger); border: 1px solid rgba(248,81,73,0.25); }
+.badge-priority-normal  { background: rgba(139,148,158,0.12); color: var(--cc-text-muted); border: 1px solid rgba(139,148,158,0.25); }
+.badge-side-idempotent  { background: rgba(63,185,80,0.1); color: var(--cc-success); border: 1px solid rgba(63,185,80,0.2); }
+.badge-side-one_shot    { background: rgba(210,153,34,0.1); color: var(--cc-warn); border: 1px solid rgba(210,153,34,0.2); }
+.badge-side-reversible  { background: rgba(88,166,255,0.1); color: var(--cc-accent); border: 1px solid rgba(88,166,255,0.2); }
+.badge-side-destructive { background: rgba(248,81,73,0.12); color: var(--cc-danger); border: 1px solid rgba(248,81,73,0.25); }
+.badge-status-in_progress { background: rgba(88,166,255,0.12); color: var(--cc-accent); border: 1px solid rgba(88,166,255,0.25); }
+.badge-status-done       { background: rgba(63,185,80,0.12); color: var(--cc-success); border: 1px solid rgba(63,185,80,0.25); }
+.badge-status-queued     { background: rgba(139,148,158,0.12); color: var(--cc-text-muted); border: 1px solid rgba(139,148,158,0.25); }
+.badge-status-parked     { background: rgba(188,140,255,0.12); color: #bc8cff; border: 1px solid rgba(188,140,255,0.25); }
+.badge-cycle-active   { background: rgba(88,166,255,0.12); color: var(--cc-accent); border: 1px solid rgba(88,166,255,0.25); }
+.badge-cycle-budget   { background: rgba(248,81,73,0.12); color: var(--cc-danger); border: 1px solid rgba(248,81,73,0.25); }
+.badge-cycle-done     { background: rgba(63,185,80,0.12); color: var(--cc-success); border: 1px solid rgba(63,185,80,0.25); }
+.badge-verdict-improved   { background: rgba(63,185,80,0.1); color: var(--cc-success); border: 1px solid rgba(63,185,80,0.2); font-size: 0.65rem; }
+.badge-verdict-no_changes { background: rgba(139,148,158,0.1); color: var(--cc-text-muted); border: 1px solid rgba(139,148,158,0.2); font-size: 0.65rem; }
+.badge-verdict-blocked    { background: rgba(210,153,34,0.1); color: var(--cc-warn); border: 1px solid rgba(210,153,34,0.2); font-size: 0.65rem; }
+
+/* Cycle progress bar */
+.cycle-bar-wrap { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.cycle-bar-track { flex: 1; height: 8px; background: var(--cc-bg); border-radius: 4px; overflow: hidden; }
+.cycle-bar-fill  { height: 100%; background: var(--cc-accent); border-radius: 4px; transition: width 0.3s; }
+.cycle-bar-label { font-size: 0.72rem; color: var(--cc-text-muted); white-space: nowrap; }
+
+/* Cost meter */
+.cost-meter { margin: 10px 0; }
+.cost-meter-track { height: 10px; background: var(--cc-bg); border-radius: 5px; overflow: hidden; margin: 6px 0; }
+.cost-meter-fill  { height: 100%; border-radius: 5px; transition: width 0.4s; }
+.cost-meter-label { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--cc-text-muted); }
+
+/* Per-instance cost breakdown */
+.instance-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--cc-border); }
+.instance-row:last-child { border-bottom: none; }
+.instance-name  { width: 120px; font-size: 0.8rem; font-weight: 600; color: var(--cc-text-body); flex-shrink: 0; }
+.instance-bar-wrap { flex: 1; height: 8px; background: var(--cc-bg); border-radius: 4px; overflow: hidden; }
+.instance-bar-fill { height: 100%; border-radius: 4px; }
+.instance-cost  { width: 60px; text-align: right; font-size: 0.8rem; color: var(--cc-text); flex-shrink: 0; }
+
+/* Fleet action buttons */
+.btn-approve { background: rgba(63,185,80,0.12); border: 1px solid rgba(63,185,80,0.3); color: var(--cc-success); padding: 4px 12px; border-radius: var(--cc-r-sm); font-size: 0.78rem; font-weight: 600; cursor: pointer; }
+.btn-reject  { background: rgba(248,81,73,0.08); border: 1px solid rgba(248,81,73,0.25); color: var(--cc-danger); padding: 4px 12px; border-radius: var(--cc-r-sm); font-size: 0.78rem; font-weight: 600; cursor: pointer; margin-left: 6px; }
+.btn-approve:hover { background: rgba(63,185,80,0.2); }
+.btn-reject:hover  { background: rgba(248,81,73,0.15); }
+
+/* History filter */
+.filter-bar { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; align-items: center; }
+.filter-btn { padding: 0.3rem 0.7rem; border-radius: var(--cc-r-sm); border: 1px solid var(--cc-border); background: transparent; color: var(--cc-text-muted); font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: inherit; }
+.filter-btn:hover  { color: var(--cc-text); border-color: var(--cc-accent); }
+.filter-btn.active { background: var(--cc-accent); color: var(--cc-bg); border-color: var(--cc-accent); }
+
+/* Today summary */
+.today-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.today-cell { background: var(--cc-bg-card); border: 1px solid var(--cc-border); border-radius: var(--cc-r-md); padding: 10px 14px; }
+.today-cell .lbl { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--cc-text-muted); margin-bottom: 4px; }
+.today-cell .val { font-size: 1.3rem; font-weight: 700; color: var(--cc-text); }
+</style>
+</head>
+<body>
+
+<!-- Shell injects banner + quickview + subtabs + stats bar above this. -->
+<main id="cc-content" class="cc-content">
+
+<section data-subtab="live">
+  <p class="fleet-section-intro">Tasks currently being executed by a Forge instance. Claim age refreshes on page load.</p>
+  <div class="fleet-grid" id="fleetLiveList"><div class="fleet-empty">Loading&hellip;</div></div>
+</section>
+
+<section data-subtab="queue">
+  <p class="fleet-section-intro">Tasks waiting for Alessio to dispatch to an instance. Forge suggests — Alessio dispatches.</p>
+  <div class="fleet-grid" id="fleetQueueList"><div class="fleet-empty">Loading&hellip;</div></div>
+</section>
+
+<section data-subtab="cycles">
+  <p class="fleet-section-intro">Tasks being iterated across instances. Hard cap: 10 cycles. Budget cap: $5/task (default).</p>
+  <div class="fleet-grid" id="fleetCyclesList"><div class="fleet-empty">Loading&hellip;</div></div>
+</section>
+
+<section data-subtab="today">
+  <div class="today-summary" id="fleetTodaySummary"></div>
+  <div class="fleet-grid" id="fleetTodayList"><div class="fleet-empty">Loading&hellip;</div></div>
+</section>
+
+<section data-subtab="blocked">
+  <p class="fleet-section-intro">Tasks that need your approval before an instance can claim or complete them.</p>
+  <div class="fleet-grid" id="fleetBlockedList"><div class="fleet-empty">Loading&hellip;</div></div>
+</section>
+
+<section data-subtab="history">
+  <div class="filter-bar" id="historyFilterBar"></div>
+  <div class="fleet-grid" id="fleetHistoryList"><div class="fleet-empty">Loading&hellip;</div></div>
+</section>
+
+<section data-subtab="cost">
+  <div id="fleetCostPanel"><div class="fleet-empty">Loading&hellip;</div></div>
+</section>
+
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  const SUPABASE_URL = 'https://twrlvnfszohyrmivdhre.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3cmx2bmZzem9oeXJtaXZkaHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NjkxMTMsImV4cCI6MjA5MDE0NTExM30.o96DFNbBObst0EAmX51rnRFXzu8oTN1o-HNAxN7MY8A';
+
+  const supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { storageKey: 'sb-twrlvnfszohyrmivdhre-auth-token', persistSession: true, autoRefreshToken: true }
+  });
+
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  const setEl = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+  const ageMins = iso => iso ? Math.round((Date.now() - new Date(iso).getTime()) / 60000) : null;
+  const fmtAge = iso => { const m = ageMins(iso); if (m == null) return '—'; if (m < 60) return m + 'm ago'; if (m < 1440) return Math.floor(m / 60) + 'h ago'; return Math.floor(m / 1440) + 'd ago'; };
+  const fmtDate = iso => iso ? iso.slice(0, 10) : '—';
+  const fmtCost = n => n == null ? '—' : '$' + Number(n).toFixed(2);
+
+  const INSTANCE_COLORS = {
+    'forge-cowork':   '#bc8cff',
+    'forge-chat':     '#58a6ff',
+    'forge-code':     '#3fb950',
+    'forge-dispatch': '#f0883e',
+    'forge-inline':   '#d29922',
+    'forge-terminal': '#79c0ff'
+  };
+  const instColor = name => INSTANCE_COLORS[name] || '#8b949e';
+
+  const badgeInstance  = name => `<span class="badge badge-instance" style="border-color:${instColor(name)}40;color:${instColor(name)}">${esc(name || '—')}</span>`;
+  const badgePriority  = p => `<span class="badge badge-priority-${esc(p)}">${esc(p)}</span>`;
+  const badgeSide      = s => `<span class="badge badge-side-${esc(s)}">${esc(s)}</span>`;
+  const badgeStatus    = s => `<span class="badge badge-status-${esc(s)}">${esc(s)}</span>`;
+
+  const verdictBadge = v => {
+    if (!v) return '';
+    const cls = v === 'improvements_made' ? 'improved' : v === 'no_changes' ? 'no_changes' : 'blocked';
+    const label = v === 'improvements_made' ? '✓ improved' : v === 'no_changes' ? '— no changes' : '⚠ blocked';
+    return `<span class="badge badge-verdict-${cls}">${label}</span>`;
+  };
+
+  const signinNote = () => '<div class="fleet-empty">Sign in to view fleet data. <a href="index.html">Sign in &rarr;</a></div>';
+
+  // ─── Stats update ─────────────────────────────────────────
+  let _stats = { active: '—', queued: '—', blocked: '—', cycles: '—', cost: '—' };
+  function pushStats() {
+    if (!window.CC) return;
+    window.CC.updateStats([
+      { label: 'Active',        value: _stats.active  },
+      { label: 'Queued',        value: _stats.queued  },
+      { label: 'Blocked',       value: _stats.blocked, tone: Number(_stats.blocked) > 0 ? 'danger' : '' },
+      { label: 'Cycles ↻', value: _stats.cycles  },
+      { label: 'Today $',       value: _stats.cost    }
+    ]);
+  }
+
+  // ─── LIVE tab ────────────────────────────────────────────
+  async function loadLive() {
+    const { data, error } = await supa.from('forge_fleet_status')
+      .select('id,title,type,assigned_to,claimed_by,claimed_at,last_exec_entry,cost_est_cad,cost_actual_cad,priority,side_effects')
+      .eq('status', 'in_progress');
+    if (error) { setEl('fleetLiveList', `<div class="fleet-empty">Error: ${esc(error.message)}</div>`); return; }
+    _stats.active = String(data ? data.length : 0);
+    pushStats();
+    if (!data || !data.length) { setEl('fleetLiveList', '<div class="fleet-empty">No active tasks right now. Forge is idle.</div>'); return; }
+    setEl('fleetLiveList', data.map(t => {
+      const lastExec = t.last_exec_entry ? JSON.parse(typeof t.last_exec_entry === 'string' ? t.last_exec_entry : JSON.stringify(t.last_exec_entry)) : null;
+      return `<div class="fleet-card${t.priority === 'urgent' ? ' urgent' : ''}">
+        <div class="fleet-card-head">
+          <div class="fleet-card-title">${esc(t.title)}</div>
+          ${badgeStatus('in_progress')}
+        </div>
+        <div class="fleet-card-meta">
+          ${badgeInstance(t.assigned_to || t.claimed_by)}
+          ${badgePriority(t.priority)}
+          ${badgeSide(t.side_effects)}
+          <span>started ${fmtAge(t.claimed_at)}</span>
+          ${t.cost_est_cad != null ? `<span>est ${fmtCost(t.cost_est_cad)}</span>` : ''}
+        </div>
+        ${lastExec ? `<div class="fleet-card-body">Last: <strong>${esc(lastExec.action || '—')}</strong> ${lastExec.note ? '— ' + esc(lastExec.note) : ''} <span style="color:var(--cc-text-dim)">${fmtAge(lastExec.timestamp)}</span></div>` : ''}
+      </div>`;
+    }).join(''));
+  }
+
+  // ─── QUEUE tab ───────────────────────────────────────────
+  async function loadQueue() {
+    const { data, error } = await supa.from('forge_fleet_status')
+      .select('id,title,type,suggested_to,suggested_model,priority,requires_approval,side_effects,cost_est_cad,tags,created_at')
+      .eq('status', 'queued')
+      .order('priority', { ascending: false })
+      .order('created_at', { ascending: true });
+    if (error) { setEl('fleetQueueList', `<div class="fleet-empty">Error: ${esc(error.message)}</div>`); return; }
+    _stats.queued = String(data ? data.length : 0);
+    pushStats();
+    if (!data || !data.length) { setEl('fleetQueueList', '<div class="fleet-empty">Queue is empty.</div>'); return; }
+    setEl('fleetQueueList', data.map(t => `<div class="fleet-card${t.priority === 'urgent' ? ' urgent' : ''}">
+      <div class="fleet-card-head">
+        <div class="fleet-card-title">${esc(t.title)}</div>
+        ${badgePriority(t.priority)}
+      </div>
+      <div class="fleet-card-meta">
+        ${t.suggested_to ? badgeInstance(t.suggested_to) : '<span>unassigned</span>'}
+        ${t.suggested_model ? `<span style="color:var(--cc-text-dim)">→ ${esc(t.suggested_model)}</span>` : ''}
+        ${badgeSide(t.side_effects)}
+        ${t.requires_approval !== 'none' ? `<span style="color:var(--cc-warn)">⚠ needs approval</span>` : ''}
+        ${t.cost_est_cad != null ? `<span>${fmtCost(t.cost_est_cad)}</span>` : ''}
+        <span>queued ${fmtAge(t.created_at)}</span>
+      </div>
+      ${(t.tags || []).length ? `<div class="fleet-card-body">${t.tags.map(tg => `<span class="badge" style="background:rgba(88,166,255,0.08);color:#79c0ff;border:1px solid rgba(88,166,255,0.2)">${esc(tg)}</span>`).join(' ')}</div>` : ''}
+    </div>`).join(''));
+  }
+
+  // ─── CYCLES tab ──────────────────────────────────────────
+  async function loadCycles() {
+    const { data, error } = await supa.from('forge_fleet_status')
+      .select('id,title,type,cycle_count,cycle_target,cycle_mode,cycle_status,cycle_rotation,cycle_budget_cad,cycle_cost_actual_cad,last_cycle_entry,assigned_to,claimed_by,status,priority')
+      .not('cycle_target', 'is', null)
+      .in('cycle_status', ['in_cycle', 'budget_exceeded', 'converged', 'target_reached', 'user_locked']);
+    if (error) { setEl('fleetCyclesList', `<div class="fleet-empty">Error: ${esc(error.message)}</div>`); return; }
+    const inCycle = (data || []).filter(t => t.cycle_status === 'in_cycle').length;
+    _stats.cycles = String(inCycle);
+    pushStats();
+    if (!data || !data.length) { setEl('fleetCyclesList', '<div class="fleet-empty">No cycled tasks yet.</div>'); return; }
+    const sorted = [...data].sort((a, b) => {
+      const order = { in_cycle: 0, budget_exceeded: 1, user_locked: 2, converged: 3, target_reached: 4 };
+      return (order[a.cycle_status] ?? 9) - (order[b.cycle_status] ?? 9);
+    });
+    setEl('fleetCyclesList', sorted.map(t => {
+      const pct = t.cycle_target ? Math.min(100, Math.round((t.cycle_count / t.cycle_target) * 100)) : 0;
+      const lastCycle = t.last_cycle_entry ? JSON.parse(typeof t.last_cycle_entry === 'string' ? t.last_cycle_entry : JSON.stringify(t.last_cycle_entry)) : null;
+      const budgetPct = (t.cycle_budget_cad && t.cycle_cost_actual_cad) ? Math.min(100, Math.round((t.cycle_cost_actual_cad / t.cycle_budget_cad) * 100)) : 0;
+      const cycleStatusBadge = t.cycle_status === 'in_cycle' ? 'badge-cycle-active' : t.cycle_status === 'budget_exceeded' ? 'badge-cycle-budget' : 'badge-cycle-done';
+      return `<div class="fleet-card">
+        <div class="fleet-card-head">
+          <div class="fleet-card-title">${esc(t.title)}</div>
+          <span class="badge ${cycleStatusBadge}">${esc(t.cycle_status)}</span>
+        </div>
+        <div class="fleet-card-meta">
+          ${t.assigned_to || t.claimed_by ? badgeInstance(t.assigned_to || t.claimed_by) : ''}
+          <span>${esc(t.cycle_mode)}</span>
+          <span>${esc(t.cycle_rotation)}</span>
+          ${lastCycle ? verdictBadge(lastCycle.verdict) : ''}
+        </div>
+        <div class="cycle-bar-wrap">
+          <div class="cycle-bar-track"><div class="cycle-bar-fill" style="width:${pct}%"></div></div>
+          <div class="cycle-bar-label">${t.cycle_count}/${t.cycle_target} cycles</div>
+        </div>
+        ${t.cycle_budget_cad != null ? `<div class="cost-meter" style="margin-top:6px">
+          <div class="cost-meter-track"><div class="cost-meter-fill" style="width:${budgetPct}%;background:${budgetPct >= 80 ? 'var(--cc-danger)' : 'var(--cc-accent)'}"></div></div>
+          <div class="cost-meter-label"><span>${fmtCost(t.cycle_cost_actual_cad)} spent</span><span>budget ${fmtCost(t.cycle_budget_cad)}</span></div>
+        </div>` : ''}
+        ${lastCycle && lastCycle.delta_summary ? `<div class="fleet-card-body" style="margin-top:6px">${esc(lastCycle.delta_summary)}</div>` : ''}
+      </div>`;
+    }).join(''));
+  }
+
+  // ─── TODAY tab ───────────────────────────────────────────
+  async function loadToday() {
+    const todayIso = new Date().toISOString().slice(0, 10);
+    const { data, error } = await supa.from('forge_tasks')
+      .select('id,title,type,assigned_to,cost_actual_cad,completed_at,status,last_error')
+      .gte('completed_at', todayIso)
+      .in('status', ['done', 'cancelled'])
+      .order('completed_at', { ascending: false });
+    if (error) { setEl('fleetTodayList', `<div class="fleet-empty">Error: ${esc(error.message)}</div>`); return; }
+    const done = (data || []).filter(t => t.status === 'done');
+    const totalCost = (data || []).reduce((s, t) => s + (Number(t.cost_actual_cad) || 0), 0);
+    _stats.cost = '$' + totalCost.toFixed(2);
+    pushStats();
+    setEl('fleetTodaySummary', `
+      <div class="today-cell"><div class="lbl">Done</div><div class="val">${done.length}</div></div>
+      <div class="today-cell"><div class="lbl">Total</div><div class="val">${data ? data.length : 0}</div></div>
+      <div class="today-cell"><div class="lbl">Cost</div><div class="val">${fmtCost(totalCost)}</div></div>
+      <div class="today-cell"><div class="lbl">Rate</div><div class="val">${data && data.length ? Math.round(done.length / data.length * 100) : 0}%</div></div>
+    `);
+    if (!data || !data.length) { setEl('fleetTodayList', '<div class="fleet-empty">Nothing completed today yet.</div>'); return; }
+    setEl('fleetTodayList', data.map(t => `<div class="fleet-card">
+      <div class="fleet-card-head">
+        <div class="fleet-card-title">${esc(t.title)}</div>
+        ${badgeStatus(t.status)}
+      </div>
+      <div class="fleet-card-meta">
+        ${t.assigned_to ? badgeInstance(t.assigned_to) : ''}
+        ${t.cost_actual_cad != null ? `<span>${fmtCost(t.cost_actual_cad)}</span>` : ''}
+        <span>${fmtDate(t.completed_at)}</span>
+        ${t.last_error ? `<span style="color:var(--cc-danger)">⚠ ${esc(t.last_error.slice(0, 80))}</span>` : ''}
+      </div>
+    </div>`).join(''));
+  }
+
+  // ─── BLOCKED tab ─────────────────────────────────────────
+  async function loadBlocked() {
+    const { data, error } = await supa.from('forge_fleet_status')
+      .select('id,title,type,requires_approval,priority,suggested_to,side_effects,created_at')
+      .neq('requires_approval', 'none')
+      .in('status', ['queued', 'in_progress']);
+    if (error) { setEl('fleetBlockedList', `<div class="fleet-empty">Error: ${esc(error.message)}</div>`); return; }
+    _stats.blocked = String(data ? data.length : 0);
+    pushStats();
+    if (!data || !data.length) { setEl('fleetBlockedList', '<div class="fleet-empty">Nothing waiting for approval.</div>'); return; }
+    setEl('fleetBlockedList', data.map(t => `<div class="fleet-card blocked-card">
+      <div class="fleet-card-head">
+        <div class="fleet-card-title">${esc(t.title)}</div>
+        ${badgePriority(t.priority)}
+      </div>
+      <div class="fleet-card-meta">
+        ${t.suggested_to ? badgeInstance(t.suggested_to) : ''}
+        ${badgeSide(t.side_effects)}
+        <span style="color:var(--cc-warn)">gate: ${esc(t.requires_approval)}</span>
+        <span>queued ${fmtAge(t.created_at)}</span>
+      </div>
+      <div class="fleet-card-footer">
+        <button class="btn-approve" onclick="fleetApprove('${esc(t.id)}')">✓ Approve</button>
+        <button class="btn-reject"  onclick="fleetReject('${esc(t.id)}')">✗ Reject</button>
+      </div>
+    </div>`).join(''));
+  }
+
+  // ─── HISTORY tab ─────────────────────────────────────────
+  let _historyFilter = 'all';
+  async function loadHistory(instance) {
+    _historyFilter = instance || 'all';
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    let query = supa.from('forge_tasks')
+      .select('id,title,type,assigned_to,cost_actual_cad,completed_at,status,tags')
+      .gte('updated_at', thirtyDaysAgo)
+      .in('status', ['done', 'cancelled', 'parked'])
+      .order('completed_at', { ascending: false })
+      .limit(60);
+    if (instance && instance !== 'all') query = query.eq('assigned_to', instance);
+    const { data, error } = await query;
+    if (error) { setEl('fleetHistoryList', `<div class="fleet-empty">Error: ${esc(error.message)}</div>`); return; }
+
+    // Build filter bar
+    const instances = ['all', ...Object.keys(INSTANCE_COLORS)];
+    setEl('historyFilterBar', instances.map(inst =>
+      `<button class="filter-btn${_historyFilter === inst ? ' active' : ''}" onclick="fleetHistoryFilter('${inst}')">${esc(inst)}</button>`
+    ).join(''));
+
+    if (!data || !data.length) { setEl('fleetHistoryList', '<div class="fleet-empty">No history in the last 30 days.</div>'); return; }
+    setEl('fleetHistoryList', data.map(t => `<div class="fleet-card">
+      <div class="fleet-card-head">
+        <div class="fleet-card-title">${esc(t.title)}</div>
+        ${badgeStatus(t.status)}
+      </div>
+      <div class="fleet-card-meta">
+        ${t.assigned_to ? badgeInstance(t.assigned_to) : '<span style="color:var(--cc-text-dim)">unassigned</span>'}
+        ${t.cost_actual_cad != null ? `<span>${fmtCost(t.cost_actual_cad)}</span>` : ''}
+        <span>${fmtDate(t.completed_at)}</span>
+        ${(t.tags || []).map(tg => `<span class="badge" style="background:rgba(88,166,255,0.08);color:#79c0ff;border:1px solid rgba(88,166,255,0.2)">${esc(tg)}</span>`).join('')}
+      </div>
+    </div>`).join(''));
+  }
+
+  // ─── COST tab ────────────────────────────────────────────
+  async function loadCost() {
+    const { data, error } = await supa.from('forge_tasks')
+      .select('assigned_to,cost_actual_cad,completed_at')
+      .not('cost_actual_cad', 'is', null);
+    if (error) { setEl('fleetCostPanel', `<div class="fleet-empty">Error: ${esc(error.message)}</div>`); return; }
+
+    const CEILING = 280;
+    const total = (data || []).reduce((s, t) => s + (Number(t.cost_actual_cad) || 0), 0);
+    const pct = Math.min(100, Math.round((total / CEILING) * 100));
+    const daysLeft = (() => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth() + 1, 0).getDate() - n.getDate(); })();
+
+    const byInstance = {};
+    (data || []).forEach(t => {
+      const k = t.assigned_to || 'unassigned';
+      byInstance[k] = (byInstance[k] || 0) + (Number(t.cost_actual_cad) || 0);
+    });
+    const maxCost = Math.max(...Object.values(byInstance), 0.01);
+
+    const instanceRows = Object.entries(byInstance)
+      .sort((a, b) => b[1] - a[1])
+      .map(([inst, cost]) => {
+        const barPct = Math.round((cost / maxCost) * 100);
+        return `<div class="instance-row">
+          <div class="instance-name">${esc(inst)}</div>
+          <div class="instance-bar-wrap"><div class="instance-bar-fill" style="width:${barPct}%;background:${instColor(inst)}"></div></div>
+          <div class="instance-cost">${fmtCost(cost)}</div>
+        </div>`;
+      }).join('');
+
+    setEl('fleetCostPanel', `
+      <div class="fleet-card" style="margin-bottom:12px">
+        <div style="font-size:1.5rem;font-weight:700;color:var(--cc-text)">${fmtCost(total)} <span style="color:var(--cc-text-muted);font-size:0.9rem">/ $${CEILING} CAD</span></div>
+        <div class="cost-meter">
+          <div class="cost-meter-track">
+            <div class="cost-meter-fill" style="width:${pct}%;background:${pct >= 85 ? 'var(--cc-danger)' : pct >= 65 ? 'var(--cc-warn)' : 'var(--cc-success)'}"></div>
+          </div>
+          <div class="cost-meter-label"><span>${pct}% used</span><span>${daysLeft} days left</span></div>
+        </div>
+      </div>
+      ${instanceRows ? `<div class="fleet-card"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--cc-text-muted);margin-bottom:10px">Per Instance (all time)</div>${instanceRows}</div>` : ''}
+    `);
+  }
+
+  // ─── Blocked approve / reject ────────────────────────────
+  window.fleetApprove = async function (id) {
+    const { error } = await supa.from('forge_tasks').update({ requires_approval: 'none' }).eq('id', id);
+    if (error) { alert('Approve failed: ' + error.message); return; }
+    loadBlocked();
+  };
+  window.fleetReject = async function (id) {
+    if (!confirm('Cancel this task?')) return;
+    const { error } = await supa.from('forge_tasks').update({ status: 'cancelled' }).eq('id', id);
+    if (error) { alert('Reject failed: ' + error.message); return; }
+    loadBlocked();
+    loadQueue();
+  };
+
+  // ─── History filter ──────────────────────────────────────
+  window.fleetHistoryFilter = function (instance) { loadHistory(instance); };
+
+  // ─── Boot ────────────────────────────────────────────────
+  async function init() {
+    const { data: { session } } = await supa.auth.getSession();
+    if (!session) {
+      document.querySelectorAll('[data-subtab]').forEach(s => { s.innerHTML = signinNote(); });
+      return;
+    }
+    loadLive();
+    loadQueue();
+    loadCycles();
+    loadToday();
+    loadBlocked();
+    loadHistory();
+    loadCost();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>
