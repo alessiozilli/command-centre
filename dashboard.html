@@ -854,6 +854,7 @@
 
     // ─── Widget: Usage Tracker (13) ── reads usage_daily ─────
     async function mountUsageTracker() {
+      if (!(await hasSession())) { setBody('usageTracker', signinPrompt()); return; }
       try {
         const { data, error } = await supa.from('usage_daily')
           .select('day,model,msgs,cost_est')
@@ -872,25 +873,52 @@
 
     // ─── Widget: Shop WIP (14) ── reads blades_wip ───────────
     async function mountShopWip() {
+      if (!(await hasSession())) { setBody('shopWip', signinPrompt()); return; }
       try {
         const { data, error } = await supa.from('blades_wip')
           .select('customer_name,title,stage,due_date,steel')
           .is('completed_at', null)
           .order('due_date', { ascending: true });
         if (error) throw error;
-        if (!data || !data.length) { setBody('shopWip', '<div class="empty">No knives in build.</div>'); return; }
         const stageColor = s => ({design:'#6e7681',material_prep:'#d29922',profiling:'#d29922',grinding:'#f0883e',heat_treat:'#f85149',handle:'#79c0ff',finishing:'#58a6ff',photography:'#bc8cff',delivered:'#3fb950'}[s]||'#6e7681');
-        const rows = data.map(r => `<div class="task-li">
-          <span class="dot" style="background:${stageColor(r.stage)}"></span>
-          <span class="t">${esc(r.customer_name)} — ${esc(r.title||r.steel||'—')}</span>
-          <span class="due">${esc(r.stage)} · ${r.due_date ? r.due_date.slice(0,10) : '—'}</span>
-        </div>`).join('');
-        setBody('shopWip', rows);
+        const rows = (!data || !data.length)
+          ? '<div class="empty">No knives in build.</div>'
+          : data.map(r => `<div class="task-li">
+              <span class="dot" style="background:${stageColor(r.stage)}"></span>
+              <span class="t">${esc(r.customer_name)} — ${esc(r.title||r.steel||'—')}</span>
+              <span class="due">${esc(r.stage)} · ${r.due_date ? r.due_date.slice(0,10) : '—'}</span>
+            </div>`).join('');
+        const addForm = `
+          <div style="margin-top:0.5rem;border-top:1px solid #30363d;padding-top:0.5rem;">
+            <button onclick="shopWipToggleForm()" style="background:#21262d;border:1px solid #30363d;color:#58a6ff;font-size:0.78rem;padding:2px 8px;border-radius:4px;cursor:pointer;">＋ Add Blade</button>
+            <div id="shopwip-form" style="display:none;margin-top:0.5rem;">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px;">
+                <input id="swip-customer" placeholder="Customer *" style="background:#0d1117;border:1px solid #30363d;color:#e6edf3;padding:3px 6px;border-radius:4px;font-size:0.78rem;">
+                <input id="swip-title" placeholder="Knife title" style="background:#0d1117;border:1px solid #30363d;color:#e6edf3;padding:3px 6px;border-radius:4px;font-size:0.78rem;">
+                <input id="swip-steel" placeholder="Steel" style="background:#0d1117;border:1px solid #30363d;color:#e6edf3;padding:3px 6px;border-radius:4px;font-size:0.78rem;">
+                <input id="swip-due" type="date" style="background:#0d1117;border:1px solid #30363d;color:#e6edf3;padding:3px 6px;border-radius:4px;font-size:0.78rem;">
+              </div>
+              <select id="swip-stage" style="background:#0d1117;border:1px solid #30363d;color:#e6edf3;padding:3px 6px;border-radius:4px;font-size:0.78rem;width:100%;margin-bottom:4px;">
+                <option value="design">Design</option>
+                <option value="material_prep">Material Prep</option>
+                <option value="profiling">Profiling</option>
+                <option value="grinding">Grinding</option>
+                <option value="heat_treat">Heat Treat</option>
+                <option value="handle">Handle</option>
+                <option value="finishing">Finishing</option>
+                <option value="photography">Photography</option>
+              </select>
+              <button onclick="shopWipAddBlade()" style="background:#238636;border:1px solid #2ea043;color:#fff;font-size:0.78rem;padding:3px 10px;border-radius:4px;cursor:pointer;">Save</button>
+              <button onclick="shopWipToggleForm()" style="background:#21262d;border:1px solid #30363d;color:#8b949e;font-size:0.78rem;padding:3px 8px;border-radius:4px;cursor:pointer;margin-left:4px;">Cancel</button>
+            </div>
+          </div>`;
+        setBody('shopWip', rows + addForm);
       } catch(e) { setBody('shopWip', `<div class="err">Load failed: ${esc(e.message||e)}</div>`); }
     }
 
     // ─── Widget: Customer Pipeline (15) ── reads customers ───
     async function mountCustomerPipeline() {
+      if (!(await hasSession())) { setBody('customerPipeline', signinPrompt()); return; }
       try {
         const { data, error } = await supa.from('customers')
           .select('name,stage,last_touch,source')
@@ -909,6 +937,28 @@
     }
 
     function mountLinks() { renderLinks(); return Promise.resolve(); }
+
+    // ─── Shop WIP add-blade helpers ──────────────────────────
+    window.shopWipToggleForm = function() {
+      const f = document.getElementById('shopwip-form');
+      if (f) f.style.display = f.style.display === 'none' ? 'block' : 'none';
+    };
+    window.shopWipAddBlade = async function() {
+      const customer_name = (document.getElementById('swip-customer')?.value || '').trim();
+      if (!customer_name) { alert('Customer name is required'); return; }
+      const row = {
+        customer_name,
+        title:    (document.getElementById('swip-title')?.value || '').trim() || null,
+        stage:     document.getElementById('swip-stage')?.value  || 'design',
+        steel:    (document.getElementById('swip-steel')?.value || '').trim() || null,
+        due_date:  document.getElementById('swip-due')?.value    || null
+      };
+      const btn = document.querySelector('#shopwip-form button');
+      if (btn) btn.textContent = 'Saving…';
+      const { error } = await supa.from('blades_wip').insert(row);
+      if (error) { alert('Save failed: ' + error.message); if (btn) btn.textContent = 'Save'; return; }
+      mountShopWip();
+    };
 
     // ─── Reset layout action ─────────────────────────────────
     window.dash_resetLayout = function() {
