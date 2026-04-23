@@ -33,6 +33,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <!-- GridStack JS (with jQuery-free HTML5 drag) -->
   <script src="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack-all.js"></script>
+  <!-- Chart.js — used by Forge Radar widget -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 
   <style>
     /* ─── Dashboard-scoped styles ──────────────────────────── */
@@ -103,9 +105,35 @@
     .forge-sub { color: #8b949e; font-size: 0.82rem; }
     .forge-ring { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.7rem; font-weight: 600; background: rgba(88,166,255,0.1); color: #58a6ff; margin-top: 0.3rem; }
 
-    /* Radar canvas */
-    .radar-wrap { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
-    .radar-wrap svg { max-width: 100%; max-height: 100%; }
+    /* ─── Forge Radar widget ─────────────────────────────────── */
+    .fr-wrap { display:flex; flex-direction:column; height:100%; gap:4px; overflow:hidden; }
+    .fr-canvas-wrap { flex:1 1 auto; min-height:140px; position:relative; }
+    .fr-canvas-wrap canvas { position:absolute; top:0; left:0; width:100% !important; height:100% !important; }
+    .fr-slider-wrap { flex:0 0 auto; padding:3px 0; }
+    .fr-slider-wrap input[type=range] {
+      width:100%; height:4px; -webkit-appearance:none; appearance:none;
+      background:#21262d; border-radius:2px; cursor:pointer; outline:none;
+    }
+    .fr-slider-wrap input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance:none; width:14px; height:14px;
+      background:#58a6ff; border-radius:50%; cursor:pointer;
+    }
+    .fr-slider-wrap input[type=range]::-moz-range-thumb {
+      width:14px; height:14px; background:#58a6ff;
+      border-radius:50%; border:none; cursor:pointer;
+    }
+    .fr-slider-label { font-size:0.78rem; font-weight:600; color:#e6edf3; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .fr-slider-sub { font-size:0.68rem; color:#8b949e; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .fr-ring-bar { flex:0 0 auto; font-size:0.68rem; color:#8b949e; padding:3px 0; border-top:1px solid #21262d; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .fr-ledger { flex:0 0 auto; overflow-y:auto; max-height:160px; }
+    .fr-metric-row { display:flex; align-items:center; gap:5px; margin-bottom:4px; }
+    .fr-metric-label { width:100px; font-size:0.68rem; font-weight:600; color:#c9d1d9; flex-shrink:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .fr-metric-track { flex:1; height:12px; background:#0d1117; border-radius:3px; position:relative; overflow:hidden; }
+    .fr-metric-prev { position:absolute; top:0; left:0; height:100%; background:#8b949e; opacity:0.2; border-radius:3px; }
+    .fr-metric-now { position:absolute; top:0; left:0; height:100%; border-radius:3px; transition:width 0.5s ease; }
+    .fr-metric-score { width:26px; text-align:right; font-size:0.7rem; font-weight:700; color:#58a6ff; flex-shrink:0; }
+    .fr-legend { display:flex; gap:10px; flex-wrap:wrap; padding-top:6px; border-top:1px solid #21262d; margin-top:4px; font-size:0.68rem; color:#8b949e; }
+    .fr-legend-dot { display:inline-block; width:14px; height:6px; border-radius:2px; vertical-align:middle; margin-right:3px; }
 
     /* Quick Links */
     .ql-list { display: flex; flex-direction: column; gap: 0.3rem; }
@@ -386,50 +414,205 @@
 
     // ─── Widget: Forge Radar (4) — inline SVG ────────────────
     async function mountRadar() {
+      // Destroy previous chart + ResizeObserver
+      if (window._dashForgeChart) { try { window._dashForgeChart.destroy(); } catch(e){} window._dashForgeChart = null; }
+      if (window._dashForgeRO) { window._dashForgeRO.disconnect(); window._dashForgeRO = null; }
+
       try {
+        if (!window.Chart) { setBody('radar', '<div class="empty">Chart.js not loaded</div>'); return; }
         const fd = await fetch('forge-data.json', { cache:'no-cache' }).then(r=>r.json());
         if (!fd || !fd.versions || !fd.versions.length) { setBody('radar', '<div class="empty">No Forge data</div>'); return; }
-        const last = fd.versions[fd.versions.length - 1];
-        const metrics = fd.metrics || [];
-        const scores = last.scores || [];
-        const n = Math.min(metrics.length, scores.length);
-        if (!n) { setBody('radar', '<div class="empty">No scores</div>'); return; }
 
+        const versions = fd.versions;
+        const metrics  = fd.metrics || [];
+        const colors   = fd.metricColors || [];
+        const latest   = versions.length - 1;
+        let   curIdx   = latest;
+
+        // Inject full widget HTML
         const bodyEl = document.getElementById('w-body-radar');
-        const W = Math.max(180, bodyEl.clientWidth - 20), H = Math.max(180, bodyEl.clientHeight - 40);
-        const size = Math.min(W, H);
-        const cx = size/2, cy = size/2, R = size/2 - 22;
-        const max = 10;
+        bodyEl.innerHTML =
+          '<div class="fr-wrap">' +
+            '<div class="fr-canvas-wrap"><canvas id="fr-canvas"></canvas></div>' +
+            '<div class="fr-slider-wrap">' +
+              '<input type="range" id="fr-slider" min="0" max="' + latest + '" value="' + latest + '">' +
+              '<div class="fr-slider-label" id="fr-slabel"></div>' +
+              '<div class="fr-slider-sub"   id="fr-ssub"></div>' +
+            '</div>' +
+            '<div class="fr-ring-bar" id="fr-ringbar"></div>' +
+            '<div class="fr-ledger"   id="fr-ledger"></div>' +
+          '</div>';
 
-        let gridRings = '';
-        for (let r=1; r<=5; r++) {
-          const pr = R * (r/5);
-          let pts = [];
-          for (let i=0; i<n; i++) {
-            const ang = -Math.PI/2 + (2*Math.PI*i/n);
-            pts.push(`${(cx + pr*Math.cos(ang)).toFixed(1)},${(cy + pr*Math.sin(ang)).toFixed(1)}`);
+        // ── Chart.js plugins (register once) ──────────────────
+        if (!window._dashForgePluginsOk) {
+          window._dashForgePluginsOk = true;
+          const numPts = metrics.length;
+          Chart.register({
+            id: 'dashFutureRings',
+            beforeDraw(chart) {
+              if (!chart.scales.r) return;
+              const ctx = chart.ctx, sc = chart.scales.r;
+              const r1 = sc.getDistanceFromCenterForValue(10);
+              const cx = sc.xCenter, cy = sc.yCenter;
+              const gap = r1 * 0.275;
+              const rHex = ['#f0883e','#d29922','#3fb950','#58a6ff','#bc8cff'];
+              ctx.save();
+              // faded rays
+              for (let i=0;i<numPts;i++) {
+                const a = -Math.PI/2 + (Math.PI*2*i/numPts);
+                ctx.beginPath();
+                ctx.moveTo(cx+Math.cos(a)*r1, cy+Math.sin(a)*r1);
+                ctx.lineTo(cx+Math.cos(a)*(r1+5*gap), cy+Math.sin(a)*(r1+5*gap));
+                ctx.strokeStyle='#30363d'; ctx.globalAlpha=0.3;
+                ctx.lineWidth=0.5; ctx.setLineDash([3,3]); ctx.stroke();
+              }
+              // future ring circles
+              [0.80,0.725,0.65,0.575,0.50].forEach((op,ri) => {
+                const h=rHex[ri], rr=parseInt(h.slice(1,3),16), gg=parseInt(h.slice(3,5),16), bb=parseInt(h.slice(5,7),16);
+                ctx.beginPath(); ctx.arc(cx,cy,r1+(ri+1)*gap,0,Math.PI*2);
+                ctx.strokeStyle=`rgba(${rr},${gg},${bb},${op})`;
+                ctx.lineWidth=1; ctx.setLineDash([5,4]); ctx.globalAlpha=1; ctx.stroke();
+              });
+              ctx.restore();
+            }
+          });
+          Chart.register({
+            id: 'dashDotGlow',
+            afterDatasetsDraw(chart) {
+              if (!chart.scales.r) return;
+              const ctx = chart.ctx;
+              const meta = chart.getDatasetMeta(1);
+              const data = chart.data.datasets[1].data;
+              meta.data.forEach((pt,i) => {
+                if (data[i] >= 10) {
+                  ctx.save(); ctx.beginPath();
+                  ctx.arc(pt.x,pt.y,15,0,Math.PI*2);
+                  ctx.fillStyle='rgba(63,185,80,0.35)'; ctx.fill(); ctx.restore();
+                }
+              });
+            }
+          });
+        }
+
+        // ── Helpers ──────────────────────────────────────────
+        const mkColors = s => s.map(v => v>=10?'#3fb950':v<=6&&v>0?'#f85149':v<=0?'#30363d':'#58a6ff');
+        const mkRadii  = s => s.map(v => v>=10?8:5);
+        const getV     = i => versions[i];
+        const getNow   = i => getV(i).scores;
+        const getPrev  = i => i>0 ? getV(i-1).scores : getV(i).scores;
+
+        // ── Build chart ───────────────────────────────────────
+        const ctx2 = document.getElementById('fr-canvas').getContext('2d');
+        window._dashForgeChart = new Chart(ctx2, {
+          type: 'radar',
+          data: {
+            labels: metrics,
+            datasets: [
+              { label:'Previous', data:getPrev(latest),
+                borderColor:'#8b949e44', backgroundColor:'#8b949e10',
+                borderWidth:1, pointRadius:2, pointBackgroundColor:'#8b949e44', borderDash:[4,4] },
+              { label:'Current', data:getNow(latest),
+                borderColor:'#58a6ff', backgroundColor:'#58a6ff28',
+                borderWidth:1.5, pointRadius:mkRadii(getNow(latest)),
+                pointBackgroundColor:mkColors(getNow(latest)),
+                pointBorderColor:'#0d1117', pointBorderWidth:2, pointHoverRadius:8 }
+            ]
+          },
+          options: {
+            responsive:true, maintainAspectRatio:false,
+            layout:{ padding:{ top:24,bottom:24,left:24,right:24 } },
+            plugins:{ legend:{ display:false } },
+            scales:{ r:{
+              min:0, max:10,
+              ticks:{ stepSize:2, color:'#8b949e88', backdropColor:'transparent', font:{size:9} },
+              grid:{ circular:true,
+                color:c => c.tick&&c.tick.value===10?'#f8514988':'#30363daa',
+                lineWidth:c => c.tick&&c.tick.value===10?2:1 },
+              angleLines:{ color:'#30363d99', lineWidth:1 },
+              pointLabels:{
+                color(c){ const s=window._dashForgeChart.data.datasets[1].data[c.index]; return s>=10?'#3fb950':s<=6&&s>0?'#f85149':'#8b949ecc'; },
+                font:{ size:9, weight:600 }
+              }
+            }}
           }
-          gridRings += `<polygon points="${pts.join(' ')}" fill="none" stroke="#21262d" stroke-width="1"/>`;
+        });
+
+        // ── Build ledger ──────────────────────────────────────
+        function buildLedger(now, prev) {
+          const el = document.getElementById('fr-ledger');
+          if (!el) return;
+          const active = now.filter(s=>s>0);
+          const minS = active.length ? Math.min(...active) : 0;
+          const bottlenecks = metrics.filter((_,i)=>now[i]===minS&&now[i]>0);
+          let html = '';
+          metrics.forEach((m,i) => {
+            const s=now[i], p=prev[i];
+            const bc = s<=6&&s>0 ? '#f85149' : (colors[i]||'#58a6ff');
+            html +=
+              '<div class="fr-metric-row">' +
+                '<div class="fr-metric-label" title="'+esc(m)+'">'+esc(m)+'</div>' +
+                '<div class="fr-metric-track">' +
+                  '<div class="fr-metric-prev" style="width:'+(p*10)+'%"></div>' +
+                  '<div class="fr-metric-now"  style="width:'+(s*10)+'%;background:'+bc+'"></div>' +
+                '</div>' +
+                '<div class="fr-metric-score">'+s+'</div>' +
+              '</div>';
+          });
+          html += '<div class="fr-legend">' +
+            '<span><span class="fr-legend-dot" style="background:#8b949e;opacity:0.4"></span>Prev</span>' +
+            '<span style="color:#f85149;">Bottleneck: '+esc(bottlenecks.join(', '))+' ('+minS+')</span>' +
+          '</div>';
+          el.innerHTML = html;
         }
-        let axes = '', labels = '', polyPts = [];
-        for (let i=0; i<n; i++) {
-          const ang = -Math.PI/2 + (2*Math.PI*i/n);
-          const xE = cx + R*Math.cos(ang), yE = cy + R*Math.sin(ang);
-          axes += `<line x1="${cx}" y1="${cy}" x2="${xE.toFixed(1)}" y2="${yE.toFixed(1)}" stroke="#21262d" stroke-width="1"/>`;
-          const pr = R * (Math.min(scores[i], max)/max);
-          polyPts.push(`${(cx + pr*Math.cos(ang)).toFixed(1)},${(cy + pr*Math.sin(ang)).toFixed(1)}`);
-          const lx = cx + (R+14)*Math.cos(ang), ly = cy + (R+14)*Math.sin(ang);
-          const lbl = metrics[i].length > 10 ? metrics[i].slice(0,9)+'…' : metrics[i];
-          labels += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="8" fill="#8b949e">${esc(lbl)}</text>`;
+
+        // ── Build ring bar ────────────────────────────────────
+        const ringNames = ['Raw Steel','Forged','Ground','Heat Treated','Finished','Heirloom'];
+        const ringColors= ['#f85149','#f0883e','#d29922','#3fb950','#58a6ff','#bc8cff'];
+        function buildRingBar(scores) {
+          const el = document.getElementById('fr-ringbar');
+          if (!el) return;
+          const active=scores.filter(s=>s>0), min=active.length?Math.min(...active):0;
+          const avg=(scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1);
+          const ri=Math.min(Math.floor(min/10),5);
+          el.innerHTML = '<span style="color:'+ringColors[ri]+';font-weight:700;">Ring '+(ri+1)+' · '+ringNames[ri]+'</span>' +
+            '&nbsp;·&nbsp;Avg <strong style="color:#e6edf3">'+avg+'</strong>' +
+            '&nbsp;·&nbsp;Min <strong style="color:#e6edf3">'+min+'</strong>' +
+            '&nbsp;·&nbsp;Next ring: all ≥ '+((ri+1)*10);
         }
-        const nonZero = scores.filter(s=>s>0);
-        const svg = `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
-          ${gridRings}${axes}
-          <polygon points="${polyPts.join(' ')}" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="2"/>
-          ${labels}
-        </svg>`;
-        setBody('radar', `<div class="radar-wrap">${svg}</div>
-          <div style="text-align:center;font-size:0.72rem;color:#6e7681;">${esc(last.version)} · min ${nonZero.length ? Math.min(...nonZero) : 0} / max ${scores.length ? Math.max(...scores) : 0}</div>`);
+
+        // ── Slider label ──────────────────────────────────────
+        function buildSliderLabel(i) {
+          const v = getV(i);
+          const sl = document.getElementById('fr-slabel'), ss = document.getElementById('fr-ssub');
+          if (sl) sl.textContent = v.version + ' — ' + v.name;
+          if (ss) ss.textContent = v.desc || '';
+        }
+
+        // ── Update all from slider ────────────────────────────
+        function updateRadar(i) {
+          const now=getNow(i), prev=getPrev(i);
+          const ch = window._dashForgeChart;
+          if (!ch) return;
+          ch.data.datasets[0].data = prev;
+          ch.data.datasets[1].data = now;
+          ch.data.datasets[1].pointBackgroundColor = mkColors(now);
+          ch.data.datasets[1].pointRadius = mkRadii(now);
+          ch.update();
+          buildLedger(now, prev);
+          buildRingBar(now);
+          buildSliderLabel(i);
+        }
+
+        // Init
+        updateRadar(latest);
+        document.getElementById('fr-slider').addEventListener('input', e => updateRadar(parseInt(e.target.value)));
+
+        // ── ResizeObserver — resize chart when block changes ──
+        window._dashForgeRO = new ResizeObserver(() => {
+          if (window._dashForgeChart) window._dashForgeChart.resize();
+        });
+        window._dashForgeRO.observe(bodyEl);
+
       } catch(e) {
         setBody('radar', `<div class="err">Load failed: ${esc(e.message||e)}</div>`);
       }
