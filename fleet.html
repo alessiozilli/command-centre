@@ -94,6 +94,9 @@
 .btn-reject  { background: rgba(248,81,73,0.08); border: 1px solid rgba(248,81,73,0.25); color: var(--cc-danger); padding: 4px 12px; border-radius: var(--cc-r-sm); font-size: 0.78rem; font-weight: 600; cursor: pointer; margin-left: 6px; }
 .btn-approve:hover { background: rgba(63,185,80,0.2); }
 .btn-reject:hover  { background: rgba(248,81,73,0.15); }
+.btn-dispatch { background: rgba(88,166,255,0.1); border: 1px solid rgba(88,166,255,0.3); color: var(--cc-accent); padding: 5px 14px; border-radius: var(--cc-r-sm); font-size: 0.78rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+.btn-dispatch:hover    { background: rgba(88,166,255,0.2); }
+.btn-dispatch:disabled { opacity: 0.5; cursor: default; }
 
 /* History filter */
 .filter-bar { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; align-items: center; }
@@ -578,6 +581,9 @@
         <span>queued ${fmtAge(t.created_at)}</span>
       </div>
       ${(t.tags || []).length ? `<div class="fleet-card-body">${t.tags.map(tg => `<span class="badge" style="background:rgba(88,166,255,0.08);color:#79c0ff;border:1px solid rgba(88,166,255,0.2)">${esc(tg)}</span>`).join(' ')}</div>` : ''}
+      ${t.suggested_to ? `<div class="fleet-card-footer" onclick="event.stopPropagation()">
+        <button class="btn-dispatch" id="dispatch-${esc(t.id)}" onclick="dispatchTask('${esc(t.id)}', this)">&#x25B6; Dispatch to ${esc(t.suggested_to)}</button>
+      </div>` : ''}
     </div>`).join(''));
   }
 
@@ -782,6 +788,61 @@
 
   // ─── History filter ──────────────────────────────────────
   window.fleetHistoryFilter = function (instance) { loadHistory(instance); };
+
+  // ─── Dispatch task to bus ────────────────────────────────
+  window.dispatchTask = async function (id, btn) {
+    if (btn) { btn.disabled = true; btn.textContent = 'Dispatching…'; }
+
+    const { data: t, error } = await supa.from('forge_tasks')
+      .select('id,title,type,body,suggested_to,priority,cost_est_cad,acceptance_criteria')
+      .eq('id', id).single();
+    if (error) {
+      alert('Could not load task: ' + error.message);
+      if (btn) { btn.disabled = false; btn.innerHTML = '&#x25B6; Dispatch'; }
+      return;
+    }
+
+    const toUser = ['forge-cowork', 'forge-chat'].includes(t.suggested_to) ? 'cowork'
+      : ['forge-code', 'forge-code-ide', 'forge-dispatch', 'forge-inline', 'forge-terminal'].includes(t.suggested_to) ? 'forge'
+      : 'team';
+
+    const claimSql = `UPDATE forge_tasks SET assigned_to='${t.suggested_to}', status='in_progress' WHERE id='${t.id}' AND assigned_to IS NULL RETURNING *`;
+    const bodyText = [
+      'TASK DISPATCH from fleet.html',
+      '',
+      `Title: ${t.title}`,
+      `ID: ${t.id}`,
+      `Type: ${t.type}  Priority: ${t.priority}`,
+      '',
+      t.body || '',
+      t.acceptance_criteria ? `\nAcceptance criteria:\n${t.acceptance_criteria}` : '',
+      '',
+      'Atomic claim SQL (run before starting):',
+      claimSql,
+      '',
+      'Zero rows returned = already claimed by another instance. Walk away.'
+    ].join('\n').trim();
+
+    const { error: msgErr } = await supa.from('agent_messages').insert({
+      from_user: 'alessio',
+      to_user: toUser,
+      channel: 'task',
+      body: bodyText,
+      priority: t.priority === 'urgent' ? 'urgent' : 'normal',
+      status: 'sent'
+    });
+
+    if (msgErr) {
+      alert('Dispatch failed: ' + msgErr.message);
+      if (btn) { btn.disabled = false; btn.innerHTML = `&#x25B6; Dispatch to ${esc(t.suggested_to)}`; }
+      return;
+    }
+
+    if (btn) {
+      btn.textContent = '✓ Dispatched';
+      btn.style.cssText += ';background:rgba(63,185,80,0.15);border-color:rgba(63,185,80,0.4);color:var(--cc-success)';
+    }
+  };
 
   // ─── Boot ────────────────────────────────────────────────
   async function init() {
