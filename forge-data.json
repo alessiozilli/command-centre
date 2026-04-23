@@ -117,7 +117,7 @@
       "scores": [9, 9, 9, 9, 9, 9, 9, 9, 10, 9, 8]
     },
     {
-      "version": "v0.9.6", "name": "The Memory", "date": "Apr 20",
+      "version": "v0.9.6", "name": "The Remembered", "date": "Apr 20",
       "desc": "Four-brain memory system shipped end-to-end. Windows services, mcpo bridge, Cowork connector. Canary verified.",
       "scores": [9, 9, 9, 10, 9, 9, 9, 9, 10, 9, 8]
     },
