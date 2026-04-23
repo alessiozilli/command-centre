@@ -218,9 +218,10 @@
       agentMsgs:        { title: 'Agent Messages',    tag: 'LIVE', pos: { x:4, y:19, w:4, h:5 } },
       usageTracker:     { title: 'Usage Tracker',     tag: 'LIVE', pos: { x:8, y:19, w:4, h:5 } },
       shopWip:          { title: 'Shop WIP',          tag: 'LIVE', pos: { x:0, y:24, w:6, h:5 } },
-      customerPipeline: { title: 'Customer Pipeline', tag: 'LIVE', pos: { x:6, y:24, w:6, h:5 } }
+      customerPipeline: { title: 'Customer Pipeline', tag: 'LIVE', pos: { x:6, y:24, w:6, h:5 } },
+      fleetStatus:      { title: 'Fleet Status',      tag: 'LIVE', pos: { x:0, y:29, w:12, h:3 } }
     };
-    const WIDGET_ORDER = ['hero','tasks','forge','roadmap','usage','radar','calendar','finance','links','buildProgress','timeLog','agentMsgs','usageTracker','shopWip','customerPipeline'];
+    const WIDGET_ORDER = ['hero','tasks','forge','roadmap','usage','radar','calendar','finance','links','buildProgress','timeLog','agentMsgs','usageTracker','shopWip','customerPipeline','fleetStatus'];
 
     // ─── LocalStorage helpers ────────────────────────────────
     const readLS = (k, fb) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : fb; } catch(e) { return fb; } };
@@ -936,6 +937,33 @@
       } catch(e) { setBody('customerPipeline', `<div class="err">Load failed: ${esc(e.message||e)}</div>`); }
     }
 
+    // ─── Widget: Fleet Status (16) ── reads forge_fleet_status ──
+    async function mountFleetStatus() {
+      if (!(await hasSession())) { setBody('fleetStatus', signinPrompt()); return; }
+      try {
+        const { data, error } = await supa.from('forge_tasks')
+          .select('status,requires_approval,cycle_status,cycle_target,cost_actual_cad,completed_at');
+        if (error) throw error;
+        const active   = (data||[]).filter(t => t.status === 'in_progress').length;
+        const queued   = (data||[]).filter(t => t.status === 'queued').length;
+        const blocked  = (data||[]).filter(t => t.requires_approval !== 'none' && ['queued','in_progress'].includes(t.status)).length;
+        const cycles   = (data||[]).filter(t => t.cycle_status === 'in_cycle').length;
+        const todayCost = (data||[])
+          .filter(t => t.completed_at && t.completed_at.slice(0,10) === todayISO())
+          .reduce((s,t) => s + (Number(t.cost_actual_cad)||0), 0);
+        const cell = (lbl, val, warn) => `<div class="hero-cell"><div class="lbl">${lbl}</div><div class="val" style="${warn?'color:#f85149':''}"> ${esc(String(val))}</div></div>`;
+        setBody('fleetStatus', `
+          <div class="hero-inline">
+            ${cell('Active', active)}
+            ${cell('Queued', queued)}
+            ${cell('Blocked', blocked, blocked > 0)}
+            ${cell('Cycles ↻', cycles)}
+            ${cell('Today $', '$' + todayCost.toFixed(2))}
+          </div>
+          <div style="margin-top:0.4rem;"><a href="fleet.html" style="color:#58a6ff;font-size:0.78rem;text-decoration:none;">Open Fleet →</a></div>`);
+      } catch(e) { setBody('fleetStatus', `<div class="err">Load failed: ${esc(e.message||e)}</div>`); }
+    }
+
     function mountLinks() { renderLinks(); return Promise.resolve(); }
 
     // ─── Shop WIP add-blade helpers ──────────────────────────
@@ -972,7 +1000,8 @@
       usage: mountUsage, radar: mountRadar, calendar: mountCalendar, finance: mountFinance,
       links: mountLinks, buildProgress: mountBuildProgress,
       timeLog: mountTimeLog, agentMsgs: mountAgentMsgs, usageTracker: mountUsageTracker,
-      shopWip: mountShopWip, customerPipeline: mountCustomerPipeline
+      shopWip: mountShopWip, customerPipeline: mountCustomerPipeline,
+      fleetStatus: mountFleetStatus
     };
 
     // ─── Boot ────────────────────────────────────────────────
