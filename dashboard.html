@@ -135,6 +135,15 @@
     .signin-prompt { color: #8b949e; font-size: 0.82rem; }
     .signin-prompt a { color: #58a6ff; text-decoration: none; }
     .signin-prompt a:hover { text-decoration: underline; }
+
+    /* Calendar widget footer */
+    .cal-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem; padding-top: 0.4rem; border-top: 1px solid #21262d; font-size: 0.72rem; }
+    .cal-footer a { color: #58a6ff; text-decoration: none; }
+    .cal-footer a:hover { text-decoration: underline; }
+    .sync-pill { font-size: 0.65rem; padding: 2px 7px; border-radius: 10px; font-weight: 600; cursor: help; }
+    .sync-pill.ok   { background: rgba(63,185,80,0.12);  color: #3fb950; border: 1px solid rgba(63,185,80,0.25); }
+    .sync-pill.soft { background: rgba(210,153,34,0.10); color: #d29922; border: 1px solid rgba(210,153,34,0.25); }
+    .sync-pill.warn { background: rgba(248,81,73,0.12);  color: #f85149; border: 1px solid rgba(248,81,73,0.30); }
   </style>
 </head>
 <body>
@@ -516,21 +525,37 @@
       }
     }
 
-    // ─── Widget: Calendar placeholder (2) ────────────────────
+    // ─── Widget: Calendar (reads calendar_events synced from Google) ────
     async function mountCalendar() {
       try {
         const nowIso = new Date().toISOString();
         const { data, error } = await supa.from('calendar_events')
-          .select('id,summary,description,start_time,end_time,all_day,html_link')
+          .select('id,summary,description,start_time,end_time,all_day,html_link,synced_at')
           .gte('end_time', nowIso)
           .order('start_time', { ascending: true })
           .limit(12);
         if (error) throw error;
+
+        const calLink = 'https://calendar.google.com/calendar/u/0/r/week';
+        const freshness = (rows) => {
+          const stamps = (rows || []).map(r => r.synced_at).filter(Boolean).sort();
+          if (!stamps.length) return '';
+          const last = new Date(stamps[stamps.length - 1]);
+          const mins = Math.floor((Date.now() - last.getTime()) / 60000);
+          let label;
+          if (mins < 1)        label = 'just now';
+          else if (mins < 60)  label = mins + 'm ago';
+          else if (mins < 1440) label = Math.floor(mins/60) + 'h ago';
+          else                  label = Math.floor(mins/1440) + 'd ago';
+          const cls = mins > 1440 ? 'warn' : (mins > 360 ? 'soft' : 'ok');
+          return `<span class="sync-pill ${cls}" title="Last synced: ${last.toLocaleString()}">⟳ ${label}</span>`;
+        };
+
         if (!data || !data.length) {
           setBody('calendar', `<div class="placeholder-center">
             <div class="icon">📅</div>
             <div class="msg">No upcoming events.</div>
-            <div class="note"><a href="https://calendar.google.com/calendar/u/0/r/week" target="_blank" style="color:#58a6ff;">Open Google Calendar →</a></div>
+            <div class="note"><a href="${calLink}" target="_blank" style="color:#58a6ff;">Open Google Calendar →</a></div>
           </div>`);
           return;
         }
@@ -544,6 +569,15 @@
           return d.toLocaleDateString('en-CA', { weekday:'short', month:'short', day:'numeric' });
         };
         const timeLabel = (iso) => new Date(iso).toLocaleTimeString('en-CA', { hour:'numeric', minute:'2-digit', hour12:true });
+        const dotFor = (summary) => {
+          const s = (summary || '').toLowerCase();
+          if (s.startsWith('shop')) return '#f0883e';
+          if (s.includes('forge')) return '#bc8cff';
+          if (s.includes('personal ai')) return '#58a6ff';
+          if (s.includes('family')) return '#3fb950';
+          if (s.includes('invoice')) return '#d29922';
+          return '#8b949e';
+        };
 
         const buckets = new Map();
         data.forEach(ev => {
@@ -556,9 +590,9 @@
         const sections = Array.from(buckets.values()).map(b => {
           const rows = b.events.map(ev => {
             const time = ev.all_day ? 'all day' : timeLabel(ev.start_time);
-            const link = ev.html_link || 'https://calendar.google.com/calendar/u/0/r/week';
+            const link = ev.html_link || calLink;
             return `<div class="task-li" style="cursor:pointer;" onclick="window.open('${esc(link)}','_blank')">
-              <span class="dot" style="background:#58a6ff"></span>
+              <span class="dot" style="background:${dotFor(ev.summary)}"></span>
               <span class="t">${esc(ev.summary || '(untitled)')}</span>
               <span class="due">${esc(time)}</span>
             </div>`;
@@ -569,7 +603,11 @@
           </div>`;
         }).join('');
 
-        setBody('calendar', sections + `<div style="margin-top:0.3rem;"><a href="https://calendar.google.com/calendar/u/0/r/week" target="_blank" style="color:#58a6ff;font-size:0.78rem;text-decoration:none;">Open full calendar →</a></div>`);
+        const footer = `<div class="cal-footer">
+          <a href="${calLink}" target="_blank">Open full calendar →</a>
+          ${freshness(data)}
+        </div>`;
+        setBody('calendar', sections + footer);
       } catch(e) {
         setBody('calendar', `<div class="err">Load failed: ${esc(e.message||e)}</div>`);
       }
