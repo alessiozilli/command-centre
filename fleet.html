@@ -19,7 +19,8 @@
       { id: 'today',   label: 'Today'   },
       { id: 'blocked', label: 'Blocked' },
       { id: 'history', label: 'History' },
-      { id: 'cost',    label: 'Cost'    }
+      { id: 'cost',    label: 'Cost'    },
+      { id: 'tree',    label: 'Tree'    }
     ],
     stats: [
       { id: 'stat-active',  label: 'Active',   value: '—' },
@@ -200,6 +201,48 @@
 .dr-footer-item .k { font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--cc-text-dim); }
 .dr-footer-item .v { font-size: 0.8rem; color: var(--cc-text-muted); margin-top: 2px; }
 .dr-loading { padding: 48px 20px; text-align: center; color: var(--cc-text-muted); font-size: 0.9rem; }
+
+/* ── Tree tab ──────────────────────────────────────────────── */
+.tree-toggle-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px; align-items: center; }
+.tree-refresh-btn { margin-left: auto; background: none; border: 1px solid var(--cc-border); color: var(--cc-text-muted); padding: 4px 10px; border-radius: var(--cc-r-sm); font-size: 0.72rem; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+.tree-refresh-btn:hover { color: var(--cc-text); border-color: var(--cc-accent); }
+.tree-root { background: var(--cc-bg-card); border: 1px solid var(--cc-border); border-radius: var(--cc-r-md); margin-bottom: 10px; overflow: hidden; }
+.tree-root-hd { display: flex; align-items: center; gap: 10px; padding: 11px 14px; cursor: pointer; user-select: none; transition: background var(--cc-t-fast); }
+.tree-root-hd:hover { background: var(--cc-bg-hover); }
+.tree-root-caret { font-size: 0.7rem; color: var(--cc-text-dim); width: 12px; transition: transform 0.2s; }
+.tree-root-caret.open { transform: rotate(90deg); }
+.tree-root-name { font-size: 0.9rem; font-weight: 700; color: var(--cc-text); flex: 1; }
+.tree-root-meta { font-size: 0.72rem; color: var(--cc-text-muted); display: flex; gap: 10px; flex-wrap: wrap; }
+.tree-root-cost { color: var(--cc-accent); font-weight: 600; }
+.tree-children { padding: 0 0 6px 0; border-top: 1px solid var(--cc-border); }
+.tree-group-label { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.09em; color: var(--cc-text-dim); font-weight: 700; padding: 10px 14px 4px; }
+.tree-leaf { display: flex; align-items: center; gap: 8px; padding: 7px 14px 7px 26px; cursor: pointer; transition: background var(--cc-t-fast); border-left: 2px solid transparent; position: relative; }
+.tree-leaf:hover { background: var(--cc-bg-hover); border-left-color: var(--cc-accent); }
+.tree-leaf::before { content: '→'; position: absolute; left: 12px; color: var(--cc-text-dim); font-size: 0.65rem; }
+.tree-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.tree-dot-active  { background: var(--cc-accent); }
+.tree-dot-urgent  { background: var(--cc-danger); }
+.tree-dot-queued  { background: var(--cc-text-dim); }
+.tree-dot-done    { background: var(--cc-success); }
+.tree-dot-parked  { background: #bc8cff; }
+.tree-dot-warm { background: var(--cc-accent); box-shadow: 0 0 0 0 rgba(88,166,255,0.6); animation: treePulse 1.6s ease-out infinite; }
+@keyframes treePulse { 0%{box-shadow:0 0 0 0 rgba(88,166,255,0.6)} 70%{box-shadow:0 0 0 5px rgba(88,166,255,0)} 100%{box-shadow:0 0 0 0 rgba(88,166,255,0)} }
+.tree-leaf-title { font-size: 0.83rem; color: var(--cc-text-body); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tree-leaf-badges { display: flex; gap: 4px; flex-shrink: 0; }
+.tree-leaf-cost { font-size: 0.7rem; color: var(--cc-text-dim); white-space: nowrap; }
+.tree-leaf-age  { font-size: 0.68rem; color: var(--cc-text-dim); white-space: nowrap; }
+/* Ecosystem section */
+.eco-section { margin-top: 28px; }
+.eco-toggle-label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.78rem; font-weight: 700; color: var(--cc-text-muted); padding: 8px 0; user-select: none; }
+.eco-toggle-label:hover { color: var(--cc-text); }
+.eco-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin: 14px 0; }
+@media(max-width:700px){ .eco-cards { grid-template-columns: repeat(2,1fr); } }
+@media(max-width:420px){ .eco-cards { grid-template-columns: 1fr; } }
+.eco-card { background: var(--cc-bg-card); border: 1px solid var(--cc-border); border-radius: var(--cc-r-md); padding: 12px 14px; }
+.eco-card-name { font-size: 0.78rem; font-weight: 700; margin-bottom: 4px; }
+.eco-card-model { font-size: 0.66rem; color: var(--cc-text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+.eco-card-desc  { font-size: 0.75rem; color: var(--cc-text-muted); line-height: 1.45; }
+.eco-flow { font-size: 0.78rem; color: var(--cc-text-muted); line-height: 2; background: var(--cc-bg); border-radius: var(--cc-r-md); padding: 14px 16px; white-space: pre; overflow-x: auto; }
 </style>
 </head>
 <body>
@@ -239,6 +282,19 @@
 
 <section data-subtab="cost">
   <div id="fleetCostPanel"><div class="fleet-empty">Loading&hellip;</div></div>
+</section>
+
+
+<section data-subtab="tree">
+  <div class="tree-toggle-bar">
+    <button class="filter-btn active" data-view="instance" onclick="treeSetView('instance')">By Instance</button>
+    <button class="filter-btn" data-view="model" onclick="treeSetView('model')">By Model</button>
+    <button class="filter-btn" data-view="project" onclick="treeSetView('project')">By Project</button>
+    <button class="filter-btn" data-view="timeframe" onclick="treeSetView('timeframe')">By Timeframe</button>
+    <button class="tree-refresh-btn" onclick="loadTree(true)">&#8635; Refresh</button>
+  </div>
+  <div id="fleetTreeContainer"><div class="fleet-empty">Loading tree&hellip;</div></div>
+  <div id="fleetEcoContainer"></div>
 </section>
 
 </main>
@@ -847,6 +903,225 @@
     }
   };
 
+  // ─── TREE tab ─────────────────────────────────────────────
+
+  let _treeView = 'instance';
+  let _treeCache = null;
+
+  async function loadTree(forceRefresh) {
+    const container = document.getElementById('fleetTreeContainer');
+    if (!container) return;
+    if (forceRefresh) _treeCache = null;
+    if (!_treeCache) {
+      container.innerHTML = '<div class="fleet-empty">Loading tree&hellip;</div>';
+      const warmCutoff = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+      const [tasksRes, claimsRes] = await Promise.all([
+        supa.from('forge_tasks')
+          .select('id,title,status,priority,type,assigned_to,suggested_to,cost_actual_cad,cycle_cost_actual_cad,created_at,updated_at,tags')
+          .neq('status', 'cancelled')
+          .order('created_at', { ascending: false })
+          .limit(200),
+        supa.from('forge_claims')
+          .select('task_id')
+          .is('released_at', null)
+          .gte('claimed_at', warmCutoff)
+      ]);
+      if (tasksRes.error) {
+        container.innerHTML = `<div class="fleet-empty">Error: ${esc(tasksRes.error.message)}</div>`;
+        return;
+      }
+      _treeCache = {
+        tasks: tasksRes.data || [],
+        warmIds: new Set((claimsRes.data || []).map(c => c.task_id))
+      };
+    }
+    renderTree(container, _treeCache.tasks, _treeCache.warmIds);
+  }
+
+  function renderTree(container, tasks, warmIds) {
+    let groups;
+    if (_treeView === 'instance')   groups = groupByInstance(tasks);
+    else if (_treeView === 'model') groups = groupByModel(tasks);
+    else if (_treeView === 'project') groups = groupByProject(tasks);
+    else groups = groupByTimeframe(tasks);
+
+    const STATUS_WEIGHT = t => ['in_progress', 'queued'].includes(t.status) ? 0 : 1;
+    const keys = Object.keys(groups).sort((a, b) => {
+      const wa = Math.min(...groups[a].map(STATUS_WEIGHT));
+      const wb = Math.min(...groups[b].map(STATUS_WEIGHT));
+      return wa - wb || a.localeCompare(b);
+    });
+
+    if (!keys.length) { container.innerHTML = '<div class="fleet-empty">No tasks.</div>'; return; }
+
+    container.innerHTML = keys.map(k => renderTreeRoot(k, groups[k], warmIds)).join('');
+
+    const saved = JSON.parse(sessionStorage.getItem('treeOpen') || '{}');
+    container.querySelectorAll('.tree-root').forEach(root => {
+      const k = root.dataset.key;
+      const hasActive = root.classList.contains('has-active');
+      const open = k in saved ? saved[k] : (keys.length === 1 || hasActive);
+      _treeSetOpen(root, open);
+    });
+  }
+
+  function groupByInstance(tasks) {
+    const g = {};
+    tasks.forEach(t => { const k = t.assigned_to || t.suggested_to || 'unassigned'; (g[k] = g[k] || []).push(t); });
+    return g;
+  }
+
+  function groupByModel(tasks) {
+    const MAP = { 'forge-cowork': 'Opus', 'forge-code': 'Sonnet', 'forge-chat': 'Sonnet', 'forge-dispatch': 'Sonnet', 'forge-inline': 'Haiku', 'forge-terminal': 'Haiku' };
+    const g = {};
+    tasks.forEach(t => { const k = MAP[t.assigned_to || t.suggested_to || ''] || 'Unknown'; (g[k] = g[k] || []).push(t); });
+    return g;
+  }
+
+  function groupByProject(tasks) {
+    const g = {};
+    tasks.forEach(t => { const k = (t.tags && t.tags[0]) || t.type || 'general'; (g[k] = g[k] || []).push(t); });
+    return g;
+  }
+
+  function groupByTimeframe(tasks) {
+    const now = Date.now(); const DAY = 86400000;
+    const g = { today: [], 'this week': [], 'this month': [], older: [] };
+    tasks.forEach(t => {
+      const age = now - new Date(t.created_at).getTime();
+      if (age < DAY) g.today.push(t);
+      else if (age < 7 * DAY) g['this week'].push(t);
+      else if (age < 30 * DAY) g['this month'].push(t);
+      else g.older.push(t);
+    });
+    Object.keys(g).forEach(k => { if (!g[k].length) delete g[k]; });
+    return g;
+  }
+
+  function renderTreeRoot(key, tasks, warmIds) {
+    const hasActive = tasks.some(t => t.status === 'in_progress');
+    const now = new Date(); const nowMonth = now.getFullYear() + '-' + now.getMonth();
+    const windowedTasks = (_treeView === 'instance' || _treeView === 'model')
+      ? tasks.filter(t => t.updated_at && new Date(t.updated_at).toDateString() === now.toDateString())
+      : _treeView === 'project'
+      ? tasks.filter(t => { const d = new Date(t.updated_at); return d.getFullYear() + '-' + d.getMonth() === nowMonth; })
+      : tasks;
+    const totalCost = windowedTasks.reduce((s, t) => s + (Number(t.cost_actual_cad) || 0) + (Number(t.cycle_cost_actual_cad) || 0), 0);
+    const windowLabel = _treeView === 'instance' || _treeView === 'model' ? 'today' : _treeView === 'project' ? 'month' : '';
+    const color = _treeView === 'instance' ? instColor(key) : '#8b949e';
+
+    const SORD = { in_progress: 0, queued: 1, parked: 2, done: 3, cancelled: 4 };
+    const sorted = [...tasks].sort((a, b) => {
+      if (a.priority === 'urgent' && b.priority !== 'urgent') return -1;
+      if (b.priority === 'urgent' && a.priority !== 'urgent') return 1;
+      return (SORD[a.status] ?? 9) - (SORD[b.status] ?? 9);
+    });
+    const active   = sorted.filter(t => ['in_progress', 'queued'].includes(t.status));
+    const inactive = sorted.filter(t => !['in_progress', 'queued'].includes(t.status));
+
+    const leavesHtml = [
+      active.length   ? `<div class="tree-group-label">active (${active.length})</div>` + active.map(t => renderLeaf(t, warmIds)).join('') : '',
+      inactive.length ? `<div class="tree-group-label">completed / parked (${inactive.length})</div>` + inactive.map(t => renderLeaf(t, warmIds)).join('') : ''
+    ].filter(Boolean).join('');
+
+    return `<div class="tree-root${hasActive ? ' has-active' : ''}" data-key="${esc(key)}">
+      <div class="tree-root-hd" onclick="treeToggleRoot(this)">
+        <span class="tree-root-caret">&#9654;</span>
+        <span class="tree-root-name" style="color:${color}">${esc(key)}</span>
+        <div class="tree-root-meta">
+          <span>${tasks.length} task${tasks.length === 1 ? '' : 's'}</span>
+          ${hasActive ? '<span style="color:var(--cc-accent)">&#9679; active</span>' : ''}
+          ${totalCost > 0 ? `<span class="tree-root-cost">${fmtCost(totalCost)}${windowLabel ? ' ' + windowLabel : ''}</span>` : ''}
+        </div>
+      </div>
+      <div class="tree-children" style="display:none">${leavesHtml || '<div style="padding:8px 14px;font-size:0.78rem;color:var(--cc-text-dim)">No tasks.</div>'}</div>
+    </div>`;
+  }
+
+  function renderLeaf(task, warmIds) {
+    const isWarm = warmIds.has(task.id);
+    let dot = 'tree-dot-queued';
+    if (isWarm) dot = 'tree-dot-warm';
+    else if (task.priority === 'urgent') dot = 'tree-dot-urgent';
+    else if (task.status === 'in_progress') dot = 'tree-dot-active';
+    else if (task.status === 'done') dot = 'tree-dot-done';
+    else if (task.status === 'parked') dot = 'tree-dot-parked';
+    const cost = (Number(task.cost_actual_cad) || 0) + (Number(task.cycle_cost_actual_cad) || 0);
+    return `<div class="tree-leaf" onclick="openDrawer('${esc(task.id)}')">
+      <span class="tree-dot ${dot}"></span>
+      <span class="tree-leaf-title" title="${esc(task.title)}">${esc(task.title)}</span>
+      <div class="tree-leaf-badges">
+        ${task.priority === 'urgent' ? '<span class="badge badge-priority-urgent">urgent</span>' : ''}
+        ${badgeStatus(task.status)}
+      </div>
+      ${cost > 0 ? `<span class="tree-leaf-cost">${fmtCost(cost)}</span>` : ''}
+      <span class="tree-leaf-age">${fmtAge(task.created_at)}</span>
+    </div>`;
+  }
+
+  function renderEcosystem() {
+    const SKINS = [
+      { name: 'forge-code',     model: 'Sonnet 4.6',      color: '#3fb950', desc: 'Code · git · deploy · shell · Windows services · local mem0' },
+      { name: 'forge-cowork',   model: 'Opus 4.7',         color: '#bc8cff', desc: 'Architecture · strategy · artifacts · grant writing · long docs · design cycles' },
+      { name: 'forge-chat',     model: 'Sonnet / Haiku',   color: '#58a6ff', desc: 'Q&amp;A · email drafts · quick decisions · human-facing comms' },
+      { name: 'forge-dispatch', model: 'Sonnet 4.6',       color: '#f0883e', desc: 'Web research · live site verification · external API checks' },
+      { name: 'forge-inline',   model: 'Haiku 4.5',        color: '#d29922', desc: 'Contextual help · quick lookups · lightweight data updates' },
+      { name: 'forge-terminal', model: 'Haiku → Sonnet',   color: '#79c0ff', desc: 'Batch jobs · background scripts · scheduled cron tasks' },
+    ];
+    const FLOW = `Alessio / Reanna
+     │
+     ▼  fleet.html (Dispatch)
+     │
+     ├── forge-cowork ── Opus ──────── design · review · peer_pair cycles
+     ├── forge-code ─── Sonnet ─────── build · git push · deploy
+     ├── forge-chat ─── Sonnet ─────── comms · Q&A
+     ├── forge-dispatch  Sonnet ─────── research · verify
+     ├── forge-inline ── Haiku ──────── quick lookups
+     └── forge-terminal  Haiku/Sonnet ── batch · cron
+                │
+     Supabase ──┤  forge_tasks · forge_claims · agent_messages
+                │
+     mem0 ───────┘  Public · Local · Private brains`;
+    const cards = SKINS.map(s => `<div class="eco-card">
+      <div class="eco-card-name" style="color:${s.color}">${s.name}</div>
+      <div class="eco-card-model">${s.model}</div>
+      <div class="eco-card-desc">${s.desc}</div>
+    </div>`).join('');
+    return `<div class="eco-section">
+      <details>
+        <summary class="eco-toggle-label">&#9654; Forge Ecosystem Map</summary>
+        <div class="eco-cards">${cards}</div>
+        <pre class="eco-flow">${esc(FLOW)}</pre>
+      </details>
+    </div>`;
+  }
+
+  window.treeToggleRoot = function(hd) {
+    const root = hd.closest('.tree-root');
+    const children = root.querySelector('.tree-children');
+    const isOpen = children.style.display !== 'none';
+    _treeSetOpen(root, !isOpen);
+    const saved = JSON.parse(sessionStorage.getItem('treeOpen') || '{}');
+    saved[root.dataset.key] = !isOpen;
+    sessionStorage.setItem('treeOpen', JSON.stringify(saved));
+  };
+
+  window.treeSetView = function(view) {
+    _treeView = view;
+    document.querySelectorAll('.tree-toggle-bar .filter-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.view === view);
+    });
+    if (_treeCache) renderTree(document.getElementById('fleetTreeContainer'), _treeCache.tasks, _treeCache.warmIds);
+  };
+
+  function _treeSetOpen(root, open) {
+    const children = root.querySelector('.tree-children');
+    const caret    = root.querySelector('.tree-root-caret');
+    if (!children) return;
+    children.style.display = open ? '' : 'none';
+    if (caret) caret.classList.toggle('open', open);
+  }
+
   // ─── Boot ────────────────────────────────────────────────
   async function init() {
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
@@ -864,6 +1139,8 @@
     loadBlocked();
     loadHistory();
     loadCost();
+    loadTree();
+    setEl('fleetEcoContainer', renderEcosystem());
 
     // Deep-link: fleet.html#task=<uuid>
     const hashMatch = location.hash.match(/^#task=([0-9a-f-]{36})$/);
