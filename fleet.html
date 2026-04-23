@@ -39,6 +39,8 @@
 .fleet-empty a { color: var(--cc-accent); }
 .fleet-grid   { display: grid; gap: 12px; }
 .fleet-card   { background: var(--cc-bg-card); border: 1px solid var(--cc-border); border-radius: var(--cc-r-md); padding: 14px 16px; }
+.fleet-card.clickable { cursor: pointer; transition: border-color var(--cc-t-fast), background var(--cc-t-fast); }
+.fleet-card.clickable:hover { border-color: var(--cc-accent); background: var(--cc-bg-hover); }
 .fleet-card.urgent { border-color: var(--cc-danger); }
 .fleet-card.blocked-card { border-color: var(--cc-warn); }
 .fleet-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
@@ -104,6 +106,97 @@
 .today-cell { background: var(--cc-bg-card); border: 1px solid var(--cc-border); border-radius: var(--cc-r-md); padding: 10px 14px; }
 .today-cell .lbl { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--cc-text-muted); margin-bottom: 4px; }
 .today-cell .val { font-size: 1.3rem; font-weight: 700; color: var(--cc-text); }
+
+/* ── Slide-out drawer ──────────────────────────────────── */
+#fleet-drawer-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+  z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+}
+#fleet-drawer-overlay.open { opacity: 1; pointer-events: all; }
+#fleet-drawer {
+  position: fixed; top: 0; right: -520px; width: 480px; height: 100%;
+  background: var(--cc-bg-card); border-left: 1px solid var(--cc-border);
+  z-index: 201; overflow-y: auto; transition: right 0.3s ease;
+  display: flex; flex-direction: column;
+}
+#fleet-drawer.open { right: 0; }
+@media (max-width: 768px) {
+  #fleet-drawer { width: 100%; right: -110%; }
+}
+.dr-hd {
+  position: sticky; top: 0; background: var(--cc-bg-card);
+  border-bottom: 1px solid var(--cc-border);
+  padding: 16px 20px 14px; display: flex; align-items: flex-start; gap: 12px; z-index: 1;
+}
+.dr-hd-main { flex: 1; min-width: 0; }
+.dr-title { font-size: 1.05rem; font-weight: 700; color: var(--cc-text); margin: 0 0 8px; line-height: 1.3; }
+.dr-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.dr-close {
+  background: none; border: none; color: var(--cc-text-muted); cursor: pointer;
+  font-size: 1.4rem; line-height: 1; padding: 2px 6px; border-radius: var(--cc-r-sm);
+  transition: color var(--cc-t-fast), background var(--cc-t-fast); flex-shrink: 0; margin-top: -2px;
+}
+.dr-close:hover { color: var(--cc-text); background: var(--cc-bg-raised); }
+.dr-body { padding: 0 20px 32px; flex: 1; }
+.dr-section { margin-top: 22px; }
+.dr-section-label {
+  font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.09em;
+  color: var(--cc-text-dim); margin-bottom: 10px; font-weight: 700;
+}
+.dr-prose {
+  font-size: 0.85rem; color: var(--cc-text-body); line-height: 1.65;
+  background: var(--cc-bg); border-radius: var(--cc-r-md); padding: 12px 14px;
+}
+.dr-prose p { margin: 0 0 0.65em; }
+.dr-prose p:last-child { margin: 0; }
+.dr-prose strong { color: var(--cc-text); }
+.dr-prose code { font-family: var(--cc-font-mono); font-size: 0.82em; background: var(--cc-bg-raised); padding: 1px 5px; border-radius: 3px; }
+.dr-criteria {
+  font-size: 0.83rem; color: var(--cc-text-muted); font-style: italic;
+  margin: 0; padding: 10px 14px; border-left: 3px solid var(--cc-border);
+  background: var(--cc-bg); border-radius: 0 var(--cc-r-md) var(--cc-r-md) 0;
+}
+.dr-claim-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 0.82rem; color: var(--cc-text-muted); }
+.dr-claim-row a { color: var(--cc-accent); }
+.dr-cycle-bar-wrap { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+.dr-cycle-bar-track { flex: 1; height: 10px; background: var(--cc-bg); border-radius: 5px; overflow: hidden; }
+.dr-cycle-bar-fill  { height: 100%; background: var(--cc-accent); border-radius: 5px; transition: width 0.4s; }
+.dr-cycle-bar-label { font-size: 0.75rem; color: var(--cc-text-muted); white-space: nowrap; }
+.dr-cycle-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.dr-cycle-cost { font-size: 0.78rem; color: var(--cc-text-muted); margin-top: 6px; }
+.dr-btn-lock {
+  background: rgba(188,140,255,0.1); border: 1px solid rgba(188,140,255,0.3);
+  color: #bc8cff; padding: 5px 14px; border-radius: var(--cc-r-sm);
+  font-size: 0.78rem; font-weight: 600; cursor: pointer; margin-top: 10px; font-family: inherit;
+}
+.dr-btn-lock:hover { background: rgba(188,140,255,0.2); }
+.dr-timeline { display: flex; flex-direction: column; }
+.dr-tl-item {
+  display: grid; grid-template-columns: 48px 1fr;
+  gap: 0 10px; padding: 9px 0;
+  border-bottom: 1px solid var(--cc-border-soft);
+}
+.dr-tl-item:last-child { border-bottom: none; }
+.dr-tl-time  { font-size: 0.7rem; color: var(--cc-text-dim); font-family: var(--cc-font-mono); padding-top: 2px; }
+.dr-tl-right { min-width: 0; }
+.dr-tl-who   { font-size: 0.75rem; font-weight: 600; }
+.dr-tl-action{ font-size: 0.75rem; color: var(--cc-text-muted); }
+.dr-tl-note  { font-size: 0.78rem; color: var(--cc-text-body); margin-top: 3px; line-height: 1.45; }
+.dr-tl-cost  { font-size: 0.7rem; color: var(--cc-text-dim); margin-top: 2px; }
+.dr-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.dr-rollback {
+  margin-top: 10px; background: var(--cc-bg); border-radius: var(--cc-r-md);
+  padding: 10px 12px; font-family: var(--cc-font-mono); font-size: 0.78rem;
+  color: var(--cc-text-muted); word-break: break-all;
+}
+.dr-footer {
+  margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--cc-border);
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px;
+}
+.dr-footer-item .k { font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--cc-text-dim); }
+.dr-footer-item .v { font-size: 0.8rem; color: var(--cc-text-muted); margin-top: 2px; }
+.dr-loading { padding: 48px 20px; text-align: center; color: var(--cc-text-muted); font-size: 0.9rem; }
 </style>
 </head>
 <body>
@@ -147,6 +240,12 @@
 
 </main>
 
+<!-- Slide-out task drawer -->
+<div id="fleet-drawer-overlay"></div>
+<aside id="fleet-drawer" role="dialog" aria-modal="true" aria-label="Task detail">
+  <div id="fleet-drawer-inner"></div>
+</aside>
+
 <script>
 (function () {
   'use strict';
@@ -164,6 +263,8 @@
   const fmtAge = iso => { const m = ageMins(iso); if (m == null) return '—'; if (m < 60) return m + 'm ago'; if (m < 1440) return Math.floor(m / 60) + 'h ago'; return Math.floor(m / 1440) + 'd ago'; };
   const fmtDate = iso => iso ? iso.slice(0, 10) : '—';
   const fmtCost = n => n == null ? '—' : '$' + Number(n).toFixed(2);
+  const fmtTs = iso => { if (!iso) return '—'; const d = new Date(iso); return d.toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit', hour12: false }); };
+  const fmtDateTime = iso => iso ? iso.slice(0, 16).replace('T', ' ') : '—';
 
   const INSTANCE_COLORS = {
     'forge-cowork':   '#bc8cff',
@@ -202,6 +303,228 @@
     ]);
   }
 
+  // ─── Drawer ───────────────────────────────────────────────
+
+  function renderMd(text) {
+    if (!text) return '';
+    return '<p>' + text
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/`([^`\n]+)`/g, '<code>$1</code>')
+      .replace(/\n\n+/g, '</p><p>')
+      .replace(/\n/g, '<br>') + '</p>';
+  }
+
+  function renderCycleStatusBadge(cs) {
+    if (!cs || cs === 'not_started') return '';
+    const map = {
+      in_cycle:        ['badge-cycle-active',  'in cycle'],
+      converged:       ['badge-cycle-done',    'converged'],
+      target_reached:  ['badge-cycle-done',    'target reached'],
+      budget_exceeded: ['badge-cycle-budget',  'budget exceeded'],
+      user_locked:     ['badge-status-parked', 'user locked'],
+    };
+    const [cls, lbl] = map[cs] || ['badge-priority-normal', cs];
+    return `<span class="badge ${cls}">${lbl}</span>`;
+  }
+
+  function renderDrawerContent(task, claim) {
+    // 1. Header
+    const tags = (task.tags || []).map(tg =>
+      `<span class="badge" style="background:rgba(88,166,255,0.08);color:#79c0ff;border:1px solid rgba(88,166,255,0.2)">${esc(tg)}</span>`
+    ).join('');
+
+    const header = `
+      <div class="dr-hd">
+        <div class="dr-hd-main">
+          <h2 class="dr-title">${esc(task.title)}</h2>
+          <div class="dr-badges">
+            ${badgeStatus(task.status)}
+            ${badgePriority(task.priority)}
+            ${tags}
+          </div>
+        </div>
+        <button class="dr-close" onclick="closeDrawer()" aria-label="Close">&times;</button>
+      </div>
+      <div class="dr-body">`;
+
+    // 2. Body (markdown)
+    const bodySection = task.body ? `
+      <div class="dr-section">
+        <div class="dr-section-label">Plan</div>
+        <div class="dr-prose">${renderMd(task.body)}</div>
+      </div>` : '';
+
+    // 3. Acceptance criteria
+    const acSection = task.acceptance_criteria ? `
+      <div class="dr-section">
+        <div class="dr-section-label">Acceptance Criteria</div>
+        <p class="dr-criteria">${esc(task.acceptance_criteria)}</p>
+      </div>` : '';
+
+    // 4. Active claim (if in_progress)
+    let claimSection = '';
+    if (task.status === 'in_progress') {
+      const claimAge = claim && claim.claimed_at ? fmtAge(claim.claimed_at) : '—';
+      const verifyLink = (claim && claim.verify_url)
+        ? `<a href="${esc(claim.verify_url)}" target="_blank" rel="noopener">verify &rarr;</a>` : '';
+      const instanceId = claim && claim.instance_id
+        ? `<span style="color:var(--cc-text-dim);font-size:0.7rem;font-family:var(--cc-font-mono)">${esc(claim.instance_id)}</span>` : '';
+      claimSection = `
+        <div class="dr-section">
+          <div class="dr-section-label">Active Claim</div>
+          <div class="dr-claim-row">
+            ${claim ? badgeInstance(claim.claimed_by) : (task.assigned_to ? badgeInstance(task.assigned_to) : '<span style="color:var(--cc-text-dim)">no active claim</span>')}
+            ${instanceId}
+            ${claim ? `<span>${claimAge}</span>` : ''}
+            ${verifyLink}
+          </div>
+        </div>`;
+    }
+
+    // 5. Cycle progress (if cycle_target set)
+    let cycleSection = '';
+    if (task.cycle_target != null) {
+      const pct = Math.min(100, Math.round(((task.cycle_count || 0) / task.cycle_target) * 100));
+      const budgetPct = (task.cycle_budget_cad && task.cycle_cost_actual_cad)
+        ? Math.min(100, Math.round((task.cycle_cost_actual_cad / task.cycle_budget_cad) * 100)) : 0;
+      const cycles = Array.isArray(task.cycle_history) ? [...task.cycle_history].reverse() : [];
+
+      const cycleTimeline = cycles.length ? cycles.map(c => `
+        <div class="dr-tl-item">
+          <div class="dr-tl-time">${fmtTs(c.timestamp)}</div>
+          <div class="dr-tl-right">
+            <div>
+              <span class="dr-tl-who" style="color:${instColor(c.instance)}">${esc(c.instance || '—')}</span>
+              <span class="dr-tl-action"> &middot; Cycle ${esc(String(c.cycle || '?'))} ${verdictBadge(c.verdict)}</span>
+            </div>
+            ${c.delta_summary ? `<div class="dr-tl-note">${esc(c.delta_summary)}</div>` : ''}
+            ${c.cost_cad != null ? `<div class="dr-tl-cost">${fmtCost(c.cost_cad)}</div>` : ''}
+          </div>
+        </div>`).join('')
+        : '<div style="font-size:0.8rem;color:var(--cc-text-dim);padding:8px 0">No cycles yet.</div>';
+
+      const showLock = task.cycle_status === 'in_cycle' || task.cycle_status === 'converged';
+      const lockBtn = showLock
+        ? `<button class="dr-btn-lock" onclick="fleetLockCycle('${esc(task.id)}')">Lock now</button>` : '';
+
+      cycleSection = `
+        <div class="dr-section">
+          <div class="dr-section-label">Cycle Progress</div>
+          <div class="dr-cycle-meta">
+            ${renderCycleStatusBadge(task.cycle_status)}
+            ${task.cycle_mode ? `<span class="badge badge-priority-normal">${esc(task.cycle_mode)}</span>` : ''}
+            ${task.cycle_rotation ? `<span class="badge badge-priority-normal">${esc(task.cycle_rotation)}</span>` : ''}
+          </div>
+          <div class="dr-cycle-bar-wrap">
+            <div class="dr-cycle-bar-track"><div class="dr-cycle-bar-fill" style="width:${pct}%"></div></div>
+            <div class="dr-cycle-bar-label">${task.cycle_count || 0} / ${task.cycle_target} cycles</div>
+          </div>
+          ${task.cycle_budget_cad != null ? `<div class="dr-cycle-cost">
+            Cost: ${fmtCost(task.cycle_cost_actual_cad)} / ${fmtCost(task.cycle_budget_cad)}
+            ${budgetPct >= 80 ? `<span style="color:var(--cc-danger)"> &ndash; ⚠ ${budgetPct}% of budget</span>` : ''}
+          </div>` : ''}
+          ${lockBtn}
+          <div class="dr-section-label" style="margin-top:16px">Cycle History</div>
+          <div class="dr-timeline">${cycleTimeline}</div>
+        </div>`;
+    }
+
+    // 6. Execution log (most recent first)
+    const execLog = Array.isArray(task.execution_log) ? [...task.execution_log].reverse() : [];
+    const execTimeline = execLog.length ? execLog.map(e => `
+      <div class="dr-tl-item">
+        <div class="dr-tl-time">${fmtTs(e.timestamp)}</div>
+        <div class="dr-tl-right">
+          <div>
+            <span class="dr-tl-who" style="color:${instColor(e.instance)}">${esc(e.instance || '—')}</span>
+            <span class="dr-tl-action"> &middot; ${esc(e.action || '—')}</span>
+            ${e.cost_cad != null && e.cost_cad > 0 ? `<span class="dr-tl-cost" style="margin-left:8px">${fmtCost(e.cost_cad)}</span>` : ''}
+          </div>
+          ${e.note ? `<div class="dr-tl-note">${esc(e.note)}</div>` : ''}
+        </div>
+      </div>`).join('')
+      : '<div style="font-size:0.8rem;color:var(--cc-text-dim);padding:8px 0">No execution entries yet.</div>';
+
+    const execSection = `
+      <div class="dr-section">
+        <div class="dr-section-label">Execution Log</div>
+        <div class="dr-timeline">${execTimeline}</div>
+      </div>`;
+
+    // 7. Safety chips
+    const rollbackHtml = task.rollback_command ? `
+      <div class="dr-rollback">${esc(task.rollback_command)}</div>` : '';
+
+    const needsApproval = task.requires_approval && task.requires_approval !== 'none';
+    const safetySection = `
+      <div class="dr-section">
+        <div class="dr-section-label">Safety</div>
+        <div class="dr-chips">
+          ${task.side_effects ? badgeSide(task.side_effects) : ''}
+          ${needsApproval ? `<span class="badge badge-side-one_shot">approval: ${esc(task.requires_approval)}</span>` : ''}
+          <span class="badge" style="background:${task.context_isolated ? 'rgba(63,185,80,0.1)' : 'rgba(139,148,158,0.08)'};color:${task.context_isolated ? 'var(--cc-success)' : 'var(--cc-text-dim)'};border:1px solid ${task.context_isolated ? 'rgba(63,185,80,0.2)' : 'rgba(139,148,158,0.15)'}">
+            ${task.context_isolated ? '● isolated' : '○ shared ctx'}
+          </span>
+        </div>
+        ${rollbackHtml}
+      </div>`;
+
+    // 8. Meta footer
+    const footerSection = `
+      <div class="dr-footer">
+        <div class="dr-footer-item"><div class="k">Created</div><div class="v">${fmtDateTime(task.created_at)}</div></div>
+        <div class="dr-footer-item"><div class="k">Updated</div><div class="v">${fmtDateTime(task.updated_at)}</div></div>
+        ${task.completed_at ? `<div class="dr-footer-item"><div class="k">Completed</div><div class="v">${fmtDateTime(task.completed_at)}</div></div>` : ''}
+        <div class="dr-footer-item"><div class="k">Est cost</div><div class="v">${fmtCost(task.cost_est_cad)}</div></div>
+        <div class="dr-footer-item"><div class="k">Actual cost</div><div class="v">${fmtCost(task.cost_actual_cad)}</div></div>
+        <div class="dr-footer-item"><div class="k">Created by</div><div class="v">${esc(task.created_by || '—')}</div></div>
+      </div>`;
+
+    return header + bodySection + acSection + claimSection + cycleSection + execSection + safetySection + footerSection + '</div>';
+  }
+
+  window.openDrawer = async function (id) {
+    const overlay = document.getElementById('fleet-drawer-overlay');
+    const drawer  = document.getElementById('fleet-drawer');
+    const inner   = document.getElementById('fleet-drawer-inner');
+    inner.innerHTML = '<div class="dr-loading">Loading&hellip;</div>';
+    overlay.classList.add('open');
+    drawer.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    history.replaceState(null, '', '#task=' + id);
+
+    const [taskRes, claimRes] = await Promise.all([
+      supa.from('forge_tasks').select('*').eq('id', id).single(),
+      supa.from('forge_claims')
+        .select('claimed_by,instance_id,claimed_at,verify_url')
+        .eq('task_id', id).is('released_at', null).maybeSingle()
+    ]);
+
+    if (taskRes.error) {
+      inner.innerHTML = `<div class="dr-loading">Error loading task: ${esc(taskRes.error.message)}</div>`;
+      return;
+    }
+    inner.innerHTML = renderDrawerContent(taskRes.data, claimRes.data);
+  };
+
+  window.closeDrawer = function () {
+    document.getElementById('fleet-drawer-overlay').classList.remove('open');
+    document.getElementById('fleet-drawer').classList.remove('open');
+    document.body.style.overflow = '';
+    if (location.hash.startsWith('#task=')) {
+      history.replaceState(null, '', location.pathname);
+    }
+  };
+
+  window.fleetLockCycle = async function (id) {
+    const { error } = await supa.from('forge_tasks')
+      .update({ cycle_status: 'user_locked', status: 'in_progress' }).eq('id', id);
+    if (error) { alert('Lock failed: ' + error.message); return; }
+    openDrawer(id);
+    loadCycles();
+  };
+
   // ─── LIVE tab ────────────────────────────────────────────
   async function loadLive() {
     const { data, error } = await supa.from('forge_fleet_status')
@@ -213,7 +536,7 @@
     if (!data || !data.length) { setEl('fleetLiveList', '<div class="fleet-empty">No active tasks right now. Forge is idle.</div>'); return; }
     setEl('fleetLiveList', data.map(t => {
       const lastExec = t.last_exec_entry ? JSON.parse(typeof t.last_exec_entry === 'string' ? t.last_exec_entry : JSON.stringify(t.last_exec_entry)) : null;
-      return `<div class="fleet-card${t.priority === 'urgent' ? ' urgent' : ''}">
+      return `<div class="fleet-card clickable${t.priority === 'urgent' ? ' urgent' : ''}" onclick="openDrawer('${esc(t.id)}')">
         <div class="fleet-card-head">
           <div class="fleet-card-title">${esc(t.title)}</div>
           ${badgeStatus('in_progress')}
@@ -241,7 +564,7 @@
     _stats.queued = String(data ? data.length : 0);
     pushStats();
     if (!data || !data.length) { setEl('fleetQueueList', '<div class="fleet-empty">Queue is empty.</div>'); return; }
-    setEl('fleetQueueList', data.map(t => `<div class="fleet-card${t.priority === 'urgent' ? ' urgent' : ''}">
+    setEl('fleetQueueList', data.map(t => `<div class="fleet-card clickable${t.priority === 'urgent' ? ' urgent' : ''}" onclick="openDrawer('${esc(t.id)}')">
       <div class="fleet-card-head">
         <div class="fleet-card-title">${esc(t.title)}</div>
         ${badgePriority(t.priority)}
@@ -278,7 +601,7 @@
       const lastCycle = t.last_cycle_entry ? JSON.parse(typeof t.last_cycle_entry === 'string' ? t.last_cycle_entry : JSON.stringify(t.last_cycle_entry)) : null;
       const budgetPct = (t.cycle_budget_cad && t.cycle_cost_actual_cad) ? Math.min(100, Math.round((t.cycle_cost_actual_cad / t.cycle_budget_cad) * 100)) : 0;
       const cycleStatusBadge = t.cycle_status === 'in_cycle' ? 'badge-cycle-active' : t.cycle_status === 'budget_exceeded' ? 'badge-cycle-budget' : 'badge-cycle-done';
-      return `<div class="fleet-card">
+      return `<div class="fleet-card clickable" onclick="openDrawer('${esc(t.id)}')">
         <div class="fleet-card-head">
           <div class="fleet-card-title">${esc(t.title)}</div>
           <span class="badge ${cycleStatusBadge}">${esc(t.cycle_status)}</span>
@@ -322,7 +645,7 @@
       <div class="today-cell"><div class="lbl">Rate</div><div class="val">${data && data.length ? Math.round(done.length / data.length * 100) : 0}%</div></div>
     `);
     if (!data || !data.length) { setEl('fleetTodayList', '<div class="fleet-empty">Nothing completed today yet.</div>'); return; }
-    setEl('fleetTodayList', data.map(t => `<div class="fleet-card">
+    setEl('fleetTodayList', data.map(t => `<div class="fleet-card clickable" onclick="openDrawer('${esc(t.id)}')">
       <div class="fleet-card-head">
         <div class="fleet-card-title">${esc(t.title)}</div>
         ${badgeStatus(t.status)}
@@ -346,7 +669,7 @@
     _stats.blocked = String(data ? data.length : 0);
     pushStats();
     if (!data || !data.length) { setEl('fleetBlockedList', '<div class="fleet-empty">Nothing waiting for approval.</div>'); return; }
-    setEl('fleetBlockedList', data.map(t => `<div class="fleet-card blocked-card">
+    setEl('fleetBlockedList', data.map(t => `<div class="fleet-card blocked-card clickable" onclick="openDrawer('${esc(t.id)}')">
       <div class="fleet-card-head">
         <div class="fleet-card-title">${esc(t.title)}</div>
         ${badgePriority(t.priority)}
@@ -357,7 +680,7 @@
         <span style="color:var(--cc-warn)">gate: ${esc(t.requires_approval)}</span>
         <span>queued ${fmtAge(t.created_at)}</span>
       </div>
-      <div class="fleet-card-footer">
+      <div class="fleet-card-footer" onclick="event.stopPropagation()">
         <button class="btn-approve" onclick="fleetApprove('${esc(t.id)}')">✓ Approve</button>
         <button class="btn-reject"  onclick="fleetReject('${esc(t.id)}')">✗ Reject</button>
       </div>
@@ -379,14 +702,13 @@
     const { data, error } = await query;
     if (error) { setEl('fleetHistoryList', `<div class="fleet-empty">Error: ${esc(error.message)}</div>`); return; }
 
-    // Build filter bar
     const instances = ['all', ...Object.keys(INSTANCE_COLORS)];
     setEl('historyFilterBar', instances.map(inst =>
       `<button class="filter-btn${_historyFilter === inst ? ' active' : ''}" onclick="fleetHistoryFilter('${inst}')">${esc(inst)}</button>`
     ).join(''));
 
     if (!data || !data.length) { setEl('fleetHistoryList', '<div class="fleet-empty">No history in the last 30 days.</div>'); return; }
-    setEl('fleetHistoryList', data.map(t => `<div class="fleet-card">
+    setEl('fleetHistoryList', data.map(t => `<div class="fleet-card clickable" onclick="openDrawer('${esc(t.id)}')">
       <div class="fleet-card-head">
         <div class="fleet-card-title">${esc(t.title)}</div>
         ${badgeStatus(t.status)}
@@ -463,6 +785,8 @@
 
   // ─── Boot ────────────────────────────────────────────────
   async function init() {
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+
     const { data: { session } } = await supa.auth.getSession();
     if (!session) {
       document.querySelectorAll('[data-subtab]').forEach(s => { s.innerHTML = signinNote(); });
@@ -475,6 +799,10 @@
     loadBlocked();
     loadHistory();
     loadCost();
+
+    // Deep-link: fleet.html#task=<uuid>
+    const hashMatch = location.hash.match(/^#task=([0-9a-f-]{36})$/);
+    if (hashMatch) openDrawer(hashMatch[1]);
   }
 
   if (document.readyState === 'loading') {
