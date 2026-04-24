@@ -118,10 +118,14 @@ a:hover { text-decoration: underline; }
 .cc-nav {
   display: flex;
   gap: 6px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   flex: 1;
   min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+.cc-nav::-webkit-scrollbar { display: none; }
 .cc-nav a {
   background: var(--cc-bg-raised);
   border: 1px solid var(--cc-border);
@@ -279,9 +283,12 @@ a:hover { text-decoration: underline; }
   border-bottom: 1px solid var(--cc-border-soft);
   display: flex;
   gap: 4px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+.cc-subtabs::-webkit-scrollbar { display: none; }
 .cc-subtab {
   background: transparent;
   border: 1px solid transparent;
@@ -455,7 +462,7 @@ a:hover { text-decoration: underline; }
 
 /* ─── 8. RESPONSIVE ─── */
 @media (max-width: 768px) {
-  .cc-banner { padding: 8px 14px; gap: 10px; flex-wrap: wrap; }
+  .cc-banner { padding: 8px 14px; gap: 10px; }
   .cc-brand  { font-size: 13px; padding: 3px 10px; }
   .cc-nav a  { padding: 5px 12px; font-size: 13px; }
   .cc-quickview { padding: 6px 14px; gap: 14px; }
