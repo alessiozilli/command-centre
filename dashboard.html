@@ -238,11 +238,36 @@
     // ─── LocalStorage helpers ────────────────────────────────
     const readLS = (k, fb) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : fb; } catch(e) { return fb; } };
     const writeLS = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
+    let _layoutSaveTimer = null;
     const getSavedLayout = () => readLS(LS_LAYOUT, null);
     function saveLayout() {
       if (!window.dashGrid) return;
       const items = window.dashGrid.save(false);
       writeLS(LS_LAYOUT, items);
+      clearTimeout(_layoutSaveTimer);
+      _layoutSaveTimer = setTimeout(() => saveLayoutToSupabase(items), 1500);
+    }
+    async function saveLayoutToSupabase(items) {
+      try {
+        const { data: { session } } = await supa.auth.getSession();
+        if (!session) return;
+        await supa.from('cc_dashboard_layouts')
+          .upsert({ user_id: session.user.id, layout: items, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+      } catch(e) {}
+    }
+    async function loadLayoutFromSupabase() {
+      try {
+        const { data: { session } } = await supa.auth.getSession();
+        if (!session) return;
+        const { data } = await supa.from('cc_dashboard_layouts')
+          .select('layout')
+          .eq('user_id', session.user.id)
+          .single();
+        if (data && data.layout && data.layout.length && window.dashGrid) {
+          window.dashGrid.load(data.layout);
+          writeLS(LS_LAYOUT, data.layout);
+        }
+      } catch(e) {}
     }
 
     // ─── Cloud layout sync ──────────────────────────────────────
@@ -1045,9 +1070,13 @@
     };
 
     // ─── Reset layout action ─────────────────────────────────
-    window.dash_resetLayout = function() {
-      if (!confirm('Reset dashboard layout to default? This only affects this device.')) return;
+    window.dash_resetLayout = async function() {
+      if (!confirm('Reset dashboard layout to default? Clears this device and your synced layout.')) return;
       localStorage.removeItem(LS_LAYOUT);
+      try {
+        const { data: { session } } = await supa.auth.getSession();
+        if (session) await supa.from('cc_dashboard_layouts').delete().eq('user_id', session.user.id);
+      } catch(e) {}
       location.reload();
     };
 
@@ -1128,6 +1157,7 @@
       WIDGET_ORDER.forEach(id => {
         try { mountFns[id](); } catch(e) { setBody(id, `<div class="err">${esc(e.message||e)}</div>`); }
       });
+      loadLayoutFromSupabase(); // async — repositions grid after Supabase layout loads
 
       function wireShell() {
         if (window.CC && window.CC.onViewChange) window.CC.onViewChange(applyViewMode);
