@@ -22,7 +22,8 @@
       { id: 'cost',    label: 'Cost'    },
       { id: 'tree',    label: 'Tree'    },
       { id: 'plans',   label: 'Plans'   },
-      { id: 'bus',     label: 'Bus'     }
+      { id: 'bus',     label: 'Bus'     },
+      { id: 'quotas',  label: 'Quotas'  }
     ],
     stats: [
       { id: 'stat-active',  label: 'Active',   value: '—' },
@@ -274,6 +275,28 @@
 .group-body.collapsed { display: none; }
 @media (max-width: 480px) { .group-toggle-bar .filter-btn { font-size: 0.68rem; padding: 0.25rem 0.55rem; } }
 
+/* ── Quotas tab ─────────────────────────────────────────── */
+.quota-block { background: var(--cc-bg-card); border: 1px solid var(--cc-border); border-radius: var(--cc-r-md); padding: 16px 18px; margin-bottom: 12px; }
+.quota-block-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.09em; color: var(--cc-text-dim); font-weight: 700; margin-bottom: 12px; }
+.quota-meter-head { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; margin-bottom: 5px; }
+.quota-meter-name { font-weight: 600; color: var(--cc-text-body); }
+.quota-meter-vals { color: var(--cc-text-muted); font-family: var(--cc-font-mono); font-size: 0.75rem; }
+.quota-meter-track { height: 10px; background: var(--cc-bg); border-radius: 5px; overflow: hidden; }
+.quota-meter-fill { height: 100%; border-radius: 5px; transition: width 0.4s; }
+.quota-fill-ok   { background: var(--cc-success); }
+.quota-fill-warn { background: var(--cc-warn); }
+.quota-fill-crit { background: var(--cc-danger); }
+.quota-next-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--cc-border-soft); font-size: 0.82rem; }
+.quota-next-item:last-child { border-bottom: none; }
+.quota-next-title { color: var(--cc-text-body); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 8px; }
+.quota-next-cost { color: var(--cc-accent); font-family: var(--cc-font-mono); font-size: 0.75rem; white-space: nowrap; }
+.quota-stub-note { font-size: 0.8rem; color: var(--cc-text-dim); font-style: italic; padding: 4px 0 12px; }
+.quota-chart-wrap { height: 80px; display: flex; align-items: flex-end; gap: 4px; }
+.quota-chart-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px; flex: 1; height: 100%; }
+.quota-chart-bar { width: 100%; border-radius: 2px 2px 0 0; min-height: 2px; }
+.quota-chart-day { font-size: 0.6rem; color: var(--cc-text-dim); text-align: center; width: 100%; }
+.quota-chart-val { font-size: 0.58rem; color: var(--cc-text-dim); text-align: center; }
+
 /* Auto-refresh indicator */
 #fleet-refresh-pill {
   position: fixed; bottom: 16px; left: 16px; z-index: 50;
@@ -367,6 +390,23 @@
     <button class="filter-btn"        data-bus-status="parked"      onclick="busSetFilter('parked')">Parked</button>
   </div>
   <div id="fleetBusList"><div class="fleet-empty">Loading&hellip;</div></div>
+</section>
+
+
+<section data-subtab="quotas">
+  <p class="fleet-section-intro">Budget, quota, and burn rate. Subscription bars configured via DATA BLOCK. Autonomous work section wires live once FAW P1 (<code>35ad444c</code>) ships.</p>
+
+  <div class="fleet-section-heading">Subscription Quotas</div>
+  <div id="fleetQuotaBars"><div class="fleet-empty">Loading&hellip;</div></div>
+
+  <div class="fleet-section-heading" style="margin-top:20px">Autonomous Work Running Now</div>
+  <div id="fleetQuotaAuto"></div>
+
+  <div class="fleet-section-heading" style="margin-top:20px">Next Up — Queued Tasks</div>
+  <div id="fleetQuotaQueue"><div class="fleet-empty">Loading&hellip;</div></div>
+
+  <div class="fleet-section-heading" style="margin-top:20px">Burn Rate — Last 7 Days</div>
+  <div id="fleetQuotaChart"><div class="fleet-empty">Loading&hellip;</div></div>
 </section>
 
 </main>
@@ -1627,6 +1667,140 @@
     loadBus();
   }
 
+  // ─── Quotas tab ──────────────────────────────────────────
+  // DATA BLOCK — update used/budget here without touching the engine
+  const QUOTA_DB = {
+    subscriptions: [
+      {
+        name: 'Forge AI (Anthropic)',
+        window: 'Apr 2026',
+        budget: 280,
+        used: 44.57,
+        unit: '$',
+        currency: 'CAD',
+        note: '~15.9% used — resets May 1'
+      }
+    ]
+  };
+
+  function loadQuotas() {
+    _renderQuotaBars();
+    _renderQuotaAuto();
+    _renderQuotaQueue();
+    _renderQuotaChart();
+  }
+
+  function _renderQuotaBars() {
+    const el = document.getElementById('fleetQuotaBars');
+    if (!el) return;
+    el.innerHTML = QUOTA_DB.subscriptions.map(s => {
+      const pct = Math.min(100, Math.round((s.used / s.budget) * 100));
+      const fillCls = pct < 60 ? 'quota-fill-ok' : pct < 80 ? 'quota-fill-warn' : 'quota-fill-crit';
+      return `
+        <div class="quota-block">
+          <div class="quota-block-title">${esc(s.name)} &ndash; ${esc(s.window)}</div>
+          <div class="quota-meter-head">
+            <span class="quota-meter-name">${esc(s.unit)}${s.used.toFixed(2)} / ${esc(s.unit)}${s.budget} ${esc(s.currency)}</span>
+            <span class="quota-meter-vals">${pct}% used</span>
+          </div>
+          <div class="quota-meter-track" style="margin-bottom:4px">
+            <div class="quota-meter-fill ${fillCls}" style="width:${pct}%"></div>
+          </div>
+          ${s.note ? `<div style="font-size:0.72rem;color:var(--cc-text-dim)">${esc(s.note)}</div>` : ''}
+        </div>`;
+    }).join('');
+  }
+
+  function _renderQuotaAuto() {
+    const el = document.getElementById('fleetQuotaAuto');
+    if (!el) return;
+    el.innerHTML = `
+      <div class="quota-block">
+        <div class="quota-stub-note">&#x26A0; Stub — wires live once FAW P1 ships (autonomous_runs table, task 35ad444c).</div>
+        <div class="fleet-empty" style="padding:12px 0;font-size:0.82rem">No autonomous work running.</div>
+      </div>`;
+  }
+
+  async function _renderQuotaQueue() {
+    const el = document.getElementById('fleetQuotaQueue');
+    if (!el) return;
+    const { data, error } = await supa
+      .from('forge_tasks')
+      .select('id, title, priority, cost_est_cad, suggested_to')
+      .eq('status', 'queued')
+      .order('priority', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(12);
+
+    if (error) { el.innerHTML = `<div class="fleet-empty">Error: ${esc(error.message)}</div>`; return; }
+    if (!data || !data.length) { el.innerHTML = '<div class="fleet-empty">Queue is empty.</div>'; return; }
+
+    const totalEst = data.reduce((s, t) => s + (parseFloat(t.cost_est_cad) || 0), 0);
+    el.innerHTML = `
+      <div class="quota-block">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <span style="font-size:0.8rem;color:var(--cc-text-muted)">${data.length} task${data.length !== 1 ? 's' : ''} queued</span>
+          ${totalEst > 0 ? `<span style="font-size:0.78rem;color:var(--cc-accent);font-weight:700">~${fmtCost(totalEst)} est. total</span>` : ''}
+        </div>
+        ${data.map(t => `
+          <div class="quota-next-item">
+            <span class="quota-next-title">${esc(t.title)}</span>
+            ${t.suggested_to ? `<span style="font-size:0.7rem;color:var(--cc-text-dim);margin-right:8px;flex-shrink:0">${esc(t.suggested_to)}</span>` : ''}
+            <span class="quota-next-cost">${t.cost_est_cad ? fmtCost(t.cost_est_cad) : '—'}</span>
+          </div>`).join('')}
+      </div>`;
+  }
+
+  async function _renderQuotaChart() {
+    const el = document.getElementById('fleetQuotaChart');
+    if (!el) return;
+
+    const since = new Date();
+    since.setDate(since.getDate() - 6);
+    since.setHours(0, 0, 0, 0);
+
+    const { data } = await supa
+      .from('forge_sessions')
+      .select('started_at, session_cost_est_cad')
+      .gte('started_at', since.toISOString())
+      .not('session_cost_est_cad', 'is', null);
+
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      days.push({
+        label: d.toLocaleDateString('en-CA', { weekday: 'short' }),
+        date: d.toISOString().slice(0, 10),
+        cost: 0
+      });
+    }
+
+    (data || []).forEach(s => {
+      const d = (s.started_at || '').slice(0, 10);
+      const bucket = days.find(b => b.date === d);
+      if (bucket) bucket.cost += parseFloat(s.session_cost_est_cad || 0);
+    });
+
+    const maxCost = Math.max(...days.map(d => d.cost), 0.01);
+
+    el.innerHTML = `
+      <div class="quota-block">
+        <div class="quota-chart-wrap">
+          ${days.map(d => {
+            const barH = Math.round((d.cost / maxCost) * 64);
+            const fillCls = d.cost < 5 ? 'quota-fill-ok' : d.cost < 15 ? 'quota-fill-warn' : 'quota-fill-crit';
+            return `
+              <div class="quota-chart-col">
+                <div class="quota-chart-val">${d.cost > 0 ? '$' + d.cost.toFixed(1) : ''}</div>
+                <div class="quota-chart-bar ${fillCls}" style="height:${Math.max(barH, 2)}px"></div>
+                <div class="quota-chart-day">${esc(d.label)}</div>
+              </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }
+
   let _refreshLabelTimer = null;
 
   function _fmtSince(ms) {
@@ -1661,7 +1835,7 @@
       live: loadLive, queue: loadQueue, cycles: loadCycles,
       today: loadToday, blocked: loadBlocked, history: loadHistory,
       cost: loadCost, tree: () => loadTree(true), plans: () => loadPlans(true),
-      bus: loadBus
+      bus: loadBus, quotas: loadQuotas
     };
     const fn = TAB_FNS[_getActiveTab()];
     if (!fn) return;
@@ -1691,6 +1865,7 @@
     loadTree();
     loadPlans();
     loadBus();
+    loadQuotas();
     setEl('fleetEcoContainer', renderEcosystem());
 
     // Deep-link: fleet.html#task=<uuid>
