@@ -21,7 +21,8 @@
       { id: 'history', label: 'History' },
       { id: 'cost',    label: 'Cost'    },
       { id: 'tree',    label: 'Tree'    },
-      { id: 'plans',   label: 'Plans'   }
+      { id: 'plans',   label: 'Plans'   },
+      { id: 'bus',     label: 'Bus'     }
     ],
     stats: [
       { id: 'stat-active',  label: 'Active',   value: '—' },
@@ -353,6 +354,19 @@
   </div>
   <div class="group-toggle-bar" id="plansGroupBar"></div>
   <div id="fleetPlansList"><div class="fleet-empty">Loading&hellip;</div></div>
+</section>
+
+
+<section data-subtab="bus">
+  <p class="fleet-section-intro">Active bus messages — status not done or archived. Mark done once the triggered work is complete.</p>
+  <div class="plan-filter-bar" id="busFilterBar">
+    <button class="filter-btn active" data-bus-status="all"         onclick="busSetFilter('all')">All Active</button>
+    <button class="filter-btn"        data-bus-status="sent"        onclick="busSetFilter('sent')">Sent</button>
+    <button class="filter-btn"        data-bus-status="read"        onclick="busSetFilter('read')">Read</button>
+    <button class="filter-btn"        data-bus-status="in_progress" onclick="busSetFilter('in_progress')">In Progress</button>
+    <button class="filter-btn"        data-bus-status="parked"      onclick="busSetFilter('parked')">Parked</button>
+  </div>
+  <div id="fleetBusList"><div class="fleet-empty">Loading&hellip;</div></div>
 </section>
 
 </main>
@@ -1557,6 +1571,62 @@
 
   // ─── Auto-refresh (30 s polling) ─────────────────────────
   let _lastRefresh = Date.now();
+  // ─── Bus tab ─────────────────────────────────────────────
+  let _busFilter = 'all';
+
+  function busSetFilter(f) {
+    _busFilter = f;
+    document.querySelectorAll('#busFilterBar .filter-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.busStatus === f);
+    });
+    loadBus();
+  }
+
+  async function loadBus() {
+    const el = document.getElementById('fleetBusList');
+    if (!el) return;
+    el.innerHTML = '<div class="fleet-empty">Loading&hellip;</div>';
+    let q = supa.from('agent_messages')
+      .select('*')
+      .not('status', 'in', '("done","archived")')
+      .order('sent_at', { ascending: false });
+    if (_busFilter !== 'all') q = q.eq('status', _busFilter);
+    const { data, error } = await q;
+    if (error) { el.innerHTML = `<div class="fleet-empty">Error: ${error.message}</div>`; return; }
+    if (!data || !data.length) { el.innerHTML = '<div class="fleet-empty">No active bus messages.</div>'; return; }
+    el.innerHTML = data.map(m => {
+      const ts = m.sent_at ? new Date(m.sent_at).toLocaleString('en-CA', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+      const preview = (m.body || '').replace(/^#+\s*/m, '').slice(0, 200);
+      const statusClass = `badge-status-${m.status}`;
+      return `<div class="fleet-card" style="margin-bottom:10px">
+        <div class="fleet-card-head">
+          <span class="fleet-card-title">#${m.id} &mdash; ${esc(m.from_user)} → ${esc(m.to_user)}</span>
+          <span class="badge ${statusClass}">${m.status}</span>
+        </div>
+        <div class="fleet-card-meta">
+          <span>ch: ${esc(m.channel)}</span>
+          <span>${ts}</span>
+          ${m.priority === 'urgent' ? '<span class="badge badge-priority-urgent">urgent</span>' : ''}
+        </div>
+        <div class="fleet-card-body">${esc(preview)}${(m.body||'').length > 200 ? '…' : ''}</div>
+        <div class="fleet-card-footer">
+          <button class="filter-btn" onclick="busMarkDone(${m.id})">Mark Done</button>
+          <button class="filter-btn" onclick="busMarkParked(${m.id})">Park</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  async function busMarkDone(id) {
+    await supa.from('agent_messages').update({ status: 'done' }).eq('id', id);
+    loadBus();
+  }
+
+  async function busMarkParked(id) {
+    await supa.from('agent_messages').update({ status: 'parked' }).eq('id', id);
+    loadBus();
+  }
+
   let _refreshLabelTimer = null;
 
   function _fmtSince(ms) {
@@ -1590,7 +1660,8 @@
     const TAB_FNS = {
       live: loadLive, queue: loadQueue, cycles: loadCycles,
       today: loadToday, blocked: loadBlocked, history: loadHistory,
-      cost: loadCost, tree: () => loadTree(true), plans: () => loadPlans(true)
+      cost: loadCost, tree: () => loadTree(true), plans: () => loadPlans(true),
+      bus: loadBus
     };
     const fn = TAB_FNS[_getActiveTab()];
     if (!fn) return;
@@ -1619,6 +1690,7 @@
     loadCost();
     loadTree();
     loadPlans();
+    loadBus();
     setEl('fleetEcoContainer', renderEcosystem());
 
     // Deep-link: fleet.html#task=<uuid>
