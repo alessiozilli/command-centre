@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -246,6 +246,16 @@
 .eco-card-model { font-size: 0.66rem; color: var(--cc-text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
 .eco-card-desc  { font-size: 0.75rem; color: var(--cc-text-muted); line-height: 1.45; }
 .eco-flow { font-size: 0.78rem; color: var(--cc-text-muted); line-height: 2; background: var(--cc-bg); border-radius: var(--cc-r-md); padding: 14px 16px; white-space: pre; overflow-x: auto; }
+
+/* Auto-refresh indicator */
+#fleet-refresh-pill {
+  position: fixed; bottom: 16px; left: 16px; z-index: 50;
+  font-size: 0.65rem; color: var(--cc-text-dim);
+  background: var(--cc-bg-card); border: 1px solid var(--cc-border);
+  border-radius: var(--cc-r-pill); padding: 3px 10px;
+  pointer-events: none; opacity: 0.75; transition: color 0.3s, border-color 0.3s;
+}
+#fleet-refresh-pill.syncing { color: var(--cc-accent); border-color: rgba(88,166,255,0.3); opacity: 1; }
 </style>
 </head>
 <body>
@@ -301,6 +311,8 @@
 </section>
 
 </main>
+
+<div id="fleet-refresh-pill">&#x27F3; &#x2014;</div>
 
 <!-- Slide-out task drawer -->
 <div id="fleet-drawer-overlay"></div>
@@ -1165,7 +1177,52 @@
     if (caret) caret.classList.toggle('open', open);
   }
 
-  // ─── Boot ────────────────────────────────────────────────
+  // ─── Auto-refresh (30 s polling) ─────────────────────────
+  let _lastRefresh = Date.now();
+  let _refreshLabelTimer = null;
+
+  function _fmtSince(ms) {
+    const s = Math.floor((Date.now() - ms) / 1000);
+    if (s < 5) return 'just now';
+    if (s < 60) return s + 's ago';
+    return Math.floor(s / 60) + 'm ago';
+  }
+
+  function _updateRefreshPill(syncing) {
+    const el = document.getElementById('fleet-refresh-pill');
+    if (!el) return;
+    if (syncing) {
+      el.textContent = '⟳ syncing…';
+      el.classList.add('syncing');
+    } else {
+      el.textContent = '⟳ ' + _fmtSince(_lastRefresh);
+      el.classList.remove('syncing');
+    }
+  }
+
+  function _getActiveTab() {
+    const sections = document.querySelectorAll('[data-subtab]');
+    for (const s of sections) {
+      if (getComputedStyle(s).display !== 'none') return s.dataset.subtab;
+    }
+    return 'live';
+  }
+
+  async function _refreshActiveTab() {
+    const TAB_FNS = {
+      live: loadLive, queue: loadQueue, cycles: loadCycles,
+      today: loadToday, blocked: loadBlocked, history: loadHistory,
+      cost: loadCost, tree: () => loadTree(true)
+    };
+    const fn = TAB_FNS[_getActiveTab()];
+    if (!fn) return;
+    _updateRefreshPill(true);
+    try { await fn(); } catch(e) {}
+    _lastRefresh = Date.now();
+    _updateRefreshPill(false);
+  }
+
+    // ─── Boot ────────────────────────────────────────────────
   async function init() {
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
     document.getElementById('fleet-drawer-overlay').addEventListener('click', closeDrawer);
@@ -1188,6 +1245,12 @@
     // Deep-link: fleet.html#task=<uuid>
     const hashMatch = location.hash.match(/^#task=([0-9a-f-]{36})$/);
     if (hashMatch) openDrawer(hashMatch[1]);
+
+    // Start auto-refresh
+    _lastRefresh = Date.now();
+    _updateRefreshPill(false);
+    setInterval(_refreshActiveTab, 30000);
+    _refreshLabelTimer = setInterval(() => _updateRefreshPill(false), 5000);
   }
 
   if (document.readyState === 'loading') {
@@ -1199,3 +1262,5 @@
 </script>
 </body>
 </html>
+
+

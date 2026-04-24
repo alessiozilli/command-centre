@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -173,9 +173,20 @@
     .sync-pill.ok   { background: rgba(63,185,80,0.12);  color: #3fb950; border: 1px solid rgba(63,185,80,0.25); }
     .sync-pill.soft { background: rgba(210,153,34,0.10); color: #d29922; border: 1px solid rgba(210,153,34,0.25); }
     .sync-pill.warn { background: rgba(248,81,73,0.12);  color: #f85149; border: 1px solid rgba(248,81,73,0.30); }
-  </style>
+  
+/* Auto-refresh pill */
+#dash-refresh-pill {
+  position: fixed; bottom: 16px; right: 16px; z-index: 50;
+  font-size: 0.65rem; color: #6e7681;
+  background: #161b22; border: 1px solid #30363d;
+  border-radius: 10px; padding: 3px 10px;
+  pointer-events: none; opacity: 0.75; transition: color 0.3s, border-color 0.3s;
+}
+#dash-refresh-pill.syncing { color: #58a6ff; border-color: rgba(88,166,255,0.3); opacity: 1; }
+</style>
 </head>
 <body>
+  <div id="dash-refresh-pill">&#x27F3; &#x2014;</div>
   <main class="dash-wrap">
     <div class="grid-stack" id="dash-grid"></div>
   </main>
@@ -1080,7 +1091,33 @@
       } catch(e) { /* silent — dashboard must not break */ }
     }
 
-    // ─── Boot ────────────────────────────────────────────────
+    // ─── Auto-refresh (30 s polling) ─────────────────────────
+    const POLL_WIDGETS = ['hero','tasks','forge','roadmap','calendar','buildProgress','timeLog','agentMsgs','usageTracker','shopWip','customerPipeline','fleetStatus'];
+    let _dashLastRefresh = Date.now();
+    let _dashRefreshLabelTimer = null;
+
+    function _dashUpdatePill(syncing) {
+      const el = document.getElementById('dash-refresh-pill');
+      if (!el) return;
+      if (syncing) {
+        el.textContent = '⟳ syncing…'; el.classList.add('syncing');
+      } else {
+        const s = Math.floor((Date.now() - _dashLastRefresh) / 1000);
+        const lbl = s < 5 ? 'just now' : s < 60 ? s + 's ago' : Math.floor(s/60) + 'm ago';
+        el.textContent = '⟳ ' + lbl; el.classList.remove('syncing');
+      }
+    }
+
+    async function _dashRefreshWidgets() {
+      _dashUpdatePill(true);
+      await Promise.allSettled(POLL_WIDGETS.map(id => {
+        try { return mountFns[id]() || Promise.resolve(); } catch(e) { return Promise.resolve(); }
+      }));
+      _dashLastRefresh = Date.now();
+      _dashUpdatePill(false);
+    }
+
+        // ─── Boot ────────────────────────────────────────────────
     async function boot() {
       if (!window.GridStack) { console.error('GridStack not loaded'); return; }
       if (!window.supabase)  { console.error('Supabase not loaded'); return; }
@@ -1099,6 +1136,12 @@
       }
       if (window.CC && window.CC.onViewChange) wireShell();
       else document.addEventListener('cc-shell-ready', wireShell, { once:true });
+
+      // Start auto-refresh
+      _dashLastRefresh = Date.now();
+      _dashUpdatePill(false);
+      setInterval(_dashRefreshWidgets, 30000);
+      _dashRefreshLabelTimer = setInterval(() => _dashUpdatePill(false), 5000);
     }
 
     if (document.readyState === 'loading') {
@@ -1110,3 +1153,5 @@
   </script>
 </body>
 </html>
+
+
