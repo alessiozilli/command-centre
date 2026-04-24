@@ -1004,12 +1004,44 @@
       fleetStatus: mountFleetStatus
     };
 
+    // ─── Insurance Renewal Banner ────────────────────────────
+    async function checkInsuranceRenewals() {
+      try {
+        const { data:{ session } } = await supa.auth.getSession();
+        if (!session) return;
+        const cutoff = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().slice(0,10);
+        const { data, error } = await supa.from('insurance_policies')
+          .select('policy_label, renewal_date')
+          .eq('active', true)
+          .lte('renewal_date', cutoff)
+          .not('renewal_date', 'is', null)
+          .order('renewal_date', { ascending: true });
+        if (error || !data || !data.length) return;
+        const soonest  = data[0];
+        const daysLeft = Math.ceil((new Date(soonest.renewal_date + 'T12:00:00') - new Date()) / 86400000);
+        const isRed    = daysLeft <= 30;
+        const banner   = document.createElement('div');
+        banner.style.cssText = 'margin:0 0 0.75rem;padding:10px 16px;border-radius:8px;display:flex;' +
+          'align-items:center;gap:10px;font-size:0.85rem;font-weight:600;' +
+          'background:' + (isRed ? '#2d0f0f' : '#2d1f00') + ';' +
+          'border:1px solid ' + (isRed ? '#f85149' : '#d29922') + ';' +
+          'color:' + (isRed ? '#f85149' : '#d29922') + ';';
+        banner.innerHTML = data.length + ' polic' + (data.length === 1 ? 'y' : 'ies') +
+          ' renewing within 60 days — next: <strong>' + esc(soonest.policy_label) +
+          '</strong> on ' + esc(soonest.renewal_date) + ' (' + daysLeft + 'd). ' +
+          '<a href="finance.html" style="color:inherit;margin-left:auto;text-decoration:underline;white-space:nowrap;">View in Finance →</a>';
+        const wrap = document.querySelector('.dash-wrap');
+        if (wrap) wrap.insertBefore(banner, wrap.firstChild);
+      } catch(e) { /* silent — dashboard must not break */ }
+    }
+
     // ─── Boot ────────────────────────────────────────────────
     function boot() {
       if (!window.GridStack) { console.error('GridStack not loaded'); return; }
       if (!window.supabase)  { console.error('Supabase not loaded'); return; }
 
       initGrid();
+      checkInsuranceRenewals();
       WIDGET_ORDER.forEach(id => {
         try { mountFns[id](); } catch(e) { setBody(id, `<div class="err">${esc(e.message||e)}</div>`); }
       });
