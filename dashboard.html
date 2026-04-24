@@ -23,6 +23,7 @@
       ],
       activeView: 'view',
       actions: [
+        { label: 'Set as Default', variant: 'primary', onClick: 'dash_setDefaultLayout' },
         { label: 'Reset layout', variant: 'ghost', onClick: 'dash_resetLayout' }
       ]
     };
@@ -232,6 +233,50 @@
       const items = window.dashGrid.save(false);
       writeLS(LS_LAYOUT, items);
     }
+
+    // ─── Cloud layout sync ──────────────────────────────────────
+    function showToast(msg) {
+      let t = document.getElementById('dash-toast');
+      if (!t) {
+        t = document.createElement('div');
+        t.id = 'dash-toast';
+        t.style.cssText = 'position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:#58a6ff;color:#0d1117;padding:0.5rem 1.2rem;border-radius:6px;font-weight:600;font-size:0.85rem;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+        document.body.appendChild(t);
+      }
+      t.textContent = msg;
+      t.style.opacity = '1';
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => { t.style.opacity = '0'; }, 2200);
+    }
+
+    async function loadCloudLayout() {
+      try {
+        const { data:{ session } } = await supa.auth.getSession();
+        if (!session) return;
+        const { data } = await supa.from('user_settings')
+          .select('dashboard_layout')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+        if (!data?.dashboard_layout) return;
+        if (window.dashGrid) {
+          window.dashGrid.load(data.dashboard_layout);
+          writeLS(LS_LAYOUT, data.dashboard_layout);
+        }
+      } catch(e) { /* silent */ }
+    }
+
+    window.dash_setDefaultLayout = async function() {
+      const { data:{ session } } = await supa.auth.getSession();
+      if (!session) { alert('Sign in first to save a default layout.'); return; }
+      if (!window.dashGrid) return;
+      const layout = window.dashGrid.save(false);
+      const { error } = await supa.from('user_settings').upsert(
+        { user_id: session.user.id, dashboard_layout: layout, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id' }
+      );
+      if (error) { alert('Could not save default: ' + error.message); return; }
+      showToast('Layout saved as default — applies on all devices');
+    };
 
     // ─── GridStack init ──────────────────────────────────────
     let grid = null;
@@ -1036,11 +1081,12 @@
     }
 
     // ─── Boot ────────────────────────────────────────────────
-    function boot() {
+    async function boot() {
       if (!window.GridStack) { console.error('GridStack not loaded'); return; }
       if (!window.supabase)  { console.error('Supabase not loaded'); return; }
 
       initGrid();
+      await loadCloudLayout();
       checkInsuranceRenewals();
       WIDGET_ORDER.forEach(id => {
         try { mountFns[id](); } catch(e) { setBody(id, `<div class="err">${esc(e.message||e)}</div>`); }
@@ -1049,6 +1095,7 @@
       function wireShell() {
         if (window.CC && window.CC.onViewChange) window.CC.onViewChange(applyViewMode);
         if (window.CC && window.CC.registerAction) window.CC.registerAction('dash_resetLayout', window.dash_resetLayout);
+        if (window.CC && window.CC.registerAction) window.CC.registerAction('dash_setDefaultLayout', window.dash_setDefaultLayout);
       }
       if (window.CC && window.CC.onViewChange) wireShell();
       else document.addEventListener('cc-shell-ready', wireShell, { once:true });
