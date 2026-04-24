@@ -98,6 +98,9 @@
 .btn-dispatch { background: rgba(88,166,255,0.1); border: 1px solid rgba(88,166,255,0.3); color: var(--cc-accent); padding: 5px 14px; border-radius: var(--cc-r-sm); font-size: 0.78rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s; }
 .btn-dispatch:hover    { background: rgba(88,166,255,0.2); }
 .btn-dispatch:disabled { opacity: 0.5; cursor: default; }
+.btn-copy-cmd { background: transparent; border: 1px solid rgba(88,166,255,0.3); color: var(--cc-accent); padding: 5px 14px; border-radius: var(--cc-r-sm); font-size: 0.78rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+.btn-copy-cmd:hover  { background: rgba(88,166,255,0.08); }
+.btn-copy-cmd.copied { border-color: rgba(63,185,80,0.4); color: var(--cc-success); }
 
 /* History filter */
 .filter-bar { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; align-items: center; }
@@ -349,6 +352,35 @@
 
   const signinNote = () => '<div class="fleet-empty">Sign in to view fleet data. <a href="index.html">Sign in &rarr;</a></div>';
 
+  // ─── Copy Terminal Command ───────────────────────────────
+  function fallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    try { document.execCommand('copy'); } catch(e) {}
+    document.body.removeChild(ta);
+  }
+
+  window.copyTerminalCmd = function(btnEl) {
+    const taskId    = btnEl.dataset.taskId;
+    const title     = btnEl.dataset.title;
+    const suggested = btnEl.dataset.suggestedTo;
+    const haiku = ['forge-chat', 'forge-dispatch', 'forge-inline'];
+    const model = haiku.includes(suggested) ? 'haiku' : 'sonnet';
+    const cmd = 'cd "C:\\Users\\user\\My Drive (alessio.zilli@azcustomknives.com)\\AZCK Ltd" ; claude --model ' + model + ' "claim task ' + taskId + ' — ' + title + '. Read forge_tasks body before claiming."';
+    const finish = () => {
+      const orig = btnEl.innerHTML;
+      btnEl.textContent = 'Copied!';
+      btnEl.classList.add('copied');
+      setTimeout(() => { btnEl.innerHTML = orig; btnEl.classList.remove('copied'); }, 2000);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(cmd).then(finish).catch(() => { fallbackCopy(cmd); finish(); });
+    } else { fallbackCopy(cmd); finish(); }
+  };
+
   // ─── Stats update ─────────────────────────────────────────
   let _stats = { active: '—', queued: '—', blocked: '—', cycles: '—', cost: '—' };
   function pushStats() {
@@ -543,7 +575,17 @@
         <div class="dr-footer-item"><div class="k">Created by</div><div class="v">${esc(task.created_by || '—')}</div></div>
       </div>`;
 
-    return header + bodySection + acSection + claimSection + cycleSection + execSection + safetySection + footerSection + '</div>';
+    // 9. Actions (Dispatch for queued tasks + Copy command always)
+    const drawerActionsSection = `
+      <div class="dr-section">
+        <div class="dr-section-label">Actions</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          ${task.status === 'queued' && task.suggested_to ? `<button class="btn-dispatch" onclick="dispatchTask('${esc(task.id)}', this)">&#x25B6; Dispatch to ${esc(task.suggested_to)}</button>` : ''}
+          <button class="btn-copy-cmd" data-task-id="${esc(task.id)}" data-title="${esc(task.title)}" data-suggested-to="${esc(task.suggested_to || '')}" onclick="copyTerminalCmd(this)">&#x2398; Copy command</button>
+        </div>
+      </div>`;
+
+    return header + bodySection + acSection + claimSection + cycleSection + execSection + safetySection + drawerActionsSection + footerSection + '</div>';
   }
 
   window.openDrawer = async function (id) {
@@ -642,6 +684,7 @@
       ${(t.tags || []).length ? `<div class="fleet-card-body">${t.tags.map(tg => `<span class="badge" style="background:rgba(88,166,255,0.08);color:#79c0ff;border:1px solid rgba(88,166,255,0.2)">${esc(tg)}</span>`).join(' ')}</div>` : ''}
       ${t.suggested_to ? `<div class="fleet-card-footer" onclick="event.stopPropagation()">
         <button class="btn-dispatch" id="dispatch-${esc(t.id)}" onclick="dispatchTask('${esc(t.id)}', this)">&#x25B6; Dispatch to ${esc(t.suggested_to)}</button>
+        <button class="btn-copy-cmd" data-task-id="${esc(t.id)}" data-title="${esc(t.title)}" data-suggested-to="${esc(t.suggested_to)}" onclick="copyTerminalCmd(this)">&#x2398; Copy command</button>
       </div>` : ''}
     </div>`).join(''));
   }
