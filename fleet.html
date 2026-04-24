@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -36,6 +36,7 @@
 <style>
 /* Fleet-scoped styles — shell + base from cc-shell.css */
 .fleet-section-intro { font-size: 0.85rem; color: var(--cc-text-muted); margin: 0 0 16px; padding: 10px 14px; background: var(--cc-bg-card); border-radius: var(--cc-r-md); border-left: 3px solid var(--cc-accent); }
+.fleet-section-heading { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.09em; color: var(--cc-text-dim); font-weight: 700; margin: 0 0 8px; }
 .fleet-empty  { text-align: center; padding: 40px 20px; color: var(--cc-text-muted); font-size: 0.9rem; background: var(--cc-bg-card); border-radius: var(--cc-r-md); }
 .fleet-empty a { color: var(--cc-accent); }
 .fleet-grid   { display: grid; gap: 12px; }
@@ -265,6 +266,9 @@
 
 <section data-subtab="live">
   <p class="fleet-section-intro">Tasks currently being executed by a Forge instance. Claim age refreshes on page load.</p>
+  <div class="fleet-section-heading">Active Sessions</div>
+  <div class="fleet-grid" id="fleetSessionsList" style="margin-bottom:20px"><div class="fleet-empty">Loading&hellip;</div></div>
+  <div class="fleet-section-heading">Active Tasks</div>
   <div class="fleet-grid" id="fleetLiveList"><div class="fleet-empty">Loading&hellip;</div></div>
 </section>
 
@@ -641,8 +645,31 @@
     loadCycles();
   };
 
+  // ─── SESSIONS (boot-level tracking) ──────────────────────
+  async function loadSessions() {
+    const { data, error } = await supa.from('forge_sessions')
+      .select('id,instance,model,started_at,last_seen,intent,session_cost_est_cad')
+      .eq('status', 'active')
+      .order('started_at', { ascending: false });
+    if (error) { setEl('fleetSessionsList', `<div class="fleet-empty">Error: ${esc(error.message)}</div>`); return; }
+    if (!data || !data.length) { setEl('fleetSessionsList', '<div class="fleet-empty" style="padding:12px 20px">No active sessions.</div>'); return; }
+    setEl('fleetSessionsList', data.map(s => `<div class="fleet-card">
+      <div class="fleet-card-head">
+        <div class="fleet-card-title">${esc(s.instance)}${s.model ? ' <span style="color:var(--cc-text-muted);font-weight:400">&middot; ' + esc(s.model) + '</span>' : ''}</div>
+        <span class="badge badge-status-in_progress">active</span>
+      </div>
+      <div class="fleet-card-meta">
+        <span>booted ${fmtAge(s.started_at)}</span>
+        <span>last seen ${fmtAge(s.last_seen)}</span>
+        ${s.session_cost_est_cad != null ? `<span>est ${fmtCost(s.session_cost_est_cad)}</span>` : ''}
+      </div>
+      ${s.intent ? `<div class="fleet-card-body">${esc(s.intent)}</div>` : ''}
+    </div>`).join(''));
+  }
+
   // ─── LIVE tab ────────────────────────────────────────────
   async function loadLive() {
+    loadSessions();
     const { data, error } = await supa.from('forge_fleet_status')
       .select('id,title,type,assigned_to,claimed_by,claimed_at,last_exec_entry,cost_est_cad,cost_actual_cad,priority,side_effects')
       .eq('status', 'in_progress');
@@ -1134,7 +1161,7 @@
      ├── forge-inline ── Haiku ──────── quick lookups
      └── forge-terminal  Haiku/Sonnet ── batch · cron
                 │
-     Supabase ──┤  forge_tasks · forge_claims · agent_messages
+     Supabase ──┤  forge_tasks · forge_claims · forge_sessions · agent_messages
                 │
      mem0 ───────┘  Public · Local · Private brains`;
     const cards = SKINS.map(s => `<div class="eco-card">
@@ -1262,5 +1289,3 @@
 </script>
 </body>
 </html>
-
-
