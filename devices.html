@@ -13,112 +13,201 @@
   <style>
     .devices-wrap { max-width: 960px; margin: 2rem auto; padding: 0 1rem; }
     .device-card {
-      background: #161b22;
-      border: 1px solid #30363d;
-      border-radius: 10px;
-      padding: 1.25rem 1.5rem;
-      margin-bottom: 1rem;
+      background: #161b22; border: 1px solid #30363d;
+      border-radius: 10px; padding: 1.25rem 1.5rem; margin-bottom: 1rem;
     }
-    .device-card h3 { margin: 0 0 0.75rem; color: #e6edf3; font-size: 1.1rem; }
+    .device-card.current { border-color: #58a6ff; }
+    .device-card h3 {
+      margin: 0 0 0.75rem; color: #e6edf3; font-size: 1.05rem;
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .current-badge {
+      font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.07em; background: rgba(88,166,255,0.15);
+      color: #58a6ff; padding: 2px 8px; border-radius: 10px;
+      border: 1px solid rgba(88,166,255,0.3);
+    }
     .device-row {
-      display: grid;
-      grid-template-columns: 140px 1fr;
-      gap: 0.5rem 1rem;
-      font-size: 0.92rem;
-      color: #c9d1d9;
-      padding: 0.35rem 0;
-      border-bottom: 1px dashed #30363d;
+      display: grid; grid-template-columns: 140px 1fr;
+      gap: 0.5rem 1rem; font-size: 0.88rem; color: #c9d1d9;
+      padding: 0.35rem 0; border-bottom: 1px dashed #30363d;
     }
     .device-row:last-of-type { border-bottom: 0; }
-    .device-row .lbl { color: #8b949e; text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.78rem; }
-    .device-row .val { font-family: ui-monospace, monospace; word-break: break-all; }
-    .rename {
-      display: flex; gap: 0.5rem; margin-top: 1rem; align-items: center;
-    }
+    .device-row .lbl { color: #8b949e; text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.76rem; }
+    .device-row .val { word-break: break-all; }
+    .device-actions { display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; align-items: center; }
+    .rename { display: flex; gap: 0.5rem; flex: 1; min-width: 200px; }
     .rename input {
       flex: 1; background: #0d1117; color: #e6edf3;
       border: 1px solid #30363d; border-radius: 6px;
-      padding: 0.55rem 0.75rem; font-size: 0.95rem;
+      padding: 0.5rem 0.75rem; font-size: 0.9rem;
     }
-    .rename button {
-      background: #238636; color: #fff; border: 0; border-radius: 6px;
-      padding: 0.6rem 1.1rem; cursor: pointer; font-weight: 600;
+    .btn {
+      padding: 0.5rem 1rem; border-radius: 6px; border: 1px solid #30363d;
+      background: #21262d; color: #e6edf3; font-size: 0.85rem; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: all 0.15s;
     }
-    .rename button:hover { background: #2ea043; }
-    .placeholder-card {
-      background: #0d1117;
-      border: 1px dashed #30363d;
-      border-radius: 10px;
-      padding: 1.25rem 1.5rem;
-      color: #8b949e;
+    .btn:hover { border-color: #58a6ff; color: #58a6ff; }
+    .btn.save { background: #238636; color: #fff; border-color: #238636; }
+    .btn.save:hover { background: #2ea043; border-color: #2ea043; color: #fff; }
+    .btn.danger { color: #f85149; border-color: rgba(248,81,73,0.4); }
+    .btn.danger:hover { background: rgba(248,81,73,0.1); border-color: #f85149; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .section-title {
+      color: #e6edf3; font-size: 0.9rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.06em; margin: 1.5rem 0 0.75rem; padding-bottom: 0.4rem;
+      border-bottom: 1px solid #30363d;
     }
-    .placeholder-card h3 { color: #c9d1d9; margin: 0 0 0.5rem; font-size: 1rem; }
+    .empty-state {
+      background: #0d1117; border: 1px dashed #30363d;
+      border-radius: 10px; padding: 2rem; text-align: center;
+      color: #8b949e; font-size: 0.88rem; line-height: 1.6;
+    }
+    .loading-msg { color: #8b949e; font-size: 0.9rem; margin-bottom: 1rem; }
     .toast {
-      position: fixed; bottom: 2rem; right: 2rem;
-      background: #238636; color: #fff; padding: 0.75rem 1.25rem;
+      position: fixed; bottom: 2rem; right: 2rem; background: #161b22;
+      border: 1px solid #58a6ff; color: #e6edf3; padding: 0.75rem 1.25rem;
       border-radius: 8px; opacity: 0; transition: opacity 0.3s;
-      pointer-events: none;
+      pointer-events: none; font-size: 0.88rem; z-index: 100;
     }
     .toast.show { opacity: 1; }
+    .toast.err { border-color: #f85149; }
   </style>
 </head>
 <body>
   <div class="devices-wrap">
-    <h1 style="color:#e6edf3;margin-bottom:1.5rem;">Devices</h1>
-
-    <div class="device-card" id="current-device">
-      <h3>This device</h3>
-      <div class="device-row"><span class="lbl">Label</span><span class="val" id="dv-label">—</span></div>
-      <div class="device-row"><span class="lbl">Device ID</span><span class="val" id="dv-id">—</span></div>
-      <div class="device-row"><span class="lbl">First seen</span><span class="val" id="dv-first">—</span></div>
-      <div class="device-row"><span class="lbl">Last seen</span><span class="val" id="dv-last">—</span></div>
-      <div class="device-row"><span class="lbl">Session kind</span><span class="val" id="dv-session">—</span></div>
-      <div class="device-row"><span class="lbl">User agent</span><span class="val" id="dv-ua">—</span></div>
-
-      <div class="rename">
-        <input type="text" id="dv-rename" maxlength="40" placeholder="Rename this device (40 chars max)">
-        <button id="dv-save">Save</button>
-      </div>
-    </div>
-
-    <div class="placeholder-card">
-      <h3>Cross-device registry</h3>
-      <p style="margin:0;line-height:1.5;">Coming in Pass 5 with Supabase Auth. You'll see every device signed into this account here, not just the one you're on — with one-click remote logout for any of them.</p>
-    </div>
+    <p class="loading-msg" id="loading-msg">Loading…</p>
+    <div id="current-section"></div>
+    <div id="other-section"></div>
   </div>
 
-  <div class="toast" id="toast">Saved</div>
+  <div class="toast" id="toast"></div>
 
   <script>
+  (function() {
     function fmt(iso) {
       if (!iso) return '—';
-      try { return new Date(iso).toLocaleString(); } catch { return iso; }
+      try { return new Date(iso).toLocaleString('en-CA', { dateStyle: 'medium', timeStyle: 'short' }); } catch(e) { return iso; }
     }
-    function toast(msg) {
+    function fmtRel(iso) {
+      if (!iso) return '—';
+      const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+      if (mins < 1)    return 'just now';
+      if (mins < 60)   return mins + 'm ago';
+      if (mins < 1440) return Math.floor(mins / 60) + 'h ago';
+      return Math.floor(mins / 1440) + 'd ago';
+    }
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+    }
+    function showToast(msg, isErr) {
       const t = document.getElementById('toast');
-      t.textContent = msg; t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 1800);
+      t.textContent = msg;
+      t.className = 'toast show' + (isErr ? ' err' : '');
+      setTimeout(() => { t.className = 'toast' + (isErr ? ' err' : ''); }, 2800);
     }
-    function paint() {
-      const i = window.ccGetDeviceInfo();
-      document.getElementById('dv-label').textContent = i.label || '—';
-      document.getElementById('dv-id').textContent = i.id || '—';
-      document.getElementById('dv-first').textContent = fmt(i.firstSeen);
-      document.getElementById('dv-last').textContent = fmt(i.lastSeen);
-      document.getElementById('dv-session').textContent = i.sessionKind;
-      document.getElementById('dv-ua').textContent = i.userAgent;
-      document.getElementById('dv-rename').value = i.label || '';
-    }
-    document.addEventListener('DOMContentLoaded', () => {
-      // Wait for auth.js guard + ccTouchDevice to settle
-      setTimeout(paint, 50);
+
+    function renderCurrent(info) {
+      document.getElementById('current-section').innerHTML = `
+        <h2 class="section-title">This device</h2>
+        <div class="device-card current">
+          <h3>
+            <span id="dv-label-display">${esc(info.label || 'New device')}</span>
+            <span class="current-badge">Current</span>
+          </h3>
+          <div class="device-row"><span class="lbl">Supabase ID</span><span class="val">${esc(info.supabaseId || 'Syncing…')}</span></div>
+          <div class="device-row"><span class="lbl">Local ID</span><span class="val">${esc(info.id || '—')}</span></div>
+          <div class="device-row"><span class="lbl">First seen</span><span class="val">${esc(fmt(info.firstSeen))}</span></div>
+          <div class="device-row"><span class="lbl">Last seen</span><span class="val">${esc(fmt(info.lastSeen))}</span></div>
+          <div class="device-row"><span class="lbl">Session</span><span class="val">${esc(info.sessionKind || 'supabase')}</span></div>
+          <div class="device-row"><span class="lbl">User agent</span><span class="val" style="font-size:0.74rem;color:#8b949e;">${esc(info.userAgent || '—')}</span></div>
+          <div class="device-actions">
+            <div class="rename">
+              <input type="text" id="dv-rename" maxlength="40" value="${esc(info.label || '')}" placeholder="Rename this device">
+              <button class="btn save" id="dv-save">Save</button>
+            </div>
+          </div>
+        </div>`;
+
       document.getElementById('dv-save').addEventListener('click', () => {
-        const v = document.getElementById('dv-rename').value.trim();
+        const v = (document.getElementById('dv-rename')?.value || '').trim();
         if (!v) return;
-        try { window.ccSetDeviceLabel(v); paint(); toast('Renamed'); }
-        catch (e) { toast(e.message || 'Error'); }
+        try {
+          window.ccSetDeviceLabel(v);
+          document.getElementById('dv-label-display').textContent = v;
+          showToast('Device renamed');
+        } catch(e) { showToast(e.message || 'Error', true); }
       });
-    });
+    }
+
+    function renderOthers(devices, currentSupaId) {
+      const others = devices.filter(d => d.id !== currentSupaId);
+      const sec = document.getElementById('other-section');
+      if (!others.length) {
+        sec.innerHTML = `
+          <h2 class="section-title">Other devices</h2>
+          <div class="empty-state">
+            No other devices signed in.<br>
+            When you sign in on another device it will appear here — with one-click remote logout.
+          </div>`;
+        return;
+      }
+      const cards = others.map(d => `
+        <div class="device-card" id="dev-card-${esc(d.id)}">
+          <h3>${esc(d.label || 'Unknown device')}</h3>
+          <div class="device-row"><span class="lbl">Supabase ID</span><span class="val">${esc(d.id)}</span></div>
+          <div class="device-row"><span class="lbl">Last seen</span><span class="val">${esc(fmt(d.last_seen))} · ${esc(fmtRel(d.last_seen))}</span></div>
+          <div class="device-row"><span class="lbl">First seen</span><span class="val">${esc(fmt(d.first_seen))}</span></div>
+          <div class="device-row"><span class="lbl">User agent</span><span class="val" style="font-size:0.74rem;color:#8b949e;">${esc(d.user_agent || '—')}</span></div>
+          <div class="device-actions">
+            <button class="btn danger" onclick="remoteLogout('${esc(d.id)}', this)">Log out remotely</button>
+          </div>
+        </div>`).join('');
+      sec.innerHTML = `<h2 class="section-title">Other devices (${others.length})</h2>${cards}`;
+    }
+
+    window.remoteLogout = async function(deviceId, btn) {
+      if (!confirm('Log out this device remotely? It will be signed out on next load.')) return;
+      btn.disabled = true; btn.textContent = 'Logging out…';
+      try {
+        await window.ccRemoteLogout(deviceId);
+        const card = document.getElementById('dev-card-' + deviceId);
+        if (card) { card.style.opacity = '0.4'; card.style.pointerEvents = 'none'; }
+        showToast('Device logged out');
+      } catch(e) {
+        showToast('Failed: ' + (e.message || e), true);
+        btn.disabled = false; btn.textContent = 'Log out remotely';
+      }
+    };
+
+    async function init() {
+      let waited = 0;
+      while (!window.ccGetDeviceInfo && waited < 4000) {
+        await new Promise(r => setTimeout(r, 60));
+        waited += 60;
+      }
+      const loadingMsg = document.getElementById('loading-msg');
+      if (!window.ccGetDeviceInfo) {
+        loadingMsg.textContent = 'Auth not available — refresh and try again.';
+        return;
+      }
+      loadingMsg.textContent = '';
+
+      const info = window.ccGetDeviceInfo();
+      renderCurrent(info);
+
+      try {
+        const devices = await window.ccGetAllDevices();
+        renderOthers(devices, info.supabaseId);
+      } catch(e) {
+        document.getElementById('other-section').innerHTML = `
+          <h2 class="section-title">Other devices</h2>
+          <div class="empty-state" style="color:#f85149;">Could not load: ${esc(e.message || e)}</div>`;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  })();
   </script>
 </body>
 </html>
