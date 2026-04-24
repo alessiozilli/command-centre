@@ -20,7 +20,8 @@
       { id: 'blocked', label: 'Blocked' },
       { id: 'history', label: 'History' },
       { id: 'cost',    label: 'Cost'    },
-      { id: 'tree',    label: 'Tree'    }
+      { id: 'tree',    label: 'Tree'    },
+      { id: 'plans',   label: 'Plans'   }
     ],
     stats: [
       { id: 'stat-active',  label: 'Active',   value: '—' },
@@ -248,6 +249,30 @@
 .eco-card-desc  { font-size: 0.75rem; color: var(--cc-text-muted); line-height: 1.45; }
 .eco-flow { font-size: 0.78rem; color: var(--cc-text-muted); line-height: 2; background: var(--cc-bg); border-radius: var(--cc-r-md); padding: 14px 16px; white-space: pre; overflow-x: auto; }
 
+/* ── Plans tab ───────────────────────────────────────────── */
+.badge-plan-draft     { background: rgba(139,148,158,0.12); color: var(--cc-text-muted); border: 1px solid rgba(139,148,158,0.25); }
+.badge-plan-bouncing  { background: rgba(88,166,255,0.12);  color: var(--cc-accent);     border: 1px solid rgba(88,166,255,0.25);  }
+.badge-plan-approved  { background: rgba(63,185,80,0.12);   color: var(--cc-success);    border: 1px solid rgba(63,185,80,0.25);   }
+.badge-plan-converted { background: rgba(188,140,255,0.12); color: #bc8cff;              border: 1px solid rgba(188,140,255,0.25); }
+.badge-plan-abandoned { background: rgba(248,81,73,0.08);   color: var(--cc-danger);     border: 1px solid rgba(248,81,73,0.2);    }
+.plan-filter-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; }
+.btn-convert { background: rgba(63,185,80,0.12); border: 1px solid rgba(63,185,80,0.3); color: var(--cc-success); padding: 5px 14px; border-radius: var(--cc-r-sm); font-size: 0.78rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s; margin-top: 10px; }
+.btn-convert:hover { background: rgba(63,185,80,0.22); }
+.btn-convert:disabled { opacity: 0.5; cursor: default; }
+
+/* ── Grouping toggle bar (Queue / Plans / History) ── */
+.group-toggle-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; }
+.group-hd { background: var(--cc-bg-card); border: 1px solid var(--cc-border); border-radius: var(--cc-r-md); margin-bottom: 8px; overflow: hidden; }
+.group-hd-btn { width: 100%; display: flex; align-items: center; gap: 8px; padding: 8px 14px; cursor: pointer; background: none; border: none; font-family: inherit; text-align: left; transition: background var(--cc-t-fast); }
+.group-hd-btn:hover { background: var(--cc-bg-hover); }
+.group-hd-caret { font-size: 0.68rem; color: var(--cc-text-dim); transition: transform 0.2s; }
+.group-hd-caret.open { transform: rotate(90deg); }
+.group-hd-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--cc-text-muted); flex: 1; }
+.group-hd-count { font-size: 0.68rem; background: var(--cc-bg-raised); color: var(--cc-text-dim); padding: 1px 7px; border-radius: var(--cc-r-pill); }
+.group-body { padding: 4px 0 8px; }
+.group-body.collapsed { display: none; }
+@media (max-width: 480px) { .group-toggle-bar .filter-btn { font-size: 0.68rem; padding: 0.25rem 0.55rem; } }
+
 /* Auto-refresh indicator */
 #fleet-refresh-pill {
   position: fixed; bottom: 16px; left: 16px; z-index: 50;
@@ -274,7 +299,8 @@
 
 <section data-subtab="queue">
   <p class="fleet-section-intro">Tasks waiting for Alessio to dispatch to an instance. Forge suggests — Alessio dispatches.</p>
-  <div class="fleet-grid" id="fleetQueueList"><div class="fleet-empty">Loading&hellip;</div></div>
+  <div class="group-toggle-bar" id="queueGroupBar"></div>
+  <div id="fleetQueueList"><div class="fleet-empty">Loading&hellip;</div></div>
 </section>
 
 <section data-subtab="cycles">
@@ -293,8 +319,8 @@
 </section>
 
 <section data-subtab="history">
-  <div class="filter-bar" id="historyFilterBar"></div>
-  <div class="fleet-grid" id="fleetHistoryList"><div class="fleet-empty">Loading&hellip;</div></div>
+  <div class="group-toggle-bar" id="historyGroupBar"></div>
+  <div id="fleetHistoryList"><div class="fleet-empty">Loading&hellip;</div></div>
 </section>
 
 <section data-subtab="cost">
@@ -312,6 +338,21 @@
   </div>
   <div id="fleetTreeContainer"><div class="fleet-empty">Loading tree&hellip;</div></div>
   <div id="fleetEcoContainer"></div>
+</section>
+
+
+<section data-subtab="plans">
+  <p class="fleet-section-intro">Architecture proposals. Bounce between instances before becoming tasks. draft → bouncing → approved → converted.</p>
+  <div class="plan-filter-bar" id="planFilterBar">
+    <button class="filter-btn active" data-plan-status="all" onclick="planSetFilter('all')">All</button>
+    <button class="filter-btn" data-plan-status="draft" onclick="planSetFilter('draft')">Draft</button>
+    <button class="filter-btn" data-plan-status="bouncing" onclick="planSetFilter('bouncing')">Bouncing</button>
+    <button class="filter-btn" data-plan-status="approved" onclick="planSetFilter('approved')">Approved</button>
+    <button class="filter-btn" data-plan-status="converted" onclick="planSetFilter('converted')">Converted</button>
+    <button class="filter-btn" data-plan-status="abandoned" onclick="planSetFilter('abandoned')">Abandoned</button>
+  </div>
+  <div class="group-toggle-bar" id="plansGroupBar"></div>
+  <div id="fleetPlansList"><div class="fleet-empty">Loading&hellip;</div></div>
 </section>
 
 </main>
@@ -1204,6 +1245,198 @@
     if (caret) caret.classList.toggle('open', open);
   }
 
+  // ─── PLANS tab ───────────────────────────────────────────
+
+  let _plansCache = null;
+  let _planFilter = 'all';
+
+  const badgePlanStatus = s => `<span class="badge badge-plan-${esc(s)}">${esc(s)}</span>`;
+
+  async function loadPlans(forceRefresh) {
+    if (forceRefresh) _plansCache = null;
+    if (!_plansCache) {
+      const { data, error } = await supa.from('forge_plans')
+        .select('id,title,status,bounce_count,current_instance,bounce_history,created_by,created_at,updated_at')
+        .order('created_at', { ascending: false });
+      if (error) { setEl('fleetPlansList', `<div class="fleet-empty">Error: ${esc(error.message)}</div>`); return; }
+      _plansCache = data || [];
+    }
+    renderPlansList();
+  }
+
+  function renderPlansList() {
+    const plans = _planFilter === 'all'
+      ? _plansCache
+      : _plansCache.filter(p => p.status === _planFilter);
+
+    if (!plans.length) {
+      setEl('fleetPlansList', '<div class="fleet-empty">No plans.</div>');
+      return;
+    }
+
+    setEl('fleetPlansList', plans.map(p => {
+      const lastBounce = Array.isArray(p.bounce_history) && p.bounce_history.length
+        ? p.bounce_history[p.bounce_history.length - 1] : null;
+      const lastVerdict = lastBounce && lastBounce.verdict
+        ? `<span style="color:var(--cc-text-dim);font-size:0.75rem">${esc(lastBounce.verdict)}</span>` : '';
+      return `<div class="fleet-card clickable" onclick="openPlanDrawer('${esc(p.id)}')">
+        <div class="fleet-card-head">
+          <div class="fleet-card-title">${esc(p.title)}</div>
+          ${badgePlanStatus(p.status)}
+        </div>
+        <div class="fleet-card-meta">
+          <span>${p.bounce_count || 0} bounce${p.bounce_count !== 1 ? 's' : ''}</span>
+          ${p.current_instance ? badgeInstance(p.current_instance) : ''}
+          ${lastVerdict}
+          <span style="color:var(--cc-text-dim)">${fmtAge(p.updated_at)}</span>
+        </div>
+      </div>`;
+    }).join(''));
+  }
+
+  window.planSetFilter = function(status) {
+    _planFilter = status;
+    document.querySelectorAll('#planFilterBar .filter-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.planStatus === status);
+    });
+    if (_plansCache) renderPlansList();
+  };
+
+  window.openPlanDrawer = async function(id) {
+    const overlay = document.getElementById('fleet-drawer-overlay');
+    const drawer  = document.getElementById('fleet-drawer');
+    const inner   = document.getElementById('fleet-drawer-inner');
+    inner.innerHTML = '<div class="dr-loading">Loading plan&hellip;</div>';
+    overlay.classList.add('open');
+    drawer.classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    const [planRes, sessionRes] = await Promise.all([
+      supa.from('forge_plans').select('*').eq('id', id).single(),
+      supa.auth.getSession()
+    ]);
+
+    if (planRes.error) {
+      inner.innerHTML = `<div class="dr-loading">Error: ${esc(planRes.error.message)}</div>`;
+      return;
+    }
+    const isAlessio = sessionRes.data?.session?.user?.email === 'alessio.zilli@azcustomknives.com';
+    inner.innerHTML = renderPlanDrawer(planRes.data, isAlessio);
+  };
+
+  function renderPlanDrawer(plan, isAlessio) {
+    const header = `
+      <div class="dr-hd">
+        <div class="dr-hd-main">
+          <h2 class="dr-title">${esc(plan.title)}</h2>
+          <div class="dr-badges">
+            ${badgePlanStatus(plan.status)}
+            <span class="badge badge-priority-normal">${plan.bounce_count || 0} bounce${plan.bounce_count !== 1 ? 's' : ''}</span>
+            ${plan.current_instance ? badgeInstance(plan.current_instance) : ''}
+          </div>
+        </div>
+        <button class="dr-close" onclick="closeDrawer()" aria-label="Close">&times;</button>
+      </div>
+      <div class="dr-body">`;
+
+    const bodySection = plan.body ? `
+      <div class="dr-section">
+        <div class="dr-section-label">Plan Body</div>
+        <div class="dr-prose">${renderMd(plan.body)}</div>
+      </div>` : '';
+
+    const bounces = Array.isArray(plan.bounce_history) ? [...plan.bounce_history].reverse() : [];
+    const bounceTimeline = bounces.length ? bounces.map(b => `
+      <div class="dr-tl-item">
+        <div class="dr-tl-time">${fmtTs(b.timestamp)}</div>
+        <div class="dr-tl-right">
+          <div>
+            <span class="dr-tl-who" style="color:${instColor(b.instance)}">${esc(b.instance || '—')}</span>
+            ${b.model ? `<span class="dr-tl-action"> &middot; ${esc(b.model)}</span>` : ''}
+            ${b.verdict ? `<span class="dr-tl-action"> &middot; ${esc(b.verdict)}</span>` : ''}
+          </div>
+          ${b.delta ? `<div class="dr-tl-note">${esc(b.delta)}</div>` : ''}
+        </div>
+      </div>`).join('')
+      : '<div style="font-size:0.8rem;color:var(--cc-text-dim);padding:8px 0">No bounces yet.</div>';
+
+    const bounceSection = `
+      <div class="dr-section">
+        <div class="dr-section-label">Bounce History</div>
+        <div class="dr-timeline">${bounceTimeline}</div>
+      </div>`;
+
+    const convertBtn = (isAlessio && (plan.status === 'approved' || plan.status === 'bouncing' || plan.status === 'draft'))
+      ? `<button class="btn-convert" onclick="convertPlanToTask('${esc(plan.id)}', this)">Convert to Task</button>` : '';
+
+    const actionsSection = convertBtn ? `
+      <div class="dr-section">
+        <div class="dr-section-label">Actions</div>
+        ${convertBtn}
+      </div>` : '';
+
+    const footerSection = `
+      <div class="dr-footer">
+        <div class="dr-footer-item"><div class="k">Created</div><div class="v">${fmtDateTime(plan.created_at)}</div></div>
+        <div class="dr-footer-item"><div class="k">Updated</div><div class="v">${fmtDateTime(plan.updated_at)}</div></div>
+        <div class="dr-footer-item"><div class="k">Created by</div><div class="v">${esc(plan.created_by || '—')}</div></div>
+        ${plan.converted_task_ids && plan.converted_task_ids.length
+          ? `<div class="dr-footer-item" style="grid-column:1/-1"><div class="k">Converted task IDs</div><div class="v" style="font-family:var(--cc-font-mono);font-size:0.72rem">${plan.converted_task_ids.map(esc).join(', ')}</div></div>` : ''}
+      </div>`;
+
+    return header + bodySection + bounceSection + actionsSection + footerSection + '</div>';
+  }
+
+  window.convertPlanToTask = async function(planId, btn) {
+    if (btn) { btn.disabled = true; btn.textContent = 'Converting…'; }
+
+    const { data: plan, error: planErr } = await supa.from('forge_plans')
+      .select('id,title,body,status').eq('id', planId).single();
+    if (planErr || !plan) {
+      alert('Could not load plan: ' + (planErr?.message || 'not found'));
+      if (btn) { btn.disabled = false; btn.textContent = 'Convert to Task'; }
+      return;
+    }
+    if (plan.status === 'converted') {
+      alert('Plan is already converted.');
+      if (btn) { btn.disabled = false; btn.textContent = 'Convert to Task'; }
+      return;
+    }
+
+    const { data: task, error: taskErr } = await supa.from('forge_tasks').insert({
+      title: plan.title,
+      body: plan.body,
+      type: 'build',
+      status: 'queued',
+      priority: 'normal',
+      requires_approval: 'before_claim',
+      created_by: 'alessio',
+      side_effects: 'one_shot'
+    }).select('id').single();
+
+    if (taskErr) {
+      alert('Task creation failed: ' + taskErr.message);
+      if (btn) { btn.disabled = false; btn.textContent = 'Convert to Task'; }
+      return;
+    }
+
+    const { error: updateErr } = await supa.from('forge_plans').update({
+      status: 'converted',
+      converted_task_ids: [task.id]
+    }).eq('id', planId);
+
+    if (updateErr) {
+      alert('Plan update failed (task was created — ID: ' + task.id + ')');
+      if (btn) { btn.disabled = false; btn.textContent = 'Convert to Task'; }
+      return;
+    }
+
+    _plansCache = null;
+    loadPlans();
+    closeDrawer();
+    openDrawer(task.id);
+  };
+
   // ─── Auto-refresh (30 s polling) ─────────────────────────
   let _lastRefresh = Date.now();
   let _refreshLabelTimer = null;
@@ -1239,7 +1472,7 @@
     const TAB_FNS = {
       live: loadLive, queue: loadQueue, cycles: loadCycles,
       today: loadToday, blocked: loadBlocked, history: loadHistory,
-      cost: loadCost, tree: () => loadTree(true)
+      cost: loadCost, tree: () => loadTree(true), plans: () => loadPlans(true)
     };
     const fn = TAB_FNS[_getActiveTab()];
     if (!fn) return;
@@ -1267,6 +1500,7 @@
     loadHistory();
     loadCost();
     loadTree();
+    loadPlans();
     setEl('fleetEcoContainer', renderEcosystem());
 
     // Deep-link: fleet.html#task=<uuid>
