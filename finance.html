@@ -67,6 +67,38 @@
   .login-shell input { width:100%; padding:10px; margin-bottom:10px; background:#0d1117; border:1px solid #30363d; color:#e6edf3; border-radius:6px; font-size:0.95rem; box-sizing:border-box; }
   .login-shell button { width:100%; padding:10px; background:#238636; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:500; }
   .login-msg { color:#f85149; font-size:0.85rem; margin-top:10px; min-height:1.2em; }
+  /* -- insurance upload UI -- */
+  .ins-upload-form{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:20px;margin-bottom:20px;display:none;}
+  .ins-upload-form.open{display:block;}
+  .ins-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+  .ins-form-label{color:#8b949e;font-size:0.78rem;text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:4px;}
+  .ins-form-input,.ins-form-select{width:100%;padding:8px 10px;background:#161b22;border:1px solid #30363d;border-radius:6px;color:#e6edf3;font-size:0.92rem;box-sizing:border-box;}
+  .ins-form-input:focus,.ins-form-select:focus{outline:none;border-color:#58a6ff;}
+  .ins-drop-zone{border:2px dashed #30363d;border-radius:8px;padding:24px;text-align:center;color:#8b949e;font-size:0.88rem;cursor:pointer;transition:border-color .2s;margin-bottom:12px;}
+  .ins-drop-zone.drag-over{border-color:#58a6ff;color:#58a6ff;}
+  .ins-drop-zone.has-file{border-color:#3fb950;color:#3fb950;}
+  .ins-save-btn{padding:8px 20px;background:#238636;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:500;font-size:0.92rem;}
+  .ins-save-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .ins-cancel-btn{padding:8px 16px;background:transparent;color:#8b949e;border:1px solid #30363d;border-radius:6px;cursor:pointer;font-size:0.92rem;margin-left:8px;}
+  .ins-form-msg{font-size:0.82rem;margin-top:10px;min-height:1.2em;color:#f85149;}
+  .ins-policy-list{display:flex;flex-direction:column;gap:10px;}
+  .ins-policy-card{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:14px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .ins-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:600;text-transform:uppercase;}
+  .ins-badge.amber{background:#332c00;color:#e3b341;border:1px solid #9e6a03;}
+  .ins-badge.red{background:#3d1515;color:#f85149;border:1px solid #b62324;}
+  .ins-card-info{flex:1;min-width:180px;}
+  .ins-card-label{color:#e6edf3;font-weight:600;font-size:0.97rem;margin-bottom:3px;}
+  .ins-card-meta{color:#8b949e;font-size:0.82rem;}
+  .ins-btn{padding:5px 12px;border-radius:5px;border:1px solid #30363d;background:transparent;color:#8b949e;font-size:0.82rem;cursor:pointer;}
+  .ins-btn:hover{border-color:#58a6ff;color:#58a6ff;}
+  .ins-btn.danger:hover{border-color:#f85149;color:#f85149;}
+  .ins-toggle-archived{background:none;border:none;color:#8b949e;font-size:0.82rem;cursor:pointer;padding:6px 0;text-decoration:underline;}
+  .ins-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:9999;}
+  .ins-modal{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:28px 28px 24px;max-width:440px;width:90%;}
+  .ins-modal h3{margin:0 0 10px;color:#f85149;}
+  .ins-modal p{color:#8b949e;font-size:0.9rem;margin:0 0 16px;}
+  .ins-modal label{display:flex;align-items:center;gap:10px;color:#e6edf3;font-size:0.9rem;cursor:pointer;margin-bottom:20px;}
+  .ins-modal-btns{display:flex;gap:10px;justify-content:flex-end;}
 </style>
   <script defer src="auth.js"></script>
 </head>
@@ -383,15 +415,82 @@
       </div>`;
   }
 
-  // â”€â”€â”€ COMBINED INSURANCE TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  async function renderInsurance(){
-    app.innerHTML = banner + '<div class="loading">Loading insurance streamsâ€¦</div>';
-    let rows;
-    try { rows = await ensureProjections(); }
-    catch(e){ return app.innerHTML = banner + fail(e.message); }
+  // --- COMBINED INSURANCE TAB ---
+  function insDaysUntil(dateStr){
+    if(!dateStr) return null;
+    return Math.round((new Date(dateStr+'T12:00:00') - new Date()) / 86400000);
+  }
+  function insRenewalBadge(dateStr){
+    const d = insDaysUntil(dateStr);
+    if(d===null) return '';
+    if(d<=30) return '<span class="ins-badge red">'+d+'d</span>';
+    if(d<=60) return '<span class="ins-badge amber">'+d+'d</span>';
+    return '';
+  }
+  function insFmtMoney(n){
+    if(!n) return 'â€”';
+    const v = Number(n);
+    if(v>=1000000) return '$'+(v/1000000).toFixed(1)+'M';
+    if(v>=1000)    return '$'+(v/1000).toFixed(0)+'K';
+    return '$'+v.toFixed(0);
+  }
+  function insFmtDate(d){ return d ? new Date(d+'T12:00:00').toLocaleDateString('en-CA') : 'â€”'; }
 
-    const insRows = rows.filter(r => r.category === 'tier-5-insurance' || (r.stream_id||'').includes('insurance'));
+  function insPolicyCardHTML(p){
+    const badge    = insRenewalBadge(p.renewal_date);
+    const archived = p.active===false;
+    return '<div class="ins-policy-card" data-id="'+p.id+'" style="'+(archived?'opacity:.55;':'')+'">'
+      +'<div class="ins-card-info">'
+      +'<div class="ins-card-label">'+esc(p.policy_label||'')+' '+badge+'</div>'
+      +'<div class="ins-card-meta">'+esc(p.insurer||'')+' \xb7 '+(p.coverage_type||'').replace(/_/g,' ')+' \xb7 renews '+insFmtDate(p.renewal_date)+'</div>'
+      +'<div class="ins-card-meta">Coverage: '+insFmtMoney(p.coverage_limit)+' \xb7 Premium: '+insFmtMoney(p.annual_premium)+'/yr</div>'
+      +'</div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">'
+      +(p.storage_path?'<button class="ins-btn" data-action="open" data-path="'+esc(p.storage_path)+'">Open PDF</button>':'')
+      +'<button class="ins-btn" data-action="archive" data-id="'+p.id+'" data-active="'+p.active+'">'+(archived?'Restore':'Archive')+'</button>'
+      +(archived?'<button class="ins-btn danger" data-action="delete" data-id="'+p.id+'" data-label="'+esc(p.policy_label||'')+'">Delete</button>':'')
+      +'</div>'
+      +'</div>';
+  }
+
+  function insPoliciesListHTML(policies){
+    const active   = policies.filter(function(p){ return p.active!==false; });
+    const archived = policies.filter(function(p){ return p.active===false; });
+    var html = '';
+    if(active.length)   html += active.map(insPolicyCardHTML).join('');
+    if(archived.length){
+      html += '<button class="ins-toggle-archived" id="ins-show-archived" style="margin-top:8px;">Show '+archived.length+' archived policy'+(archived.length>1?'ies':'')+'</button>'
+            + '<div id="ins-archived-list" style="display:none;">'+archived.map(insPolicyCardHTML).join('')+'</div>';
+    }
+    if(!active.length && !archived.length) html = '<div class="empty">No policies added yet.</div>';
+    return html;
+  }
+
+  async function renderInsurance(){
+    app.innerHTML = banner + '<div class="loading">Loading insuranceâ€¦</div>';
+    const { data:{ session } } = await supa.auth.getSession();
+    if(!session){ app.innerHTML = banner + fail('Not authenticated.'); return; }
+    const uid = session.user.id;
+
+    // orphan cleanup: rows with no PDF uploaded yet, older than 1 hour
+    supa.from('insurance_policies').delete()
+      .is('storage_path', null)
+      .lt('uploaded_at', new Date(Date.now()-3600000).toISOString())
+      .then(function(){});
+
+    let rows=[], policies=[], loadErr=null;
+    try { rows = await ensureProjections(); } catch(e){ app.innerHTML = banner + fail(e.message); return; }
+    const { data:polData, error:polErr } = await supa.from('insurance_policies')
+      .select('*').eq('user_id', uid).order('renewal_date',{ascending:true});
+    if(polErr) loadErr = polErr.message; else policies = polData||[];
+
+    const insRows = rows.filter(function(r){ return r.category==='tier-5-insurance' || (r.stream_id||'').includes('insurance'); });
     const B = D.insurance2025;
+    const active = policies.filter(function(p){ return p.active!==false; });
+    const totalPremium = active.reduce(function(s,p){ return s+Number(p.annual_premium||0); },0);
+    const withDate = active.filter(function(p){ return !!p.renewal_date; });
+    withDate.sort(function(a,b){ return a.renewal_date.localeCompare(b.renewal_date); });
+    const soonest = withDate[0]||null;
 
     app.innerHTML = banner + `
       <div class="section">
@@ -422,21 +521,176 @@
       </div>
 
       <div class="section">
-        <div class="section-header"><h2>Policy Attachments</h2><span class="meta">local-only per Spec Â§9 privacy rule</span></div>
-        <div class="todo">
-          TODO: drop-zone for Alessio's policy PDFs. Stored locally (not Supabase Storage) unless privacy call changes.
-          See <code>AI/Business/Projects/Command-Centre/Financial_Projections_Spec_v1_ADDENDUM_Combined_Insurance_2026-04-18.md</code> Â§3.
+        <div class="section-header">
+          <h2>Policy Attachments <span class="meta">(${active.length} active)</span></h2>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            ${soonest ? '<span style="color:#8b949e;font-size:0.85rem;">Next renewal: <strong>'+insFmtDate(soonest.renewal_date)+'</strong> '+insRenewalBadge(soonest.renewal_date)+'</span>' : ''}
+            ${totalPremium ? '<span style="color:#8b949e;font-size:0.85rem;">Total premium: <strong>'+insFmtMoney(totalPremium)+'/yr</strong></span>' : ''}
+            <button id="ins-add-btn" class="ins-save-btn" style="margin-left:auto;">+ Add Policy</button>
+          </div>
+        </div>
+
+        <div class="ins-upload-form" id="ins-form">
+          <div class="ins-form-grid">
+            <div><label class="ins-form-label">Policy Label *</label><input class="ins-form-input" id="ins-label" placeholder="e.g. Disability Income 2025" required></div>
+            <div><label class="ins-form-label">Insurer</label><input class="ins-form-input" id="ins-insurer" placeholder="e.g. Manulife"></div>
+            <div>
+              <label class="ins-form-label">Coverage Type</label>
+              <select class="ins-form-select" id="ins-cov-type">
+                <option value="disability">Disability Income</option>
+                <option value="accident_sickness">Accident &amp; Sickness</option>
+                <option value="critical_illness">Critical Illness</option>
+                <option value="life">Life</option>
+                <option value="commercial_general">Commercial General Liability</option>
+                <option value="product_liability">Product Liability</option>
+                <option value="workers_comp">Workers Compensation</option>
+                <option value="business_interruption">Business Interruption</option>
+                <option value="property">Property</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div><label class="ins-form-label">Renewal Date</label><input class="ins-form-input" id="ins-renewal" type="date"></div>
+            <div><label class="ins-form-label">Annual Premium ($)</label><input class="ins-form-input" id="ins-premium" type="number" min="0" step="0.01" placeholder="2400.00"></div>
+            <div><label class="ins-form-label">Coverage Limit ($)</label><input class="ins-form-input" id="ins-limit" type="number" min="0" step="1" placeholder="500000"></div>
+          </div>
+          <div class="ins-drop-zone" id="ins-drop">
+            <span id="ins-drop-label">Drop PDF here or click to browse (max 10 MB)</span>
+            <input type="file" id="ins-file" accept="application/pdf" style="display:none;">
+          </div>
+          <div>
+            <button class="ins-save-btn" id="ins-save">Save Policy</button>
+            <button class="ins-cancel-btn" id="ins-cancel">Cancel</button>
+          </div>
+          <div class="ins-form-msg" id="ins-msg"></div>
+        </div>
+
+        <div class="ins-policy-list" id="ins-list">
+          ${loadErr ? '<div class="error">'+esc(loadErr)+'</div>' : insPoliciesListHTML(policies)}
         </div>
       </div>
 
       <div class="ins-caveat">
-        <strong>Caveat:</strong> Expected payouts are actuarial projections based on Alessio's personal incidence rate, not commitments.
+        <strong>Caveat:</strong> Expected payouts are actuarial projections based on Alessio&rsquo;s personal incidence rate, not commitments.
         Once the payout revenue rows are seeded (suffix <code>-payouts</code>, category <code>tier-5-insurance</code>), this tab will render paired curves per policy.
       </div>
 
       <div class="todo">
-        TODO (future session): paired premium/payout charts per stream Â· policy PDF viewer Â· net insurance position card per quarter.
+        TODO (future session): paired premium/payout charts per stream \xb7 policy PDF viewer \xb7 net insurance position card per quarter.
       </div>`;
+
+    wireInsuranceForm(uid, policies);
+  }
+
+  function wireInsuranceForm(uid, allPolicies){
+    const form      = document.getElementById('ins-form');
+    const addBtn    = document.getElementById('ins-add-btn');
+    const cancelBtn = document.getElementById('ins-cancel');
+    const saveBtn   = document.getElementById('ins-save');
+    const dropZone  = document.getElementById('ins-drop');
+    const fileInput = document.getElementById('ins-file');
+    const dropLabel = document.getElementById('ins-drop-label');
+    const msg       = document.getElementById('ins-msg');
+    const list      = document.getElementById('ins-list');
+
+    addBtn.addEventListener('click', function(){ form.classList.add('open'); addBtn.disabled=true; });
+    cancelBtn.addEventListener('click', function(){ form.classList.remove('open'); addBtn.disabled=false; msg.textContent=''; fileInput.value=''; dropZone.className='ins-drop-zone'; dropLabel.textContent='Drop PDF here or click to browse (max 10 MB)'; });
+    dropZone.addEventListener('click', function(){ fileInput.click(); });
+    dropZone.addEventListener('dragover', function(e){ e.preventDefault(); dropZone.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', function(){ dropZone.classList.remove('drag-over'); });
+    dropZone.addEventListener('drop', function(e){ e.preventDefault(); dropZone.classList.remove('drag-over'); handleFile(e.dataTransfer.files[0]); });
+    fileInput.addEventListener('change', function(){ handleFile(fileInput.files[0]); });
+
+    function handleFile(f){
+      if(!f) return;
+      if(f.type!=='application/pdf'){ msg.textContent='PDF files only.'; return; }
+      if(f.size>10*1024*1024){ msg.textContent='Max file size is 10 MB.'; return; }
+      dropZone.className='ins-drop-zone has-file';
+      dropLabel.textContent=f.name;
+      fileInput._file=f;
+      msg.textContent='';
+    }
+
+    saveBtn.addEventListener('click', async function(){
+      const label = document.getElementById('ins-label').value.trim();
+      if(!label){ msg.textContent='Policy label is required.'; return; }
+      const insurer  = document.getElementById('ins-insurer').value.trim();
+      const covType  = document.getElementById('ins-cov-type').value;
+      const renewal  = document.getElementById('ins-renewal').value||null;
+      const premium  = parseFloat(document.getElementById('ins-premium').value)||null;
+      const limit    = parseFloat(document.getElementById('ins-limit').value)||null;
+      const file     = fileInput._file||null;
+
+      saveBtn.disabled=true; msg.style.color='#f85149'; msg.textContent='Savingâ€¦';
+
+      const { data:row, error:insErr } = await supa.from('insurance_policies').insert({
+        user_id:uid, policy_label:label, insurer, coverage_type:covType,
+        renewal_date:renewal, annual_premium:premium, coverage_limit:limit, active:true
+      }).select().single();
+      if(insErr){ msg.textContent='Error: '+insErr.message; saveBtn.disabled=false; return; }
+
+      if(file){
+        msg.textContent='Uploading PDFâ€¦';
+        const storagePath = uid+'/'+row.id+'.pdf';
+        const { error:upErr } = await supa.storage.from('insurance-policies').upload(storagePath, file, { contentType:'application/pdf', upsert:false });
+        if(upErr){ msg.textContent='PDF upload failed: '+upErr.message+' (policy saved without PDF)'; saveBtn.disabled=false; return; }
+        const { error:updErr } = await supa.from('insurance_policies').update({ storage_path:storagePath, storage_bytes:file.size }).eq('id', row.id);
+        if(updErr){ msg.textContent='Policy saved; PDF stored but path not linked: '+updErr.message; saveBtn.disabled=false; return; }
+      }
+
+      msg.style.color='#3fb950'; msg.textContent='Policy saved.';
+      setTimeout(function(){ renderInsurance(); }, 1200);
+    });
+
+    list.addEventListener('click', async function(e){
+      const btn = e.target.closest('[data-action]');
+      if(btn){
+        const action = btn.dataset.action;
+        if(action==='open'){
+          const { data, error } = await supa.storage.from('insurance-policies').createSignedUrl(btn.dataset.path, 60);
+          if(error){ alert('Could not open PDF: '+error.message); return; }
+          window.open(data.signedUrl, '_blank');
+        }
+        if(action==='archive'){
+          await supa.from('insurance_policies').update({ active: btn.dataset.active==='false' }).eq('id', btn.dataset.id);
+          renderInsurance();
+        }
+        if(action==='delete'){ showDeleteModal(btn.dataset.id, btn.dataset.label); }
+      }
+      if(e.target.id==='ins-show-archived'){
+        const arc = document.getElementById('ins-archived-list');
+        if(arc){
+          const showing = arc.style.display!=='none';
+          arc.style.display = showing ? 'none' : 'block';
+          e.target.textContent = showing ? e.target.textContent.replace('Hide','Show') : e.target.textContent.replace('Show','Hide');
+        }
+      }
+    });
+  }
+
+  function showDeleteModal(policyId, label){
+    const overlay = document.createElement('div');
+    overlay.className='ins-modal-overlay';
+    overlay.innerHTML='<div class="ins-modal">'
+      +'<h3>Delete Policy</h3>'
+      +'<p>Permanently delete <strong>'+esc(label)+'</strong>? This also removes the uploaded PDF. This cannot be undone.</p>'
+      +'<label><input type="checkbox" id="ins-del-chk"> I understand this is permanent</label>'
+      +'<div class="ins-modal-btns">'
+      +'<button class="ins-cancel-btn" id="ins-del-cancel">Cancel</button>'
+      +'<button class="ins-save-btn" id="ins-del-confirm" style="background:#b62324;" disabled>Delete</button>'
+      +'</div>'
+      +'</div>';
+    document.body.appendChild(overlay);
+    overlay.querySelector('#ins-del-chk').addEventListener('change', function(){ overlay.querySelector('#ins-del-confirm').disabled=!this.checked; });
+    overlay.querySelector('#ins-del-cancel').addEventListener('click', function(){ overlay.remove(); });
+    overlay.querySelector('#ins-del-confirm').addEventListener('click', async function(){
+      this.disabled=true; this.textContent='Deletingâ€¦';
+      const { data:pol } = await supa.from('insurance_policies').select('storage_path').eq('id',policyId).single();
+      const { error:delErr } = await supa.from('insurance_policies').delete().eq('id',policyId);
+      if(delErr){ alert('Delete failed: '+delErr.message); overlay.remove(); return; }
+      if(pol&&pol.storage_path){ await supa.storage.from('insurance-policies').remove([pol.storage_path]); }
+      overlay.remove();
+      renderInsurance();
+    });
   }
 
   // â”€â”€â”€ LOGIN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
