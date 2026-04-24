@@ -737,18 +737,110 @@
     }).join(''));
   }
 
+  // ─── Grouping helpers (Queue / Plans / History) ──────────
+  const GROUP_MODES   = ['instance', 'model', 'project', 'timeframe'];
+  const GROUP_LABELS  = { instance: 'By Instance', model: 'By Model', project: 'By Project', timeframe: 'By Timeframe' };
+  const TIMEFRAME_ORD = ['Today', 'This week', 'This month', 'Older'];
+  const PROJECT_ORD   = ['Website', 'CC', 'Fleet-Bus', 'FAW', 'PC Security', 'Memory', 'Mac Fleet', 'Other'];
+
+  function classifyProject(t) {
+    const s = ((t.title || '') + ' ' + (t.type || '') + ' ' + (t.tags || []).join(' ')).toLowerCase();
+    if (/faw|fleet autonomous/.test(s))                                                    return 'FAW';
+    if (/fleet.bus|fleet queue|fleet plans|fleet.html|fleet.html|bus tab|dispatch btn/.test(s)) return 'Fleet-Bus';
+    if (/\bcc\b|command.centr|finance\.html|forge\.html|usage\.html|dashboard/.test(s))   return 'CC';
+    if (/website|shopify|wix|booking|engraving|sharpening|\.html.*site|checkout/.test(s)) return 'Website';
+    if (/pc security|security plan/.test(s))                                               return 'PC Security';
+    if (/mem0|memory|brain|supabase.*brain/.test(s))                                       return 'Memory';
+    if (/\bmac\b|neo|macos|macbook|imac|forgewatcher.mac/.test(s))                        return 'Mac Fleet';
+    return 'Other';
+  }
+  function classifyTimeframe(iso) {
+    if (!iso) return 'Older';
+    const ms = Date.now() - new Date(iso).getTime();
+    if (ms < 86400000)    return 'Today';
+    if (ms < 604800000)   return 'This week';
+    if (ms < 2592000000)  return 'This month';
+    return 'Older';
+  }
+  function getGroupKey(t, mode) {
+    if (mode === 'instance')  return t.suggested_to || t.assigned_to || 'unassigned';
+    if (mode === 'model')     return t.suggested_model || 'auto';
+    if (mode === 'project')   return classifyProject(t);
+    if (mode === 'timeframe') return classifyTimeframe(t.created_at || t.updated_at);
+  }
+  function sortGroupEntries(entries, mode) {
+    const ord = mode === 'timeframe' ? TIMEFRAME_ORD : mode === 'project' ? PROJECT_ORD
+      : mode === 'instance' ? Object.keys(INSTANCE_COLORS).concat(['unassigned']) : null;
+    return entries.sort((a, b) => {
+      if (!ord) return a[0].localeCompare(b[0]);
+      const ai = ord.indexOf(a[0]), bi = ord.indexOf(b[0]);
+      if (ai < 0 && bi < 0) return a[0].localeCompare(b[0]);
+      return (ai < 0 ? 999 : ai) - (bi < 0 ? 999 : bi);
+    });
+  }
+
+  const _groupRenderers = {};
+
+  function buildGroupBar(barId, storeKey, defaultMode, renderFn) {
+    _groupRenderers[storeKey] = renderFn;
+    const active = sessionStorage.getItem(storeKey) || defaultMode;
+    const bar = document.getElementById(barId);
+    if (bar) bar.innerHTML = GROUP_MODES.map(m =>
+      `<button class="filter-btn${m === active ? ' active' : ''}" onclick="groupToggle('${storeKey}','${m}','${barId}')">${GROUP_LABELS[m]}</button>`
+    ).join('');
+    return active;
+  }
+
+  window.groupToggle = function(storeKey, mode, barId) {
+    sessionStorage.setItem(storeKey, mode);
+    document.querySelectorAll(`#${barId} .filter-btn`).forEach(b =>
+      b.classList.toggle('active', b.textContent === GROUP_LABELS[mode])
+    );
+    if (_groupRenderers[storeKey]) _groupRenderers[storeKey]();
+  };
+
+  function renderGrouped(items, mode, cardFn, containerId) {
+    if (!items || !items.length) { setEl(containerId, '<div class="fleet-empty">Nothing here.</div>'); return; }
+    const map = {};
+    items.forEach(t => { const k = getGroupKey(t, mode); (map[k] = map[k] || []).push(t); });
+    const colKey = containerId + '_col';
+    const col = JSON.parse(sessionStorage.getItem(colKey) || '{}');
+    const groups = sortGroupEntries(Object.entries(map), mode);
+    setEl(containerId, groups.map(([label, group]) => {
+      const isOpen = col[label] !== true;
+      const safeId = `grp-${containerId}-${label.replace(/[^a-zA-Z0-9]/g, '_')}`;
+      return `<div class="group-hd">
+        <button class="group-hd-btn" onclick="groupCollapse('${containerId}','${label.replace(/'/g,"\\'")}')" >
+          <span class="group-hd-caret${isOpen ? ' open' : ''}">&#9658;</span>
+          <span class="group-hd-label">${esc(label)}</span>
+          <span class="group-hd-count">${group.length}</span>
+        </button>
+        <div class="group-body${isOpen ? '' : ' collapsed'}" id="${safeId}">
+          <div class="fleet-grid" style="padding:0 0 0">${group.map(cardFn).join('')}</div>
+        </div>
+      </div>`;
+    }).join(''));
+  }
+
+  window.groupCollapse = function(containerId, label) {
+    const colKey = containerId + '_col';
+    const col = JSON.parse(sessionStorage.getItem(colKey) || '{}');
+    const safeId = `grp-${containerId}-${label.replace(/[^a-zA-Z0-9]/g, '_')}`;
+    const body = document.getElementById(safeId);
+    if (!body) return;
+    const isNowCollapsed = !col[label];
+    if (isNowCollapsed) col[label] = true; else delete col[label];
+    sessionStorage.setItem(colKey, JSON.stringify(col));
+    body.classList.toggle('collapsed', isNowCollapsed);
+    const caret = body.previousElementSibling && body.previousElementSibling.querySelector('.group-hd-caret');
+    if (caret) caret.classList.toggle('open', !isNowCollapsed);
+  };
+
   // ─── QUEUE tab ───────────────────────────────────────────
-  async function loadQueue() {
-    const { data, error } = await supa.from('forge_fleet_status')
-      .select('id,title,type,suggested_to,suggested_model,priority,requires_approval,side_effects,cost_est_cad,tags,created_at')
-      .eq('status', 'queued')
-      .order('priority', { ascending: false })
-      .order('created_at', { ascending: true });
-    if (error) { setEl('fleetQueueList', `<div class="fleet-empty">Error: ${esc(error.message)}</div>`); return; }
-    _stats.queued = String(data ? data.length : 0);
-    pushStats();
-    if (!data || !data.length) { setEl('fleetQueueList', '<div class="fleet-empty">Queue is empty.</div>'); return; }
-    setEl('fleetQueueList', data.map(t => `<div class="fleet-card clickable${t.priority === 'urgent' ? ' urgent' : ''}" onclick="openDrawer('${esc(t.id)}')">
+  let _queueData = null;
+
+  function queueCardFn(t) {
+    return `<div class="fleet-card clickable${t.priority === 'urgent' ? ' urgent' : ''}" onclick="openDrawer('${esc(t.id)}')">
       <div class="fleet-card-head">
         <div class="fleet-card-title">${esc(t.title)}</div>
         ${badgePriority(t.priority)}
@@ -756,9 +848,10 @@
       <div class="fleet-card-meta">
         ${t.suggested_to ? badgeInstance(t.suggested_to) : '<span>unassigned</span>'}
         ${t.suggested_model ? `<span style="color:var(--cc-text-dim)">→ ${esc(t.suggested_model)}</span>` : ''}
-        ${badgeSide(t.side_effects)}
-        ${t.requires_approval !== 'none' ? `<span style="color:var(--cc-warn)">⚠ needs approval</span>` : ''}
+        ${t.side_effects ? badgeSide(t.side_effects) : ''}
+        ${t.requires_approval && t.requires_approval !== 'none' ? `<span style="color:var(--cc-warn)">⚠ needs approval</span>` : ''}
         ${t.cost_est_cad != null ? `<span>${fmtCost(t.cost_est_cad)}</span>` : ''}
+        ${t.status === 'parked' ? badgeStatus('parked') : ''}
         <span>queued ${fmtAge(t.created_at)}</span>
       </div>
       ${(t.tags || []).length ? `<div class="fleet-card-body">${t.tags.map(tg => `<span class="badge" style="background:rgba(88,166,255,0.08);color:#79c0ff;border:1px solid rgba(88,166,255,0.2)">${esc(tg)}</span>`).join(' ')}</div>` : ''}
@@ -766,7 +859,26 @@
         <button class="btn-dispatch" id="dispatch-${esc(t.id)}" onclick="dispatchTask('${esc(t.id)}', this)">&#x25B6; Dispatch to ${esc(t.suggested_to)}</button>
         <button class="btn-copy-cmd" data-task-id="${esc(t.id)}" data-title="${esc(t.title)}" data-suggested-to="${esc(t.suggested_to)}" onclick="copyTerminalCmd(this)">&#x2398; Copy command</button>
       </div>` : ''}
-    </div>`).join(''));
+    </div>`;
+  }
+
+  function renderQueue() {
+    const mode = sessionStorage.getItem('queueGroup') || 'project';
+    renderGrouped(_queueData, mode, queueCardFn, 'fleetQueueList');
+  }
+
+  async function loadQueue() {
+    const { data, error } = await supa.from('forge_fleet_status')
+      .select('id,title,type,suggested_to,suggested_model,priority,requires_approval,side_effects,cost_est_cad,tags,created_at,status')
+      .in('status', ['queued', 'parked'])
+      .order('priority', { ascending: false })
+      .order('created_at', { ascending: true });
+    if (error) { setEl('fleetQueueList', `<div class="fleet-empty">Error: ${esc(error.message)}</div>`); return; }
+    _stats.queued = String((data || []).filter(t => t.status === 'queued').length);
+    pushStats();
+    _queueData = data || [];
+    buildGroupBar('queueGroupBar', 'queueGroup', 'project', renderQueue);
+    renderQueue();
   }
 
   // ─── CYCLES tab ──────────────────────────────────────────
@@ -876,27 +988,10 @@
   }
 
   // ─── HISTORY tab ─────────────────────────────────────────
-  let _historyFilter = 'all';
-  async function loadHistory(instance) {
-    _historyFilter = instance || 'all';
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-    let query = supa.from('forge_tasks')
-      .select('id,title,type,assigned_to,cost_actual_cad,completed_at,status,tags')
-      .gte('updated_at', thirtyDaysAgo)
-      .in('status', ['done', 'cancelled', 'parked'])
-      .order('completed_at', { ascending: false })
-      .limit(60);
-    if (instance && instance !== 'all') query = query.eq('assigned_to', instance);
-    const { data, error } = await query;
-    if (error) { setEl('fleetHistoryList', `<div class="fleet-empty">Error: ${esc(error.message)}</div>`); return; }
+  let _historyData = null;
 
-    const instances = ['all', ...Object.keys(INSTANCE_COLORS)];
-    setEl('historyFilterBar', instances.map(inst =>
-      `<button class="filter-btn${_historyFilter === inst ? ' active' : ''}" onclick="fleetHistoryFilter('${inst}')">${esc(inst)}</button>`
-    ).join(''));
-
-    if (!data || !data.length) { setEl('fleetHistoryList', '<div class="fleet-empty">No history in the last 30 days.</div>'); return; }
-    setEl('fleetHistoryList', data.map(t => `<div class="fleet-card clickable" onclick="openDrawer('${esc(t.id)}')">
+  function historyCardFn(t) {
+    return `<div class="fleet-card clickable" onclick="openDrawer('${esc(t.id)}')">
       <div class="fleet-card-head">
         <div class="fleet-card-title">${esc(t.title)}</div>
         ${badgeStatus(t.status)}
@@ -907,7 +1002,26 @@
         <span>${fmtDate(t.completed_at)}</span>
         ${(t.tags || []).map(tg => `<span class="badge" style="background:rgba(88,166,255,0.08);color:#79c0ff;border:1px solid rgba(88,166,255,0.2)">${esc(tg)}</span>`).join('')}
       </div>
-    </div>`).join(''));
+    </div>`;
+  }
+
+  function renderHistory() {
+    const mode = sessionStorage.getItem('historyGroup') || 'timeframe';
+    renderGrouped(_historyData, mode, historyCardFn, 'fleetHistoryList');
+  }
+
+  async function loadHistory() {
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const { data, error } = await supa.from('forge_tasks')
+      .select('id,title,type,assigned_to,suggested_to,suggested_model,cost_actual_cad,completed_at,updated_at,created_at,status,tags')
+      .gte('updated_at', thirtyDaysAgo)
+      .in('status', ['done', 'cancelled', 'parked'])
+      .order('completed_at', { ascending: false })
+      .limit(60);
+    if (error) { setEl('fleetHistoryList', `<div class="fleet-empty">Error: ${esc(error.message)}</div>`); return; }
+    _historyData = data || [];
+    buildGroupBar('historyGroupBar', 'historyGroup', 'timeframe', renderHistory);
+    renderHistory();
   }
 
   // ─── COST tab ────────────────────────────────────────────
@@ -968,8 +1082,7 @@
     loadQueue();
   };
 
-  // ─── History filter ──────────────────────────────────────
-  window.fleetHistoryFilter = function (instance) { loadHistory(instance); };
+
 
   // ─── Dispatch task to bus ────────────────────────────────
   window.dispatchTask = async function (id, btn) {
@@ -1256,42 +1369,47 @@
     if (forceRefresh) _plansCache = null;
     if (!_plansCache) {
       const { data, error } = await supa.from('forge_plans')
-        .select('id,title,status,bounce_count,current_instance,bounce_history,created_by,created_at,updated_at')
+        .select('id,title,status,bounce_count,current_instance,bounce_history,created_by,created_at,updated_at,suggested_to,suggested_model')
         .order('created_at', { ascending: false });
-      if (error) { setEl('fleetPlansList', `<div class="fleet-empty">Error: ${esc(error.message)}</div>`); return; }
+      if (error) {
+        const msg = error.code === '42P01'
+          ? 'Plans table not yet created. Coming in FAW Phase 1.'
+          : `Error: ${esc(error.message)}`;
+        setEl('fleetPlansList', `<div class="fleet-empty">${msg}</div>`);
+        return;
+      }
       _plansCache = data || [];
     }
+    buildGroupBar('plansGroupBar', 'plansGroup', 'project', renderPlansList);
     renderPlansList();
   }
 
+  function planCardFn(p) {
+    const lastBounce = Array.isArray(p.bounce_history) && p.bounce_history.length
+      ? p.bounce_history[p.bounce_history.length - 1] : null;
+    const lastVerdict = lastBounce && lastBounce.verdict
+      ? `<span style="color:var(--cc-text-dim);font-size:0.75rem">${esc(lastBounce.verdict)}</span>` : '';
+    return `<div class="fleet-card clickable" onclick="openPlanDrawer('${esc(p.id)}')">
+      <div class="fleet-card-head">
+        <div class="fleet-card-title">${esc(p.title)}</div>
+        ${badgePlanStatus(p.status)}
+      </div>
+      <div class="fleet-card-meta">
+        <span>${p.bounce_count || 0} bounce${p.bounce_count !== 1 ? 's' : ''}</span>
+        ${p.current_instance ? badgeInstance(p.current_instance) : ''}
+        ${lastVerdict}
+        <span style="color:var(--cc-text-dim)">${fmtAge(p.updated_at)}</span>
+      </div>
+    </div>`;
+  }
+
   function renderPlansList() {
+    if (!_plansCache) return;
     const plans = _planFilter === 'all'
       ? _plansCache
       : _plansCache.filter(p => p.status === _planFilter);
-
-    if (!plans.length) {
-      setEl('fleetPlansList', '<div class="fleet-empty">No plans.</div>');
-      return;
-    }
-
-    setEl('fleetPlansList', plans.map(p => {
-      const lastBounce = Array.isArray(p.bounce_history) && p.bounce_history.length
-        ? p.bounce_history[p.bounce_history.length - 1] : null;
-      const lastVerdict = lastBounce && lastBounce.verdict
-        ? `<span style="color:var(--cc-text-dim);font-size:0.75rem">${esc(lastBounce.verdict)}</span>` : '';
-      return `<div class="fleet-card clickable" onclick="openPlanDrawer('${esc(p.id)}')">
-        <div class="fleet-card-head">
-          <div class="fleet-card-title">${esc(p.title)}</div>
-          ${badgePlanStatus(p.status)}
-        </div>
-        <div class="fleet-card-meta">
-          <span>${p.bounce_count || 0} bounce${p.bounce_count !== 1 ? 's' : ''}</span>
-          ${p.current_instance ? badgeInstance(p.current_instance) : ''}
-          ${lastVerdict}
-          <span style="color:var(--cc-text-dim)">${fmtAge(p.updated_at)}</span>
-        </div>
-      </div>`;
-    }).join(''));
+    const mode = sessionStorage.getItem('plansGroup') || 'project';
+    renderGrouped(plans, mode, planCardFn, 'fleetPlansList');
   }
 
   window.planSetFilter = function(status) {
