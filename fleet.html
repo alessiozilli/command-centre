@@ -23,7 +23,8 @@
       { id: 'tree',    label: 'Tree'    },
       { id: 'plans',   label: 'Plans'   },
       { id: 'bus',     label: 'Bus'     },
-      { id: 'quotas',  label: 'Quotas'  }
+      { id: 'quotas',  label: 'Quotas'  },
+      { id: 'devices', label: 'Devices' }
     ],
     stats: [
       { id: 'stat-active',  label: 'Active',   value: '—' },
@@ -297,6 +298,25 @@
 .quota-chart-day { font-size: 0.6rem; color: var(--cc-text-dim); text-align: center; width: 100%; }
 .quota-chart-val { font-size: 0.58rem; color: var(--cc-text-dim); text-align: center; }
 
+/* ── Devices tab ─────────────────────────────────────── */
+.device-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 14px; margin-top: 10px; }
+.device-card { background: var(--cc-bg-card); border: 1px solid var(--cc-border); border-radius: var(--cc-r-md); padding: 18px; }
+.device-card-alias { font-size: 1.3rem; font-weight: 700; color: var(--cc-text-body); letter-spacing: 0.05em; text-transform: uppercase; }
+.device-card-meta { font-size: 0.76rem; color: var(--cc-text-dim); margin: 3px 0 12px; }
+.device-cap-row { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; padding: 3px 0; }
+.device-cap-yes { color: var(--cc-success); font-weight: 700; }
+.device-cap-no  { color: var(--cc-text-muted); }
+.device-cap-label-on  { color: var(--cc-text-body); }
+.device-cap-label-off { color: var(--cc-text-muted); }
+.device-path-block { margin-top: 12px; font-family: var(--cc-font-mono); font-size: 0.7rem; color: var(--cc-text-muted); background: var(--cc-bg); border-radius: 4px; padding: 7px 9px; cursor: pointer; word-break: break-all; border: 1px solid transparent; transition: border-color 0.15s, color 0.15s; }
+.device-path-block:hover { border-color: var(--cc-accent); color: var(--cc-accent); }
+.device-path-copied { color: var(--cc-success) !important; border-color: var(--cc-success) !important; }
+.device-lastseen { font-size: 0.7rem; color: var(--cc-text-muted); margin-top: 8px; }
+.device-card-footer { margin-top: 10px; display: flex; gap: 8px; }
+.device-edit-form { display: flex; flex-direction: column; gap: 10px; padding: 16px; }
+.device-edit-title { font-size: 1rem; font-weight: 700; color: var(--cc-text-body); margin-bottom: 6px; }
+.device-edit-label { display: flex; align-items: center; gap: 8px; font-size: 0.84rem; color: var(--cc-text-body); cursor: pointer; }
+
 /* Auto-refresh indicator */
 #fleet-refresh-pill {
   position: fixed; bottom: 16px; left: 16px; z-index: 50;
@@ -407,6 +427,11 @@
 
   <div class="fleet-section-heading" style="margin-top:20px">Burn Rate — Last 7 Days</div>
   <div id="fleetQuotaChart"><div class="fleet-empty">Loading&hellip;</div></div>
+</section>
+
+<section data-subtab="devices">
+  <p class="fleet-section-intro">Primary fleet devices. Capabilities sourced live from Supabase. Click a drive path to copy it. Edit button updates the device record.</p>
+  <div id="fleetDeviceGrid" class="device-grid"><div class="fleet-empty">Loading&hellip;</div></div>
 </section>
 
 </main>
@@ -1822,6 +1847,81 @@
     }
   }
 
+  // ─── Devices tab ─────────────────────────────────────────────
+  async function loadDevices() {
+    const el = document.getElementById('fleetDeviceGrid');
+    if (!el) return;
+    el.innerHTML = '<div class="fleet-empty">Loading&hellip;</div>';
+    const { data, error } = await supa.from('fleet_devices')
+      .select('*').eq('device_kind', 'primary').order('owner');
+    if (error) { el.innerHTML = `<div class="fleet-empty">Error: ${esc(error.message)}</div>`; return; }
+    if (!data || !data.length) { el.innerHTML = '<div class="fleet-empty">No primary devices registered.</div>'; return; }
+
+    const osIcon = os => ({ windows: '🪟', macos: '🍎' }[os] || '🖥️');
+    const cap = (has, label) =>
+      `<div class="device-cap-row">
+        <span class="${has ? 'device-cap-yes' : 'device-cap-no'}">${has ? '✓' : '✗'}</span>
+        <span class="${has ? 'device-cap-label-on' : 'device-cap-label-off'}">${label}</span>
+      </div>`;
+
+    el.className = 'device-grid';
+    el.innerHTML = data.map(d => {
+      const updated = d.updated_at
+        ? new Date(d.updated_at).toLocaleString('en-CA', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })
+        : 'Never';
+      const path = d.drive_mount_path || '—';
+      const safeId = esc(d.id);
+      return `<div class="device-card">
+        <div class="device-card-alias">${osIcon(d.os)} ${esc(d.alias)}</div>
+        <div class="device-card-meta">${esc(d.owner)} &middot; ${esc(d.role)} &middot; ${esc(d.os)}</div>
+        ${cap(d.has_claude_code, 'Claude Code / Git / Shell')}
+        ${cap(d.has_google_drive, 'Google Drive')}
+        ${cap(d.has_cowork, 'Cowork')}
+        <div class="device-path-block" onclick="copyDevicePath(this, ${JSON.stringify(path)})">${esc(path)}</div>
+        <div class="device-lastseen">Updated ${updated}</div>
+        <div class="device-card-footer">
+          <button class="filter-btn" onclick="openDeviceEdit(${JSON.stringify(d)})">Edit</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  window.copyDevicePath = function (el, path) {
+    navigator.clipboard.writeText(path).then(() => {
+      el.classList.add('device-path-copied');
+      el.textContent = 'Copied!';
+      setTimeout(() => { el.classList.remove('device-path-copied'); el.textContent = path; }, 1500);
+    }).catch(() => {
+      el.textContent = 'Copy failed — select manually';
+    });
+  };
+
+  window.openDeviceEdit = function (d) {
+    const inner = document.getElementById('fleet-drawer-inner');
+    inner.innerHTML = `<div class="device-edit-form">
+      <div class="device-edit-title">Edit — ${esc(d.alias)}</div>
+      <label class="device-edit-label"><input type="checkbox" id="ded-cc" ${d.has_claude_code?'checked':''}> Claude Code</label>
+      <label class="device-edit-label"><input type="checkbox" id="ded-drive" ${d.has_google_drive?'checked':''}> Google Drive</label>
+      <label class="device-edit-label"><input type="checkbox" id="ded-cowork" ${d.has_cowork?'checked':''}> Cowork</label>
+      <button class="filter-btn" onclick="saveDevice(${JSON.stringify(d.id)})">Save</button>
+    </div>`;
+    document.getElementById('fleet-drawer-overlay').classList.add('open');
+    document.getElementById('fleet-drawer').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.saveDevice = async function (id) {
+    const { error } = await supa.from('fleet_devices').update({
+      has_claude_code:  document.getElementById('ded-cc').checked,
+      has_google_drive: document.getElementById('ded-drive').checked,
+      has_cowork:       document.getElementById('ded-cowork').checked,
+      updated_at:       new Date().toISOString()
+    }).eq('id', id);
+    if (error) { alert('Save failed: ' + error.message); return; }
+    closeDrawer();
+    loadDevices();
+  };
+
   function _getActiveTab() {
     const sections = document.querySelectorAll('[data-subtab]');
     for (const s of sections) {
@@ -1835,7 +1935,7 @@
       live: loadLive, queue: loadQueue, cycles: loadCycles,
       today: loadToday, blocked: loadBlocked, history: loadHistory,
       cost: loadCost, tree: () => loadTree(true), plans: () => loadPlans(true),
-      bus: loadBus, quotas: loadQuotas
+      bus: loadBus, quotas: loadQuotas, devices: loadDevices
     };
     const fn = TAB_FNS[_getActiveTab()];
     if (!fn) return;
@@ -1866,6 +1966,7 @@
     loadPlans();
     loadBus();
     loadQuotas();
+    loadDevices();
     setEl('fleetEcoContainer', renderEcosystem());
 
     // Deep-link: fleet.html#task=<uuid>
