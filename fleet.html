@@ -22,9 +22,7 @@
       { id: 'cost',    label: 'Cost'    },
       { id: 'tree',    label: 'Tree'    },
       { id: 'plans',   label: 'Plans'   },
-      { id: 'bus',     label: 'Bus'     },
-      { id: 'quotas',  label: 'Quotas'  },
-      { id: 'devices', label: 'Devices' }
+      { id: 'bus',     label: 'Bus'     }
     ],
     stats: [
       { id: 'stat-active',  label: 'Active',   value: '—' },
@@ -276,47 +274,6 @@
 .group-body.collapsed { display: none; }
 @media (max-width: 480px) { .group-toggle-bar .filter-btn { font-size: 0.68rem; padding: 0.25rem 0.55rem; } }
 
-/* ── Quotas tab ─────────────────────────────────────────── */
-.quota-block { background: var(--cc-bg-card); border: 1px solid var(--cc-border); border-radius: var(--cc-r-md); padding: 16px 18px; margin-bottom: 12px; }
-.quota-block-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.09em; color: var(--cc-text-dim); font-weight: 700; margin-bottom: 12px; }
-.quota-meter-head { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; margin-bottom: 5px; }
-.quota-meter-name { font-weight: 600; color: var(--cc-text-body); }
-.quota-meter-vals { color: var(--cc-text-muted); font-family: var(--cc-font-mono); font-size: 0.75rem; }
-.quota-meter-track { height: 10px; background: var(--cc-bg); border-radius: 5px; overflow: hidden; }
-.quota-meter-fill { height: 100%; border-radius: 5px; transition: width 0.4s; }
-.quota-fill-ok   { background: var(--cc-success); }
-.quota-fill-warn { background: var(--cc-warn); }
-.quota-fill-crit { background: var(--cc-danger); }
-.quota-next-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--cc-border-soft); font-size: 0.82rem; }
-.quota-next-item:last-child { border-bottom: none; }
-.quota-next-title { color: var(--cc-text-body); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 8px; }
-.quota-next-cost { color: var(--cc-accent); font-family: var(--cc-font-mono); font-size: 0.75rem; white-space: nowrap; }
-.quota-stub-note { font-size: 0.8rem; color: var(--cc-text-dim); font-style: italic; padding: 4px 0 12px; }
-.quota-chart-wrap { height: 80px; display: flex; align-items: flex-end; gap: 4px; }
-.quota-chart-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px; flex: 1; height: 100%; }
-.quota-chart-bar { width: 100%; border-radius: 2px 2px 0 0; min-height: 2px; }
-.quota-chart-day { font-size: 0.6rem; color: var(--cc-text-dim); text-align: center; width: 100%; }
-.quota-chart-val { font-size: 0.58rem; color: var(--cc-text-dim); text-align: center; }
-
-/* ── Devices tab ─────────────────────────────────────── */
-.device-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 14px; margin-top: 10px; }
-.device-card { background: var(--cc-bg-card); border: 1px solid var(--cc-border); border-radius: var(--cc-r-md); padding: 18px; }
-.device-card-alias { font-size: 1.3rem; font-weight: 700; color: var(--cc-text-body); letter-spacing: 0.05em; text-transform: uppercase; }
-.device-card-meta { font-size: 0.76rem; color: var(--cc-text-dim); margin: 3px 0 12px; }
-.device-cap-row { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; padding: 3px 0; }
-.device-cap-yes { color: var(--cc-success); font-weight: 700; }
-.device-cap-no  { color: var(--cc-text-muted); }
-.device-cap-label-on  { color: var(--cc-text-body); }
-.device-cap-label-off { color: var(--cc-text-muted); }
-.device-path-block { margin-top: 12px; font-family: var(--cc-font-mono); font-size: 0.7rem; color: var(--cc-text-muted); background: var(--cc-bg); border-radius: 4px; padding: 7px 9px; cursor: pointer; word-break: break-all; border: 1px solid transparent; transition: border-color 0.15s, color 0.15s; }
-.device-path-block:hover { border-color: var(--cc-accent); color: var(--cc-accent); }
-.device-path-copied { color: var(--cc-success) !important; border-color: var(--cc-success) !important; }
-.device-lastseen { font-size: 0.7rem; color: var(--cc-text-muted); margin-top: 8px; }
-.device-card-footer { margin-top: 10px; display: flex; gap: 8px; }
-.device-edit-form { display: flex; flex-direction: column; gap: 10px; padding: 16px; }
-.device-edit-title { font-size: 1rem; font-weight: 700; color: var(--cc-text-body); margin-bottom: 6px; }
-.device-edit-label { display: flex; align-items: center; gap: 8px; font-size: 0.84rem; color: var(--cc-text-body); cursor: pointer; }
-
 /* Auto-refresh indicator */
 #fleet-refresh-pill {
   position: fixed; bottom: 16px; left: 16px; z-index: 50;
@@ -410,28 +367,6 @@
     <button class="filter-btn"        data-bus-status="parked"      onclick="busSetFilter('parked')">Parked</button>
   </div>
   <div id="fleetBusList"><div class="fleet-empty">Loading&hellip;</div></div>
-</section>
-
-
-<section data-subtab="quotas">
-  <p class="fleet-section-intro">Budget, quota, and burn rate. Subscription bars configured via DATA BLOCK. Autonomous work section wires live once FAW P1 (<code>35ad444c</code>) ships.</p>
-
-  <div class="fleet-section-heading">Subscription Quotas</div>
-  <div id="fleetQuotaBars"><div class="fleet-empty">Loading&hellip;</div></div>
-
-  <div class="fleet-section-heading" style="margin-top:20px">Autonomous Work Running Now</div>
-  <div id="fleetQuotaAuto"></div>
-
-  <div class="fleet-section-heading" style="margin-top:20px">Next Up — Queued Tasks</div>
-  <div id="fleetQuotaQueue"><div class="fleet-empty">Loading&hellip;</div></div>
-
-  <div class="fleet-section-heading" style="margin-top:20px">Burn Rate — Last 7 Days</div>
-  <div id="fleetQuotaChart"><div class="fleet-empty">Loading&hellip;</div></div>
-</section>
-
-<section data-subtab="devices">
-  <p class="fleet-section-intro">Primary fleet devices. Capabilities sourced live from Supabase. Click a drive path to copy it. Edit button updates the device record.</p>
-  <div id="fleetDeviceGrid" class="device-grid"><div class="fleet-empty">Loading&hellip;</div></div>
 </section>
 
 </main>
@@ -1105,13 +1040,16 @@
 
   // ─── COST tab ────────────────────────────────────────────
   async function loadCost() {
-    const { data, error } = await supa.from('forge_tasks')
-      .select('assigned_to,cost_actual_cad,completed_at')
-      .not('cost_actual_cad', 'is', null);
-    if (error) { setEl('fleetCostPanel', `<div class="fleet-empty">Error: ${esc(error.message)}</div>`); return; }
+    // Monthly total from forge_sessions — live, no hardcoded QUOTA_DB
+    const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+    const [{ data: sessData, error: sessErr }, { data, error }] = await Promise.all([
+      supa.from('forge_sessions').select('session_cost_est_cad').gte('started_at', monthStart),
+      supa.from('forge_tasks').select('assigned_to,cost_actual_cad').not('cost_actual_cad', 'is', null)
+    ]);
+    if (sessErr || error) { setEl('fleetCostPanel', `<div class="fleet-empty">Error: ${esc((sessErr || error).message)}</div>`); return; }
 
     const CEILING = 280;
-    const total = (data || []).reduce((s, t) => s + (Number(t.cost_actual_cad) || 0), 0);
+    const total = (sessData || []).reduce((s, r) => s + (Number(r.session_cost_est_cad) || 0), 0);
     const pct = Math.min(100, Math.round((total / CEILING) * 100));
     const daysLeft = (() => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth() + 1, 0).getDate() - n.getDate(); })();
 
@@ -1692,140 +1630,6 @@
     loadBus();
   }
 
-  // ─── Quotas tab ──────────────────────────────────────────
-  // DATA BLOCK — update used/budget here without touching the engine
-  const QUOTA_DB = {
-    subscriptions: [
-      {
-        name: 'Forge AI (Anthropic)',
-        window: 'Apr 2026',
-        budget: 280,
-        used: 46.57,
-        unit: '$',
-        currency: 'CAD',
-        note: '~16.6% used — resets May 1'
-      }
-    ]
-  };
-
-  function loadQuotas() {
-    _renderQuotaBars();
-    _renderQuotaAuto();
-    _renderQuotaQueue();
-    _renderQuotaChart();
-  }
-
-  function _renderQuotaBars() {
-    const el = document.getElementById('fleetQuotaBars');
-    if (!el) return;
-    el.innerHTML = QUOTA_DB.subscriptions.map(s => {
-      const pct = Math.min(100, Math.round((s.used / s.budget) * 100));
-      const fillCls = pct < 60 ? 'quota-fill-ok' : pct < 80 ? 'quota-fill-warn' : 'quota-fill-crit';
-      return `
-        <div class="quota-block">
-          <div class="quota-block-title">${esc(s.name)} &ndash; ${esc(s.window)}</div>
-          <div class="quota-meter-head">
-            <span class="quota-meter-name">${esc(s.unit)}${s.used.toFixed(2)} / ${esc(s.unit)}${s.budget} ${esc(s.currency)}</span>
-            <span class="quota-meter-vals">${pct}% used</span>
-          </div>
-          <div class="quota-meter-track" style="margin-bottom:4px">
-            <div class="quota-meter-fill ${fillCls}" style="width:${pct}%"></div>
-          </div>
-          ${s.note ? `<div style="font-size:0.72rem;color:var(--cc-text-dim)">${esc(s.note)}</div>` : ''}
-        </div>`;
-    }).join('');
-  }
-
-  function _renderQuotaAuto() {
-    const el = document.getElementById('fleetQuotaAuto');
-    if (!el) return;
-    el.innerHTML = `
-      <div class="quota-block">
-        <div class="quota-stub-note">&#x26A0; Stub — wires live once FAW P1 ships (autonomous_runs table, task 35ad444c).</div>
-        <div class="fleet-empty" style="padding:12px 0;font-size:0.82rem">No autonomous work running.</div>
-      </div>`;
-  }
-
-  async function _renderQuotaQueue() {
-    const el = document.getElementById('fleetQuotaQueue');
-    if (!el) return;
-    const { data, error } = await supa
-      .from('forge_tasks')
-      .select('id, title, priority, cost_est_cad, suggested_to')
-      .eq('status', 'queued')
-      .order('priority', { ascending: false })
-      .order('created_at', { ascending: false })
-      .limit(12);
-
-    if (error) { el.innerHTML = `<div class="fleet-empty">Error: ${esc(error.message)}</div>`; return; }
-    if (!data || !data.length) { el.innerHTML = '<div class="fleet-empty">Queue is empty.</div>'; return; }
-
-    const totalEst = data.reduce((s, t) => s + (parseFloat(t.cost_est_cad) || 0), 0);
-    el.innerHTML = `
-      <div class="quota-block">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <span style="font-size:0.8rem;color:var(--cc-text-muted)">${data.length} task${data.length !== 1 ? 's' : ''} queued</span>
-          ${totalEst > 0 ? `<span style="font-size:0.78rem;color:var(--cc-accent);font-weight:700">~${fmtCost(totalEst)} est. total</span>` : ''}
-        </div>
-        ${data.map(t => `
-          <div class="quota-next-item">
-            <span class="quota-next-title">${esc(t.title)}</span>
-            ${t.suggested_to ? `<span style="font-size:0.7rem;color:var(--cc-text-dim);margin-right:8px;flex-shrink:0">${esc(t.suggested_to)}</span>` : ''}
-            <span class="quota-next-cost">${t.cost_est_cad ? fmtCost(t.cost_est_cad) : '—'}</span>
-          </div>`).join('')}
-      </div>`;
-  }
-
-  async function _renderQuotaChart() {
-    const el = document.getElementById('fleetQuotaChart');
-    if (!el) return;
-
-    const since = new Date();
-    since.setDate(since.getDate() - 6);
-    since.setHours(0, 0, 0, 0);
-
-    const { data } = await supa
-      .from('forge_sessions')
-      .select('started_at, session_cost_est_cad')
-      .gte('started_at', since.toISOString())
-      .not('session_cost_est_cad', 'is', null);
-
-    const days = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      days.push({
-        label: d.toLocaleDateString('en-CA', { weekday: 'short' }),
-        date: d.toISOString().slice(0, 10),
-        cost: 0
-      });
-    }
-
-    (data || []).forEach(s => {
-      const d = (s.started_at || '').slice(0, 10);
-      const bucket = days.find(b => b.date === d);
-      if (bucket) bucket.cost += parseFloat(s.session_cost_est_cad || 0);
-    });
-
-    const maxCost = Math.max(...days.map(d => d.cost), 0.01);
-
-    el.innerHTML = `
-      <div class="quota-block">
-        <div class="quota-chart-wrap">
-          ${days.map(d => {
-            const barH = Math.round((d.cost / maxCost) * 64);
-            const fillCls = d.cost < 5 ? 'quota-fill-ok' : d.cost < 15 ? 'quota-fill-warn' : 'quota-fill-crit';
-            return `
-              <div class="quota-chart-col">
-                <div class="quota-chart-val">${d.cost > 0 ? '$' + d.cost.toFixed(1) : ''}</div>
-                <div class="quota-chart-bar ${fillCls}" style="height:${Math.max(barH, 2)}px"></div>
-                <div class="quota-chart-day">${esc(d.label)}</div>
-              </div>`;
-          }).join('')}
-        </div>
-      </div>`;
-  }
-
   let _refreshLabelTimer = null;
 
   function _fmtSince(ms) {
@@ -1847,81 +1651,6 @@
     }
   }
 
-  // ─── Devices tab ─────────────────────────────────────────────
-  async function loadDevices() {
-    const el = document.getElementById('fleetDeviceGrid');
-    if (!el) return;
-    el.innerHTML = '<div class="fleet-empty">Loading&hellip;</div>';
-    const { data, error } = await supa.from('fleet_devices')
-      .select('*').eq('device_kind', 'primary').order('owner');
-    if (error) { el.innerHTML = `<div class="fleet-empty">Error: ${esc(error.message)}</div>`; return; }
-    if (!data || !data.length) { el.innerHTML = '<div class="fleet-empty">No primary devices registered.</div>'; return; }
-
-    const osIcon = os => ({ windows: '🪟', macos: '🍎' }[os] || '🖥️');
-    const cap = (has, label) =>
-      `<div class="device-cap-row">
-        <span class="${has ? 'device-cap-yes' : 'device-cap-no'}">${has ? '✓' : '✗'}</span>
-        <span class="${has ? 'device-cap-label-on' : 'device-cap-label-off'}">${label}</span>
-      </div>`;
-
-    el.className = 'device-grid';
-    el.innerHTML = data.map(d => {
-      const updated = d.updated_at
-        ? new Date(d.updated_at).toLocaleString('en-CA', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })
-        : 'Never';
-      const path = d.drive_mount_path || '—';
-      const safeId = esc(d.id);
-      return `<div class="device-card">
-        <div class="device-card-alias">${osIcon(d.os)} ${esc(d.alias)}</div>
-        <div class="device-card-meta">${esc(d.owner)} &middot; ${esc(d.role)} &middot; ${esc(d.os)}</div>
-        ${cap(d.has_claude_code, 'Claude Code / Git / Shell')}
-        ${cap(d.has_google_drive, 'Google Drive')}
-        ${cap(d.has_cowork, 'Cowork')}
-        <div class="device-path-block" onclick="copyDevicePath(this, ${JSON.stringify(path)})">${esc(path)}</div>
-        <div class="device-lastseen">Updated ${updated}</div>
-        <div class="device-card-footer">
-          <button class="filter-btn" onclick="openDeviceEdit(${JSON.stringify(d)})">Edit</button>
-        </div>
-      </div>`;
-    }).join('');
-  }
-
-  window.copyDevicePath = function (el, path) {
-    navigator.clipboard.writeText(path).then(() => {
-      el.classList.add('device-path-copied');
-      el.textContent = 'Copied!';
-      setTimeout(() => { el.classList.remove('device-path-copied'); el.textContent = path; }, 1500);
-    }).catch(() => {
-      el.textContent = 'Copy failed — select manually';
-    });
-  };
-
-  window.openDeviceEdit = function (d) {
-    const inner = document.getElementById('fleet-drawer-inner');
-    inner.innerHTML = `<div class="device-edit-form">
-      <div class="device-edit-title">Edit — ${esc(d.alias)}</div>
-      <label class="device-edit-label"><input type="checkbox" id="ded-cc" ${d.has_claude_code?'checked':''}> Claude Code</label>
-      <label class="device-edit-label"><input type="checkbox" id="ded-drive" ${d.has_google_drive?'checked':''}> Google Drive</label>
-      <label class="device-edit-label"><input type="checkbox" id="ded-cowork" ${d.has_cowork?'checked':''}> Cowork</label>
-      <button class="filter-btn" onclick="saveDevice(${JSON.stringify(d.id)})">Save</button>
-    </div>`;
-    document.getElementById('fleet-drawer-overlay').classList.add('open');
-    document.getElementById('fleet-drawer').classList.add('open');
-    document.body.style.overflow = 'hidden';
-  };
-
-  window.saveDevice = async function (id) {
-    const { error } = await supa.from('fleet_devices').update({
-      has_claude_code:  document.getElementById('ded-cc').checked,
-      has_google_drive: document.getElementById('ded-drive').checked,
-      has_cowork:       document.getElementById('ded-cowork').checked,
-      updated_at:       new Date().toISOString()
-    }).eq('id', id);
-    if (error) { alert('Save failed: ' + error.message); return; }
-    closeDrawer();
-    loadDevices();
-  };
-
   function _getActiveTab() {
     const sections = document.querySelectorAll('[data-subtab]');
     for (const s of sections) {
@@ -1935,7 +1664,7 @@
       live: loadLive, queue: loadQueue, cycles: loadCycles,
       today: loadToday, blocked: loadBlocked, history: loadHistory,
       cost: loadCost, tree: () => loadTree(true), plans: () => loadPlans(true),
-      bus: loadBus, quotas: loadQuotas, devices: loadDevices
+      bus: loadBus
     };
     const fn = TAB_FNS[_getActiveTab()];
     if (!fn) return;
@@ -1965,8 +1694,6 @@
     loadTree();
     loadPlans();
     loadBus();
-    loadQuotas();
-    loadDevices();
     setEl('fleetEcoContainer', renderEcosystem());
 
     // Deep-link: fleet.html#task=<uuid>
