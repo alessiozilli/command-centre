@@ -204,6 +204,32 @@
       nav.pill-nav { padding: 0.75rem 1rem; gap: 0.5rem; }
       nav.pill-nav a, nav.pill-nav button { font-size: 0.8rem; padding: 0.4rem 0.8rem; }
     }
+    /* ===== VIOLATIONS VIEW ===== */
+    .violations-counters { background:#161b22; border-bottom:1px solid #30363d; padding:1.5rem 2rem; display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1rem; }
+    .v-counter-value { font-size:2rem; font-weight:700; color:#58a6ff; }
+    .v-counter-value.danger { color:#f85149; }
+    .v-counter-value.warn   { color:#f0883e; }
+    .v-counter-value.good   { color:#3fb950; }
+    .v-counter-label { font-size:0.8rem; color:#8b949e; text-transform:uppercase; letter-spacing:0.05em; margin-top:0.2rem; }
+    .violations-section { max-width:1200px; margin:0 auto; padding:1.5rem 2rem; }
+    .violations-section-title { font-size:1rem; font-weight:700; color:#e6edf3; margin-bottom:0.75rem; border-bottom:1px solid #30363d; padding-bottom:0.5rem; display:flex; justify-content:space-between; align-items:center; }
+    .rules-table { width:100%; border-collapse:collapse; font-size:0.875rem; }
+    .rules-table th { text-align:left; padding:0.5rem 0.75rem; color:#8b949e; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid #30363d; }
+    .rules-table td { padding:0.6rem 0.75rem; border-bottom:1px solid rgba(48,54,61,0.5); vertical-align:middle; }
+    .rules-table tr.blocks-v1 > td:first-child { border-left:3px solid #f85149; }
+    .rules-table tr:hover > td { background:rgba(88,166,255,0.04); }
+    .pill { display:inline-block; padding:0.2rem 0.55rem; border-radius:12px; font-size:0.7rem; font-weight:600; text-transform:uppercase; }
+    .pill-enforced    { background:rgba(63,185,80,0.15);   color:#3fb950; }
+    .pill-partial     { background:rgba(240,136,62,0.15);  color:#f0883e; }
+    .pill-honor_system{ background:rgba(139,148,158,0.15); color:#8b949e; }
+    .pill-not_yet     { background:rgba(248,81,73,0.15);   color:#f85149; }
+    .violation-row { padding:0.75rem; border:1px solid #30363d; border-radius:6px; margin-bottom:0.5rem; background:#161b22; }
+    .violation-row-head { display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap; margin-bottom:0.3rem; font-size:0.85rem; }
+    .violation-excerpt { font-size:0.78rem; color:#8b949e; font-family:monospace; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .v-chip { display:inline-block; padding:0.15rem 0.45rem; border-radius:4px; font-size:0.7rem; background:rgba(88,166,255,0.1); color:#58a6ff; }
+    .v-empty { color:#8b949e; font-size:0.9rem; padding:1rem 0; }
+    .btn-audit { padding:0.4rem 0.9rem; border:1px solid #30363d; border-radius:6px; background:transparent; color:#8b949e; cursor:not-allowed; font-size:0.8rem; font-family:inherit; }
+    @media(max-width:768px) { .violations-counters { grid-template-columns:1fr 1fr; } .rules-table thead { display:none; } .rules-table tr { display:block; margin-bottom:0.75rem; border:1px solid #30363d; border-radius:6px; } .rules-table td { display:block; padding:0.4rem 0.75rem; } }
   </style>
 </head>
 <body>
@@ -214,8 +240,9 @@ window.PAGE = {
   title: 'Cockpit',
   subtitle: 'NOW · YOU · DONE',
   subtabs: [
-    { id: 'cockpit', label: 'Cockpit' },
-    { id: 'tasks',   label: 'Tasks' }
+    { id: 'cockpit',    label: 'Cockpit' },
+    { id: 'tasks',      label: 'Tasks' },
+    { id: 'violations', label: 'Violations' }
   ],
   stats: []
 };
@@ -311,6 +338,35 @@ window.PAGE = {
         <div class="empty-state-icon">📋</div>
         <div class="empty-state-text">No tasks in this category. Start by adding one!</div>
       </div>
+    </div>
+  </div>
+
+  <!-- ===== VIOLATIONS VIEW ===== -->
+  <div id="view-violations" class="view-panel" style="display:none">
+    <div class="violations-counters">
+      <div class="v-counter">
+        <div class="v-counter-value good" id="vcEnforced">—</div>
+        <div class="v-counter-label">Rules Enforced</div>
+      </div>
+      <div class="v-counter">
+        <div class="v-counter-value warn" id="vcToday">—</div>
+        <div class="v-counter-label">Violations Today</div>
+      </div>
+      <div class="v-counter">
+        <div class="v-counter-value danger" id="vcBlocking">—</div>
+        <div class="v-counter-label">Blocking v1.0</div>
+      </div>
+    </div>
+    <div class="violations-section">
+      <div class="violations-section-title">All Rules</div>
+      <div id="rulesTableWrap"><div class="v-empty">Loading…</div></div>
+    </div>
+    <div class="violations-section">
+      <div class="violations-section-title">
+        <span>Recent Violations</span>
+        <button class="btn-audit" disabled title="Coming Phase D — Edge Function not yet deployed">Run Audit ▸</button>
+      </div>
+      <div id="recentViolations"><div class="v-empty">Loading…</div></div>
     </div>
   </div>
 
@@ -1201,6 +1257,10 @@ function switchView(view) {
     cockpitLoaded = true;
     initCockpit();
   }
+  if (view === 'violations' && !violationsLoaded) {
+    violationsLoaded = true;
+    initViolations();
+  }
 }
 
 function restoreView() {
@@ -1595,6 +1655,95 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   setInterval(updateSyncDisplay, 60000);
 });
+
+// ===== VIOLATIONS =====
+let violationsLoaded = false;
+let _violationsChannels = [];
+
+function fmtAge(iso) {
+  if (!iso) return '—';
+  const s = Math.floor((Date.now() - new Date(iso)) / 1000);
+  if (s < 60)   return s + 's ago';
+  if (s < 3600) return Math.floor(s/60) + 'm ago';
+  if (s < 86400) return Math.floor(s/3600) + 'h ago';
+  return Math.floor(s/86400) + 'd ago';
+}
+
+function esc(s) { const d = document.createElement('div'); d.textContent = String(s||''); return d.innerHTML; }
+
+function initViolations() {
+  setupViolationsRealtime();
+  loadViolations();
+}
+
+function setupViolationsRealtime() {
+  const rCh = sb.channel('violations-rules')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'forge_rules' }, loadViolations)
+    .subscribe();
+  const vCh = sb.channel('violations-log')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'forge_violations' }, loadViolations)
+    .subscribe();
+  _violationsChannels = [rCh, vCh];
+}
+
+async function loadViolations() {
+  const [rulesRes, violationsRes, todayRes] = await Promise.all([
+    sb.from('forge_rules').select('*').order('blocks_v1', { ascending: false }).order('enforcement_status', { ascending: true }),
+    sb.from('forge_violations').select('*, rule:forge_rules(name,severity)').order('occurred_at', { ascending: false }).limit(20),
+    sb.from('forge_violations').select('id', { count: 'exact', head: true }).gte('occurred_at', new Date(Date.now() - 86400000).toISOString())
+  ]);
+
+  const rules = rulesRes.data || [];
+  const violations = violationsRes.data || [];
+  const todayCount = todayRes.count || 0;
+
+  // Counters
+  const enforced = rules.filter(r => r.enforcement_status === 'enforced').length;
+  const blocking  = rules.filter(r => r.blocks_v1 && r.enforcement_status !== 'enforced').length;
+  document.getElementById('vcEnforced').textContent = enforced + ' / ' + rules.length;
+  document.getElementById('vcToday').textContent    = todayCount;
+  document.getElementById('vcBlocking').textContent = blocking;
+
+  // Rules table
+  const wrap = document.getElementById('rulesTableWrap');
+  if (!rules.length) { wrap.innerHTML = '<div class="v-empty">No rules found.</div>'; }
+  else {
+    wrap.innerHTML = `<table class="rules-table">
+      <thead><tr>
+        <th>Rule</th><th>Category</th><th>Method</th><th>Status</th><th>Violations</th><th>Last hit</th>
+      </tr></thead>
+      <tbody>${rules.map(r => `
+        <tr class="${r.blocks_v1 ? 'blocks-v1' : ''}">
+          <td><strong>${esc(r.name)}</strong></td>
+          <td>${esc(r.category)}</td>
+          <td>${esc(r.enforcement_method)}</td>
+          <td><span class="pill pill-${esc(r.enforcement_status)}">${esc(r.enforcement_status)}</span></td>
+          <td>${r.violations_count || 0}</td>
+          <td>${fmtAge(r.last_violated_at)}</td>
+        </tr>`).join('')}
+      </tbody></table>`;
+  }
+
+  // Recent violations
+  const el = document.getElementById('recentViolations');
+  if (!violations.length) { el.innerHTML = '<div class="v-empty">No violations logged yet.</div>'; }
+  else {
+    el.innerHTML = violations.map(v => {
+      const ruleName = v.rule ? v.rule.name : (v.rule_violated || '—');
+      const excerpt  = (v.response_excerpt || '').slice(-200);
+      return `<div class="violation-row">
+        <div class="violation-row-head">
+          <span style="color:#8b949e">${fmtAge(v.occurred_at)}</span>
+          <strong>${esc(ruleName)}</strong>
+          <span class="v-chip">${esc(v.instance)}</span>
+          <span class="v-chip">${esc(v.model)}</span>
+          <span class="v-chip">${esc(v.caught_by)}</span>
+        </div>
+        ${excerpt ? `<div class="violation-excerpt">${esc(excerpt)}</div>` : ''}
+      </div>`;
+    }).join('');
+  }
+}
 
 document.getElementById('confirmModal').addEventListener('click', (e) => {
   if (e.target.id === 'confirmModal') e.target.classList.remove('active');
