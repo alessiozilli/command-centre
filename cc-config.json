@@ -1,7 +1,7 @@
 {
-  "_comment": "AZCK Command Centre \u2014 global config. v2.4 re-adds Password to REFERENCE nav (under tightened auth \u2014 password.html now requires login, no public back door).",
-  "_version": "2.4",
-  "_updated": "2026-04-19",
+  "_comment": "AZCK Command Centre \u2014 global config. v2.5 adds Fleet to SYSTEMS group (fleet.html was unlinked from main nav). v2.4 re-adds Password to REFERENCE nav (under tightened auth).",
+  "_version": "2.5",
+  "_updated": "2026-04-26",
   "brand": {
     "text": "AZCK",
     "sub": "Command Centre",
@@ -65,6 +65,11 @@
           "id": "forge",
           "label": "Forge",
           "href": "forge.html"
+        },
+        {
+          "id": "fleet",
+          "label": "Fleet",
+          "href": "fleet.html"
         },
         {
           "id": "network",
