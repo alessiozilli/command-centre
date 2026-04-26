@@ -410,6 +410,9 @@
   const instColor = name => INSTANCE_COLORS[name] || '#8b949e';
 
   const badgeInstance  = name => `<span class="badge badge-instance" style="border-color:${instColor(name)}40;color:${instColor(name)}">${esc(name || '—')}</span>`;
+  const MODEL_COLORS = { 'opus': '#bc8cff', 'sonnet': '#58a6ff', 'haiku': '#8b949e' };
+  const modelColor = m => MODEL_COLORS[(m||'').toLowerCase()] || '#8b949e';
+  const badgeModel = m => m ? `<span class="badge badge-instance" style="border-color:${modelColor(m)}40;color:${modelColor(m)};font-size:0.62rem;opacity:0.85">${esc(m)}</span>` : '';
   const badgePriority  = p => `<span class="badge badge-priority-${esc(p)}">${esc(p)}</span>`;
   const badgeSide      = s => `<span class="badge badge-side-${esc(s)}">${esc(s)}</span>`;
   const badgeStatus    = s => `<span class="badge badge-status-${esc(s)}">${esc(s)}</span>`;
@@ -726,7 +729,7 @@
   async function loadLive() {
     loadSessions();
     const { data, error } = await supa.from('forge_fleet_status')
-      .select('id,title,type,assigned_to,claimed_by,claimed_at,last_exec_entry,cost_est_cad,cost_actual_cad,priority,side_effects')
+      .select('id,title,type,assigned_to,claimed_by,claimed_at,last_exec_entry,cost_est_cad,cost_actual_cad,priority,side_effects,suggested_model')
       .eq('status', 'in_progress');
     if (error) { setEl('fleetLiveList', `<div class="fleet-empty">Error: ${esc(error.message)}</div>`); return; }
     _stats.active = String(data ? data.length : 0);
@@ -741,6 +744,7 @@
         </div>
         <div class="fleet-card-meta">
           ${badgeInstance(t.assigned_to || t.claimed_by)}
+          ${badgeModel(t.suggested_model)}
           ${badgePriority(t.priority)}
           ${badgeSide(t.side_effects)}
           <span>started ${fmtAge(t.claimed_at)}</span>
@@ -861,7 +865,7 @@
       </div>
       <div class="fleet-card-meta">
         ${t.suggested_to ? badgeInstance(t.suggested_to) : '<span>unassigned</span>'}
-        ${t.suggested_model ? `<span style="color:var(--cc-text-dim)">→ ${esc(t.suggested_model)}</span>` : ''}
+        ${badgeModel(t.suggested_model)}
         ${t.side_effects ? badgeSide(t.side_effects) : ''}
         ${t.requires_approval && t.requires_approval !== 'none' ? `<span style="color:var(--cc-warn)">⚠ needs approval</span>` : ''}
         ${t.cost_est_cad != null ? `<span>${fmtCost(t.cost_est_cad)}</span>` : ''}
@@ -898,7 +902,7 @@
   // ─── CYCLES tab ──────────────────────────────────────────
   async function loadCycles() {
     const { data, error } = await supa.from('forge_fleet_status')
-      .select('id,title,type,cycle_count,cycle_target,cycle_mode,cycle_status,cycle_rotation,cycle_budget_cad,cycle_cost_actual_cad,last_cycle_entry,assigned_to,claimed_by,status,priority')
+      .select('id,title,type,cycle_count,cycle_target,cycle_mode,cycle_status,cycle_rotation,cycle_budget_cad,cycle_cost_actual_cad,last_cycle_entry,assigned_to,claimed_by,status,priority,suggested_model')
       .not('cycle_target', 'is', null)
       .in('cycle_status', ['in_cycle', 'budget_exceeded', 'converged', 'target_reached', 'user_locked']);
     if (error) { setEl('fleetCyclesList', `<div class="fleet-empty">Error: ${esc(error.message)}</div>`); return; }
@@ -922,6 +926,7 @@
         </div>
         <div class="fleet-card-meta">
           ${t.assigned_to || t.claimed_by ? badgeInstance(t.assigned_to || t.claimed_by) : ''}
+          ${badgeModel(t.suggested_model)}
           <span>${esc(t.cycle_mode)}</span>
           <span>${esc(t.cycle_rotation)}</span>
           ${lastCycle ? verdictBadge(lastCycle.verdict) : ''}
@@ -943,7 +948,7 @@
   async function loadToday() {
     const todayIso = new Date().toISOString().slice(0, 10);
     const { data, error } = await supa.from('forge_tasks')
-      .select('id,title,type,assigned_to,cost_actual_cad,completed_at,status,last_error')
+      .select('id,title,type,assigned_to,suggested_model,cost_actual_cad,completed_at,status,last_error')
       .gte('completed_at', todayIso)
       .in('status', ['done', 'cancelled'])
       .order('completed_at', { ascending: false });
@@ -966,6 +971,7 @@
       </div>
       <div class="fleet-card-meta">
         ${t.assigned_to ? badgeInstance(t.assigned_to) : ''}
+        ${badgeModel(t.suggested_model)}
         ${t.cost_actual_cad != null ? `<span>${fmtCost(t.cost_actual_cad)}</span>` : ''}
         <span>${fmtDate(t.completed_at)}</span>
         ${t.last_error ? `<span style="color:var(--cc-danger)">⚠ ${esc(t.last_error.slice(0, 80))}</span>` : ''}
@@ -976,7 +982,7 @@
   // ─── BLOCKED tab ─────────────────────────────────────────
   async function loadBlocked() {
     const { data, error } = await supa.from('forge_fleet_status')
-      .select('id,title,type,requires_approval,priority,suggested_to,side_effects,created_at')
+      .select('id,title,type,requires_approval,priority,suggested_to,suggested_model,side_effects,created_at')
       .neq('requires_approval', 'none')
       .in('status', ['queued', 'in_progress']);
     if (error) { setEl('fleetBlockedList', `<div class="fleet-empty">Error: ${esc(error.message)}</div>`); return; }
@@ -990,6 +996,7 @@
       </div>
       <div class="fleet-card-meta">
         ${t.suggested_to ? badgeInstance(t.suggested_to) : ''}
+        ${badgeModel(t.suggested_model)}
         ${badgeSide(t.side_effects)}
         <span style="color:var(--cc-warn)">gate: ${esc(t.requires_approval)}</span>
         <span>queued ${fmtAge(t.created_at)}</span>
@@ -1012,6 +1019,7 @@
       </div>
       <div class="fleet-card-meta">
         ${t.assigned_to ? badgeInstance(t.assigned_to) : '<span style="color:var(--cc-text-dim)">unassigned</span>'}
+        ${badgeModel(t.suggested_model)}
         ${t.cost_actual_cad != null ? `<span>${fmtCost(t.cost_actual_cad)}</span>` : ''}
         <span>${fmtDate(t.completed_at)}</span>
         ${(t.tags || []).map(tg => `<span class="badge" style="background:rgba(88,166,255,0.08);color:#79c0ff;border:1px solid rgba(88,166,255,0.2)">${esc(tg)}</span>`).join('')}
