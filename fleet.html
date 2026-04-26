@@ -777,7 +777,7 @@
     return 'Older';
   }
   function getGroupKey(t, mode) {
-    if (mode === 'instance')  return t.suggested_to || t.assigned_to || 'unassigned';
+    if (mode === 'instance')  return t.suggested_to || t.assigned_to || t.current_instance || 'unassigned';
     if (mode === 'model')     return t.suggested_model || 'auto';
     if (mode === 'project')   return classifyProject(t);
     if (mode === 'timeframe') return classifyTimeframe(t.created_at || t.updated_at);
@@ -1386,7 +1386,7 @@
     if (forceRefresh) _plansCache = null;
     if (!_plansCache) {
       const { data, error } = await supa.from('forge_plans')
-        .select('id,title,status,bounce_count,current_instance,bounce_history,created_by,created_at,updated_at,suggested_to,suggested_model')
+        .select('id,title,status,bounce_count,current_instance,bounce_history,created_by,created_at,updated_at')
         .order('created_at', { ascending: false });
       if (error) {
         const msg = error.code === '42P01'
