@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════
    cc-shell.css — AZCK Command Centre unified shell
+   v2.1 — 2026-04-26 (mid-size responsive: tighter header ≤1280px so all nav pills + groups fit on one row)
    v2.0 — 2026-04-21 (Pass 1 rebuild — adds .cc-device-pill)
    v1.0 — 2026-04-17 (Forge v0.9.5 The Operator)
 
@@ -454,6 +455,20 @@ a:hover { text-decoration: underline; }
 .cc-content ul li { margin-bottom: 4px; }
 
 /* ─── 8. RESPONSIVE ─── */
+/* Mid-size — tightens header so all nav pills + group labels fit on one row */
+@media (max-width: 1280px) {
+  .cc-banner            { padding: 8px 16px; gap: 10px; }
+  .cc-brand             { font-size: 13px; padding: 3px 10px; }
+  .cc-brand .cc-brand-sub { display: none; }
+  .cc-nav               { gap: 4px; }
+  .cc-nav a             { padding: 5px 12px; font-size: 13px; }
+  .cc-nav-group-label   { font-size: 9px; padding: 6px 2px 6px 6px; letter-spacing: 1px; }
+  .cc-nav-group-sep     { margin: 0 2px; height: 16px; }
+  .cc-banner-actions    { gap: 6px; }
+  .cc-banner-actions button { padding: 4px 8px; font-size: 11px; }
+  .cc-device-pill       { font-size: 11px; padding: 3px 8px; }
+}
+
 @media (max-width: 768px) {
   .cc-banner { padding: 8px 14px; gap: 10px; flex-wrap: wrap; }
   .cc-brand  { font-size: 13px; padding: 3px 10px; }
