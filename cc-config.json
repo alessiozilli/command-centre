@@ -1,6 +1,6 @@
 {
-  "_comment": "AZCK Command Centre \u2014 global config. v2.5 adds Fleet to SYSTEMS group (fleet.html was unlinked from main nav). v2.4 re-adds Password to REFERENCE nav (under tightened auth).",
-  "_version": "2.5",
+  "_comment": "AZCK Command Centre \u2014 global config. v2.6 adds PEOPLE group (Alessio + Reanna personal dashboards). v2.5 adds Fleet to SYSTEMS group.",
+  "_version": "2.6",
   "_updated": "2026-04-26",
   "brand": {
     "text": "AZCK",
@@ -21,14 +21,25 @@
       ]
     },
     {
+      "id": "people",
+      "label": "PEOPLE",
+      "items": [
+        {
+          "id": "cockpit-alessio",
+          "label": "Alessio",
+          "href": "alessio.html"
+        },
+        {
+          "id": "cockpit-reanna",
+          "label": "Reanna",
+          "href": "reanna.html"
+        }
+      ]
+    },
+    {
       "id": "today",
       "label": "TODAY",
       "items": [
-        {
-          "id": "tasks",
-          "label": "Cockpit",
-          "href": "alessio.html"
-        },
         {
           "id": "shared",
           "label": "Shared",
