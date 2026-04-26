@@ -13,6 +13,7 @@
     title: 'Forge Fleet',
     subtitle: 'Multi-instance task dispatch, cycles, and cost tracking.',
     subtabs: [
+      { id: 'board',   label: 'Board'   },
       { id: 'live',    label: 'Live'    },
       { id: 'queue',   label: 'Queue'   },
       { id: 'cycles',  label: 'Cycles'  },
@@ -274,6 +275,30 @@
 .group-body.collapsed { display: none; }
 @media (max-width: 480px) { .group-toggle-bar .filter-btn { font-size: 0.68rem; padding: 0.25rem 0.55rem; } }
 
+/* ─── Board tab ──────────────────────────────────────────────────── */
+.board-scroll { display: flex; gap: 16px; overflow-x: auto; padding: 4px 0 20px; align-items: flex-start; }
+.board-lane { flex: 0 0 280px; background: var(--cc-bg-card); border: 1px solid var(--cc-border); border-radius: var(--cc-r-md); overflow: hidden; min-width: 0; }
+.board-lane-header { padding: 11px 14px 9px; background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--cc-border); }
+.board-lane-title { font-size: 0.78rem; font-weight: 700; color: var(--cc-text); letter-spacing: 0.01em; margin-bottom: 5px; line-height: 1.3; }
+.board-lane-counts { display: flex; gap: 10px; font-size: 0.65rem; color: var(--cc-text-dim); }
+.board-lane-body { padding: 10px; display: flex; flex-direction: column; gap: 7px; max-height: calc(100vh - 220px); overflow-y: auto; }
+.board-plan-card { background: var(--cc-bg); border: 1px solid var(--cc-border); border-left: 4px solid; border-radius: var(--cc-r-md); padding: 10px 12px; cursor: pointer; transition: border-color var(--cc-t-fast), background var(--cc-t-fast); }
+.board-plan-card.board-plan-root { background: rgba(255,255,255,0.025); }
+.board-plan-card:hover { background: var(--cc-bg-hover); }
+.board-card-head { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 6px; }
+.board-card-sym { flex-shrink: 0; font-size: 0.78rem; line-height: 1.45; }
+.board-card-title { font-size: 0.77rem; font-weight: 600; color: var(--cc-text); line-height: 1.35; letter-spacing: 0.01em; word-break: break-word; }
+.board-card-meta { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.board-child-group { position: relative; padding-left: 16px; }
+.board-connector { position: absolute; left: 6px; top: -4px; bottom: 50%; width: 1px; background: var(--cc-border); }
+.board-connector::after { content:''; position: absolute; bottom: 0; left: 0; width: 10px; height: 1px; background: var(--cc-border); }
+.board-task-group { display: flex; flex-direction: column; gap: 4px; padding-left: 8px; border-left: 1px solid var(--cc-border); margin: 5px 0 3px 8px; }
+.board-task-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-left: 3px solid; border-radius: 4px; padding: 7px 10px; cursor: pointer; transition: background var(--cc-t-fast); }
+.board-task-card:hover { background: var(--cc-bg-hover); }
+.board-orphan-section { margin-top: 20px; }
+.board-orphan-heading { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--cc-text-dim); font-weight: 700; margin-bottom: 10px; }
+@media (max-width: 768px) { .board-scroll { flex-direction: column; overflow-x: visible; } .board-lane { flex: none; width: 100%; max-height: none; } .board-lane-body { max-height: none; } }
+
 /* Auto-refresh indicator */
 #fleet-refresh-pill {
   position: fixed; bottom: 16px; left: 16px; z-index: 50;
@@ -289,6 +314,11 @@
 
 <!-- Shell injects banner + quickview + subtabs + stats bar above this. -->
 <main id="cc-content" class="cc-content">
+
+<section data-subtab="board">
+  <p class="fleet-section-intro">Visual map of all active plans and tasks. Each lane = one umbrella plan. Cards show status, owner, and model. Click any card to drill in.</p>
+  <div id="boardWrap"><div class="fleet-empty">Loading&hellip;</div></div>
+</section>
 
 <section data-subtab="live">
   <p class="fleet-section-intro">Tasks currently being executed by a Forge instance. Claim age refreshes on page load.</p>
@@ -1659,6 +1689,150 @@
     }
   }
 
+  // ─── BOARD tab ────────────────────────────────────────────────────
+  let _boardChannels = [];
+
+  const BOARD_STATUS_COLOR = { bouncing:'#d29922', approved:'#58a6ff', draft:'#8b949e', converted:'#3fb950', abandoned:'#484f58', parked:'#6e40c9', in_progress:'#3fb950', queued:'#58a6ff', done:'#484f58' };
+  const BOARD_STATUS_SYM   = { bouncing:'↩', approved:'✓', draft:'○', converted:'✔', abandoned:'⊘', parked:'‖', in_progress:'▶', queued:'◆', done:'✓' };
+
+  function _boardPlanCard(plan, isRoot) {
+    const col = BOARD_STATUS_COLOR[plan.status] || '#8b949e';
+    const sym = BOARD_STATUS_SYM[plan.status] || '○';
+    const shortTitle = plan.title.length > 52 ? plan.title.slice(0, 49) + '…' : plan.title;
+    return `<div class="board-plan-card${isRoot ? ' board-plan-root' : ''}" style="border-left-color:${col}" onclick="openDrawer('${esc(plan.id)}')">
+      <div class="board-card-head">
+        <span class="board-card-sym" style="color:${col}">${sym}</span>
+        <span class="board-card-title">${esc(shortTitle)}</span>
+      </div>
+      <div class="board-card-meta">
+        <span class="badge badge-instance" style="border-color:${col}40;color:${col};font-size:0.6rem">${esc(plan.status)}</span>
+        ${plan.bounce_count ? `<span style="color:var(--cc-text-dim);font-size:0.7rem">↩${plan.bounce_count}</span>` : ''}
+        ${plan.current_instance ? badgeInstance(plan.current_instance) : ''}
+        ${plan.cost_est_cad != null ? `<span style="color:var(--cc-text-dim);font-size:0.68rem">${fmtCost(plan.cost_est_cad)}</span>` : ''}
+      </div>
+    </div>`;
+  }
+
+  function _boardTaskCard(t) {
+    const col = BOARD_STATUS_COLOR[t.status] || '#8b949e';
+    const sym = BOARD_STATUS_SYM[t.status] || '◆';
+    const shortTitle = t.title.length > 60 ? t.title.slice(0, 57) + '…' : t.title;
+    return `<div class="board-task-card" style="border-left-color:${col}" onclick="openDrawer('${esc(t.id)}')">
+      <div class="board-card-head">
+        <span class="board-card-sym" style="color:${col};font-size:0.65rem">${sym}</span>
+        <span class="board-card-title" style="font-size:0.72rem">${esc(shortTitle)}</span>
+      </div>
+      <div class="board-card-meta">
+        ${badgeInstance(t.suggested_to)}
+        ${badgeModel(t.suggested_model)}
+      </div>
+    </div>`;
+  }
+
+  function _renderBoardLane(root, childMap, taskByPlan) {
+    const children = childMap[root.id] || [];
+    const rootTasks = taskByPlan[root.id] || [];
+    const shortHeader = root.title.length > 38 ? root.title.slice(0, 35) + '…' : root.title;
+    const totalTasks = rootTasks.length + children.reduce((s, c) => s + (taskByPlan[c.id] || []).length, 0);
+
+    let body = _boardPlanCard(root, true);
+    if (rootTasks.length) body += `<div class="board-task-group">${rootTasks.map(_boardTaskCard).join('')}</div>`;
+
+    children.forEach(child => {
+      const ct = taskByPlan[child.id] || [];
+      body += `<div class="board-child-group">
+        <div class="board-connector"></div>
+        ${_boardPlanCard(child, false)}
+        ${ct.length ? `<div class="board-task-group">${ct.map(_boardTaskCard).join('')}</div>` : ''}
+      </div>`;
+    });
+
+    return `<div class="board-lane">
+      <div class="board-lane-header">
+        <div class="board-lane-title">${esc(shortHeader)}</div>
+        <div class="board-lane-counts">
+          ${children.length ? `<span>${children.length} child plan${children.length !== 1 ? 's' : ''}</span>` : ''}
+          ${totalTasks ? `<span>${totalTasks} task${totalTasks !== 1 ? 's' : ''}</span>` : ''}
+        </div>
+      </div>
+      <div class="board-lane-body">${body}</div>
+    </div>`;
+  }
+
+  async function loadBoard() {
+    const [plansRes, tasksRes] = await Promise.all([
+      supa.from('forge_plans')
+        .select('id,title,status,domain,parent_plan_id,bounce_count,current_instance,cost_est_cad,updated_at')
+        .not('status', 'in', '("archived","converted")')
+        .order('created_at', { ascending: true }),
+      supa.from('forge_tasks')
+        .select('id,title,status,suggested_to,suggested_model,parent_plan_id,priority')
+        .in('status', ['queued','in_progress','parked'])
+        .order('priority', { ascending: false })
+        .order('created_at', { ascending: true })
+    ]);
+
+    if (plansRes.error) { setEl('boardWrap', `<div class="fleet-empty">Error loading plans: ${esc(plansRes.error.message)}</div>`); return; }
+
+    const plans   = plansRes.data || [];
+    const tasks   = tasksRes.data || [];
+    const planIds = new Set(plans.map(p => p.id));
+
+    // Task map: plan_id → tasks[]
+    const taskByPlan = {};
+    const orphanTasks = [];
+    tasks.forEach(t => {
+      if (t.parent_plan_id && planIds.has(t.parent_plan_id)) {
+        (taskByPlan[t.parent_plan_id] = taskByPlan[t.parent_plan_id] || []).push(t);
+      } else {
+        orphanTasks.push(t);
+      }
+    });
+
+    // Plan hierarchy: roots + childMap
+    const childMap = {};
+    const roots = [];
+    plans.forEach(p => {
+      if (p.parent_plan_id && planIds.has(p.parent_plan_id)) {
+        (childMap[p.parent_plan_id] = childMap[p.parent_plan_id] || []).push(p);
+      } else {
+        roots.push(p);
+      }
+    });
+
+    // Sort roots: bouncing first, then approved, draft, rest
+    const statusOrd = { bouncing: 0, approved: 1, draft: 2, parked: 3, abandoned: 4 };
+    roots.sort((a, b) => (statusOrd[a.status] ?? 9) - (statusOrd[b.status] ?? 9));
+
+    if (!roots.length && !orphanTasks.length) {
+      setEl('boardWrap', '<div class="fleet-empty">No active plans. Board is clear.</div>');
+      return;
+    }
+
+    let html = `<div class="board-scroll">${roots.map(r => _renderBoardLane(r, childMap, taskByPlan)).join('')}</div>`;
+
+    if (orphanTasks.length) {
+      html += `<div class="board-orphan-section">
+        <div class="board-orphan-heading">Unlinked Tasks (${orphanTasks.length})</div>
+        <div class="fleet-grid">${orphanTasks.map(_boardTaskCard).join('')}</div>
+      </div>`;
+    }
+
+    setEl('boardWrap', html);
+  }
+
+  function _setupBoardRealtime() {
+    _boardChannels.forEach(c => supa.removeChannel(c));
+    _boardChannels = [
+      supa.channel('board-plans').on('postgres_changes', { event: '*', schema: 'public', table: 'forge_plans' }, () => loadBoard()).subscribe(),
+      supa.channel('board-tasks').on('postgres_changes', { event: '*', schema: 'public', table: 'forge_tasks' }, () => loadBoard()).subscribe()
+    ];
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) { _boardChannels.forEach(c => supa.removeChannel(c)); _boardChannels = []; }
+      else { _setupBoardRealtime(); loadBoard(); }
+    });
+  }
+
   function _getActiveTab() {
     const sections = document.querySelectorAll('[data-subtab]');
     for (const s of sections) {
@@ -1669,6 +1843,7 @@
 
   async function _refreshActiveTab() {
     const TAB_FNS = {
+      board: loadBoard,
       live: loadLive, queue: loadQueue, cycles: loadCycles,
       today: loadToday, blocked: loadBlocked, history: loadHistory,
       cost: loadCost, tree: () => loadTree(true), plans: () => loadPlans(true),
@@ -1692,6 +1867,8 @@
       document.querySelectorAll('[data-subtab]').forEach(s => { s.innerHTML = signinNote(); });
       return;
     }
+    _setupBoardRealtime();
+    loadBoard();
     loadLive();
     loadQueue();
     loadCycles();
