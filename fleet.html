@@ -299,6 +299,21 @@
 .board-orphan-heading { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--cc-text-dim); font-weight: 700; margin-bottom: 10px; }
 @media (max-width: 768px) { .board-scroll { flex-direction: column; overflow-x: visible; } .board-lane { flex: none; width: 100%; max-height: none; } .board-lane-body { max-height: none; } }
 
+/* ─── Universal Action Menu (C3) ───────────────────────────── */
+.cc-action-menu { position: fixed; z-index: 310; background: var(--cc-bg-card); border: 1px solid var(--cc-border); border-radius: var(--cc-r-md); box-shadow: 0 8px 32px rgba(0,0,0,0.45); min-width: 192px; padding: 4px 0; opacity: 0; pointer-events: none; transform: scale(0.95); transition: opacity 0.12s, transform 0.12s; transform-origin: top left; }
+.cc-action-menu.open { opacity: 1; pointer-events: all; transform: scale(1); }
+.cc-menu-item { display: flex; align-items: center; padding: 9px 16px; font-size: 0.82rem; cursor: pointer; color: var(--cc-text); user-select: none; white-space: nowrap; transition: background 0.08s; }
+.cc-menu-item:hover { background: var(--cc-bg-hover); }
+.cc-menu-item.danger { color: var(--cc-danger); }
+.cc-menu-sep { height: 1px; background: var(--cc-border); margin: 3px 0; }
+.cc-menu-hd { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--cc-text-dim); padding: 7px 16px 3px; font-weight: 700; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cc-sheet-bd { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 308; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+.cc-sheet-bd.open { opacity: 1; pointer-events: all; }
+.cc-action-sheet { position: fixed; bottom: 0; left: 0; right: 0; z-index: 309; background: var(--cc-bg-card); border-radius: 16px 16px 0 0; border-top: 1px solid var(--cc-border); padding: 0 0 max(env(safe-area-inset-bottom),8px); transform: translateY(100%); transition: transform 0.25s cubic-bezier(0.2,0.8,0.2,1); max-height: 70vh; overflow-y: auto; }
+.cc-action-sheet.open { transform: translateY(0); }
+.cc-sheet-handle { width: 36px; height: 4px; background: var(--cc-border); border-radius: 2px; margin: 10px auto 4px; }
+.cc-sheet-title { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--cc-text-dim); padding: 4px 16px 10px; font-weight: 700; border-bottom: 1px solid var(--cc-border); }
+
 /* Auto-refresh indicator */
 #fleet-refresh-pill {
   position: fixed; bottom: 16px; left: 16px; z-index: 50;
@@ -408,6 +423,15 @@
 <aside id="fleet-drawer" role="dialog" aria-modal="true" aria-label="Task detail">
   <div id="fleet-drawer-inner"></div>
 </aside>
+
+<!-- C3 Universal Action Menu -->
+<div id="cc-action-menu" class="cc-action-menu" role="menu"></div>
+<div id="cc-sheet-bd" class="cc-sheet-bd" onclick="hideActionMenu()"></div>
+<div id="cc-action-sheet" class="cc-action-sheet" role="menu">
+  <div class="cc-sheet-handle"></div>
+  <div class="cc-sheet-title" id="cc-sheet-title"></div>
+  <div id="cc-sheet-items"></div>
+</div>
 
 <script>
 (function () {
@@ -888,7 +912,8 @@
   let _queueData = null;
 
   function queueCardFn(t) {
-    return `<div class="fleet-card clickable${t.priority === 'urgent' ? ' urgent' : ''}" onclick="openDrawer('${esc(t.id)}')">
+    _menuCache[t.id] = { id: t.id, title: t.title, status: t.status, suggested_to: t.suggested_to, suggested_model: t.suggested_model, priority: t.priority };
+    return `<div class="fleet-card clickable${t.priority === 'urgent' ? ' urgent' : ''}" data-menu-type="forge_task" data-menu-id="${esc(t.id)}" onclick="openDrawer('${esc(t.id)}')" oncontextmenu="showActionMenu(event,'forge_task','${esc(t.id)}')">
       <div class="fleet-card-head">
         <div class="fleet-card-title">${esc(t.title)}</div>
         ${badgePriority(t.priority)}
@@ -1699,7 +1724,8 @@
     const col = BOARD_STATUS_COLOR[plan.status] || '#8b949e';
     const sym = BOARD_STATUS_SYM[plan.status] || '○';
     const shortTitle = plan.title.length > 52 ? plan.title.slice(0, 49) + '…' : plan.title;
-    return `<div class="board-plan-card${isRoot ? ' board-plan-root' : ''}" style="border-left-color:${col}" onclick="openDrawer('${esc(plan.id)}')">
+    _menuCache[plan.id] = { id: plan.id, title: plan.title, status: plan.status, bounce_count: plan.bounce_count };
+    return `<div class="board-plan-card${isRoot ? ' board-plan-root' : ''}" style="border-left-color:${col}" data-menu-type="forge_plan" data-menu-id="${esc(plan.id)}" onclick="openDrawer('${esc(plan.id)}')" oncontextmenu="showActionMenu(event,'forge_plan','${esc(plan.id)}')">
       <div class="board-card-head">
         <span class="board-card-sym" style="color:${col}">${sym}</span>
         <span class="board-card-title">${esc(shortTitle)}</span>
@@ -1717,7 +1743,8 @@
     const col = BOARD_STATUS_COLOR[t.status] || '#8b949e';
     const sym = BOARD_STATUS_SYM[t.status] || '◆';
     const shortTitle = t.title.length > 60 ? t.title.slice(0, 57) + '…' : t.title;
-    return `<div class="board-task-card" style="border-left-color:${col}" onclick="openDrawer('${esc(t.id)}')">
+    _menuCache[t.id] = { id: t.id, title: t.title, status: t.status, suggested_to: t.suggested_to, suggested_model: t.suggested_model, priority: t.priority };
+    return `<div class="board-task-card" style="border-left-color:${col}" data-menu-type="forge_task" data-menu-id="${esc(t.id)}" onclick="openDrawer('${esc(t.id)}')" oncontextmenu="showActionMenu(event,'forge_task','${esc(t.id)}')">
       <div class="board-card-head">
         <span class="board-card-sym" style="color:${col};font-size:0.65rem">${sym}</span>
         <span class="board-card-title" style="font-size:0.72rem">${esc(shortTitle)}</span>
@@ -1833,6 +1860,195 @@
     });
   }
 
+  // ─── C3 Universal Action Menu ────────────────────────────────────
+  const _menuCache = {}; // id → row data; populated when cards render
+  let _menuOpen = false, _menuType = null, _menuRowId = null;
+  const _isMobile = () => window.matchMedia('(max-width: 768px)').matches;
+
+  function _menuItems(type, data) {
+    const s = data ? data.status : '';
+    if (type === 'forge_plan') return [
+      { id:'view',    label:'View details' },
+      { id:'approve', label:'Approve',   show: s === 'bouncing' },
+      { id:'bounce',  label:'Bounce to…', show: ['draft','bouncing','approved'].includes(s) },
+      'sep',
+      { id:'park',    label:'Park',      show: s !== 'parked' && !['archived','abandoned'].includes(s) },
+      { id:'unpark',  label:'Unpark',    show: s === 'parked' },
+      { id:'archive', label:'Archive',   show: s !== 'archived', danger: true },
+      'sep',
+      { id:'copy_id', label:'Copy ID' },
+    ].filter(i => i === 'sep' || !i.show === false || i.show === undefined);
+
+    if (type === 'forge_task') return [
+      { id:'view',     label:'View details' },
+      { id:'dispatch', label:'Dispatch',   show: s === 'queued' },
+      { id:'claim',    label:'Claim',      show: s === 'queued' },
+      { id:'done',     label:'Mark Done',  show: ['queued','in_progress','parked'].includes(s) },
+      'sep',
+      { id:'park',     label:'Park',       show: s !== 'parked' },
+      { id:'unpark',   label:'Unpark',     show: s === 'parked' },
+      'sep',
+      { id:'copy_id',  label:'Copy ID' },
+    ].filter(i => i === 'sep' || !i.show === false || i.show === undefined);
+
+    return [];
+  }
+
+  function _menuHtml(type, data) {
+    const items = _menuItems(type, data);
+    const title = data ? (data.title || '').slice(0, 38) : '';
+    const rows = items.map(i => {
+      if (i === 'sep') return '<div class="cc-menu-sep"></div>';
+      return `<div class="cc-menu-item${i.danger?' danger':''}" onclick="handleMenuAction('${i.id}')">${esc(i.label)}</div>`;
+    }).join('');
+    return `<div class="cc-menu-hd">${esc(title)}</div>${rows}`;
+  }
+
+  window.showActionMenu = function(e, type, id) {
+    e.preventDefault(); e.stopPropagation();
+    const data = _menuCache[id];
+    _menuType = type; _menuRowId = id;
+    const html = _menuHtml(type, data);
+    if (_isMobile()) {
+      document.getElementById('cc-sheet-title').textContent = (data && data.title || type).slice(0,40);
+      setEl('cc-sheet-items', html);
+      document.getElementById('cc-sheet-bd').classList.add('open');
+      document.getElementById('cc-action-sheet').classList.add('open');
+    } else {
+      const menu = document.getElementById('cc-action-menu');
+      menu.innerHTML = html;
+      menu.style.left = '0'; menu.style.top = '0';
+      menu.classList.add('open');
+      const mw = menu.offsetWidth, mh = menu.offsetHeight;
+      const vw = window.innerWidth, vh = window.innerHeight;
+      let x = e.clientX, y = e.clientY;
+      if (x + mw > vw - 8) x = vw - mw - 8;
+      if (y + mh > vh - 8) y = vh - mh - 8;
+      menu.style.left = x + 'px'; menu.style.top = y + 'px';
+    }
+    _menuOpen = true;
+  };
+
+  window.hideActionMenu = function() {
+    document.getElementById('cc-action-menu').classList.remove('open');
+    document.getElementById('cc-action-sheet').classList.remove('open');
+    document.getElementById('cc-sheet-bd').classList.remove('open');
+    _menuOpen = false;
+  };
+
+  window.handleMenuAction = async function(actionId) {
+    hideActionMenu();
+    const type = _menuType, id = _menuRowId, data = _menuCache[id] || {};
+    if (!id) return;
+
+    if (actionId === 'view')    { openDrawer(id); return; }
+    if (actionId === 'copy_id') { navigator.clipboard.writeText(id).catch(()=>{}); _ccToast('ID copied'); return; }
+
+    if (actionId === 'bounce') {
+      const opts = 'forge-code Sonnet / forge-code Opus / forge-cowork Sonnet / forge-cowork Opus / forge-chat Sonnet';
+      const inst = prompt('Bounce to:\n' + opts);
+      if (!inst) return;
+      const parts = inst.trim().split(/\s+/), last = parts[parts.length-1].toLowerCase();
+      const model = ['sonnet','opus','haiku'].includes(last) ? last : 'sonnet';
+      const instName = ['sonnet','opus','haiku'].includes(last) ? parts.slice(0,-1).join('-') : parts.join('-');
+      const { error } = await supa.from('forge_plans')
+        .update({ status: 'bouncing', current_instance: instName, suggested_model: model,
+                  bounce_count: (data.bounce_count || 0) + 1, bounced_at: new Date().toISOString() })
+        .eq('id', id);
+      if (error) { _ccToast('Bounce failed: ' + error.message, true); return; }
+      _ccToast('Bounced to ' + inst.trim());
+      loadBoard(); loadPlans();
+      return;
+    }
+
+    if (type === 'forge_plan') {
+      const planUpdates = {
+        approve: { status: 'approved', approved_at: new Date().toISOString(), approved_by: 'alessio' },
+        park:    { status: 'parked' },
+        unpark:  { status: 'draft' },
+        archive: { status: 'archived', archived_at: new Date().toISOString() },
+      }[actionId];
+      if (!planUpdates) return;
+      if (actionId === 'archive' && !confirm('Archive "' + (data.title||'').slice(0,60) + '"?')) return;
+      const { error } = await supa.from('forge_plans').update(planUpdates).eq('id', id);
+      if (error) { _ccToast('Failed: ' + error.message, true); return; }
+      _ccToast({ approve:'Approved', park:'Parked', unpark:'Unparked', archive:'Archived' }[actionId]);
+      loadBoard(); loadPlans(); return;
+    }
+
+    if (type === 'forge_task') {
+      if (actionId === 'done') {
+        const { error } = await supa.from('forge_tasks')
+          .update({ status: 'done', completed_at: new Date().toISOString() }).eq('id', id);
+        if (error) { _ccToast('Failed: ' + error.message, true); return; }
+        _ccToast('Marked done'); loadBoard(); loadQueue(); loadToday(); loadHistory(); return;
+      }
+      if (actionId === 'park') {
+        const { error } = await supa.from('forge_tasks').update({ status: 'parked' }).eq('id', id);
+        if (error) { _ccToast('Failed: ' + error.message, true); return; }
+        _ccToast('Parked'); loadBoard(); loadQueue(); return;
+      }
+      if (actionId === 'unpark') {
+        const { error } = await supa.from('forge_tasks').update({ status: 'queued' }).eq('id', id);
+        if (error) { _ccToast('Failed: ' + error.message, true); return; }
+        _ccToast('Unparked'); loadBoard(); loadQueue(); return;
+      }
+      if (actionId === 'claim') {
+        const { data: row, error } = await supa.from('forge_tasks')
+          .update({ status: 'in_progress', assigned_to: 'alessio', started_at: new Date().toISOString() })
+          .eq('id', id).is('assigned_to', null).select('id').single();
+        if (error || !row) { _ccToast('Claim failed — already assigned', true); return; }
+        _ccToast('Claimed'); loadBoard(); loadLive(); loadQueue(); return;
+      }
+      if (actionId === 'dispatch') {
+        const d = data;
+        const toUser = ['forge-cowork','forge-chat'].includes(d.suggested_to) ? 'cowork' : 'forge';
+        const body = `TASK DISPATCH from fleet.html (C3 menu)\nTask: ${d.title}\nID: ${id}\nSuggested: ${d.suggested_to||'?'} ${d.suggested_model||''}\n\nClaim: UPDATE forge_tasks SET assigned_to='${d.suggested_to||'forge-code'}', status='in_progress' WHERE id='${id}' AND assigned_to IS NULL RETURNING *`;
+        const { error } = await supa.from('agent_messages')
+          .insert({ from_user: 'alessio', to_user: toUser, body, status: 'sent' });
+        if (error) { _ccToast('Dispatch failed: ' + error.message, true); return; }
+        const { error: e2 } = await supa.from('forge_tasks')
+          .update({ status: 'in_progress', assigned_to: d.suggested_to || 'forge-code' })
+          .eq('id', id).is('assigned_to', null);
+        _ccToast('Dispatched to ' + (d.suggested_to || toUser));
+        loadBoard(); loadQueue(); loadLive(); return;
+      }
+    }
+  };
+
+  function _ccToast(msg, isErr) {
+    let el = document.getElementById('cc-toast');
+    if (!el) {
+      el = document.createElement('div'); el.id = 'cc-toast';
+      el.style.cssText = 'position:fixed;bottom:64px;left:50%;transform:translateX(-50%);z-index:400;background:var(--cc-bg-card);border:1px solid var(--cc-border);border-radius:var(--cc-r-pill);padding:9px 20px;font-size:0.82rem;color:var(--cc-text);box-shadow:0 4px 20px rgba(0,0,0,0.35);transition:opacity 0.3s;pointer-events:none;white-space:nowrap';
+      document.body.appendChild(el);
+    }
+    el.textContent = msg;
+    el.style.borderColor = isErr ? 'var(--cc-danger)' : 'var(--cc-border)';
+    el.style.color = isErr ? 'var(--cc-danger)' : 'var(--cc-text)';
+    el.style.opacity = '1';
+    clearTimeout(el._t);
+    el._t = setTimeout(() => { el.style.opacity = '0'; }, isErr ? 5000 : 2200);
+  }
+
+  // Long-press on touch for menu
+  let _lpTimer = null;
+  document.addEventListener('touchstart', e => {
+    const card = e.target.closest('[data-menu-type]');
+    if (!card) return;
+    _lpTimer = setTimeout(() => {
+      const fake = { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY, preventDefault:()=>{}, stopPropagation:()=>{} };
+      showActionMenu(fake, card.dataset.menuType, card.dataset.menuId);
+    }, 500);
+  }, { passive: true });
+  document.addEventListener('touchend',  () => clearTimeout(_lpTimer), { passive: true });
+  document.addEventListener('touchmove', () => clearTimeout(_lpTimer), { passive: true });
+
+  // Dismiss menu on outside click
+  document.addEventListener('click', e => {
+    if (_menuOpen && !e.target.closest('#cc-action-menu') && !e.target.closest('#cc-action-sheet')) hideActionMenu();
+  });
+
   function _getActiveTab() {
     const sections = document.querySelectorAll('[data-subtab]');
     for (const s of sections) {
@@ -1859,7 +2075,7 @@
 
     // ─── Boot ────────────────────────────────────────────────
   async function init() {
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeDrawer(); hideActionMenu(); } });
     document.getElementById('fleet-drawer-overlay').addEventListener('click', closeDrawer);
 
     const { data: { session } } = await supa.auth.getSession();
