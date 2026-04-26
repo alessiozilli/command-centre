@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:;">
-  <title>Network & Email â€” AZCK Command Centre</title>
+  <title>Network & Email — AZCK Command Centre</title>
   <link rel="stylesheet" href="cc-shell.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -81,10 +81,9 @@
     /* Loading state */
     #loadingMsg { padding:40px; text-align:center; color:var(--cc-text-dim); }
     /* NOTE: subtab visibility handled natively by cc-shell.js (applySubtabVisibility).
-       Do NOT add `[data-subtab] { display:none; }` â€” cc-shell uses inline style and
+       Do NOT add `[data-subtab] { display:none; }` — cc-shell uses inline style and
        a CSS rule will override its "show active" attempt and hide every section. */
   </style>
-  <script defer src="auth.js"></script>
 </head>
 <body>
 
@@ -92,7 +91,7 @@
   window.PAGE = {
     id: 'network',
     title: 'Network & Email',
-    subtitle: 'Domain Â· DNS Â· Email authentication Â· Platforms Â· Tools',
+    subtitle: 'Domain · DNS · Email authentication · Platforms · Tools',
     subtabs: [
       { id:'email',     label:'Email Auth' },
       { id:'platforms', label:'Platforms' },
@@ -100,17 +99,17 @@
       { id:'tools',     label:'Toolbox' }
     ],
     stats: [
-      { label:'Email Auth',   value:'â€”' },
-      { label:'DNS Records',  value:'â€”' },
-      { label:'Platforms',    value:'â€”' },
-      { label:'SSL Active',   value:'â€”' },
-      { label:'Tools',        value:'â€”' }
+      { label:'Email Auth',   value:'—' },
+      { label:'DNS Records',  value:'—' },
+      { label:'Platforms',    value:'—' },
+      { label:'SSL Active',   value:'—' },
+      { label:'Tools',        value:'—' }
     ]
   };
 </script>
 <script src="cc-shell.js" defer></script>
 
-<div id="loadingMsg">Checking sessionâ€¦</div>
+<div id="loadingMsg">Checking session…</div>
 
 <!-- Email Auth -->
 <section data-subtab="email">
@@ -148,15 +147,15 @@
   <h2 class="section-title">Network Toolbox</h2>
   <div class="tool-grid" id="toolGrid"></div>
   <p style="font-size:0.7rem;color:#484f58;text-align:center;margin-top:24px;">
-    AZCK Network & Email Â· Updated <span id="lastUpdated"></span> by Forge
+    AZCK Network & Email · Updated <span id="lastUpdated"></span> by Forge
   </p>
 </section>
 
-<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-     DATA BLOCK â€” UPDATE THIS SECTION ONLY
+<!-- ═══════════════════════════════════════════════════════════════
+     DATA BLOCK — UPDATE THIS SECTION ONLY
      To update status: edit the objects below.
      Engine auto-renders everything from this data.
-     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+     ═══════════════════════════════════════════════════════════════ -->
 <script>
 var DATA = {
 
@@ -175,14 +174,14 @@ var DATA = {
     {
       name: 'SPF',
       fullName: 'Sender Policy Framework',
-      icon: 'ðŸ›¡ï¸',
+      icon: '🛡️',
       status: 'pass',
       badge: 'Enforced',
       record: 'v=spf1 include:_spf.google.com include:icloud.com -all',
       recordType: 'TXT',
       host: 'azcustomknives.com',
       details: [
-        'Policy: <strong>hardfail (-all)</strong> â€” unauthorized senders rejected',
+        'Policy: <strong>hardfail (-all)</strong> — unauthorized senders rejected',
         'Includes: Google Workspace, iCloud (Apple Mail)',
         'Upgraded from softfail (~all) on Apr 15, 2026'
       ],
@@ -191,36 +190,36 @@ var DATA = {
     {
       name: 'DKIM',
       fullName: 'DomainKeys Identified Mail',
-      icon: 'ðŸ”‘',
+      icon: '🔑',
       status: 'warn',
-      badge: 'Stale â€” Parked',
+      badge: 'Stale — Parked',
       record: 'v=DKIM1; k=rsa; p=MIIBIjANBgkq...',
       recordType: 'TXT',
       host: 'google._domainkey.azcustomknives.com',
       details: [
         'Google Workspace: <strong>2048-bit RSA key deployed</strong>',
-        '<strong>Status:</strong> Wix DNS value â‰  Google-expected key (hash mismatch confirmed Apr 17)',
-        'Google "Start Authentication" fails â€” selector stale, needs regen + redeploy',
-        'Wix DKIM (s1/s2/sel1/sel2): active via CNAME âœ“',
-        'iCloud DKIM (sig1): active via CNAME âœ“',
-        '<strong>Action:</strong> Parked â€” not urgent. Regen key + update Wix TXT when outbound email volume grows.'
+        '<strong>Status:</strong> Wix DNS value ≠ Google-expected key (hash mismatch confirmed Apr 17)',
+        'Google "Start Authentication" fails — selector stale, needs regen + redeploy',
+        'Wix DKIM (s1/s2/sel1/sel2): active via CNAME ✓',
+        'iCloud DKIM (sig1): active via CNAME ✓',
+        '<strong>Action:</strong> Parked — not urgent. Regen key + update Wix TXT when outbound email volume grows.'
       ],
       lastChecked: '2026-04-17'
     },
     {
       name: 'DMARC',
       fullName: 'Domain-based Message Authentication',
-      icon: 'ðŸ“‹',
+      icon: '📋',
       status: 'pass',
       badge: 'Reject (full lockdown)',
       record: 'v=DMARC1; p=reject; rua=mailto:admin@azcustomknives.com; pct=100',
       recordType: 'TXT',
       host: '_dmarc.azcustomknives.com',
       details: [
-        'Policy: <strong>reject</strong> â€” failing emails bounced at receiver',
+        'Policy: <strong>reject</strong> — failing emails bounced at receiver',
         'Aggregate reports to: admin@azcustomknives.com',
         'Coverage: 100% of emails',
-        'Upgraded: none (Wix) â†’ quarantine (Apr 16) â†’ reject (Apr 17)',
+        'Upgraded: none (Wix) → quarantine (Apr 16) → reject (Apr 17)',
         '<strong>Roadmap:</strong> Monitor rua reports. Set up DMARC report dashboard next month.'
       ],
       lastChecked: '2026-04-17'
@@ -230,7 +229,7 @@ var DATA = {
   dnsRecords: [
     { type: 'A',     host: 'azcustomknives.com',     value: '185.199.108-111.153',                          ttl: 3600,  purpose: 'GitHub Pages (main site)',          managed: 'Wix API' },
     { type: 'MX',    host: 'azcustomknives.com',     value: 'aspmx.l.google.com (+ 4 alts)',               ttl: 3600,  purpose: 'Google Workspace email',             managed: 'Wix API' },
-    { type: 'TXT',   host: 'azcustomknives.com',     value: 'v=spf1 include:_spf.google.com include:icloud.com -all', ttl: 3600, purpose: 'SPF â€” email auth',           managed: 'Wix API' },
+    { type: 'TXT',   host: 'azcustomknives.com',     value: 'v=spf1 include:_spf.google.com include:icloud.com -all', ttl: 3600, purpose: 'SPF — email auth',           managed: 'Wix API' },
     { type: 'TXT',   host: 'azcustomknives.com',     value: 'apple-domain=Ote5z68PyBz3zGOA',               ttl: 3600,  purpose: 'Apple domain verification',         managed: 'Wix API' },
     { type: 'TXT',   host: 'google._domainkey',      value: 'v=DKIM1; k=rsa; p=MIIBIjAN... (STALE)',       ttl: 3600,  purpose: 'Google DKIM signing key (stale)',    managed: 'Wix API' },
     { type: 'TXT',   host: '_dmarc',                 value: 'v=DMARC1; p=reject; rua=mailto:admin@...',    ttl: 3600,  purpose: 'DMARC policy (reject)',              managed: 'Wix API' },
@@ -250,28 +249,28 @@ var DATA = {
   ],
 
   platforms: [
-    { name: 'AZCK Main Site',    url: 'azcustomknives.com',               host: 'GitHub Pages', repo: 'alessiozilli/azcustomknives.com', status: 'live',   ssl: true,  notes: '18 pages Â· shared header/footer Â· journey-based structure' },
-    { name: 'AZCK Store',        url: 'shop.azcustomknives.com',          host: 'Wix',          repo: null,                              status: 'live',   ssl: true,  notes: '183 products Â· Site ID 30b03c22-64e5-4c42-a962-62e3ce6560e3' },
-    { name: 'Command Centre',    url: 'command.azcustomknives.com',       host: 'GitHub Pages', repo: 'alessiozilli/command-centre',     status: 'live',   ssl: true,  notes: '7 pages on cc-shell Â· CSP-hardened Apr 17 Â· banner/quickview/subtabs' },
-    { name: 'QuadFang',          url: 'quadfang.com',                     host: 'GitHub Pages', repo: 'alessiozilli/quadfang.com',       status: 'live',   ssl: true,  notes: 'Coming Soon page Â· HTTPS enabled Apr 16 Â· DNS migrated from Shopify Apr 15' },
+    { name: 'AZCK Main Site',    url: 'azcustomknives.com',               host: 'GitHub Pages', repo: 'alessiozilli/azcustomknives.com', status: 'live',   ssl: true,  notes: '18 pages · shared header/footer · journey-based structure' },
+    { name: 'AZCK Store',        url: 'shop.azcustomknives.com',          host: 'Wix',          repo: null,                              status: 'live',   ssl: true,  notes: '183 products · Site ID 30b03c22-64e5-4c42-a962-62e3ce6560e3' },
+    { name: 'Command Centre',    url: 'command.azcustomknives.com',       host: 'GitHub Pages', repo: 'alessiozilli/command-centre',     status: 'live',   ssl: true,  notes: '7 pages on cc-shell · CSP-hardened Apr 17 · banner/quickview/subtabs' },
+    { name: 'QuadFang',          url: 'quadfang.com',                     host: 'GitHub Pages', repo: 'alessiozilli/quadfang.com',       status: 'live',   ssl: true,  notes: 'Coming Soon page · HTTPS enabled Apr 16 · DNS migrated from Shopify Apr 15' },
     { name: 'QuadFang Shopify',  url: 'quadfang.myshopify.com',           host: 'Shopify',      repo: null,                              status: 'parked', ssl: true,  notes: 'Cancellation parked to 2026-06-26 (store ID ete3clmgv4ilqk1busmk3spppg). Export + cancel before date.' },
     { name: 'Alessio CC',        url: 'az-command-centre.netlify.app',    host: 'Netlify',      repo: null,                              status: 'live',   ssl: true,  notes: 'Personal command centre' },
     { name: 'Reanna CC',         url: 'rl-command-centre.netlify.app',    host: 'Netlify',      repo: null,                              status: 'live',   ssl: true,  notes: 'Personal command centre' }
   ],
 
   tools: [
-    { name: 'MXToolbox',         icon: 'ðŸ“§', url: 'https://mxtoolbox.com/SuperTool.aspx?action=mx%3aazcustomknives.com&run=toolpage',           desc: 'MX, SPF, DKIM, DMARC lookup' },
-    { name: 'DNS Checker',       icon: 'ðŸŒ', url: 'https://dnschecker.org/#A/azcustomknives.com',                                               desc: 'Global DNS propagation' },
-    { name: 'SSL Labs',          icon: 'ðŸ”’', url: 'https://www.ssllabs.com/ssltest/analyze.html?d=azcustomknives.com',                          desc: 'SSL/TLS certificate grade' },
-    { name: 'Google Admin',      icon: 'âš™ï¸', url: 'https://admin.google.com/ac/apps/gmail/authenticateemail',                                    desc: 'DKIM authentication' },
-    { name: 'PageSpeed',         icon: 'âš¡', url: 'https://pagespeed.web.dev/analysis?url=https%3A%2F%2Fazcustomknives.com',                    desc: 'Performance & Core Web Vitals' },
-    { name: 'Security Headers',  icon: 'ðŸ§±', url: 'https://securityheaders.com/?q=azcustomknives.com&followRedirects=on',                       desc: 'HTTP security header scan' },
-    { name: 'DMARC Analyzer',    icon: 'ðŸ“¨', url: 'https://dmarcian.com/dmarc-inspector/?domain=azcustomknives.com',                            desc: 'DMARC record inspector' },
-    { name: 'GitHub Status',     icon: 'ðŸŸ¢', url: 'https://www.githubstatus.com/',                                                              desc: 'GitHub infrastructure status' },
-    { name: 'Uptime Robot',      icon: 'ðŸ“¡', url: 'https://uptimerobot.com/',                                                                   desc: 'Uptime monitoring (setup needed)' },
-    { name: 'WHOIS',             icon: 'ðŸ”', url: 'https://www.whois.com/whois/azcustomknives.com',                                             desc: 'Domain registration lookup' },
-    { name: 'QuadFang DNS',      icon: 'ðŸ¹', url: 'https://mxtoolbox.com/SuperTool.aspx?action=a%3aquadfang.com&run=toolpage',                  desc: 'QuadFang A-record check' },
-    { name: 'Wix DNS Console',   icon: 'ðŸ› ï¸', url: 'https://manage.wix.com/',                                                                   desc: 'DNS zone editor (Wix)' }
+    { name: 'MXToolbox',         icon: '📧', url: 'https://mxtoolbox.com/SuperTool.aspx?action=mx%3aazcustomknives.com&run=toolpage',           desc: 'MX, SPF, DKIM, DMARC lookup' },
+    { name: 'DNS Checker',       icon: '🌐', url: 'https://dnschecker.org/#A/azcustomknives.com',                                               desc: 'Global DNS propagation' },
+    { name: 'SSL Labs',          icon: '🔒', url: 'https://www.ssllabs.com/ssltest/analyze.html?d=azcustomknives.com',                          desc: 'SSL/TLS certificate grade' },
+    { name: 'Google Admin',      icon: '⚙️', url: 'https://admin.google.com/ac/apps/gmail/authenticateemail',                                    desc: 'DKIM authentication' },
+    { name: 'PageSpeed',         icon: '⚡', url: 'https://pagespeed.web.dev/analysis?url=https%3A%2F%2Fazcustomknives.com',                    desc: 'Performance & Core Web Vitals' },
+    { name: 'Security Headers',  icon: '🧱', url: 'https://securityheaders.com/?q=azcustomknives.com&followRedirects=on',                       desc: 'HTTP security header scan' },
+    { name: 'DMARC Analyzer',    icon: '📨', url: 'https://dmarcian.com/dmarc-inspector/?domain=azcustomknives.com',                            desc: 'DMARC record inspector' },
+    { name: 'GitHub Status',     icon: '🟢', url: 'https://www.githubstatus.com/',                                                              desc: 'GitHub infrastructure status' },
+    { name: 'Uptime Robot',      icon: '📡', url: 'https://uptimerobot.com/',                                                                   desc: 'Uptime monitoring (setup needed)' },
+    { name: 'WHOIS',             icon: '🔍', url: 'https://www.whois.com/whois/azcustomknives.com',                                             desc: 'Domain registration lookup' },
+    { name: 'QuadFang DNS',      icon: '🏹', url: 'https://mxtoolbox.com/SuperTool.aspx?action=a%3aquadfang.com&run=toolpage',                  desc: 'QuadFang A-record check' },
+    { name: 'Wix DNS Console',   icon: '🛠️', url: 'https://manage.wix.com/',                                                                   desc: 'DNS zone editor (Wix)' }
   ],
 
   roadmap: [
@@ -284,7 +283,7 @@ var DATA = {
     { date: '2026-04-17', text: 'DMARC upgraded to p=reject (full lockdown)',                     status: 'done' },
     { date: '2026-04-17', text: 'Command Centre CSP hardened on 6 pages',                         status: 'done' },
     { date: '2026-04-17', text: 'Network page migrated to cc-shell',                              status: 'done' },
-    { date: '2026-04-17', text: 'Google DKIM flagged stale â€” hash mismatch, regen parked',        status: 'pending' },
+    { date: '2026-04-17', text: 'Google DKIM flagged stale — hash mismatch, regen parked',        status: 'pending' },
     { date: '2026-06-26', text: 'Shopify store cancellation (auto-expires)',                      status: 'future' },
     { date: 'May 2026',   text: 'Set up DMARC report monitoring dashboard',                       status: 'future' },
     { date: 'Q3 2026',    text: 'BIMI record (brand logo in email clients)',                      status: 'future' },
@@ -292,9 +291,9 @@ var DATA = {
   ]
 };
 </script>
-<!-- â•â•â• END DATA BLOCK â•â•â• -->
+<!-- ═══ END DATA BLOCK ═══ -->
 
-<!-- â•â•â• ENGINE â€” DO NOT EDIT BELOW â•â•â• -->
+<!-- ═══ ENGINE — DO NOT EDIT BELOW ═══ -->
 <script>
 (function(){
   'use strict';
@@ -357,7 +356,7 @@ var DATA = {
 
     document.getElementById('lastUpdated').textContent = D.lastUpdated;
 
-    // Stats bar â€” cc-shell native
+    // Stats bar — cc-shell native
     var authPass = D.emailAuth.filter(function(a){ return a.status==='pass'; }).length;
     var platformLive = D.platforms.filter(function(p){ return p.status==='live'; }).length;
     var sslCount = D.platforms.filter(function(p){ return p.ssl; }).length;
@@ -382,7 +381,7 @@ var DATA = {
       authHTML += '<div class="auth-card-details">';
       authHTML += '<div style="margin-bottom:8px;"><code>'+a.recordType+' @ '+a.host+'</code></div>';
       authHTML += '<div style="margin-bottom:12px;"><code>'+a.record+'</code></div>';
-      a.details.forEach(function(d){ authHTML += '<div style="padding:2px 0;">â€¢ '+d+'</div>'; });
+      a.details.forEach(function(d){ authHTML += '<div style="padding:2px 0;">• '+d+'</div>'; });
       authHTML += '<div style="margin-top:8px;font-size:0.7rem;color:#484f58;">Last checked: '+a.lastChecked+'</div>';
       authHTML += '</div></div>';
     });
@@ -404,8 +403,8 @@ var DATA = {
       platHTML += '<div class="platform-card-url">'+p.url+'</div>';
       platHTML += '<div class="platform-card-detail"><strong>Host:</strong> '+p.host+'<br>';
       if(p.repo) platHTML += '<strong>Repo:</strong> '+p.repo+'<br>';
-      platHTML += '<strong>Status:</strong> '+(p.status==='parked'?'<span style="color:#8b949e;">â¸ Parked</span>':'<span style="color:var(--cc-success);">â— Live</span>')+'<br>';
-      platHTML += '<strong>SSL:</strong> '+(p.ssl?'<span style="color:var(--cc-success);">âœ“ Active</span>':'<span style="color:var(--cc-danger);">âœ— None</span>')+'<br>';
+      platHTML += '<strong>Status:</strong> '+(p.status==='parked'?'<span style="color:#8b949e;">⏸ Parked</span>':'<span style="color:var(--cc-success);">● Live</span>')+'<br>';
+      platHTML += '<strong>SSL:</strong> '+(p.ssl?'<span style="color:var(--cc-success);">✓ Active</span>':'<span style="color:var(--cc-danger);">✗ None</span>')+'<br>';
       platHTML += p.notes+'</div></div>';
     });
     document.getElementById('platformGrid').innerHTML = platHTML;
