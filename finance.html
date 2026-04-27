@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://twrlvnfszohyrmivdhre.supabase.co wss://twrlvnfszohyrmivdhre.supabase.co; img-src 'self' data: https:;">
-<title>Finance â€” AZCK Command Centre</title>
+<title>Finance — AZCK Command Centre</title>
 <link rel="stylesheet" href="cc-shell.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -60,6 +60,40 @@
   .ins-caveat { background:#1a1410; border:1px solid #9e6a03; border-radius:6px; padding:10px 14px; color:#d4a017; font-size:0.82rem; margin-top:14px; }
   .todo { color:#8b949e; font-style:italic; font-size:0.85rem; padding:10px; border:1px dashed #30363d; border-radius:6px; background:#0d1117; margin-top:10px; }
 
+  /* ── Stream drill-down modal ── */
+  .drill-overlay { position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1000; display:flex; align-items:center; justify-content:center; padding:16px; }
+  .drill-modal { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:24px; max-width:680px; width:100%; max-height:90vh; overflow-y:auto; }
+  .drill-head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:16px; }
+  .drill-head h2 { color:#e6edf3; font-size:1.1rem; margin:0; }
+  .drill-close { background:none; border:none; color:#8b949e; font-size:1.4rem; cursor:pointer; line-height:1; padding:0; flex:none; }
+  .drill-close:hover { color:#e6edf3; }
+  .drill-meta { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+  .drill-chip { background:#21262d; color:#adbac7; font-size:0.78rem; padding:3px 10px; border-radius:10px; }
+  .drill-chip.active { background:#1a3a22; color:#3fb950; }
+  .drill-chip.dormant { background:#21262d; color:#6e7681; }
+  .drill-chart-wrap2 { position:relative; height:200px; margin-bottom:18px; }
+  .drill-conf-section h3 { color:#e6edf3; font-size:0.88rem; margin:0 0 10px; font-weight:600; }
+  .drill-conf-row { display:grid; grid-template-columns:80px 70px 90px 1fr; gap:8px; align-items:center; padding:8px 12px; background:#0d1117; border:1px solid #30363d; border-radius:6px; margin-bottom:6px; font-size:0.82rem; }
+  .drill-conf-qtr { color:#e6edf3; font-weight:500; }
+  .drill-conf-ratio { font-variant-numeric:tabular-nums; font-weight:500; }
+  .drill-conf-ratio.over { color:#3fb950; }
+  .drill-conf-ratio.on { color:#58a6ff; }
+  .drill-conf-ratio.under { color:#f85149; }
+  .drill-conf-note { color:#8b949e; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  /* ── Ratio-mode toggle ── */
+  .ratio-toggle-bar { display:flex; gap:8px; margin-bottom:16px; }
+  .ratio-btn { padding:5px 14px; border-radius:6px; border:1px solid #30363d; background:#21262d; color:#adbac7; font-size:0.82rem; cursor:pointer; transition:all .15s; }
+  .ratio-btn.active { background:#1a2d4a; border-color:#58a6ff; color:#58a6ff; }
+  .ratio-section { background:#0d1117; border:1px solid #30363d; border-radius:8px; padding:16px 20px; margin-bottom:14px; }
+  .ratio-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #21262d; font-size:0.88rem; gap:16px; }
+  .ratio-row:last-child { border-bottom:none; }
+  .ratio-lbl { color:#adbac7; }
+  .ratio-val { font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .ratio-val.up { color:#3fb950; }
+  .ratio-val.down { color:#f85149; }
+  .ratio-val.neutral { color:#8b949e; }
+
   .loading, .empty { color:#8b949e; padding:20px; text-align:center; }
   .error { background:#5a1d1d; color:#ffb3b3; padding:12px 16px; border-radius:6px; }
   .login-shell { max-width:360px; margin:60px auto; background:#161b22; padding:30px; border:1px solid #30363d; border-radius:8px; }
@@ -67,75 +101,88 @@
   .login-shell input { width:100%; padding:10px; margin-bottom:10px; background:#0d1117; border:1px solid #30363d; color:#e6edf3; border-radius:6px; font-size:0.95rem; box-sizing:border-box; }
   .login-shell button { width:100%; padding:10px; background:#238636; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:500; }
   .login-msg { color:#f85149; font-size:0.85rem; margin-top:10px; min-height:1.2em; }
-  /* -- insurance upload UI -- */
-  .ins-upload-form{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:20px;margin-bottom:20px;display:none;}
-  .ins-upload-form.open{display:block;}
-  .ins-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
-  .ins-form-label{color:#8b949e;font-size:0.78rem;text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:4px;}
-  .ins-form-input,.ins-form-select{width:100%;padding:8px 10px;background:#161b22;border:1px solid #30363d;border-radius:6px;color:#e6edf3;font-size:0.92rem;box-sizing:border-box;}
-  .ins-form-input:focus,.ins-form-select:focus{outline:none;border-color:#58a6ff;}
-  .ins-drop-zone{border:2px dashed #30363d;border-radius:8px;padding:24px;text-align:center;color:#8b949e;font-size:0.88rem;cursor:pointer;transition:border-color .2s;margin-bottom:12px;}
-  .ins-drop-zone.drag-over{border-color:#58a6ff;color:#58a6ff;}
-  .ins-drop-zone.has-file{border-color:#3fb950;color:#3fb950;}
-  .ins-save-btn{padding:8px 20px;background:#238636;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:500;font-size:0.92rem;}
-  .ins-save-btn:disabled{opacity:.4;cursor:not-allowed;}
-  .ins-cancel-btn{padding:8px 16px;background:transparent;color:#8b949e;border:1px solid #30363d;border-radius:6px;cursor:pointer;font-size:0.92rem;margin-left:8px;}
-  .ins-form-msg{font-size:0.82rem;margin-top:10px;min-height:1.2em;color:#f85149;}
-  .ins-policy-list{display:flex;flex-direction:column;gap:10px;}
-  .ins-policy-card{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:14px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
-  .ins-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:600;text-transform:uppercase;}
-  .ins-badge.amber{background:#332c00;color:#e3b341;border:1px solid #9e6a03;}
-  .ins-badge.red{background:#3d1515;color:#f85149;border:1px solid #b62324;}
-  .ins-card-info{flex:1;min-width:180px;}
-  .ins-card-label{color:#e6edf3;font-weight:600;font-size:0.97rem;margin-bottom:3px;}
-  .ins-card-meta{color:#8b949e;font-size:0.82rem;}
-  .ins-btn{padding:5px 12px;border-radius:5px;border:1px solid #30363d;background:transparent;color:#8b949e;font-size:0.82rem;cursor:pointer;}
-  .ins-btn:hover{border-color:#58a6ff;color:#58a6ff;}
-  .ins-btn.danger:hover{border-color:#f85149;color:#f85149;}
-  .ins-toggle-archived{background:none;border:none;color:#8b949e;font-size:0.82rem;cursor:pointer;padding:6px 0;text-decoration:underline;}
-  .ins-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:9999;}
-  .ins-modal{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:28px 28px 24px;max-width:440px;width:90%;}
-  .ins-modal h3{margin:0 0 10px;color:#f85149;}
-  .ins-modal p{color:#8b949e;font-size:0.9rem;margin:0 0 16px;}
-  .ins-modal label{display:flex;align-items:center;gap:10px;color:#e6edf3;font-size:0.9rem;cursor:pointer;margin-bottom:20px;}
-  .ins-modal-btns{display:flex;gap:10px;justify-content:flex-end;}
+
+  /* ── Insurance Upload UI ── */
+  .ins-summary-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:16px; }
+  .ins-upload-form { border:1px solid #30363d; border-radius:8px; padding:16px; background:#0d1117; margin-bottom:16px; }
+  .ins-upload-form h3 { color:#e6edf3; font-size:0.95rem; margin:0 0 12px; font-weight:600; }
+  .ins-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .ins-form-label { color:#8b949e; font-size:0.75rem; text-transform:uppercase; letter-spacing:.04em; margin-bottom:4px; }
+  .ins-form-input { width:100%; padding:8px 10px; background:#161b22; border:1px solid #30363d; border-radius:6px; color:#e6edf3; font-size:0.88rem; box-sizing:border-box; }
+  .ins-form-input:focus { outline:none; border-color:#58a6ff; }
+  .ins-form-select { width:100%; padding:8px 10px; background:#161b22; border:1px solid #30363d; border-radius:6px; color:#e6edf3; font-size:0.88rem; box-sizing:border-box; }
+  .ins-drop-zone { border:2px dashed #30363d; border-radius:8px; padding:18px; text-align:center; cursor:pointer; color:#8b949e; font-size:0.85rem; transition:border-color .2s,background .2s; margin-top:10px; }
+  .ins-drop-zone.drag-over { border-color:#58a6ff; background:#0d1a2d; }
+  .ins-drop-zone.has-file { border-color:#3fb950; color:#3fb950; }
+  .ins-save-btn { margin-top:12px; padding:8px 18px; background:#238636; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:600; font-size:0.88rem; float:right; }
+  .ins-save-btn:disabled { background:#21262d; color:#484f58; cursor:not-allowed; }
+  .ins-save-btn:hover:not(:disabled) { background:#2ea043; }
+  .ins-cancel-btn { margin-top:12px; margin-right:8px; padding:8px 18px; background:transparent; color:#8b949e; border:1px solid #30363d; border-radius:6px; cursor:pointer; font-size:0.88rem; float:right; display:none; }
+  .ins-cancel-btn:hover { background:#21262d; color:#e6edf3; }
+  .ins-form-msg { font-size:0.82rem; margin-top:8px; min-height:1.2em; clear:both; }
+  .ins-form-msg.err { color:#f85149; }
+  .ins-form-msg.ok  { color:#3fb950; }
+  .ins-policy-list { display:flex; flex-direction:column; gap:10px; margin-top:4px; }
+  .ins-policy-card { background:#0d1117; border:1px solid #30363d; border-radius:8px; padding:14px 16px; }
+  .ins-policy-card.inactive { opacity:.55; }
+  .ins-card-head { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
+  .ins-card-label { color:#e6edf3; font-weight:600; font-size:0.93rem; }
+  .ins-badge { font-size:0.72rem; font-weight:700; padding:3px 9px; border-radius:10px; white-space:nowrap; }
+  .ins-badge.amber { background:#d2992218; color:#d29922; }
+  .ins-badge.red   { background:#f8514918; color:#f85149; }
+  .ins-card-meta { color:#8b949e; font-size:0.82rem; margin-bottom:5px; }
+  .ins-card-nums { display:flex; gap:14px; flex-wrap:wrap; font-size:0.83rem; margin-bottom:8px; }
+  .ins-card-num { color:#8b949e; }
+  .ins-card-num b { color:#adbac7; font-weight:500; }
+  .ins-card-actions { display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; }
+  .ins-btn { padding:4px 12px; border-radius:6px; border:1px solid #30363d; background:#21262d; color:#adbac7; font-size:0.78rem; cursor:pointer; }
+  .ins-btn:hover { background:#30363d; color:#e6edf3; }
+  .ins-btn.danger { border-color:#f85149; color:#f85149; }
+  .ins-btn.danger:hover { background:#5a1d1d; }
+  .ins-toggle-archived { background:none; border:none; color:#58a6ff; font-size:0.82rem; cursor:pointer; padding:6px 0; display:block; margin-top:8px; }
+  .ins-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:1000; display:flex; align-items:center; justify-content:center; }
+  .ins-modal { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:24px; max-width:420px; width:90%; }
+  .ins-modal h3 { color:#f85149; margin:0 0 12px; font-size:1rem; }
+  .ins-modal p  { color:#adbac7; font-size:0.88rem; margin:0 0 14px; line-height:1.5; }
+  .ins-modal label { display:flex; gap:8px; align-items:flex-start; color:#e6edf3; font-size:0.88rem; cursor:pointer; margin-bottom:16px; }
+  .ins-modal label input { margin-top:2px; flex:none; }
+  .ins-modal-btns { display:flex; gap:10px; justify-content:flex-end; }
 </style>
-  <script defer src="auth.js"></script>
 </head>
 <body>
 
-<div id="app" class="app-wrap"><div class="loading">Loadingâ€¦</div></div>
+<div id="app" class="app-wrap"><div class="loading">Loading…</div></div>
 
 <script>
-  // â”€â”€â”€ DATA BLOCK â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── DATA BLOCK ─────────────────────────────────────────────────────────
   // Update this block to add categories, change labels, or tweak the 2025
-  // insurance baseline. The ENGINE below reads from here â€” never edit the
+  // insurance baseline. The ENGINE below reads from here — never edit the
   // renderers without good reason.
   window.FINANCE_DATA = {
-    updated: '2026-04-19',
+    updated: '2026-04-27',
     categoryLabels: {
       // Revenue
       'core':              'Core Revenue',
-      'tier-1':            'Tier 1 â€” Near-Term Streams',
-      'tier-2':            'Tier 2 â€” Audience Monetisation',
-      'tier-3':            'Tier 3 â€” Premium Experiences',
-      'tier-4':            'Tier 4 â€” Passive / Side Streams',
+      'tier-1':            'Tier 1 — Near-Term Streams',
+      'tier-2':            'Tier 2 — Audience Monetisation',
+      'tier-3':            'Tier 3 — Premium Experiences',
+      'tier-4':            'Tier 4 — Passive / Side Streams',
       'partnership':       'Partnerships (QuadFang)',
       // Expenses
       'ops-shop':          'Shop Operations',
       'admin-digital':     'Admin & Digital',
       'quadfang-rnd':      'QuadFang R&D',
       'fc-tier-1':         'Tier 1 Build Costs',
-      'tier-5-insurance':  'Tier 5 â€” Wealth Protection (Insurance)',
-      'tier-5-wealth':     'Tier 5 â€” Wealth Protection (Savings)',
+      'tier-5-insurance':  'Tier 5 — Wealth Protection (Insurance)',
+      'tier-5-wealth':     'Tier 5 — Wealth Protection (Savings)',
       'variable':          'Variable / Ad-Hoc'
     },
     categoryOrder: {
       revenue: ['core','tier-1','tier-2','tier-3','tier-4','partnership'],
       expense: ['ops-shop','admin-digital','quadfang-rnd','fc-tier-1','tier-5-insurance','tier-5-wealth','variable']
     },
-    // Combined Insurance addendum â€” 2025 calibration reference.
-    // Dollars local-only per Spec Â§9; these numbers live in the page, not Supabase.
+    // Combined Insurance addendum — 2025 calibration reference.
+    // Dollars local-only per Spec §9; these numbers live in the page, not Supabase.
     insurance2025: {
       premiumMonthly: 600,
       premiumAnnual: 7200,
@@ -149,11 +196,11 @@
 </script>
 
 <script>
-  // PAGE declaration â€” consumed by cc-shell.js
+  // PAGE declaration — consumed by cc-shell.js
   window.PAGE = {
     id: 'finance',
     title: 'Finance',
-    subtitle: 'Projections Â· private net mode Â· ratios-to-cloud / dollars-local',
+    subtitle: 'Projections · private net mode · ratios-to-cloud / dollars-local',
     subtabs: [
       { id:'net',       label:'Net' },
       { id:'revenue',   label:'Revenue' },
@@ -185,6 +232,8 @@
   const app = document.getElementById('app');
   let projections = null;     // cached rows from supabase.projections
   let chartInstance = null;
+  let _drillRows  = null;     // most recent rows available for click delegation
+  let _ratioMode  = false;    // Net tab: toggle ratio view
 
   const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
   const fail = (msg) => `<div class="error">${esc(msg)}</div>`;
@@ -194,12 +243,12 @@
   const banner = `
     <div class="privacy-banner">
       <span class="dot"></span>
-      <div><strong>Private Net mode</strong> â€” projections only. No dollar actuals are stored in Supabase.
+      <div><strong>Private Net mode</strong> — projections only. No dollar actuals are stored in Supabase.
         <span style="color:#8b949e;"> Ratios to cloud, dollars local. Updated ${esc(D.updated)}.</span>
       </div>
     </div>`;
 
-  // â”€â”€â”€ BOOT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── BOOT ───────────────────────────────────────────────────────────────
   async function boot(){
     const { data:{ session } } = await supa.auth.getSession();
     if (!session) return renderLogin();
@@ -214,6 +263,13 @@
   function wireSubtabs(){
     window.CC.onSubtabChange(id => renderSubtab(id));
     renderSubtab(window.CC.getSubtab() || 'net');
+    // Global drill-down delegation — persists across subtab renders since #app element stays
+    app.addEventListener('click', e => {
+      const row = e.target.closest('[data-stream-id]');
+      if (!row || !_drillRows) return;
+      const sr = _drillRows.find(r => r.stream_id === row.dataset.streamId);
+      if (sr) openDrillModal(sr);
+    });
   }
 
   async function ensureProjections(){
@@ -228,7 +284,7 @@
     return projections;
   }
 
-  // â”€â”€â”€ helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── helpers ────────────────────────────────────────────────────────────
   function curvePoints(row){
     const c = row && row.curve_json;
     if (!c || !Array.isArray(c.points)) return [];
@@ -260,13 +316,14 @@
     app.innerHTML = fail('Unknown subtab: '+id);
   }
 
-  // â”€â”€â”€ NET TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── NET TAB ────────────────────────────────────────────────────────────
   async function renderNet(){
-    app.innerHTML = banner + '<div class="loading">Loading projectionsâ€¦</div>';
+    app.innerHTML = banner + '<div class="loading">Loading projections…</div>';
     let rows;
     try { rows = await ensureProjections(); }
     catch(e){ return app.innerHTML = banner + fail(e.message); }
 
+    _drillRows = rows;
     const rev = monthlyTotals(rows, 'revenue');
     const exp = monthlyTotals(rows, 'expense');
     const labels = Array.from(new Set([...rev.labels, ...exp.labels])).sort();
@@ -296,7 +353,7 @@
         <div class="hero-card">
           <div class="lbl">12-mo Projected Net</div>
           <div class="val ${totalNet>=0?'pos':'neg'}">${fmt$(totalNet)}</div>
-          <div class="sub">${labels[0]||'â€”'} â†’ ${labels[labels.length-1]||'â€”'}</div>
+          <div class="sub">${labels[0]||'—'} → ${labels[labels.length-1]||'—'}</div>
         </div>
         <div class="hero-card">
           <div class="lbl">Active Streams</div>
@@ -305,22 +362,39 @@
         </div>
       </div>
 
-      <div class="section">
-        <div class="section-header">
-          <h2>Monthly Cashflow â€” Projected</h2>
-          <span class="meta">Revenue (green) Â· Expenses (red) Â· Net (blue line)</span>
-        </div>
-        <div class="chart-wrap"><canvas id="net-chart"></canvas></div>
+      <div class="ratio-toggle-bar">
+        <button class="ratio-btn${_ratioMode?'':' active'}" id="btn-dollar-mode">Dollar view</button>
+        <button class="ratio-btn${_ratioMode?' active':''}" id="btn-ratio-mode">Ratio mode</button>
       </div>
 
-      <div class="todo">
-        TODO (future session): confirmation workflow Â· drill-down modal per stream Â· ratio-mode toggle Â· quarterly breakdown table.
-        See <code>AI/Business/Projects/Command-Centre/Financial_Projections_Spec_v1_2026-04-18.md</code>.
+      <div id="net-ratio-section"></div>
+
+      <div class="section" id="net-chart-section" style="${_ratioMode?'display:none':''}">
+        <div class="section-header">
+          <h2>Monthly Cashflow — Projected</h2>
+          <span class="meta">Revenue (green) · Expenses (red) · Net (blue line)</span>
+        </div>
+        <div class="chart-wrap"><canvas id="net-chart"></canvas></div>
       </div>`;
 
-    // Chart render
+    // Toggle buttons
+    document.getElementById('btn-dollar-mode').addEventListener('click', () => {
+      _ratioMode = false; renderNet();
+    });
+    document.getElementById('btn-ratio-mode').addEventListener('click', () => {
+      _ratioMode = true; renderNet();
+    });
+
+    // Ratio section
+    if (_ratioMode) {
+      renderRatioSection(rows);
+    }
+
+    // Chart render (hidden in ratio mode — canvas won't exist if section hidden)
     if (chartInstance) chartInstance.destroy();
-    const ctx = document.getElementById('net-chart').getContext('2d');
+    const netCanvas = document.getElementById('net-chart');
+    if (!netCanvas) return;
+    const ctx = netCanvas.getContext('2d');
     chartInstance = new Chart(ctx, {
       type: 'bar',
       data: {
@@ -345,9 +419,9 @@
     });
   }
 
-  // â”€â”€â”€ REVENUE / EXPENSES TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── REVENUE / EXPENSES TAB ────────────────────────────────────────────
   async function renderStreams(type){
-    app.innerHTML = banner + '<div class="loading">Loadingâ€¦</div>';
+    app.innerHTML = banner + '<div class="loading">Loading…</div>';
     let rows;
     try { rows = await ensureProjections(); }
     catch(e){ return app.innerHTML = banner + fail(e.message); }
@@ -396,10 +470,8 @@
         </div>`;
     });
 
-    app.innerHTML = html + `
-      <div class="todo">
-        TODO: click a row to drill into its 12-point curve, confidence rationale, and last-confirmed date.
-      </div>`;
+    app.innerHTML = html;
+    _drillRows = rows; // expose for click delegation
   }
 
   function rowStream(r){
@@ -407,7 +479,7 @@
     const numClass = r.stream_type==='revenue' ? 'pos' : 'neg';
     const note = r.notes_ratio ? `<span class="note">${esc(r.notes_ratio)}</span>` : '';
     return `
-      <div class="stream-row ${r.active?'':'inactive'}">
+      <div class="stream-row ${r.active?'':'inactive'}" data-stream-id="${esc(r.stream_id)}" style="cursor:pointer" title="Click to drill in">
         <div class="name">${esc(r.stream_id)}${note}</div>
         <div class="num ${numClass}">${fmt$(r.stream_type==='expense'?-total:total)}</div>
         <div class="conf">${fmtPct(Number(r.confidence||0))}</div>
@@ -415,98 +487,265 @@
       </div>`;
   }
 
-  // --- COMBINED INSURANCE TAB ---
-  function insDaysUntil(dateStr){
-    if(!dateStr) return null;
-    return Math.round((new Date(dateStr+'T12:00:00') - new Date()) / 86400000);
+  // ─── DRILL-DOWN MODAL ─────────────────────────────────────────────────────
+  async function openDrillModal(row){
+    const pts    = curvePoints(row);
+    const labels = pts.map(p => p.m);
+    const vals   = pts.map(p => Number(p.v||0));
+    const isRev  = row.stream_type === 'revenue';
+
+    let confs = [];
+    const { data: cd } = await supa.from('confirmations')
+      .select('quarter, ratio_vs_projection, direction, user_note')
+      .eq('stream_id', row.stream_id)
+      .order('quarter', { ascending: false })
+      .limit(12);
+    if (cd) confs = cd;
+
+    const confHTML = confs.length
+      ? confs.map(c => {
+          const r = Number(c.ratio_vs_projection||0);
+          const cl = c.direction==='over' ? 'over' : c.direction==='under' ? 'under' : 'on';
+          const sign = c.direction==='over' ? '↑ ' : c.direction==='under' ? '↓ ' : '= ';
+          return `<div class="drill-conf-row">
+            <span class="drill-conf-qtr">${esc(c.quarter)}</span>
+            <span class="drill-conf-ratio ${cl}">${(r*100).toFixed(1)}%</span>
+            <span class="drill-conf-ratio ${cl}">${sign}${c.direction||'on'}</span>
+            <span class="drill-conf-note">${esc(c.user_note||'—')}</span>
+          </div>`;
+        }).join('')
+      : '<div class="empty" style="text-align:left;padding:10px 0">No quarterly confirmations yet.</div>';
+
+    const overlay = document.createElement('div');
+    overlay.className = 'drill-overlay';
+    overlay.innerHTML = `
+      <div class="drill-modal">
+        <div class="drill-head">
+          <h2>${esc(row.stream_id)}</h2>
+          <button class="drill-close" id="drill-close-btn">×</button>
+        </div>
+        <div class="drill-meta">
+          <span class="drill-chip ${row.active?'active':'dormant'}">${row.active?'ACTIVE':'DORMANT'}</span>
+          <span class="drill-chip">${esc(row.stream_type)}</span>
+          <span class="drill-chip">${esc(row.category||'—')}</span>
+          <span class="drill-chip">Confidence: ${fmtPct(Number(row.confidence||0))}</span>
+        </div>
+        ${row.notes_ratio ? `<div style="color:#8b949e;font-size:0.85rem;margin-bottom:14px;line-height:1.5">${esc(row.notes_ratio)}</div>` : ''}
+        <div class="drill-chart-wrap2">
+          <canvas id="drill-chart-canvas"></canvas>
+        </div>
+        <div class="drill-conf-section">
+          <h3>Quarterly Confirmation History</h3>
+          ${confHTML}
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+
+    const dc = new Chart(
+      document.getElementById('drill-chart-canvas').getContext('2d'),
+      {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: isRev ? 'Projected Revenue' : 'Projected Expense',
+            data: vals,
+            borderColor:     isRev ? '#3fb950' : '#f85149',
+            backgroundColor: isRev ? 'rgba(63,185,80,0.12)' : 'rgba(248,81,73,0.12)',
+            borderWidth: 2, tension: 0.3, pointRadius: 4, fill: true
+          }]
+        },
+        options: {
+          responsive:true, maintainAspectRatio:false,
+          plugins: {
+            legend: { labels: { color:'#adbac7' } },
+            tooltip: { callbacks: { label: ctx => ctx.dataset.label+': '+fmt$(ctx.parsed.y) } }
+          },
+          scales: {
+            x: { ticks:{ color:'#8b949e' }, grid:{ color:'#21262d' } },
+            y: { ticks:{ color:'#8b949e', callback: v => fmt$(v) }, grid:{ color:'#21262d' } }
+          }
+        }
+      }
+    );
+
+    const close = () => { dc.destroy(); overlay.remove(); document.removeEventListener('keydown', onKey); };
+    const onKey = e => { if (e.key==='Escape') close(); };
+    overlay.querySelector('#drill-close-btn').addEventListener('click', close);
+    overlay.addEventListener('click', e => { if (e.target===overlay) close(); });
+    document.addEventListener('keydown', onKey);
   }
+
+  // ─── RATIO SECTION (Net tab) ───────────────────────────────────────────────
+  async function renderRatioSection(rows){
+    const el = document.getElementById('net-ratio-section');
+    if (!el) return;
+    el.innerHTML = '<div class="loading">Loading confirmation ratios…</div>';
+
+    // Find most-recently confirmed quarter
+    const { data: latest } = await supa.from('confirmations')
+      .select('quarter')
+      .order('quarter', { ascending: false })
+      .limit(1);
+    if (!latest || !latest.length){
+      el.innerHTML = `<div class="section" style="color:#8b949e;font-size:0.88rem;padding:16px">
+        No quarterly confirmations yet — ratio comparison will appear after the first confirmation cycle.
+      </div>`;
+      return;
+    }
+    const qtr = latest[0].quarter;
+
+    const { data: confs } = await supa.from('confirmations')
+      .select('stream_id, ratio_vs_projection, direction')
+      .eq('quarter', qtr);
+    if (!confs || !confs.length){
+      el.innerHTML = `<div class="section" style="color:#8b949e;font-size:0.88rem;padding:16px">No data for ${esc(qtr)}.</div>`;
+      return;
+    }
+
+    // Average ratio by stream_type
+    const avg = (type) => {
+      const ids = rows.filter(r=>r.stream_type===type && r.active).map(r=>r.stream_id);
+      const hits = confs.filter(c => ids.includes(c.stream_id));
+      if (!hits.length) return null;
+      return hits.reduce((s,c)=>s+Number(c.ratio_vs_projection||1),0) / hits.length;
+    };
+    const revRatio = avg('revenue');
+    const expRatio = avg('expense');
+    const netRatio = (revRatio != null && expRatio != null) ? ((revRatio + (2 - expRatio)) / 2) : null;
+
+    const fmt_ratio = r => {
+      if (r == null) return { str:'—', cls:'neutral' };
+      const pct = Math.round((r - 1) * 100);
+      return { str: (pct>=0?'+':'')+pct+'%', cls: pct>0?'up':pct<0?'down':'neutral' };
+    };
+    const rr = fmt_ratio(revRatio);
+    const er = fmt_ratio(expRatio ? (2 - expRatio) : null); // invert: under-spend = good
+    const nr = fmt_ratio(netRatio);
+
+    el.innerHTML = `
+      <div class="section">
+        <div class="section-header">
+          <h2>Ratio Mode — ${esc(qtr)} vs projection</h2>
+          <span class="meta">avg confirmed / projected across active streams</span>
+        </div>
+        <div class="ratio-section">
+          <div class="ratio-row"><span class="ratio-lbl">Revenue pace</span><span class="ratio-val ${rr.cls}">${rr.str}</span></div>
+          <div class="ratio-row"><span class="ratio-lbl">Expense pace (under = good)</span><span class="ratio-val ${er.cls}">${er.str}</span></div>
+          <div class="ratio-row"><span class="ratio-lbl">Net trend</span><span class="ratio-val ${nr.cls}">${nr.str}</span></div>
+          <div class="ratio-row"><span class="ratio-lbl">Streams confirmed</span><span class="ratio-val neutral">${confs.length} / ${rows.filter(r=>r.active).length} active</span></div>
+        </div>
+        <div style="color:#6e7681;font-size:0.8rem;margin-top:4px">Ratios from ${esc(qtr)} confirmations · Switch to Dollar view for full cashflow chart</div>
+      </div>`;
+  }
+
+  // ─── INSURANCE HELPERS ────────────────────────────────────────────────────
+  function insDaysUntil(dateStr){
+    if (!dateStr) return null;
+    const today = new Date(); today.setHours(0,0,0,0);
+    return Math.ceil((new Date(dateStr + 'T12:00:00') - today) / 86400000);
+  }
+
   function insRenewalBadge(dateStr){
     const d = insDaysUntil(dateStr);
-    if(d===null) return '';
-    if(d<=30) return '<span class="ins-badge red">'+d+'d</span>';
-    if(d<=60) return '<span class="ins-badge amber">'+d+'d</span>';
-    return '';
+    if (d === null || d > 60) return '';
+    return `<span class="ins-badge ${d <= 30 ? 'red' : 'amber'}">Renews in ${d}d</span>`;
   }
-  function insFmtMoney(n){
-    if(!n) return 'â€”';
-    const v = Number(n);
-    if(v>=1000000) return '$'+(v/1000000).toFixed(1)+'M';
-    if(v>=1000)    return '$'+(v/1000).toFixed(0)+'K';
-    return '$'+v.toFixed(0);
+
+  function insFmt$k(n){
+    if (n >= 1000000) return '$' + (n/1000000).toFixed(1) + 'M';
+    if (n >= 1000)    return '$' + Math.round(n/1000) + 'K';
+    return fmt$(n);
   }
-  function insFmtDate(d){ return d ? new Date(d+'T12:00:00').toLocaleDateString('en-CA') : 'â€”'; }
+
+  function insFmtDate(d){
+    if (!d) return '—';
+    return new Date(d + 'T12:00:00').toLocaleDateString('en-CA');
+  }
 
   function insPolicyCardHTML(p){
-    const badge    = insRenewalBadge(p.renewal_date);
-    const archived = p.active===false;
-    return '<div class="ins-policy-card" data-id="'+p.id+'" style="'+(archived?'opacity:.55;':'')+'">'
-      +'<div class="ins-card-info">'
-      +'<div class="ins-card-label">'+esc(p.policy_label||'')+' '+badge+'</div>'
-      +'<div class="ins-card-meta">'+esc(p.insurer||'')+' \xb7 '+(p.coverage_type||'').replace(/_/g,' ')+' \xb7 renews '+insFmtDate(p.renewal_date)+'</div>'
-      +'<div class="ins-card-meta">Coverage: '+insFmtMoney(p.coverage_limit)+' \xb7 Premium: '+insFmtMoney(p.annual_premium)+'/yr</div>'
-      +'</div>'
-      +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">'
-      +(p.storage_path?'<button class="ins-btn" data-action="open" data-path="'+esc(p.storage_path)+'">Open PDF</button>':'')
-      +'<button class="ins-btn" data-action="archive" data-id="'+p.id+'" data-active="'+p.active+'">'+(archived?'Restore':'Archive')+'</button>'
-      +(archived?'<button class="ins-btn danger" data-action="delete" data-id="'+p.id+'" data-label="'+esc(p.policy_label||'')+'">Delete</button>':'')
-      +'</div>'
-      +'</div>';
+    return `
+      <div class="ins-policy-card${p.active ? '' : ' inactive'}" data-policy-id="${esc(p.id)}">
+        <div class="ins-card-head">
+          <span class="ins-card-label">${esc(p.policy_label)}</span>
+          ${insRenewalBadge(p.renewal_date)}
+        </div>
+        <div class="ins-card-meta">${esc(p.carrier || '—')} · #${esc(p.policy_number || '—')} · ${esc((p.coverage_type || '').replace(/_/g,' ') || '—')}</div>
+        <div class="ins-card-nums">
+          <span class="ins-card-num">Premium: <b>${p.premium_annual_cad ? fmt$(Number(p.premium_annual_cad)) + '/yr' : '—'}</b></span>
+          <span class="ins-card-num">Limit: <b>${p.coverage_limit_cad ? insFmt$k(Number(p.coverage_limit_cad)) : '—'}</b></span>
+          <span class="ins-card-num">Deductible: <b>${p.deductible_cad ? fmt$(Number(p.deductible_cad)) : '—'}</b></span>
+        </div>
+        <div class="ins-card-meta">Effective: ${insFmtDate(p.effective_date)} → Renewal: ${insFmtDate(p.renewal_date)}</div>
+        <div class="ins-card-actions">
+          ${p.storage_path
+            ? `<button class="ins-btn" data-action="open-pdf" data-id="${esc(p.id)}" data-path="${esc(p.storage_path)}">Open PDF</button>`
+            : '<span style="color:#484f58;font-size:0.75rem;align-self:center">No PDF</span>'}
+          <button class="ins-btn" data-action="edit" data-id="${esc(p.id)}">Edit</button>
+          ${p.active
+            ? `<button class="ins-btn" data-action="archive" data-id="${esc(p.id)}">Archive</button>`
+            : `<button class="ins-btn danger" data-action="delete" data-id="${esc(p.id)}" data-label="${esc(p.policy_label)}">Delete</button>`}
+        </div>
+      </div>`;
   }
 
   function insPoliciesListHTML(policies){
-    const active   = policies.filter(function(p){ return p.active!==false; });
-    const archived = policies.filter(function(p){ return p.active===false; });
-    var html = '';
-    if(active.length)   html += active.map(insPolicyCardHTML).join('');
-    if(archived.length){
-      html += '<button class="ins-toggle-archived" id="ins-show-archived" style="margin-top:8px;">Show '+archived.length+' archived policy'+(archived.length>1?'ies':'')+'</button>'
-            + '<div id="ins-archived-list" style="display:none;">'+archived.map(insPolicyCardHTML).join('')+'</div>';
-    }
-    if(!active.length && !archived.length) html = '<div class="empty">No policies added yet.</div>';
-    return html;
+    if (!policies.length) return '<div class="empty">No policies yet. Use the form above to add one.</div>';
+    return policies.map(insPolicyCardHTML).join('');
   }
 
+  // ─── COMBINED INSURANCE TAB ────────────────────────────────────────────
   async function renderInsurance(){
-    app.innerHTML = banner + '<div class="loading">Loading insuranceâ€¦</div>';
-    const { data:{ session } } = await supa.auth.getSession();
-    if(!session){ app.innerHTML = banner + fail('Not authenticated.'); return; }
-    const uid = session.user.id;
+    app.innerHTML = banner + '<div class="loading">Loading insurance data…</div>';
 
-    // orphan cleanup: rows with no PDF uploaded yet, older than 1 hour
-    supa.from('insurance_policies').delete()
-      .is('storage_path', null)
-      .lt('uploaded_at', new Date(Date.now()-3600000).toISOString())
-      .then(function(){});
+    let projRows;
+    try { projRows = await ensureProjections(); }
+    catch(e){ return app.innerHTML = banner + fail(e.message); }
 
-    let rows=[], policies=[], loadErr=null;
-    try { rows = await ensureProjections(); } catch(e){ app.innerHTML = banner + fail(e.message); return; }
-    const { data:polData, error:polErr } = await supa.from('insurance_policies')
-      .select('*').eq('user_id', uid).order('renewal_date',{ascending:true});
-    if(polErr) loadErr = polErr.message; else policies = polData||[];
-
-    const insRows = rows.filter(function(r){ return r.category==='tier-5-insurance' || (r.stream_id||'').includes('insurance'); });
+    _drillRows = projRows;
+    const insRows = projRows.filter(r => r.category === 'tier-5-insurance' || (r.stream_id||'').includes('insurance'));
     const B = D.insurance2025;
-    const active = policies.filter(function(p){ return p.active!==false; });
-    const totalPremium = active.reduce(function(s,p){ return s+Number(p.annual_premium||0); },0);
-    const withDate = active.filter(function(p){ return !!p.renewal_date; });
-    withDate.sort(function(a,b){ return a.renewal_date.localeCompare(b.renewal_date); });
-    const soonest = withDate[0]||null;
+
+    // Orphan cleanup — silent, 1-hour grace for slow connections
+    supa.from('insurance_policies')
+      .delete()
+      .is('storage_path', null)
+      .lt('uploaded_at', new Date(Date.now() - 3600000).toISOString())
+      .then(() => {});
+
+    // Load policies
+    let policies = [];
+    const { data: polData, error: polErr } = await supa.from('insurance_policies')
+      .select('*')
+      .order('renewal_date', { ascending: true, nullsFirst: false });
+    if (!polErr) policies = polData || [];
+
+    const active   = policies.filter(p => p.active);
+    const archived = policies.filter(p => !p.active);
+    const totalPrem  = active.reduce((s,p) => s + Number(p.premium_annual_cad||0), 0);
+    const totalLimit = active.reduce((s,p) => s + Number(p.coverage_limit_cad||0), 0);
+    const nextRen    = active.filter(p => p.renewal_date)[0];
+
+    const coverageTypes = [
+      'general_liability','product_liability','property','commercial_auto',
+      'umbrella','workers_comp','business_interruption','E&O','cyber','other'
+    ];
 
     app.innerHTML = banner + `
       <div class="section">
         <div class="section-header">
           <h2>2025 Calibration Baseline</h2>
-          <span class="meta">reference for EV framing â€” dollars live in-page, not in Supabase</span>
+          <span class="meta">reference for EV framing — dollars live in-page, not in Supabase</span>
         </div>
         <div class="ins-baseline">
           <div class="hero-card"><div class="lbl">Premium / Month</div><div class="val neg">${fmt$(B.premiumMonthly)}</div><div class="sub">wage-loss / accident / sickness</div></div>
           <div class="hero-card"><div class="lbl">Premium / Year</div><div class="val neg">${fmt$(B.premiumAnnual)}</div><div class="sub">2025 outflow</div></div>
           <div class="hero-card"><div class="lbl">2025 Payouts Received</div><div class="val pos">${fmt$(B.payoutsReceived)}+</div><div class="sub">${B.surgeries} minor surgeries</div></div>
-          <div class="hero-card"><div class="lbl">Net 2025 Position</div><div class="val pos">+${fmt$(B.netPosition)}</div><div class="sub">payouts âˆ’ premiums</div></div>
+          <div class="hero-card"><div class="lbl">Net 2025 Position</div><div class="val pos">+${fmt$(B.netPosition)}</div><div class="sub">payouts − premiums</div></div>
         </div>
         <div class="ins-note">
           Payout schedule per cut: <strong>${fmt$(B.payoutPerCut.suture)}</strong> (modern suture) / <strong>${fmt$(B.payoutPerCut.stitches)}</strong> (actual stitches).
-          Alessio frames insurance as an <strong>EV-positive investment category</strong>, not a cost category â€”
+          Alessio frames insurance as an <strong>EV-positive investment category</strong>, not a cost category —
           premiums paired with expected-payout curves, not sunk.
         </div>
         <div class="ins-note" style="font-style:italic;color:#8b949e;">&ldquo;${esc(B.quote)}&rdquo;</div>
@@ -515,185 +754,322 @@
       <div class="section">
         <div class="section-header">
           <h2>Insurance Streams <span class="meta">(${insRows.length})</span></h2>
-          <span class="meta">premium outflow only â€” expected-payout inflow rows pending policy review</span>
+          <span class="meta">premium outflow only — expected-payout inflow rows pending policy review</span>
         </div>
         ${insRows.length ? insRows.map(rowStream).join('') : '<div class="empty">No insurance streams seeded yet.</div>'}
       </div>
 
       <div class="section">
         <div class="section-header">
-          <h2>Policy Attachments <span class="meta">(${active.length} active)</span></h2>
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-            ${soonest ? '<span style="color:#8b949e;font-size:0.85rem;">Next renewal: <strong>'+insFmtDate(soonest.renewal_date)+'</strong> '+insRenewalBadge(soonest.renewal_date)+'</span>' : ''}
-            ${totalPremium ? '<span style="color:#8b949e;font-size:0.85rem;">Total premium: <strong>'+insFmtMoney(totalPremium)+'/yr</strong></span>' : ''}
-            <button id="ins-add-btn" class="ins-save-btn" style="margin-left:auto;">+ Add Policy</button>
-          </div>
+          <h2>Policy Attachments</h2>
+          <span class="meta">Supabase Storage · RLS-gated · signed URLs · 5-min TTL</span>
         </div>
 
-        <div class="ins-upload-form" id="ins-form">
+        <div class="ins-summary-grid">
+          <div class="hero-card"><div class="lbl">Active Policies</div><div class="val">${active.length}</div></div>
+          <div class="hero-card"><div class="lbl">Total Annual Premium</div><div class="val neg">${totalPrem ? fmt$(totalPrem) : '—'}</div></div>
+          <div class="hero-card"><div class="lbl">Total Coverage</div><div class="val">${totalLimit ? insFmt$k(totalLimit) : '—'}</div></div>
+          <div class="hero-card"><div class="lbl">Next Renewal</div><div class="val" style="font-size:0.95rem">${nextRen ? esc(insFmtDate(nextRen.renewal_date)) : '—'}</div></div>
+        </div>
+
+        <div class="ins-upload-form" id="ins-upload-form">
+          <h3 id="ins-form-title">Add Policy</h3>
+          <input type="hidden" id="ins-edit-id" value="">
           <div class="ins-form-grid">
-            <div><label class="ins-form-label">Policy Label *</label><input class="ins-form-input" id="ins-label" placeholder="e.g. Disability Income 2025" required></div>
-            <div><label class="ins-form-label">Insurer</label><input class="ins-form-input" id="ins-insurer" placeholder="e.g. Manulife"></div>
+            <div><div class="ins-form-label">Label *</div><input class="ins-form-input" id="ins-label" placeholder="AZCK General Liability 2026"></div>
+            <div><div class="ins-form-label">Carrier</div><input class="ins-form-input" id="ins-carrier" placeholder="Federated Insurance"></div>
+            <div><div class="ins-form-label">Policy #</div><input class="ins-form-input" id="ins-policy-num" placeholder="GL-2026-XXXX"></div>
             <div>
-              <label class="ins-form-label">Coverage Type</label>
-              <select class="ins-form-select" id="ins-cov-type">
-                <option value="disability">Disability Income</option>
-                <option value="accident_sickness">Accident &amp; Sickness</option>
-                <option value="critical_illness">Critical Illness</option>
-                <option value="life">Life</option>
-                <option value="commercial_general">Commercial General Liability</option>
-                <option value="product_liability">Product Liability</option>
-                <option value="workers_comp">Workers Compensation</option>
-                <option value="business_interruption">Business Interruption</option>
-                <option value="property">Property</option>
-                <option value="other">Other</option>
+              <div class="ins-form-label">Coverage Type</div>
+              <select class="ins-form-select" id="ins-coverage">
+                <option value="">— select —</option>
+                ${coverageTypes.map(t => `<option value="${esc(t)}">${esc(t.replace(/_/g,' '))}</option>`).join('')}
               </select>
             </div>
-            <div><label class="ins-form-label">Renewal Date</label><input class="ins-form-input" id="ins-renewal" type="date"></div>
-            <div><label class="ins-form-label">Annual Premium ($)</label><input class="ins-form-input" id="ins-premium" type="number" min="0" step="0.01" placeholder="2400.00"></div>
-            <div><label class="ins-form-label">Coverage Limit ($)</label><input class="ins-form-input" id="ins-limit" type="number" min="0" step="1" placeholder="500000"></div>
+            <div><div class="ins-form-label">Effective Date</div><input class="ins-form-input" type="date" id="ins-effective"></div>
+            <div><div class="ins-form-label">Renewal Date</div><input class="ins-form-input" type="date" id="ins-renewal"></div>
+            <div><div class="ins-form-label">Premium / Year ($CAD)</div><input class="ins-form-input" type="number" min="0" id="ins-premium" placeholder="2400"></div>
+            <div><div class="ins-form-label">Deductible ($CAD)</div><input class="ins-form-input" type="number" min="0" id="ins-deductible" placeholder="500"></div>
           </div>
-          <div class="ins-drop-zone" id="ins-drop">
-            <span id="ins-drop-label">Drop PDF here or click to browse (max 10 MB)</span>
-            <input type="file" id="ins-file" accept="application/pdf" style="display:none;">
+          <div style="margin-top:10px"><div class="ins-form-label">Coverage Limit ($CAD)</div><input class="ins-form-input" type="number" min="0" id="ins-limit" placeholder="2000000"></div>
+          <div style="margin-top:10px"><div class="ins-form-label">Notes</div><input class="ins-form-input" id="ins-notes" placeholder="Optional notes"></div>
+          <div class="ins-drop-zone" id="ins-drop-zone">
+            <span id="ins-drop-label">Drop PDF here or click to browse · .pdf only · max 10 MB</span>
+            <input type="file" id="ins-pdf-input" accept=".pdf" style="display:none">
           </div>
-          <div>
-            <button class="ins-save-btn" id="ins-save">Save Policy</button>
-            <button class="ins-cancel-btn" id="ins-cancel">Cancel</button>
-          </div>
-          <div class="ins-form-msg" id="ins-msg"></div>
+          <button class="ins-cancel-btn" id="ins-cancel-btn">Cancel</button>
+          <button class="ins-save-btn" id="ins-save-btn">Save →</button>
+          <div class="ins-form-msg" id="ins-form-msg"></div>
         </div>
 
-        <div class="ins-policy-list" id="ins-list">
-          ${loadErr ? '<div class="error">'+esc(loadErr)+'</div>' : insPoliciesListHTML(policies)}
+        <div id="ins-policy-list" class="ins-policy-list">
+          ${insPoliciesListHTML(active)}
         </div>
+        ${archived.length ? `<button class="ins-toggle-archived" id="ins-toggle-archived">Show archived (${archived.length})</button>` : ''}
       </div>
 
       <div class="ins-caveat">
-        <strong>Caveat:</strong> Expected payouts are actuarial projections based on Alessio&rsquo;s personal incidence rate, not commitments.
+        <strong>Caveat:</strong> Expected payouts are actuarial projections based on Alessio's personal incidence rate, not commitments.
         Once the payout revenue rows are seeded (suffix <code>-payouts</code>, category <code>tier-5-insurance</code>), this tab will render paired curves per policy.
       </div>
+`;
 
-      <div class="todo">
-        TODO (future session): paired premium/payout charts per stream \xb7 policy PDF viewer \xb7 net insurance position card per quarter.
-      </div>`;
-
-    wireInsuranceForm(uid, policies);
+    wireInsuranceForm(policies);
   }
 
-  function wireInsuranceForm(uid, allPolicies){
-    const form      = document.getElementById('ins-form');
-    const addBtn    = document.getElementById('ins-add-btn');
-    const cancelBtn = document.getElementById('ins-cancel');
-    const saveBtn   = document.getElementById('ins-save');
-    const dropZone  = document.getElementById('ins-drop');
-    const fileInput = document.getElementById('ins-file');
-    const dropLabel = document.getElementById('ins-drop-label');
-    const msg       = document.getElementById('ins-msg');
-    const list      = document.getElementById('ins-list');
+  function wireInsuranceForm(allPolicies){
+    const dropZone   = document.getElementById('ins-drop-zone');
+    const fileInput  = document.getElementById('ins-pdf-input');
+    const saveBtn    = document.getElementById('ins-save-btn');
+    const cancelBtn  = document.getElementById('ins-cancel-btn');
+    const formMsg    = document.getElementById('ins-form-msg');
+    const policyList = document.getElementById('ins-policy-list');
+    const toggleBtn  = document.getElementById('ins-toggle-archived');
+    let selectedFile = null;
+    let showArchived = false;
+    const archived   = allPolicies.filter(p => !p.active);
 
-    addBtn.addEventListener('click', function(){ form.classList.add('open'); addBtn.disabled=true; });
-    cancelBtn.addEventListener('click', function(){ form.classList.remove('open'); addBtn.disabled=false; msg.textContent=''; fileInput.value=''; dropZone.className='ins-drop-zone'; dropLabel.textContent='Drop PDF here or click to browse (max 10 MB)'; });
-    dropZone.addEventListener('click', function(){ fileInput.click(); });
-    dropZone.addEventListener('dragover', function(e){ e.preventDefault(); dropZone.classList.add('drag-over'); });
-    dropZone.addEventListener('dragleave', function(){ dropZone.classList.remove('drag-over'); });
-    dropZone.addEventListener('drop', function(e){ e.preventDefault(); dropZone.classList.remove('drag-over'); handleFile(e.dataTransfer.files[0]); });
-    fileInput.addEventListener('change', function(){ handleFile(fileInput.files[0]); });
-
-    function handleFile(f){
-      if(!f) return;
-      if(f.type!=='application/pdf'){ msg.textContent='PDF files only.'; return; }
-      if(f.size>10*1024*1024){ msg.textContent='Max file size is 10 MB.'; return; }
-      dropZone.className='ins-drop-zone has-file';
-      dropLabel.textContent=f.name;
-      fileInput._file=f;
-      msg.textContent='';
+    function showMsg(msg, isErr){
+      if (!formMsg) return;
+      formMsg.textContent = msg;
+      formMsg.className = 'ins-form-msg' + (isErr ? ' err' : msg ? ' ok' : '');
     }
 
-    saveBtn.addEventListener('click', async function(){
-      const label = document.getElementById('ins-label').value.trim();
-      if(!label){ msg.textContent='Policy label is required.'; return; }
-      const insurer  = document.getElementById('ins-insurer').value.trim();
-      const covType  = document.getElementById('ins-cov-type').value;
-      const renewal  = document.getElementById('ins-renewal').value||null;
-      const premium  = parseFloat(document.getElementById('ins-premium').value)||null;
-      const limit    = parseFloat(document.getElementById('ins-limit').value)||null;
-      const file     = fileInput._file||null;
+    function setFile(f){
+      if (f.type !== 'application/pdf'){ showMsg('PDF files only.', true); return; }
+      if (f.size > 10485760){ showMsg('File too large — max 10 MB.', true); return; }
+      selectedFile = f;
+      if (dropZone) dropZone.classList.add('has-file');
+      const dl = document.getElementById('ins-drop-label');
+      if (dl) dl.textContent = f.name + ' (' + (f.size/1024).toFixed(0) + ' KB)';
+      showMsg('');
+    }
 
-      saveBtn.disabled=true; msg.style.color='#f85149'; msg.textContent='Savingâ€¦';
+    function clearForm(){
+      ['ins-label','ins-carrier','ins-policy-num','ins-effective','ins-renewal',
+       'ins-premium','ins-deductible','ins-limit','ins-notes'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      const cov = document.getElementById('ins-coverage');
+      if (cov) cov.value = '';
+      selectedFile = null;
+      if (dropZone){ dropZone.classList.remove('has-file','drag-over'); }
+      const dl = document.getElementById('ins-drop-label');
+      if (dl) dl.textContent = 'Drop PDF here or click to browse · .pdf only · max 10 MB';
+      const editId = document.getElementById('ins-edit-id');
+      if (editId) editId.value = '';
+      const title = document.getElementById('ins-form-title');
+      if (title) title.textContent = 'Add Policy';
+      if (saveBtn){ saveBtn.textContent = 'Save →'; saveBtn.disabled = false; }
+      if (cancelBtn) cancelBtn.style.display = 'none';
+      showMsg('');
+    }
 
-      const { data:row, error:insErr } = await supa.from('insurance_policies').insert({
-        user_id:uid, policy_label:label, insurer, coverage_type:covType,
-        renewal_date:renewal, annual_premium:premium, coverage_limit:limit, active:true
-      }).select().single();
-      if(insErr){ msg.textContent='Error: '+insErr.message; saveBtn.disabled=false; return; }
+    function getFormValues(){
+      return {
+        policy_label:       (document.getElementById('ins-label')?.value || '').trim(),
+        carrier:            (document.getElementById('ins-carrier')?.value || '').trim() || null,
+        policy_number:      (document.getElementById('ins-policy-num')?.value || '').trim() || null,
+        coverage_type:      document.getElementById('ins-coverage')?.value || null,
+        effective_date:     document.getElementById('ins-effective')?.value || null,
+        renewal_date:       document.getElementById('ins-renewal')?.value || null,
+        premium_annual_cad: parseFloat(document.getElementById('ins-premium')?.value) || null,
+        deductible_cad:     parseFloat(document.getElementById('ins-deductible')?.value) || null,
+        coverage_limit_cad: parseFloat(document.getElementById('ins-limit')?.value) || null,
+        notes:              (document.getElementById('ins-notes')?.value || '').trim() || null,
+      };
+    }
 
-      if(file){
-        msg.textContent='Uploading PDFâ€¦';
-        const storagePath = uid+'/'+row.id+'.pdf';
-        const { error:upErr } = await supa.storage.from('insurance-policies').upload(storagePath, file, { contentType:'application/pdf', upsert:false });
-        if(upErr){ msg.textContent='PDF upload failed: '+upErr.message+' (policy saved without PDF)'; saveBtn.disabled=false; return; }
-        const { error:updErr } = await supa.from('insurance_policies').update({ storage_path:storagePath, storage_bytes:file.size }).eq('id', row.id);
-        if(updErr){ msg.textContent='Policy saved; PDF stored but path not linked: '+updErr.message; saveBtn.disabled=false; return; }
+    // Drop zone wiring
+    if (dropZone && fileInput) {
+      dropZone.addEventListener('click', () => fileInput.click());
+      dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+      dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+      dropZone.addEventListener('drop', e => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        const f = e.dataTransfer.files[0];
+        if (f) setFile(f);
+      });
+      fileInput.addEventListener('change', () => {
+        if (fileInput.files[0]) setFile(fileInput.files[0]);
+      });
+    }
+
+    // Save / Update
+    if (saveBtn) saveBtn.addEventListener('click', async () => {
+      const vals = getFormValues();
+      if (!vals.policy_label){ showMsg('Label is required.', true); return; }
+
+      const editId = document.getElementById('ins-edit-id')?.value || '';
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving…';
+      showMsg('');
+
+      try {
+        if (editId) {
+          // Update existing row
+          const patch = { ...vals, updated_at: new Date().toISOString() };
+          if (selectedFile) {
+            const { data: { user } } = await supa.auth.getUser();
+            const path = `${user.id}/${editId}.pdf`;
+            const { error: upErr } = await supa.storage
+              .from('insurance-policies').upload(path, selectedFile, { upsert: true });
+            if (upErr) throw upErr;
+            patch.storage_path  = path;
+            patch.storage_bytes = selectedFile.size;
+          }
+          const { error } = await supa.from('insurance_policies')
+            .update(patch).eq('id', editId);
+          if (error) throw error;
+
+        } else {
+          // 3-step honest write: INSERT (path=null) → upload → UPDATE path
+          const { data: row, error: insErr } = await supa.from('insurance_policies')
+            .insert({ ...vals }).select('id, user_id').single();
+          if (insErr) throw insErr;
+
+          if (selectedFile) {
+            const path = `${row.user_id}/${row.id}.pdf`;
+            const { error: upErr } = await supa.storage
+              .from('insurance-policies').upload(path, selectedFile);
+            if (upErr) {
+              showMsg('Saved — PDF upload failed. Edit the policy to re-upload.', true);
+              saveBtn.disabled = false; saveBtn.textContent = 'Save →';
+              return;
+            }
+            await supa.from('insurance_policies')
+              .update({ storage_path: path, storage_bytes: selectedFile.size,
+                        updated_at: new Date().toISOString() })
+              .eq('id', row.id);
+          }
+        }
+
+        showMsg(editId ? 'Updated.' : 'Saved.');
+        clearForm();
+        await renderInsurance();
+      } catch(e) {
+        showMsg(e.message || 'Error saving policy.', true);
+        saveBtn.disabled = false;
+        saveBtn.textContent = editId ? 'Update →' : 'Save →';
       }
-
-      msg.style.color='#3fb950'; msg.textContent='Policy saved.';
-      setTimeout(function(){ renderInsurance(); }, 1200);
     });
 
-    list.addEventListener('click', async function(e){
+    // Cancel edit
+    if (cancelBtn) cancelBtn.addEventListener('click', clearForm);
+
+    // Archived toggle
+    if (toggleBtn) toggleBtn.addEventListener('click', () => {
+      showArchived = !showArchived;
+      toggleBtn.textContent = showArchived
+        ? `Hide archived`
+        : `Show archived (${archived.length})`;
+      if (!policyList) return;
+      const display = showArchived
+        ? allPolicies.filter(p => p.active).concat(archived)
+        : allPolicies.filter(p => p.active);
+      policyList.innerHTML = insPoliciesListHTML(display);
+    });
+
+    // Policy card actions (event delegation)
+    if (policyList) policyList.addEventListener('click', async e => {
       const btn = e.target.closest('[data-action]');
-      if(btn){
-        const action = btn.dataset.action;
-        if(action==='open'){
-          const { data, error } = await supa.storage.from('insurance-policies').createSignedUrl(btn.dataset.path, 60);
-          if(error){ alert('Could not open PDF: '+error.message); return; }
-          window.open(data.signedUrl, '_blank');
-        }
-        if(action==='archive'){
-          await supa.from('insurance_policies').update({ active: btn.dataset.active==='false' }).eq('id', btn.dataset.id);
-          renderInsurance();
-        }
-        if(action==='delete'){ showDeleteModal(btn.dataset.id, btn.dataset.label); }
+      if (!btn) return;
+      const action = btn.dataset.action;
+      const id     = btn.dataset.id;
+
+      if (action === 'open-pdf') {
+        const { data, error } = await supa.storage
+          .from('insurance-policies').createSignedUrl(btn.dataset.path, 300);
+        if (error){ alert('Could not get PDF link: ' + error.message); return; }
+        window.open(data.signedUrl, '_blank');
       }
-      if(e.target.id==='ins-show-archived'){
-        const arc = document.getElementById('ins-archived-list');
-        if(arc){
-          const showing = arc.style.display!=='none';
-          arc.style.display = showing ? 'none' : 'block';
-          e.target.textContent = showing ? e.target.textContent.replace('Hide','Show') : e.target.textContent.replace('Show','Hide');
-        }
+
+      if (action === 'edit') {
+        const p = allPolicies.find(x => x.id === id);
+        if (!p) return;
+        const editIdEl = document.getElementById('ins-edit-id');
+        if (editIdEl) editIdEl.value = p.id;
+        const title = document.getElementById('ins-form-title');
+        if (title) title.textContent = 'Edit Policy';
+        if (saveBtn){ saveBtn.textContent = 'Update →'; saveBtn.disabled = false; }
+        if (cancelBtn) cancelBtn.style.display = 'inline-block';
+
+        const fields = {
+          'ins-label': p.policy_label,       'ins-carrier': p.carrier || '',
+          'ins-policy-num': p.policy_number || '', 'ins-effective': p.effective_date || '',
+          'ins-renewal': p.renewal_date || '', 'ins-premium': p.premium_annual_cad || '',
+          'ins-deductible': p.deductible_cad || '', 'ins-limit': p.coverage_limit_cad || '',
+          'ins-notes': p.notes || ''
+        };
+        Object.entries(fields).forEach(([fid, val]) => {
+          const el = document.getElementById(fid);
+          if (el) el.value = val;
+        });
+        const cov = document.getElementById('ins-coverage');
+        if (cov) cov.value = p.coverage_type || '';
+
+        const formEl = document.getElementById('ins-upload-form');
+        if (formEl) formEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        showMsg('Editing — update fields then click Update.', false);
+      }
+
+      if (action === 'archive') {
+        btn.disabled = true; btn.textContent = '…';
+        const { error } = await supa.from('insurance_policies')
+          .update({ active: false, updated_at: new Date().toISOString() }).eq('id', id);
+        if (error){ alert('Archive failed: ' + error.message); btn.disabled=false; btn.textContent='Archive'; return; }
+        await renderInsurance();
+      }
+
+      if (action === 'delete') {
+        showDeleteModal(id, btn.dataset.label || 'this policy');
       }
     });
   }
 
   function showDeleteModal(policyId, label){
     const overlay = document.createElement('div');
-    overlay.className='ins-modal-overlay';
-    overlay.innerHTML='<div class="ins-modal">'
-      +'<h3>Delete Policy</h3>'
-      +'<p>Permanently delete <strong>'+esc(label)+'</strong>? This also removes the uploaded PDF. This cannot be undone.</p>'
-      +'<label><input type="checkbox" id="ins-del-chk"> I understand this is permanent</label>'
-      +'<div class="ins-modal-btns">'
-      +'<button class="ins-cancel-btn" id="ins-del-cancel">Cancel</button>'
-      +'<button class="ins-save-btn" id="ins-del-confirm" style="background:#b62324;" disabled>Delete</button>'
-      +'</div>'
-      +'</div>';
+    overlay.className = 'ins-modal-overlay';
+    overlay.innerHTML = `
+      <div class="ins-modal">
+        <h3>Permanently delete this policy?</h3>
+        <p><strong>${esc(label)}</strong><br>This deletes the policy record and any attached PDF. Cannot be undone.</p>
+        <label><input type="checkbox" id="ins-del-chk"> I understand this permanently deletes the policy and PDF.</label>
+        <div class="ins-modal-btns">
+          <button class="ins-btn" id="ins-del-cancel">Cancel</button>
+          <button class="ins-btn danger" id="ins-del-btn" disabled>Delete permanently</button>
+        </div>
+      </div>`;
     document.body.appendChild(overlay);
-    overlay.querySelector('#ins-del-chk').addEventListener('change', function(){ overlay.querySelector('#ins-del-confirm').disabled=!this.checked; });
-    overlay.querySelector('#ins-del-cancel').addEventListener('click', function(){ overlay.remove(); });
-    overlay.querySelector('#ins-del-confirm').addEventListener('click', async function(){
-      this.disabled=true; this.textContent='Deletingâ€¦';
-      const { data:pol } = await supa.from('insurance_policies').select('storage_path').eq('id',policyId).single();
-      const { error:delErr } = await supa.from('insurance_policies').delete().eq('id',policyId);
-      if(delErr){ alert('Delete failed: '+delErr.message); overlay.remove(); return; }
-      if(pol&&pol.storage_path){ await supa.storage.from('insurance-policies').remove([pol.storage_path]); }
-      overlay.remove();
-      renderInsurance();
+
+    const chk    = overlay.querySelector('#ins-del-chk');
+    const delBtn = overlay.querySelector('#ins-del-btn');
+    chk.addEventListener('change', () => { delBtn.disabled = !chk.checked; });
+    overlay.querySelector('#ins-del-cancel').addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+
+    delBtn.addEventListener('click', async () => {
+      delBtn.disabled = true; delBtn.textContent = 'Deleting…';
+      try {
+        const { data: row } = await supa.from('insurance_policies')
+          .select('storage_path').eq('id', policyId).single();
+        if (row?.storage_path) {
+          await supa.storage.from('insurance-policies').remove([row.storage_path]);
+        }
+        const { error } = await supa.from('insurance_policies').delete().eq('id', policyId);
+        if (error) throw error;
+        overlay.remove();
+        await renderInsurance();
+      } catch(e) {
+        delBtn.textContent = 'Error — try again';
+        delBtn.disabled = false;
+      }
     });
   }
 
-  // â”€â”€â”€ LOGIN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── LOGIN ─────────────────────────────────────────────────────────────
   function renderLogin(){
     app.innerHTML = `
       <div class="login-shell">
@@ -710,7 +1086,7 @@
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('pw').value;
       const msg = document.getElementById('login-msg');
-      msg.textContent = 'Signing inâ€¦';
+      msg.textContent = 'Signing in…';
       const { error } = await supa.auth.signInWithPassword({ email, password });
       if (error) { msg.textContent = error.message; return; }
       location.reload();
