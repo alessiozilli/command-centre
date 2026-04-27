@@ -1,7 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
    cc-shell.css — AZCK Command Centre unified shell
-   v2.1 — 2026-04-26 (mid-size responsive: tighter header ≤1280px so all nav pills + groups fit on one row)
-   v2.0 — 2026-04-21 (Pass 1 rebuild — adds .cc-device-pill)
    v1.0 — 2026-04-17 (Forge v0.9.5 The Operator)
 
    Design tokens + layout for all CC pages. Pages load this file
@@ -28,11 +26,11 @@
   --cc-text-dim:    #484f58;
 
   /* Accents (semantic) */
-  --cc-accent:      #58a6ff;
-  --cc-success:     #3fb950;
-  --cc-warn:        #d29922;
-  --cc-danger:      #f85149;
-  --cc-magenta:     #bc8cff;
+  --cc-accent:      #58a6ff;   /* primary blue */
+  --cc-success:     #3fb950;   /* green */
+  --cc-warn:        #d29922;   /* yellow/amber */
+  --cc-danger:      #f85149;   /* red */
+  --cc-magenta:     #bc8cff;   /* purple */
   --cc-orange:      #f0883e;
   --cc-pink:        #f778ba;
 
@@ -181,7 +179,6 @@ a:hover { text-decoration: underline; }
   display: flex;
   gap: 8px;
   flex-shrink: 0;
-  align-items: center;
 }
 .cc-banner-actions button {
   background: transparent;
@@ -198,39 +195,26 @@ a:hover { text-decoration: underline; }
   border-color: var(--cc-text-muted);
 }
 
-/* Device pill (Pass 1 — v2.0) */
-.cc-device-pill {
-  display: inline-flex;
-  align-items: center;
-  max-width: 180px;
-  padding: 4px 10px;
-  background: var(--cc-bg-card);
+.cc-banner-actions select {
+  background: transparent;
   border: 1px solid var(--cc-border);
-  border-radius: var(--cc-r-pill);
   color: var(--cc-text-muted);
+  padding: 4px 6px;
+  border-radius: var(--cc-r-sm);
   font-size: 12px;
-  font-weight: 600;
-  text-decoration: none;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: all var(--cc-t-fast);
+  cursor: pointer;
+  max-width: 130px;
 }
-.cc-device-pill::before {
-  content: '💻';
-  font-size: 11px;
-  margin-right: 6px;
-}
-.cc-device-pill:hover {
+.cc-banner-actions select:focus {
+  outline: none;
+  border-color: var(--cc-accent);
   color: var(--cc-text);
-  border-color: var(--cc-text-muted);
-  text-decoration: none;
 }
 
 /* ─── 4. LEVEL 2 — QUICKVIEW STRIP ─── */
 .cc-quickview {
   position: sticky;
-  top: 48px;
+  top: 48px;  /* below banner */
   z-index: var(--cc-z-quickview);
   background: var(--cc-bg-card);
   border-bottom: 1px solid var(--cc-border);
@@ -273,7 +257,7 @@ a:hover { text-decoration: underline; }
 /* ─── 5. LEVEL 3 — SUB-TABS (per page, drag-reorder) ─── */
 .cc-subtabs {
   position: sticky;
-  top: 86px;
+  top: 86px;  /* below banner + quickview */
   z-index: var(--cc-z-subtabs);
   background: var(--cc-bg);
   padding: 12px 24px 0;
@@ -424,6 +408,7 @@ a:hover { text-decoration: underline; }
   border-color: #79c0ff;
 }
 
+/* Card — generic container */
 .cc-card {
   background: var(--cc-bg-card);
   border: 1px solid var(--cc-border);
@@ -432,6 +417,7 @@ a:hover { text-decoration: underline; }
   margin-bottom: var(--cc-pad-md);
 }
 
+/* Inline-edit affordance (task pages) */
 .cc-editable {
   cursor: text;
   padding: 2px 4px;
@@ -447,6 +433,7 @@ a:hover { text-decoration: underline; }
   background: var(--cc-bg);
 }
 
+/* Typography defaults for content */
 .cc-content h1 { font-size: 32px; color: var(--cc-accent); margin-bottom: 4px; }
 .cc-content h2 { font-size: 22px; color: var(--cc-accent); margin: 32px 0 16px; }
 .cc-content h3 { font-size: 17px; color: var(--cc-text); margin: 20px 0 10px; }
@@ -455,20 +442,6 @@ a:hover { text-decoration: underline; }
 .cc-content ul li { margin-bottom: 4px; }
 
 /* ─── 8. RESPONSIVE ─── */
-/* Mid-size — tightens header so all nav pills + group labels fit on one row */
-@media (max-width: 1280px) {
-  .cc-banner            { padding: 8px 16px; gap: 10px; }
-  .cc-brand             { font-size: 13px; padding: 3px 10px; }
-  .cc-brand .cc-brand-sub { display: none; }
-  .cc-nav               { gap: 4px; }
-  .cc-nav a             { padding: 5px 12px; font-size: 13px; }
-  .cc-nav-group-label   { font-size: 9px; padding: 6px 2px 6px 6px; letter-spacing: 1px; }
-  .cc-nav-group-sep     { margin: 0 2px; height: 16px; }
-  .cc-banner-actions    { gap: 6px; }
-  .cc-banner-actions button { padding: 4px 8px; font-size: 11px; }
-  .cc-device-pill       { font-size: 11px; padding: 3px 8px; }
-}
-
 @media (max-width: 768px) {
   .cc-banner { padding: 8px 14px; gap: 10px; flex-wrap: wrap; }
   .cc-brand  { font-size: 13px; padding: 3px 10px; }
@@ -479,7 +452,6 @@ a:hover { text-decoration: underline; }
   .cc-content   { padding: 16px 14px; }
   .cc-content h1 { font-size: 24px; }
   .cc-view-toolbar { flex-direction: column; align-items: stretch; }
-  .cc-device-pill { max-width: 120px; font-size: 11px; padding: 3px 8px; }
 }
 
 /* ─── 9. UTILITIES ─── */
