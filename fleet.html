@@ -23,6 +23,7 @@
       { id: 'cost',    label: 'Cost'    },
       { id: 'tree',    label: 'Tree'    },
       { id: 'plans',   label: 'Plans'   },
+      { id: 'strings', label: 'Strings' },
       { id: 'bus',     label: 'Bus'     }
     ],
     stats: [
@@ -314,6 +315,22 @@
 .cc-sheet-handle { width: 36px; height: 4px; background: var(--cc-border); border-radius: 2px; margin: 10px auto 4px; }
 .cc-sheet-title { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--cc-text-dim); padding: 4px 16px 10px; font-weight: 700; border-bottom: 1px solid var(--cc-border); }
 
+/* ─── Strings tab ────────────────────────────────────────────── */
+.str-pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: var(--cc-r-pill); border: 1px solid; font-size: 0.8rem; font-weight: 700; }
+.str-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.str-filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.str-grid { display: grid; gap: 10px; }
+.str-card { background: var(--cc-bg-card); border: 1px solid var(--cc-border); border-radius: var(--cc-r-md); padding: 14px 16px; cursor: default; transition: border-color var(--cc-t-fast); }
+.str-card:hover { border-color: rgba(255,255,255,0.15); }
+.str-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+.str-card-meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-size: 0.75rem; color: var(--cc-text-muted); margin-bottom: 6px; }
+.str-card-focus { font-size: 0.82rem; color: var(--cc-text-muted); margin-bottom: 10px; line-height: 1.45; }
+.str-card-footer { display: flex; gap: 8px; align-items: center; padding-top: 8px; border-top: 1px solid var(--cc-border); }
+.btn-str-menu { background: none; border: 1px solid var(--cc-border); color: var(--cc-text-muted); border-radius: var(--cc-r-sm); padding: 4px 12px; font-size: 0.75rem; cursor: pointer; transition: border-color 0.12s, color 0.12s; }
+.btn-str-menu:hover { border-color: var(--cc-accent); color: var(--cc-accent); }
+.btn-str-resume { background: rgba(63,185,80,0.1); border: 1px solid rgba(63,185,80,0.3); color: var(--cc-success); border-radius: var(--cc-r-sm); padding: 4px 12px; font-size: 0.75rem; cursor: pointer; font-weight: 600; }
+.btn-str-resume:hover { background: rgba(63,185,80,0.2); }
+
 /* Auto-refresh indicator */
 #fleet-refresh-pill {
   position: fixed; bottom: 16px; left: 16px; z-index: 50;
@@ -401,6 +418,17 @@
   <div id="fleetPlansList"><div class="fleet-empty">Loading&hellip;</div></div>
 </section>
 
+
+<section data-subtab="strings">
+  <p class="fleet-section-intro">Active work contexts. Each String groups sessions, tasks, and cost under a named theme. Right-click or tap ⋯ to act.</p>
+  <div class="str-filter-bar" id="strFilterBar">
+    <button class="filter-btn active" data-str-filter="all"      onclick="strSetFilter('all')">All Active</button>
+    <button class="filter-btn"        data-str-filter="active"   onclick="strSetFilter('active')">Active</button>
+    <button class="filter-btn"        data-str-filter="paused"   onclick="strSetFilter('paused')">Paused</button>
+    <button class="filter-btn"        data-str-filter="archived" onclick="strSetFilter('archived')">Archived</button>
+  </div>
+  <div class="str-grid" id="fleetStringsList"><div class="fleet-empty">Loading&hellip;</div></div>
+</section>
 
 <section data-subtab="bus">
   <p class="fleet-section-intro">Active bus messages — status not done or archived. Mark done once the triggered work is complete.</p>
@@ -1848,6 +1876,82 @@
     setEl('boardWrap', html);
   }
 
+  // ─── STRINGS tab ─────────────────────────────────────────────
+  let _strFilter = 'all';
+
+  window.strSetFilter = function(f) {
+    _strFilter = f;
+    document.querySelectorAll('#strFilterBar .filter-btn').forEach(b => b.classList.toggle('active', b.dataset.strFilter === f));
+    loadStrings();
+  };
+
+  async function loadStrings() {
+    let q = supa.from('forge_strings')
+      .select('id,name,color,status,description,current_instance,last_activity,total_cost_cad,current_focus_task_id,current_focus_plan_id,archived_at')
+      .order('last_activity', { ascending: false, nullsFirst: false });
+
+    if (_strFilter === 'all')      q = q.in('status', ['active','paused']);
+    else if (_strFilter === 'archived') q = q.eq('status', 'archived');
+    else                           q = q.eq('status', _strFilter);
+
+    const { data, error } = await q;
+    if (error) { setEl('fleetStringsList', `<div class="fleet-empty">Error: ${esc(error.message)}</div>`); return; }
+    if (!data || !data.length) {
+      setEl('fleetStringsList', '<div class="fleet-empty">No strings match this filter.</div>');
+      return;
+    }
+
+    const taskIds = [...new Set(data.map(s => s.current_focus_task_id).filter(Boolean))];
+    let taskMap = {};
+    if (taskIds.length) {
+      const { data: tasks } = await supa.from('forge_tasks')
+        .select('id,title,status,assigned_to').in('id', taskIds);
+      (tasks || []).forEach(t => { taskMap[t.id] = t; });
+    }
+
+    data.forEach(s => { _menuCache[s.id] = { ...s, _type: 'forge_string' }; });
+
+    const cards = data.map(s => {
+      const ft = s.current_focus_task_id ? taskMap[s.current_focus_task_id] : null;
+      const color = s.color || '#8b949e';
+      const statusBadge = {
+        active:   `<span class="badge" style="background:rgba(63,185,80,0.12);color:var(--cc-success);border:1px solid rgba(63,185,80,0.25)">active</span>`,
+        paused:   `<span class="badge" style="background:rgba(210,153,34,0.12);color:var(--cc-warn);border:1px solid rgba(210,153,34,0.25)">paused</span>`,
+        archived: `<span class="badge" style="background:rgba(139,148,158,0.12);color:var(--cc-text-muted);border:1px solid rgba(139,148,158,0.25)">archived</span>`,
+      }[s.status] || `<span class="badge">${esc(s.status)}</span>`;
+
+      return `<div class="str-card"
+        data-menu-type="forge_string" data-menu-id="${esc(s.id)}"
+        oncontextmenu="showActionMenu(event,'forge_string','${esc(s.id)}')">
+        <div class="str-card-head">
+          <span class="str-pill" style="background:${color}18;border-color:${color}44;color:${color}">
+            <span class="str-dot" style="background:${color}"></span>${esc(s.name)}
+          </span>
+          ${statusBadge}
+        </div>
+        <div class="str-card-meta">
+          ${s.current_instance ? badgeInstance(s.current_instance) : '<span style="color:var(--cc-text-dim)">no instance</span>'}
+          ${s.last_activity ? `<span>active ${fmtAge(s.last_activity)}</span>` : ''}
+          ${s.total_cost_cad != null ? `<span style="color:var(--cc-text)">${fmtCost(s.total_cost_cad)}</span>` : ''}
+        </div>
+        ${s.description ? `<div class="str-card-focus" style="color:var(--cc-text-dim);font-size:0.78rem">${esc(s.description)}</div>` : ''}
+        ${ft ? `<div class="str-card-focus">Focus: <strong>${esc(ft.title)}</strong> ${badgeStatus(ft.status)} ${ft.assigned_to ? badgeInstance(ft.assigned_to) : ''}</div>` : ''}
+        <div class="str-card-footer">
+          ${s.status === 'paused' ? `<button class="btn-str-resume" onclick="handleStrResume('${esc(s.id)}')">▶ Resume</button>` : ''}
+          <button class="btn-str-menu" onclick="showActionMenu(event,'forge_string','${esc(s.id)}');event.stopPropagation()">⋯ Actions</button>
+        </div>
+      </div>`;
+    }).join('');
+
+    setEl('fleetStringsList', cards);
+  }
+
+  window.handleStrResume = async function(id) {
+    const { error } = await supa.from('forge_strings').update({ status: 'active' }).eq('id', id);
+    if (error) { _ccToast('Failed: ' + error.message, true); return; }
+    _ccToast('String resumed'); loadStrings();
+  };
+
   function _setupBoardRealtime() {
     _boardChannels.forEach(c => supa.removeChannel(c));
     _boardChannels = [
@@ -1890,6 +1994,17 @@
       'sep',
       { id:'copy_id',  label:'Copy ID' },
     ].filter(i => i === 'sep' || !i.show === false || i.show === undefined);
+
+    if (type === 'forge_string') return [
+      { id:'resume',   label:'Resume',     show: s === 'paused'   },
+      { id:'pause',    label:'Pause',      show: s === 'active'   },
+      { id:'dispatch', label:'Dispatch to instance…' },
+      { id:'edit',     label:'Edit description' },
+      'sep',
+      { id:'archive',  label:'Archive',    show: s !== 'archived', danger: true },
+      'sep',
+      { id:'copy_id',  label:'Copy ID' },
+    ].filter(i => i === 'sep' || i.show !== false);
 
     return [];
   }
@@ -1974,6 +2089,43 @@
       if (error) { _ccToast('Failed: ' + error.message, true); return; }
       _ccToast({ approve:'Approved', park:'Parked', unpark:'Unparked', archive:'Archived' }[actionId]);
       loadBoard(); loadPlans(); return;
+    }
+
+    if (type === 'forge_string') {
+      if (actionId === 'pause') {
+        const { error } = await supa.from('forge_strings').update({ status: 'paused' }).eq('id', id);
+        if (error) { _ccToast('Failed: ' + error.message, true); return; }
+        _ccToast('String paused'); loadStrings(); return;
+      }
+      if (actionId === 'resume') {
+        const { error } = await supa.from('forge_strings').update({ status: 'active' }).eq('id', id);
+        if (error) { _ccToast('Failed: ' + error.message, true); return; }
+        _ccToast('String resumed'); loadStrings(); return;
+      }
+      if (actionId === 'dispatch') {
+        const name = data.name || id;
+        const body = `RESUME STRING from fleet.html Strings tab\nString: ${name}\nID: ${id}\n\nResume command (beast):\ncd "C:\\Users\\user\\My Drive (alessio.zilli@azcustomknives.com)\\AZCK Ltd" ; claude --model sonnet "[STRING:${name}] resume handoff"`;
+        const { error } = await supa.from('agent_messages')
+          .insert({ from_user: 'alessio', to_user: 'forge', body, status: 'sent' });
+        if (error) { _ccToast('Dispatch failed: ' + error.message, true); return; }
+        _ccToast('Dispatched to bus — forge picks it up next boot'); loadStrings(); return;
+      }
+      if (actionId === 'edit') {
+        const cur = data.description || '';
+        const newDesc = prompt('Description for "' + (data.name || '') + '":\n(leave blank to clear)', cur);
+        if (newDesc === null) return;
+        const { error } = await supa.from('forge_strings').update({ description: newDesc }).eq('id', id);
+        if (error) { _ccToast('Failed: ' + error.message, true); return; }
+        _ccToast('Description updated'); loadStrings(); return;
+      }
+      if (actionId === 'archive') {
+        if (!confirm('Archive string "' + (data.name || '') + '"?\nThis hides it from the Active view.')) return;
+        const { error } = await supa.from('forge_strings')
+          .update({ status: 'archived', archived_at: new Date().toISOString() }).eq('id', id);
+        if (error) { _ccToast('Failed: ' + error.message, true); return; }
+        _ccToast('String archived'); loadStrings(); return;
+      }
+      return;
     }
 
     if (type === 'forge_task') {
@@ -2063,7 +2215,7 @@
       live: loadLive, queue: loadQueue, cycles: loadCycles,
       today: loadToday, blocked: loadBlocked, history: loadHistory,
       cost: loadCost, tree: () => loadTree(true), plans: () => loadPlans(true),
-      bus: loadBus
+      strings: loadStrings, bus: loadBus
     };
     const fn = TAB_FNS[_getActiveTab()];
     if (!fn) return;
@@ -2094,6 +2246,7 @@
     loadCost();
     loadTree();
     loadPlans();
+    loadStrings();
     loadBus();
     setEl('fleetEcoContainer', renderEcosystem());
 
