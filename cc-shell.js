@@ -53,8 +53,10 @@
   var KEY_SUBTAB_ORDER = function (pid) { return 'cc.subtabOrder.' + pid + '.v1'; };
   var KEY_VIEW = function (pid) { return 'cc.view.' + pid + '.v1'; };
   var KEY_ACTIVE_SUBTAB = function (pid) { return 'cc.activeSubtab.' + pid + '.v1'; };
-  var KEY_VOICE_ENABLED = 'cc.voice.enabled.v1';
-  var KEY_VOICE_NAME    = 'cc.voice.name.v1';
+  var KEY_VOICE_CLICK_READ = 'cc.voice.clickRead.v1';
+  var KEY_VOICE_AUTO_BUS   = 'cc.voice.autoBus.v1';
+  var KEY_VOICE_VOLUME     = 'cc.voice.volume.v1';
+  var KEY_VOICE_NAME       = 'cc.voice.name.v1';
 
   var state = {
     config: null,
@@ -88,11 +90,13 @@
   function removeLS(k) { try { localStorage.removeItem(k); } catch (e) {} }
 
   // ─── 2b. VOICE MODULE ────────────────────────────────────
-  var _voiceOn   = readLS(KEY_VOICE_ENABLED, false);
-  var _voiceName = readLS(KEY_VOICE_NAME, '');
+  var _clickReadOn = readLS(KEY_VOICE_CLICK_READ, true);
+  var _autoBusOn   = readLS(KEY_VOICE_AUTO_BUS, true);
+  var _voiceVolume = readLS(KEY_VOICE_VOLUME, 0.85);
+  var _voiceName   = readLS(KEY_VOICE_NAME, '');
+  var _voiceChangeCb = null;
 
-  function speakText(text) {
-    if (!_voiceOn) return;
+  function _rawSpeak(text) {
     if (document.visibilityState !== 'visible') return;
     if (!('speechSynthesis' in window)) return;
     try {
@@ -100,6 +104,7 @@
       if (!txt.trim()) return;
       window.speechSynthesis.cancel();
       var utt = new SpeechSynthesisUtterance(txt);
+      utt.volume = typeof _voiceVolume === 'number' ? _voiceVolume : 0.85;
       if (_voiceName) {
         var vs = window.speechSynthesis.getVoices();
         for (var vi = 0; vi < vs.length; vi++) { if (vs[vi].name === _voiceName) { utt.voice = vs[vi]; break; } }
@@ -108,18 +113,38 @@
     } catch (e) {}
   }
 
-  function _setVoiceOn(val) {
-    _voiceOn = !!val;
-    writeLS(KEY_VOICE_ENABLED, _voiceOn);
-    var btn = document.getElementById('cc-voice-btn');
-    if (btn) btn.textContent = _voiceOn ? '🔊' : '🔇';
-    var sel = document.getElementById('cc-voice-picker');
-    if (sel) sel.style.display = _voiceOn ? '' : 'none';
+  // speakText = auto-bus gated (called from fleet.html / alessio.html Realtime callbacks)
+  function speakText(text) {
+    if (!_autoBusOn) return;
+    _rawSpeak(text);
+  }
+
+  function _setClickReadOn(val) {
+    _clickReadOn = !!val;
+    writeLS(KEY_VOICE_CLICK_READ, _clickReadOn);
+    var btn = document.getElementById('cc-voice-click-btn');
+    if (btn) btn.classList.toggle('cc-voice-btn-active', _clickReadOn);
+    if (_voiceChangeCb) _voiceChangeCb('voice_click_read', _clickReadOn);
+  }
+
+  function _setAutoBusOn(val) {
+    _autoBusOn = !!val;
+    writeLS(KEY_VOICE_AUTO_BUS, _autoBusOn);
+    var btn = document.getElementById('cc-voice-bus-btn');
+    if (btn) btn.classList.toggle('cc-voice-btn-active', _autoBusOn);
+    if (_voiceChangeCb) _voiceChangeCb('voice_auto_bus', _autoBusOn);
+  }
+
+  function _setVolume(val) {
+    _voiceVolume = parseFloat(val) || 0.85;
+    writeLS(KEY_VOICE_VOLUME, _voiceVolume);
+    if (_voiceChangeCb) _voiceChangeCb('voice_volume', _voiceVolume);
   }
 
   function _setVoiceName(name) {
     _voiceName = name;
     writeLS(KEY_VOICE_NAME, name);
+    if (_voiceChangeCb) _voiceChangeCb('voice_preference', name);
   }
 
   function _populateVoicePicker() {
@@ -136,6 +161,121 @@
       sel.appendChild(opt);
     });
     if (!_voiceName && vs.length) { _voiceName = vs[0].name; writeLS(KEY_VOICE_NAME, _voiceName); }
+  }
+
+  function _initClickToRead() {
+    if (!('speechSynthesis' in window) || !('getSelection' in window)) return;
+    var btn = document.createElement('button');
+    btn.id = 'cc-voice-read-btn';
+    btn.textContent = '🔊 Read';
+    btn.style.display = 'none';
+    document.body.appendChild(btn);
+
+    var hideBtn = function () { btn.style.display = 'none'; };
+
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var sel = window.getSelection();
+      var txt = sel ? sel.toString().trim() : '';
+      if (txt) _rawSpeak(txt);
+      hideBtn();
+    });
+
+    document.addEventListener('selectionchange', function () {
+      if (!_clickReadOn) { hideBtn(); return; }
+      var sel = window.getSelection();
+      if (!sel || !sel.toString().trim()) { hideBtn(); return; }
+      try {
+        var range = sel.getRangeAt(0);
+        var rect = range.getBoundingClientRect();
+        if (!rect || rect.width === 0) { hideBtn(); return; }
+        btn.style.left = (rect.left + window.scrollX + rect.width / 2 - 30) + 'px';
+        btn.style.top  = (rect.top  + window.scrollY - 40) + 'px';
+        btn.style.display = '';
+      } catch (ex) { hideBtn(); }
+    });
+
+    document.addEventListener('mousedown', function (e) {
+      if (e.target !== btn) hideBtn();
+    });
+  }
+
+  // ─── 2c. CMD+K PALETTE MODULE ────────────────────────────
+  var _paletteEl    = null;
+  var _paletteDataFn = null;
+  var _paletteCache = { ts: 0, items: [] };
+  var _PALETTE_TTL  = 30000;
+
+  function _buildStaticPaletteItems() {
+    var items = [];
+    var cfg = state.config || {};
+    var navItems = [];
+    if (cfg.navGroups && Array.isArray(cfg.navGroups)) {
+      cfg.navGroups.forEach(function (g) { (g.items || []).forEach(function (n) { navItems.push(n); }); });
+    } else {
+      navItems = cfg.nav || [];
+    }
+    navItems.forEach(function (n) {
+      items.push({ id: 'nav-' + n.id, title: n.label, section: 'Navigation',
+        handler: function () { window.location.href = n.href; } });
+    });
+    var page = state.page;
+    if (page && page.subtabs) {
+      page.subtabs.forEach(function (t) {
+        items.push({ id: 'tab-' + t.id, title: t.label, section: 'Subtabs',
+          handler: function () { if (typeof setSubtab === 'function') setSubtab(t.id); } });
+      });
+    }
+    return items;
+  }
+
+  function _openPalette() {
+    if (!_paletteEl) return;
+    var base = _buildStaticPaletteItems();
+    var now = Date.now();
+    if (now - _paletteCache.ts < _PALETTE_TTL) {
+      _paletteEl.data = base.concat(_paletteCache.items);
+      _paletteEl.open();
+    } else if (_paletteDataFn) {
+      _paletteDataFn().then(function (live) {
+        _paletteCache = { ts: Date.now(), items: live || [] };
+        _paletteEl.data = base.concat(_paletteCache.items);
+        _paletteEl.open();
+      }).catch(function () { _paletteEl.data = base; _paletteEl.open(); });
+    } else {
+      _paletteEl.data = base;
+      _paletteEl.open();
+    }
+  }
+
+  function _initPalette() {
+    // ninja-keys custom element must be defined before we can create it
+    var tryInit = function () {
+      if (!customElements.get('ninja-keys')) return;
+      _paletteEl = document.createElement('ninja-keys');
+      _paletteEl.id = 'cc-palette';
+      document.body.appendChild(_paletteEl);
+      document.addEventListener('keydown', function (e) {
+        if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+          e.preventDefault();
+          _openPalette();
+        }
+      });
+    };
+    // Try now; if not yet defined, wait for the element to register
+    tryInit();
+    if (!_paletteEl && customElements.whenDefined) {
+      customElements.whenDefined('ninja-keys').then(tryInit);
+    }
+  }
+
+  // ─── 2d. STATUS PIPS MODULE ──────────────────────────────
+  function _applyPip(tabId, color) {
+    var navA = document.querySelector('.cc-nav-item[data-id="' + tabId + '"]');
+    if (!navA) return;
+    var pip = navA.querySelector('.cc-pip');
+    if (!pip) { pip = document.createElement('span'); pip.className = 'cc-pip'; navA.appendChild(pip); }
+    pip.className = 'cc-pip cc-pip-' + (color || 'empty');
   }
 
   // ─── 3. CONFIG LOAD ──────────────────────────────────────
@@ -312,6 +452,7 @@
           text: n.label
         });
         if (n.id === state.page.id) a.classList.add('active');
+        a.appendChild(el('span', { cls: 'cc-pip cc-pip-empty' }));
         nav.appendChild(a);
       });
       if (gi < groups.length - 1) {
@@ -329,20 +470,44 @@
         } } })
     ]});
 
-    // Voice toggle + picker (only if Web Speech API available)
+    // Voice controls (v2): click-read toggle · auto-bus toggle · voice picker · volume slider
     if ('speechSynthesis' in window) {
-      var _vBtn = el('button', {
-        text: _voiceOn ? '🔊' : '🔇',
-        attrs: { id: 'cc-voice-btn', title: 'Toggle voice notifications' },
-        on: { click: function () { _setVoiceOn(!_voiceOn); } }
+      var _vClickBtn = el('button', {
+        text: '🔊',
+        attrs: { id: 'cc-voice-click-btn', title: 'Click-to-read: select text to get a Read button' },
+        on: { click: function () { _setClickReadOn(!_clickReadOn); } }
       });
+      if (_clickReadOn) _vClickBtn.classList.add('cc-voice-btn-active');
+
+      var _vBusBtn = el('button', {
+        text: '📡',
+        attrs: { id: 'cc-voice-bus-btn', title: 'Auto-read incoming bus messages aloud' },
+        on: { click: function () { _setAutoBusOn(!_autoBusOn); } }
+      });
+      if (_autoBusOn) _vBusBtn.classList.add('cc-voice-btn-active');
+
       var _vSel = document.createElement('select');
       _vSel.id = 'cc-voice-picker';
       _vSel.title = 'Select voice';
-      _vSel.style.display = _voiceOn ? '' : 'none';
       _vSel.addEventListener('change', function () { _setVoiceName(this.value); });
+
+      var _vVolWrap = el('div', { cls: 'cc-voice-vol-wrap' });
+      var _vVolIcon = el('span', { cls: 'cc-voice-vol-icon', text: '🔉' });
+      var _vVolSlider = document.createElement('input');
+      _vVolSlider.type = 'range'; _vVolSlider.id = 'cc-voice-volume';
+      _vVolSlider.min = '0'; _vVolSlider.max = '1'; _vVolSlider.step = '0.05';
+      _vVolSlider.value = String(_voiceVolume);
+      _vVolSlider.title = 'Voice volume';
+      _vVolSlider.addEventListener('input', function () { _setVolume(this.value); });
+      _vVolWrap.appendChild(_vVolIcon);
+      _vVolWrap.appendChild(_vVolSlider);
+
+      // Order: [🔊] [📡] [picker] [🔉 slider] — insert reversed so firstChild works
+      actions.insertBefore(_vVolWrap, actions.firstChild);
       actions.insertBefore(_vSel, actions.firstChild);
-      actions.insertBefore(_vBtn, actions.firstChild);
+      actions.insertBefore(_vBusBtn, actions.firstChild);
+      actions.insertBefore(_vClickBtn, actions.firstChild);
+
       _populateVoicePicker();
       if ('onvoiceschanged' in window.speechSynthesis) {
         window.speechSynthesis.onvoiceschanged = _populateVoicePicker;
@@ -571,12 +736,36 @@
       location.reload();
     },
 
-    // Voice (Forge Voice Phase 2)
+    // Voice (Forge Voice v2 — Bus #224)
     voice: {
-      speak:      speakText,
-      isEnabled:  function () { return _voiceOn; },
-      setEnabled: _setVoiceOn,
-      setName:    _setVoiceName
+      speak:         speakText,          // auto-bus gated; called from Realtime callbacks
+      isAutoBusOn:   function () { return _autoBusOn; },
+      isClickReadOn: function () { return _clickReadOn; },
+      setAutoBus:    _setAutoBusOn,
+      setClickRead:  _setClickReadOn,
+      setVolume:     _setVolume,
+      setName:       _setVoiceName,
+      // Inject DB settings post-auth: CC.voice.inject({ voice_click_read: true, ... })
+      inject: function (s) {
+        if (!s) return;
+        if (s.voice_click_read !== undefined) _setClickReadOn(s.voice_click_read);
+        if (s.voice_auto_bus   !== undefined) _setAutoBusOn(s.voice_auto_bus);
+        if (s.voice_volume     !== undefined) _setVolume(s.voice_volume);
+        if (s.voice_preference) { _setVoiceName(s.voice_preference); _populateVoicePicker(); }
+      },
+      // Register save callback: CC.voice.onChange((key, val) => upsertUserSetting(key, val))
+      onChange: function (fn) { _voiceChangeCb = fn; }
+    },
+
+    // Cmd+K palette (Plan 7abbcc33 Cycle 4)
+    palette: {
+      open:          _openPalette,
+      setDataSource: function (fn) { _paletteDataFn = fn; }
+    },
+
+    // Status pips (Plan 7abbcc33 Cycle 4)
+    pips: {
+      apply: _applyPip
     },
 
     // Introspection (for debugging)
@@ -594,6 +783,8 @@
         renderStatsBar();
         wrapContent();
         renderViewToolbar();
+        _initPalette();
+        _initClickToRead();
         // Ready signal
         document.dispatchEvent(new CustomEvent('cc-shell-ready', { detail: { page: state.page } }));
       });
