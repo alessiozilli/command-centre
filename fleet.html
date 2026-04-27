@@ -1956,7 +1956,15 @@
     _boardChannels.forEach(c => supa.removeChannel(c));
     _boardChannels = [
       supa.channel('board-plans').on('postgres_changes', { event: '*', schema: 'public', table: 'forge_plans' }, () => loadBoard()).subscribe(),
-      supa.channel('board-tasks').on('postgres_changes', { event: '*', schema: 'public', table: 'forge_tasks' }, () => loadBoard()).subscribe()
+      supa.channel('board-tasks').on('postgres_changes', { event: '*', schema: 'public', table: 'forge_tasks' }, () => loadBoard()).subscribe(),
+      supa.channel('board-bus-voice').on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'agent_messages'
+      }, (payload) => {
+        const msg = payload && payload.new;
+        if (!msg) return;
+        if (!['alessio', 'forge', 'team'].includes(msg.to_user)) return;
+        if (window.CC && CC.voice) CC.voice.speak(msg.body || '');
+      }).subscribe()
     ];
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) { _boardChannels.forEach(c => supa.removeChannel(c)); _boardChannels = []; }
