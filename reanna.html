@@ -977,7 +977,7 @@ async function loadCalendarTab() {
     const el = document.getElementById('calendarContent');
     el.innerHTML = '<div class="cal-loading">Loading calendar&hellip;</div>';
     const now = new Date();
-    let q = sb.from('calendar_events').select('id,summary,description,location,start_time,end_time,all_day').gte('start_time', now.toISOString()).order('start_time', { ascending: true });
+    let q = sb.from('calendar_events').select('id,summary,description,location,start_time,end_time,all_day').eq('source_email', currentUser.email).gte('start_time', now.toISOString()).order('start_time', { ascending: true });
     if (_calDays > 0) {
         const cutoff = new Date(now); cutoff.setDate(cutoff.getDate() + _calDays);
         q = q.lte('start_time', cutoff.toISOString());
