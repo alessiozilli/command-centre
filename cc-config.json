@@ -1,7 +1,7 @@
 {
-  "_comment": "AZCK Command Centre \u2014 global config. v2.6 adds PEOPLE group (Alessio + Reanna personal dashboards). v2.5 adds Fleet to SYSTEMS group.",
-  "_version": "2.6",
-  "_updated": "2026-04-26",
+  "_comment": "AZCK Command Centre \u2014 global config. v2.7 adds Quarterly confirmation page to OPERATIONS. v2.6 adds PEOPLE group. v2.5 adds Fleet to SYSTEMS.",
+  "_version": "2.7",
+  "_updated": "2026-04-27",
   "brand": {
     "text": "AZCK",
     "sub": "Command Centre",
@@ -60,6 +60,11 @@
           "id": "finance",
           "label": "Finance",
           "href": "finance.html"
+        },
+        {
+          "id": "quarterly",
+          "label": "Quarterly",
+          "href": "quarterly-confirm.html"
         },
         {
           "id": "usage",

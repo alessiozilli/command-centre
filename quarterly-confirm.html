@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:;">
+<title>Quarterly Confirmation &mdash; AZCK Command Centre</title>
+<link rel="stylesheet" href="cc-shell.css">
+<script src="cc-shell.js" defer></script>
+<script>
+  window.PAGE = {
+    id: 'quarterly',
+    title: 'Quarterly Confirmation',
+    subtitle: 'Confirm last quarter\'s stream ratios vs projections — ratios only, no dollar amounts.',
+    subtabs: [
+      { id: 'confirm', label: 'Confirm' },
+      { id: 'history', label: 'History' }
+    ],
+    stats: [
+      { id: 'stat-quarter', label: 'Quarter',   value: '—' },
+      { id: 'stat-streams', label: 'Active',    value: '—' },
+      { id: 'stat-done',    label: 'Confirmed', value: '—' },
+      { id: 'stat-window',  label: 'Window',    value: '—' }
+    ]
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script defer src="auth.js"></script>
+<style>
+/* quarterly-confirm — page-scoped styles */
+.qc-banner { padding: 12px 16px; border-radius: var(--cc-r-md, 8px); margin: 0 0 20px; font-size: 0.875rem; font-weight: 600; }
+.qc-banner.due    { background: rgba(210,153,34,0.12); border: 1px solid rgba(210,153,34,0.35); color: #d29922; }
+.qc-banner.ready  { background: rgba(63,185,80,0.10); border: 1px solid rgba(63,185,80,0.3); color: #3fb950; }
+.qc-banner.closed { background: rgba(139,148,158,0.08); border: 1px solid var(--cc-border, #30363d); color: var(--cc-text-muted, #8b949e); }
+
+.qc-group-head { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.09em; color: var(--cc-text-dim, #586069); font-weight: 700; margin: 22px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--cc-border, #30363d); }
+
+.qc-card { background: var(--cc-bg-card, #161b22); border: 1px solid var(--cc-border, #30363d); border-radius: var(--cc-r-md, 8px); padding: 14px 16px; margin-bottom: 10px; }
+.qc-card.qc-saved { border-color: rgba(63,185,80,0.3); }
+.qc-card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.qc-name { font-size: 0.93rem; font-weight: 700; color: var(--cc-text, #e6edf3); flex: 1; min-width: 140px; }
+.qc-cat  { font-size: 0.67rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; background: rgba(88,166,255,0.1); color: #79c0ff; border: 1px solid rgba(88,166,255,0.2); }
+.qc-conf { font-size: 0.74rem; color: var(--cc-text-muted, #8b949e); }
+.qc-saved-badge { font-size: 0.75rem; color: #3fb950; font-weight: 700; }
+.qc-note-row { font-size: 0.78rem; color: var(--cc-text-muted, #8b949e); margin-bottom: 10px; }
+
+.dir-row { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+.dir-btn { padding: 6px 13px; border-radius: 6px; border: 1px solid var(--cc-border, #30363d); background: transparent; color: var(--cc-text-muted, #8b949e); font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.14s; font-family: inherit; white-space: nowrap; }
+.dir-btn:hover { border-color: #58a6ff; color: #58a6ff; }
+.dir-btn.d-above    { background: rgba(63,185,80,0.1); border-color: rgba(63,185,80,0.4); color: #3fb950; }
+.dir-btn.d-on_track { background: rgba(88,166,255,0.1); border-color: rgba(88,166,255,0.3); color: #58a6ff; }
+.dir-btn.d-below    { background: rgba(248,81,73,0.08); border-color: rgba(248,81,73,0.3); color: #f85149; }
+
+.qc-inputs { display: grid; grid-template-columns: 150px 1fr; gap: 10px; align-items: start; }
+.qci-group { display: flex; flex-direction: column; gap: 4px; }
+.qci-group label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--cc-text-muted, #8b949e); font-weight: 700; }
+.qci-group input, .qci-group textarea { background: var(--cc-bg, #0d1117); border: 1px solid var(--cc-border, #30363d); border-radius: 6px; color: var(--cc-text, #e6edf3); font-family: inherit; font-size: 0.85rem; padding: 7px 10px; width: 100%; }
+.qci-group textarea { resize: none; height: 54px; }
+.qci-group input:focus, .qci-group textarea:focus { outline: none; border-color: #58a6ff; }
+
+.qc-saved-row { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.82rem; padding: 4px 0; }
+.qc-saved-cell { display: flex; flex-direction: column; gap: 2px; }
+.qc-saved-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--cc-text-muted, #8b949e); }
+.qc-saved-val { font-weight: 700; color: var(--cc-text, #e6edf3); }
+.qc-saved-val.dir-above    { color: #3fb950; }
+.qc-saved-val.dir-on_track { color: #58a6ff; }
+.qc-saved-val.dir-below    { color: #f85149; }
+
+.qc-submit-bar { position: sticky; bottom: 0; background: var(--cc-bg-card, #161b22); border-top: 1px solid var(--cc-border, #30363d); padding: 12px 0; margin-top: 24px; display: flex; align-items: center; gap: 14px; z-index: 10; }
+.btn-submit { padding: 10px 22px; background: #58a6ff; color: #0d1117; border: none; border-radius: 6px; font-size: 0.875rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: background 0.18s; }
+.btn-submit:hover:not(:disabled) { background: #79c0ff; }
+.btn-submit:disabled { opacity: 0.45; cursor: default; }
+.qc-count-text { font-size: 0.82rem; color: var(--cc-text-muted, #8b949e); }
+
+.qc-hist-qhead { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--cc-text-muted, #8b949e); margin: 20px 0 8px; }
+.qc-hist-wrap { background: var(--cc-bg-card, #161b22); border: 1px solid var(--cc-border, #30363d); border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
+.qc-hist-table { width: 100%; border-collapse: collapse; font-size: 0.81rem; }
+.qc-hist-table th { text-align: left; padding: 8px 12px; color: var(--cc-text-muted, #8b949e); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; border-bottom: 1px solid var(--cc-border, #30363d); }
+.qc-hist-table td { padding: 8px 12px; border-bottom: 1px solid rgba(48,54,61,0.5); color: #c9d1d9; vertical-align: top; }
+.qc-hist-table tr:last-child td { border-bottom: none; }
+.qc-hist-table tr:hover td { background: rgba(22,27,34,0.6); }
+.d-above    { color: #3fb950; font-weight: 700; }
+.d-on_track { color: #58a6ff; font-weight: 700; }
+.d-below    { color: #f85149; font-weight: 700; }
+
+@media (max-width: 600px) {
+  .qc-inputs { grid-template-columns: 1fr; }
+  .qc-submit-bar { flex-wrap: wrap; }
+}
+</style>
+</head>
+<body>
+
+<section data-subtab="confirm">
+  <div id="qc-confirm-body"><div style="color:var(--cc-text-muted,#8b949e);padding:30px 0">Loading streams&hellip;</div></div>
+</section>
+
+<section data-subtab="history">
+  <div style="font-size:0.84rem;color:var(--cc-text-muted,#8b949e);margin-bottom:16px">All submitted quarterly confirmations, newest first.</div>
+  <div id="qc-history-body"><div style="color:var(--cc-text-muted,#8b949e)">Loading&hellip;</div></div>
+</section>
+
+<script>
+(function () {
+  'use strict';
+
+  var SUPA_URL = 'https://twrlvnfszohyrmivdhre.supabase.co';
+  var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3cmx2bmZzem9oeXJtaXZkaHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NjkxMTMsImV4cCI6MjA5MDE0NTExM30.o96DFNbBObst0EAmX51rnRFXzu8oTN1o-HNAxN7MY8A';
+  var ALESSIO_UID = '0e65e6b9-4495-4db0-af27-126402abd27d';
+
+  var supa = window.supabase.createClient(SUPA_URL, SUPA_KEY, {
+    auth: { storageKey: 'sb-twrlvnfszohyrmivdhre-auth-token', persistSession: true, autoRefreshToken: true }
+  });
+
+  // ── Quarter math ──
+  function prevQuarter() {
+    var d = new Date();
+    var q = Math.floor(d.getMonth() / 3) + 1;
+    var y = d.getFullYear();
+    return q === 1
+      ? { year: y - 1, q: 4, label: (y - 1) + '-Q4' }
+      : { year: y, q: q - 1, label: y + '-Q' + (q - 1) };
+  }
+
+  function qWindowStatus() {
+    var d = new Date();
+    var qStartMonth = Math.floor(d.getMonth() / 3) * 3;
+    var dow = new Date(d.getFullYear(), qStartMonth, 1).getDay();
+    var daysToMon = dow === 0 ? 1 : (dow === 1 ? 0 : 8 - dow);
+    var firstMon = new Date(d.getFullYear(), qStartMonth, 1 + daysToMon);
+    var closeDate = new Date(firstMon.getTime() + 14 * 86400000);
+    if (d < firstMon) {
+      return { open: false, label: 'Opens in ' + Math.ceil((firstMon - d) / 86400000) + 'd', type: 'closed' };
+    }
+    if (d > closeDate) {
+      return { open: false, label: 'Closed ' + Math.floor((d - closeDate) / 86400000) + 'd ago', type: 'closed' };
+    }
+    return { open: true, label: Math.ceil((closeDate - d) / 86400000) + 'd left', type: 'due' };
+  }
+
+  // ── Utils ──
+  var esc = function (s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  };
+  var fmtId = function (s) {
+    return s.replace(/-/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+  };
+  var fmtDir = function (d) {
+    return { above: '↑ Above', on_track: '~ On Track', below: '↓ Below' }[d] || d || '—';
+  };
+  var dirCls = function (d) { return 'd-' + (d || 'on_track'); };
+
+  // ── State ──
+  var pq = prevQuarter();
+  var projections = [];
+  var saved = {};
+  var dirSel = {};
+  var ratioSel = {};
+  var noteSel = {};
+
+  // ── Load ──
+  function load() {
+    return Promise.all([
+      supa.from('projections')
+        .select('stream_id,stream_type,category,active,confidence,notes_ratio')
+        .eq('active', true).order('stream_type').order('stream_id'),
+      supa.from('confirmations').select('*').eq('quarter', pq.label)
+    ]).then(function (results) {
+      projections = results[0].data || [];
+      saved = {};
+      (results[1].data || []).forEach(function (r) { saved[r.stream_id] = r; });
+    });
+  }
+
+  // ── Render confirm ──
+  function renderConfirm() {
+    var win = qWindowStatus();
+    var total = projections.length;
+    var doneCount = Object.keys(saved).length;
+    var allDone = total > 0 && doneCount >= total;
+
+    if (window.CC && window.CC.updateStats) {
+      window.CC.updateStats([
+        { id: 'stat-quarter', label: 'Quarter',   value: pq.label },
+        { id: 'stat-streams', label: 'Active',    value: total },
+        { id: 'stat-done',    label: 'Confirmed', value: doneCount + '/' + total },
+        { id: 'stat-window',  label: 'Window',    value: win.open ? 'OPEN' : 'closed' }
+      ]);
+    }
+
+    var h = '';
+
+    // Banner
+    if (allDone) {
+      h += '<div class="qc-banner ready">All ' + total + ' streams confirmed for ' + esc(pq.label) + '. See History tab for the record.</div>';
+    } else if (win.open) {
+      h += '<div class="qc-banner due">Confirmation due — ' + esc(win.label) + ' · ' + (total - doneCount) + ' stream' + (total - doneCount !== 1 ? 's' : '') + ' remaining.</div>';
+    } else {
+      h += '<div class="qc-banner closed">Window ' + esc(win.label) + '. You can still submit manually.</div>';
+    }
+
+    var revenue = projections.filter(function (p) { return p.stream_type === 'revenue'; });
+    var expense  = projections.filter(function (p) { return p.stream_type === 'expense'; });
+    var other    = projections.filter(function (p) { return p.stream_type !== 'revenue' && p.stream_type !== 'expense'; });
+
+    function renderGroup(list, label) {
+      if (!list.length) return '';
+      var g = '<div class="qc-group-head">' + esc(label) + ' &mdash; ' + list.length + ' active</div>';
+      list.forEach(function (p) {
+        var sid = p.stream_id;
+        var isSaved = !!saved[sid];
+        var selDir = dirSel[sid] || null;
+        var confPct = Math.round((p.confidence || 0) * 100);
+
+        g += '<div class="qc-card' + (isSaved ? ' qc-saved' : '') + '">';
+        g += '<div class="qc-card-head">';
+        g += '<span class="qc-name">' + esc(fmtId(sid)) + '</span>';
+        g += '<span class="qc-cat">' + esc(p.category) + '</span>';
+        g += '<span class="qc-conf">conf ' + confPct + '%</span>';
+        if (isSaved) g += '<span class="qc-saved-badge">✓ Saved</span>';
+        g += '</div>';
+
+        if (p.notes_ratio) {
+          g += '<div class="qc-note-row">' + esc(p.notes_ratio) + '</div>';
+        }
+
+        if (isSaved) {
+          var sv = saved[sid];
+          g += '<div class="qc-saved-row">';
+          g += '<div class="qc-saved-cell"><span class="qc-saved-label">Direction</span>';
+          g += '<span class="qc-saved-val dir-' + (sv.direction || 'on_track') + '">' + esc(fmtDir(sv.direction)) + '</span></div>';
+          g += '<div class="qc-saved-cell"><span class="qc-saved-label">Ratio</span>';
+          g += '<span class="qc-saved-val">x' + (sv.ratio_vs_projection != null ? Number(sv.ratio_vs_projection).toFixed(2) : '—') + '</span></div>';
+          if (sv.user_note) {
+            g += '<div class="qc-saved-cell"><span class="qc-saved-label">Note</span>';
+            g += '<span class="qc-saved-val" style="font-weight:400;color:var(--cc-text-muted,#8b949e)">' + esc(sv.user_note) + '</span></div>';
+          }
+          g += '</div>';
+        } else {
+          g += '<div class="dir-row">';
+          ['above', 'on_track', 'below'].forEach(function (d) {
+            var cls = selDir === d ? ' d-' + d : '';
+            g += '<button class="dir-btn' + cls + '" data-sid="' + esc(sid) + '" data-dir="' + d + '">' + esc(fmtDir(d)) + '</button>';
+          });
+          g += '</div>';
+
+          g += '<div class="qc-inputs">';
+          g += '<div class="qci-group"><label>Ratio vs projection</label>';
+          g += '<input type="number" step="0.01" min="0" max="99" placeholder="1.00"';
+          g += ' value="' + esc(ratioSel[sid] != null ? ratioSel[sid] : '') + '"';
+          g += ' data-sid="' + esc(sid) + '" data-field="ratio"></div>';
+          g += '<div class="qci-group"><label>Note (optional)</label>';
+          g += '<textarea placeholder="e.g. Slow Jan, strong Mar" data-sid="' + esc(sid) + '" data-field="note">' + esc(noteSel[sid] || '') + '</textarea></div>';
+          g += '</div>';
+        }
+
+        g += '</div>';
+      });
+      return g;
+    }
+
+    h += renderGroup(revenue, 'Revenue');
+    h += renderGroup(expense, 'Expense');
+    h += renderGroup(other, 'Other');
+
+    var readyCount   = projections.filter(function (p) { return !saved[p.stream_id] && dirSel[p.stream_id]; }).length;
+    var pendingCount = projections.filter(function (p) { return !saved[p.stream_id]; }).length;
+
+    h += '<div class="qc-submit-bar">';
+    h += '<button class="btn-submit" id="qcSubmitBtn"' + (allDone ? ' disabled' : '') + '>';
+    h += allDone ? 'All confirmed' : 'Submit selected (' + readyCount + ')';
+    h += '</button>';
+    h += '<span class="qc-count-text">' + doneCount + ' of ' + total + ' confirmed';
+    if (pendingCount > 0) h += ' &middot; ' + readyCount + '/' + pendingCount + ' ready to submit';
+    h += '</span></div>';
+
+    document.getElementById('qc-confirm-body').innerHTML = h;
+    attachEvents();
+  }
+
+  // ── Render history ──
+  function renderHistory() {
+    supa.from('confirmations').select('*').order('recorded_at', { ascending: false }).limit(300)
+      .then(function (res) {
+        var el = document.getElementById('qc-history-body');
+        if (!el) return;
+        var data = res.data || [];
+        if (!data.length) {
+          el.innerHTML = '<div style="color:var(--cc-text-muted,#8b949e);font-size:0.85rem;padding:16px 0">No confirmations recorded yet.</div>';
+          return;
+        }
+        var byQ = {};
+        data.forEach(function (r) {
+          if (!byQ[r.quarter]) byQ[r.quarter] = [];
+          byQ[r.quarter].push(r);
+        });
+        var h = '';
+        Object.keys(byQ).sort().reverse().forEach(function (q) {
+          var rows = byQ[q];
+          h += '<div class="qc-hist-qhead">' + esc(q) + ' &mdash; ' + rows.length + ' streams confirmed</div>';
+          h += '<div class="qc-hist-wrap"><table class="qc-hist-table">';
+          h += '<thead><tr><th>Stream</th><th>Direction</th><th>Ratio</th><th>Note</th><th>Date</th></tr></thead><tbody>';
+          rows.forEach(function (r) {
+            h += '<tr>';
+            h += '<td><strong>' + esc(fmtId(r.stream_id)) + '</strong></td>';
+            h += '<td class="' + dirCls(r.direction) + '">' + esc(fmtDir(r.direction)) + '</td>';
+            h += '<td>' + (r.ratio_vs_projection != null ? 'x' + Number(r.ratio_vs_projection).toFixed(2) : '—') + '</td>';
+            h += '<td style="color:var(--cc-text-muted,#8b949e)">' + esc(r.user_note || '—') + '</td>';
+            h += '<td style="color:var(--cc-text-muted,#8b949e)">' + esc(r.recorded_at ? r.recorded_at.slice(0, 10) : '—') + '</td>';
+            h += '</tr>';
+          });
+          h += '</tbody></table></div>';
+        });
+        el.innerHTML = h;
+      });
+  }
+
+  // ── Events ──
+  function attachEvents() {
+    document.querySelectorAll('.dir-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var sid = this.dataset.sid;
+        var dir = this.dataset.dir;
+        dirSel[sid] = dir;
+        document.querySelectorAll('.dir-btn[data-sid="' + sid + '"]').forEach(function (b) {
+          b.className = 'dir-btn' + (b.dataset.dir === dir ? ' d-' + dir : '');
+        });
+        var ready = projections.filter(function (p) { return !saved[p.stream_id] && dirSel[p.stream_id]; }).length;
+        var btn2 = document.getElementById('qcSubmitBtn');
+        if (btn2 && !btn2.disabled) btn2.textContent = 'Submit selected (' + ready + ')';
+      });
+    });
+
+    document.querySelectorAll('input[data-field="ratio"]').forEach(function (inp) {
+      inp.addEventListener('input', function () {
+        ratioSel[this.dataset.sid] = this.value !== '' ? parseFloat(this.value) : null;
+      });
+    });
+
+    document.querySelectorAll('textarea[data-field="note"]').forEach(function (ta) {
+      ta.addEventListener('input', function () {
+        noteSel[this.dataset.sid] = this.value;
+      });
+    });
+
+    var submitBtn = document.getElementById('qcSubmitBtn');
+    if (submitBtn && !submitBtn.disabled) {
+      submitBtn.addEventListener('click', handleSubmit);
+    }
+  }
+
+  // ── Submit ──
+  function handleSubmit() {
+    var btn = document.getElementById('qcSubmitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+
+    var rows = projections
+      .filter(function (p) { return !saved[p.stream_id] && dirSel[p.stream_id]; })
+      .map(function (p) {
+        return {
+          stream_id: p.stream_id,
+          quarter: pq.label,
+          ratio_vs_projection: ratioSel[p.stream_id] != null ? ratioSel[p.stream_id] : null,
+          direction: dirSel[p.stream_id],
+          user_note: noteSel[p.stream_id] || null,
+          user_id: ALESSIO_UID
+        };
+      });
+
+    if (!rows.length) {
+      btn.textContent = 'Pick a direction for at least one stream first';
+      btn.disabled = false;
+      return;
+    }
+
+    supa.from('confirmations').insert(rows).then(function (res) {
+      if (res.error) {
+        btn.textContent = 'Error: ' + res.error.message;
+        btn.disabled = false;
+        return;
+      }
+      dirSel = {}; ratioSel = {}; noteSel = {};
+      load().then(function () { renderConfirm(); renderHistory(); });
+    });
+  }
+
+  // ── Boot ──
+  load().then(function () {
+    renderConfirm();
+    renderHistory();
+    if (window.CC && window.CC.onSubtabChange) {
+      window.CC.onSubtabChange(function (id) {
+        if (id === 'history') renderHistory();
+      });
+    }
+  }).catch(function (err) {
+    document.getElementById('qc-confirm-body').innerHTML =
+      '<div style="color:#f85149;padding:20px 0">Load error: ' + esc(String(err.message || err)) + '</div>';
+  });
+
+})();
+</script>
+</body>
+</html>
