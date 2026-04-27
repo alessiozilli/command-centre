@@ -1310,7 +1310,10 @@ function setupCockpitRealtime() {
     .on('postgres_changes', {
       event: 'INSERT', schema: 'public', table: 'agent_messages',
       filter: 'status=eq.sent'
-    }, () => { renderBus(); })
+    }, (payload) => {
+      renderBus();
+      if (window.CC && CC.voice && payload.new) CC.voice.speak(payload.new.body || '');
+    })
     .subscribe();
 
   const plansCh = sb.channel('cockpit-forge-plans')
