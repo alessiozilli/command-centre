@@ -317,6 +317,17 @@
         /* Delegate confirm note */
         .delegate-confirm-note { background: rgba(240,136,62,0.08); border: 1px solid rgba(240,136,62,0.2); border-radius: 6px; padding: 0.75rem 1rem; margin-top: 0.5rem; font-size: 0.85rem; color: #f0883e; }
 
+        /* ===== FLEET HEADER LINK ===== */
+        .fleet-header-link { font-size: 0.8rem; color: #8b949e; text-decoration: none; padding: 0.35rem 0.75rem; border: 1px solid #30363d; border-radius: 6px; transition: all 0.2s; white-space: nowrap; }
+        .fleet-header-link:hover { color: #e6edf3; border-color: #58a6ff; }
+
+        /* ===== BUS STRIP (Fleet tab messages) ===== */
+        .bus-strip { background: rgba(240,136,62,0.08); border-left: 3px solid #f0883e; border-radius: 6px; padding: 0.75rem 1.25rem; margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.4rem; }
+        .bus-strip-item { display: flex; flex-direction: column; gap: 0.15rem; padding: 0.3rem 0; border-bottom: 1px solid rgba(240,136,62,0.12); }
+        .bus-strip-item:last-child { border-bottom: none; }
+        .bus-strip-body { font-size: 0.88rem; color: #f0883e; white-space: pre-wrap; word-break: break-word; }
+        .bus-strip-meta { font-size: 0.75rem; color: #8b949e; }
+
         /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
             header { flex-direction: column; align-items: flex-start; }
@@ -358,6 +369,7 @@
             <span class="user-role" id="userRole"></span>
             <button class="btn-logout" onclick="handleLogout()">Sign Out</button>
         </div>
+        <a href="fleet.html" class="fleet-header-link">Fleet →</a>
         <div class="status-bar">
             <div class="status-item">
                 <div class="status-label">Open</div>
@@ -466,6 +478,7 @@
             <span class="fleet-tab-title">Tasks you've sent to Forge</span>
             <button class="btn-delegate" onclick="openDelegateModal()">+ Delegate to Forge</button>
         </div>
+        <div id="fleetBusStrip" style="display:none"></div>
         <div id="fleetContent"><div class="fleet-loading">Loading&hellip;</div></div>
     </div>
 </div>
@@ -539,7 +552,7 @@
 // ===== CONFIG =====
 const SUPABASE_URL = 'https://twrlvnfszohyrmivdhre.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3cmx2bmZzem9oeXJtaXZkaHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NjkxMTMsImV4cCI6MjA5MDE0NTExM30.o96DFNbBObst0EAmX51rnRFXzu8oTN1o-HNAxN7MY8A';
-const USE_ASSIGNED_USER_FILTER = false; // Phase B: flip to true once Device Registry P1+P2 ships
+const USE_ASSIGNED_USER_FILTER = true;
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     auth: { storageKey: 'sb-twrlvnfszohyrmivdhre-auth-token', lock: async (name, t, fn) => await fn() }
 });
@@ -557,7 +570,7 @@ function switchTab(tab) {
     if (tab === 'calendar' && !_tabLoaded.calendar) { loadCalendarTab(); _tabLoaded.calendar = true; }
     if (tab === 'grants' && !_tabLoaded.grants) { loadGrantsTab(); _tabLoaded.grants = true; }
     if (tab === 'store') renderStoreTab();
-    if (tab === 'fleet' && !_tabLoaded.fleet) { loadFleetTab(); _tabLoaded.fleet = true; }
+    if (tab === 'fleet') { loadBusMessagesForReanna(); if (!_tabLoaded.fleet) { loadFleetTab(); _tabLoaded.fleet = true; } }
 }
 
 function toggleMobileMenu() {
@@ -1147,13 +1160,36 @@ function handleStoreTileClick(key) {
     if (el) el.textContent = 'Last: Just now';
 }
 
+// ===== FLEET BUS MESSAGES =====
+async function loadBusMessagesForReanna() {
+    const strip = document.getElementById('fleetBusStrip');
+    if (!strip) return;
+    const { data, error } = await sb.from('agent_messages')
+        .select('id,from_user,body,created_at')
+        .eq('to_user', 'reanna')
+        .eq('status', 'sent')
+        .order('created_at', { ascending: true });
+    if (error || !data || !data.length) { strip.style.display = 'none'; return; }
+    strip.style.display = 'block';
+    strip.className = 'bus-strip';
+    strip.innerHTML = data.map(m => {
+        const ts = new Date(m.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+        return `<div class="bus-strip-item">
+            <div class="bus-strip-body">${esc(m.body)}</div>
+            <div class="bus-strip-meta">From ${esc(m.from_user || 'forge')} &middot; ${ts}</div>
+        </div>`;
+    }).join('');
+    const ids = data.map(m => m.id);
+    await sb.from('agent_messages').update({ status: 'read' }).in('id', ids);
+}
+
 // ===== FLEET TAB =====
 async function loadFleetTab() {
     const el = document.getElementById('fleetContent');
     el.innerHTML = '<div class="fleet-loading">Loading&hellip;</div>';
     let q = sb.from('forge_tasks').select('id,title,body,status,priority,created_at,assigned_to');
     if (USE_ASSIGNED_USER_FILTER) {
-        q = q.or("assigned_user.eq.reanna,assigned_user.eq.both");
+        q = q.or('assigned_to.eq.' + currentUser.id + ',owner_id.eq.' + currentUser.id);
     } else {
         q = q.eq('created_by', 'reanna');
     }
