@@ -1,7 +1,7 @@
 {
-  "_comment": "AZCK Command Centre \u2014 global config. v2.8 adds Swiss Delicious tab under new SIDE HUSTLES group. v2.7 adds Quarterly confirmation page to OPERATIONS. v2.6 adds PEOPLE group.",
-  "_version": "2.8",
-  "_updated": "2026-04-27",
+  "_comment": "AZCK Command Centre — global config. v2.9 adds Security tab under SYSTEMS. v2.8 adds Swiss Delicious tab under SIDE HUSTLES. v2.7 adds Quarterly confirmation page to OPERATIONS. v2.6 adds PEOPLE group.",
+  "_version": "2.9",
+  "_updated": "2026-04-28",
   "brand": {
     "text": "AZCK",
     "sub": "Command Centre",
@@ -91,6 +91,11 @@
           "id": "network",
           "label": "Network",
           "href": "network.html"
+        },
+        {
+          "id": "security",
+          "label": "Security",
+          "href": "security.html"
         }
       ]
     },
@@ -135,21 +140,21 @@
   ],
   "quickview": [
     {
-      "icon": "\ud83d\udcb0",
+      "icon": "💰",
       "label": "Budget",
       "value": "Check /usage.html",
       "link": "usage.html"
     },
     {
-      "icon": "\ud83d\udcca",
+      "icon": "📊",
       "label": "Finance",
       "value": "Projections live",
       "link": "finance.html"
     },
     {
-      "icon": "\ud83d\udcc5",
+      "icon": "📅",
       "label": "Next",
-      "value": "Terra Machine \u00b7 Apr 24"
+      "value": "Terra Machine · Apr 24"
     }
   ]
 }
