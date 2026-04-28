@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════
    cc-shell.js — AZCK Command Centre unified shell engine
+   v2.2 — 2026-04-28 (Plan ae072184 — mobile hamburger drawer <1024px, D1-D5)
    v2.1 — 2026-04-18 (Forge v0.9.5 The Operator, Track B rebuild)
    v2.0 — 2026-04-18 (grouped nav)
    v1.0 — 2026-04-17 (initial)
@@ -239,6 +240,91 @@
         });
       });
     }).observe(document.body, { childList: true, subtree: true });
+  }
+
+  // ─── 2b3. MOBILE DRAWER MODULE ───────────────────────────
+  function _initMobileDrawer() {
+    var backdrop = el('div', { attrs: { id: 'cc-mobile-backdrop', 'aria-hidden': 'true' } });
+    var drawer   = el('div', { attrs: { id: 'cc-mobile-drawer', role: 'dialog', 'aria-label': 'Navigation', 'aria-modal': 'true' } });
+    document.body.appendChild(backdrop);
+    document.body.appendChild(drawer);
+
+    var toggle = el('button', {
+      attrs: { id: 'cc-mobile-toggle', type: 'button', 'aria-label': 'Open menu',
+               'aria-expanded': 'false', 'aria-controls': 'cc-mobile-drawer' },
+      text: '☰'
+    });
+    var actions = document.querySelector('.cc-banner-actions');
+    if (actions) actions.insertBefore(toggle, actions.firstChild);
+
+    // Clone nav-group HTML into drawer on open — header nav-groups stay in header (D2)
+    function _cloneNavToDrawer() {
+      drawer.innerHTML = '';
+      var nav = document.getElementById('cc-nav');
+      if (!nav) return;
+      var clone = nav.cloneNode(true);
+      clone.id = 'cc-mobile-nav';
+      clone.querySelectorAll('[draggable]').forEach(function (n) { n.removeAttribute('draggable'); });
+      drawer.appendChild(clone);
+    }
+
+    // Mirror .active from header links → drawer copies (D2)
+    function _syncDrawerActive() {
+      var headerLinks = document.querySelectorAll('#cc-nav .cc-nav-item');
+      var drawerLinks = drawer.querySelectorAll('.cc-nav-item');
+      drawerLinks.forEach(function (dl, i) {
+        if (headerLinks[i]) dl.classList.toggle('active', headerLinks[i].classList.contains('active'));
+      });
+    }
+    state.syncDrawerActive = _syncDrawerActive;
+
+    function _openDrawer() {
+      document.body.classList.add('cc-drawer-open');
+      toggle.setAttribute('aria-expanded', 'true');
+      var firstLink = drawer.querySelector('a');
+      if (firstLink) firstLink.focus();  // D3 — focus first link on open
+    }
+
+    function _closeDrawer() {
+      document.body.classList.remove('cc-drawer-open');
+      toggle.setAttribute('aria-expanded', 'false');
+      toggle.focus();  // D3 — return focus to toggle on close
+    }
+
+    toggle.addEventListener('click', function () {
+      if (document.body.classList.contains('cc-drawer-open')) {
+        _closeDrawer();
+      } else {
+        _cloneNavToDrawer();
+        _syncDrawerActive();
+        _openDrawer();
+      }
+    });
+
+    backdrop.addEventListener('click', _closeDrawer);
+
+    drawer.addEventListener('click', function (e) {
+      var link = e.target.tagName === 'A' ? e.target : (e.target.closest ? e.target.closest('a') : null);
+      if (link) _closeDrawer();
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && document.body.classList.contains('cc-drawer-open')) _closeDrawer();
+    });
+
+    window.addEventListener('resize', function () {
+      if (window.innerWidth >= 1024 && document.body.classList.contains('cc-drawer-open')) _closeDrawer();
+    });
+
+    // D5 — Swipe-to-close: rightward delta > 80px
+    var _swipeStartX = null;
+    drawer.addEventListener('touchstart', function (e) { _swipeStartX = e.touches[0].clientX; }, { passive: true });
+    drawer.addEventListener('touchend', function (e) {
+      if (_swipeStartX === null) return;
+      var delta = e.changedTouches[0].clientX - _swipeStartX;
+      _swipeStartX = null;
+      if (delta > 80) _closeDrawer();
+    }, { passive: true });
   }
 
   // ─── 2c. CMD+K PALETTE MODULE ────────────────────────────
@@ -641,6 +727,7 @@
     });
     applySubtabVisibility(id);
     state.subtabListeners.forEach(function (fn) { try { fn(id); } catch (e) {} });
+    if (typeof state.syncDrawerActive === 'function') state.syncDrawerActive();
   }
 
   function applySubtabVisibility(id) {
@@ -835,6 +922,7 @@
         _initPalette();
         _initClickToRead();
         _initSpeakButtons();
+        _initMobileDrawer();
         // Ready signal
         document.dispatchEvent(new CustomEvent('cc-shell-ready', { detail: { page: state.page } }));
       });
