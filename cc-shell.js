@@ -90,10 +90,13 @@
   function removeLS(k) { try { localStorage.removeItem(k); } catch (e) {} }
 
   // ─── 2b. VOICE MODULE ────────────────────────────────────
-  var _clickReadOn = readLS(KEY_VOICE_CLICK_READ, true);
-  var _autoBusOn   = readLS(KEY_VOICE_AUTO_BUS, true);
-  var _voiceVolume = readLS(KEY_VOICE_VOLUME, 0.85);
-  var _voiceName   = readLS(KEY_VOICE_NAME, '');
+  var KEY_VOICE_SHOW_ALL = 'cc.voice.showAll.v1';
+
+  var _clickReadOn  = readLS(KEY_VOICE_CLICK_READ, true);
+  var _autoBusOn    = readLS(KEY_VOICE_AUTO_BUS, true);
+  var _voiceVolume  = readLS(KEY_VOICE_VOLUME, 0.85);
+  var _voiceName    = readLS(KEY_VOICE_NAME, '');
+  var _voiceShowAll = readLS(KEY_VOICE_SHOW_ALL, false);
   var _voiceChangeCb = null;
 
   function _rawSpeak(text) {
@@ -152,15 +155,25 @@
     if (!sel || !('speechSynthesis' in window)) return;
     var vs = window.speechSynthesis.getVoices();
     if (!vs.length) return;
-    var prev = sel.value;
+    var prev = sel.value === '__lang_toggle__' ? _voiceName : sel.value;
+    // English-only filter unless _voiceShowAll is set
+    var toShow = _voiceShowAll ? vs : vs.filter(function (v) {
+      return /^en[-_]/i.test(v.lang) || /english/i.test(v.name);
+    });
+    if (!toShow.length) toShow = vs; // fallback: no English voices found → show all
     sel.innerHTML = '';
-    vs.forEach(function (v) {
+    toShow.forEach(function (v) {
       var opt = document.createElement('option');
       opt.value = opt.textContent = v.name;
       if (v.name === (prev || _voiceName)) opt.selected = true;
       sel.appendChild(opt);
     });
-    if (!_voiceName && vs.length) { _voiceName = vs[0].name; writeLS(KEY_VOICE_NAME, _voiceName); }
+    // Language toggle option at bottom
+    var tog = document.createElement('option');
+    tog.value = '__lang_toggle__';
+    tog.textContent = _voiceShowAll ? '⊖ English only' : '⊕ All languages';
+    sel.appendChild(tog);
+    if (!_voiceName && toShow.length) { _voiceName = toShow[0].name; writeLS(KEY_VOICE_NAME, _voiceName); }
   }
 
   function _initClickToRead() {
@@ -181,23 +194,51 @@
       hideBtn();
     });
 
+    // Fix 1: button is viewport-fixed (CSS top:58px right:16px) — just show/hide
     document.addEventListener('selectionchange', function () {
       if (!_clickReadOn) { hideBtn(); return; }
       var sel = window.getSelection();
-      if (!sel || !sel.toString().trim()) { hideBtn(); return; }
-      try {
-        var range = sel.getRangeAt(0);
-        var rect = range.getBoundingClientRect();
-        if (!rect || rect.width === 0) { hideBtn(); return; }
-        btn.style.left = (rect.left + window.scrollX + rect.width / 2 - 30) + 'px';
-        btn.style.top  = (rect.top  + window.scrollY - 40) + 'px';
-        btn.style.display = '';
-      } catch (ex) { hideBtn(); }
+      btn.style.display = (sel && sel.toString().trim()) ? '' : 'none';
     });
 
     document.addEventListener('mousedown', function (e) {
       if (e.target !== btn) hideBtn();
     });
+  }
+
+  // ─── 2b2. PER-ITEM SPEAK BUTTONS (Fix 2+3) ──────────────
+  // Injects a 🔊 button into any element with [data-speak-text].
+  // Works on all CC pages automatically via MutationObserver.
+  function _initSpeakButtons() {
+    if (!('speechSynthesis' in window)) return;
+
+    function injectBtn(el) {
+      if (!el || el.querySelector('.cc-speak-item-btn')) return;
+      var text = el.dataset && el.dataset.speakText;
+      if (!text) return;
+      var b = document.createElement('button');
+      b.className = 'cc-speak-item-btn';
+      b.textContent = '🔊';
+      b.title = 'Read aloud';
+      b.addEventListener('click', function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        _rawSpeak(el.dataset.speakText);
+      });
+      el.appendChild(b);
+    }
+
+    document.querySelectorAll('[data-speak-text]').forEach(injectBtn);
+
+    new MutationObserver(function (mutations) {
+      mutations.forEach(function (m) {
+        m.addedNodes.forEach(function (n) {
+          if (n.nodeType !== 1) return;
+          if (n.dataset && n.dataset.speakText) injectBtn(n);
+          if (n.querySelectorAll) n.querySelectorAll('[data-speak-text]').forEach(injectBtn);
+        });
+      });
+    }).observe(document.body, { childList: true, subtree: true });
   }
 
   // ─── 2c. CMD+K PALETTE MODULE ────────────────────────────
@@ -489,7 +530,15 @@
       var _vSel = document.createElement('select');
       _vSel.id = 'cc-voice-picker';
       _vSel.title = 'Select voice';
-      _vSel.addEventListener('change', function () { _setVoiceName(this.value); });
+      _vSel.addEventListener('change', function () {
+        if (this.value === '__lang_toggle__') {
+          _voiceShowAll = !_voiceShowAll;
+          writeLS(KEY_VOICE_SHOW_ALL, _voiceShowAll);
+          _populateVoicePicker();
+          return;
+        }
+        _setVoiceName(this.value);
+      });
 
       var _vVolWrap = el('div', { cls: 'cc-voice-vol-wrap' });
       var _vVolIcon = el('span', { cls: 'cc-voice-vol-icon', text: '🔉' });
@@ -785,6 +834,7 @@
         renderViewToolbar();
         _initPalette();
         _initClickToRead();
+        _initSpeakButtons();
         // Ready signal
         document.dispatchEvent(new CustomEvent('cc-shell-ready', { detail: { page: state.page } }));
       });
