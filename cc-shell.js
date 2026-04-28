@@ -1,5 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════
    cc-shell.js — AZCK Command Centre unified shell engine
+   v2.3 — 2026-04-28 (Plan 7dc6ce70 — config-driven drawer + command strip)
+   v2.2.2 — 2026-04-28 (banner retry + cc-shell-ready in catch path; task 0d31d2af)
+   v2.2.1 — 2026-04-28 (idempotency guard + boot try/catch; live verification fix)
    v2.2 — 2026-04-28 (Plan ae072184 — mobile hamburger drawer <1024px, D1-D5)
    v2.1 — 2026-04-18 (Forge v0.9.5 The Operator, Track B rebuild)
    v2.0 — 2026-04-18 (grouped nav)
@@ -243,7 +246,10 @@
   }
 
   // ─── 2b3. MOBILE DRAWER MODULE ───────────────────────────
+  // Config-driven: reads state.config same as header — no clone, no DOM sync.
+  // Active state set from state.page.id on each open. Always fresh.
   function _initMobileDrawer() {
+    if (document.getElementById('cc-mobile-backdrop')) return;
     var backdrop = el('div', { attrs: { id: 'cc-mobile-backdrop', 'aria-hidden': 'true' } });
     var drawer   = el('div', { attrs: { id: 'cc-mobile-drawer', role: 'dialog', 'aria-label': 'Navigation', 'aria-modal': 'true' } });
     document.body.appendChild(backdrop);
@@ -254,69 +260,61 @@
                'aria-expanded': 'false', 'aria-controls': 'cc-mobile-drawer' },
       text: '☰'
     });
-    var actions = document.querySelector('.cc-banner-actions');
-    if (actions) actions.insertBefore(toggle, actions.firstChild);
+    var bannerActions = document.querySelector('.cc-banner-actions');
+    if (bannerActions) bannerActions.insertBefore(toggle, bannerActions.firstChild);
 
-    // Clone nav-group HTML into drawer on open — header nav-groups stay in header (D2)
-    function _cloneNavToDrawer() {
+    function _buildDrawerNav() {
       drawer.innerHTML = '';
-      var nav = document.getElementById('cc-nav');
-      if (!nav) return;
-      var clone = nav.cloneNode(true);
-      clone.id = 'cc-mobile-nav';
-      clone.querySelectorAll('[draggable]').forEach(function (n) { n.removeAttribute('draggable'); });
-      drawer.appendChild(clone);
-    }
-
-    // Mirror .active from header links → drawer copies (D2)
-    function _syncDrawerActive() {
-      var headerLinks = document.querySelectorAll('#cc-nav .cc-nav-item');
-      var drawerLinks = drawer.querySelectorAll('.cc-nav-item');
-      drawerLinks.forEach(function (dl, i) {
-        if (headerLinks[i]) dl.classList.toggle('active', headerLinks[i].classList.contains('active'));
+      var cfg = state.config || {};
+      var drawerNav = el('nav', { cls: 'cc-nav', attrs: { id: 'cc-mobile-nav' } });
+      var groups = (cfg.navGroups && Array.isArray(cfg.navGroups))
+        ? cfg.navGroups
+        : [{ id: '_flat', label: null, items: cfg.nav || [] }];
+      groups.forEach(function (g) {
+        if (g.label) {
+          drawerNav.appendChild(el('span', {
+            cls: 'cc-nav-group-label', attrs: { 'data-group-id': g.id }, text: g.label
+          }));
+        }
+        (g.items || []).forEach(function (n) {
+          drawerNav.appendChild(el('a', {
+            cls: 'cc-nav-item' + (n.id === state.page.id ? ' active' : ''),
+            attrs: { href: n.href, 'data-id': n.id }, text: n.label
+          }));
+        });
       });
+      drawer.appendChild(drawerNav);
     }
-    state.syncDrawerActive = _syncDrawerActive;
 
     function _openDrawer() {
+      _buildDrawerNav();
       document.body.classList.add('cc-drawer-open');
       toggle.setAttribute('aria-expanded', 'true');
       var firstLink = drawer.querySelector('a');
-      if (firstLink) firstLink.focus();  // D3 — focus first link on open
+      if (firstLink) firstLink.focus();
     }
 
     function _closeDrawer() {
       document.body.classList.remove('cc-drawer-open');
       toggle.setAttribute('aria-expanded', 'false');
-      toggle.focus();  // D3 — return focus to toggle on close
+      toggle.focus();
     }
 
     toggle.addEventListener('click', function () {
-      if (document.body.classList.contains('cc-drawer-open')) {
-        _closeDrawer();
-      } else {
-        _cloneNavToDrawer();
-        _syncDrawerActive();
-        _openDrawer();
-      }
+      document.body.classList.contains('cc-drawer-open') ? _closeDrawer() : _openDrawer();
     });
-
     backdrop.addEventListener('click', _closeDrawer);
-
     drawer.addEventListener('click', function (e) {
       var link = e.target.tagName === 'A' ? e.target : (e.target.closest ? e.target.closest('a') : null);
       if (link) _closeDrawer();
     });
-
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && document.body.classList.contains('cc-drawer-open')) _closeDrawer();
     });
-
     window.addEventListener('resize', function () {
       if (window.innerWidth >= 1024 && document.body.classList.contains('cc-drawer-open')) _closeDrawer();
     });
 
-    // D5 — Swipe-to-close: rightward delta > 80px
     var _swipeStartX = null;
     drawer.addEventListener('touchstart', function (e) { _swipeStartX = e.touches[0].clientX; }, { passive: true });
     drawer.addEventListener('touchend', function (e) {
@@ -325,6 +323,118 @@
       _swipeStartX = null;
       if (delta > 80) _closeDrawer();
     }, { passive: true });
+  }
+
+  // ─── 2b4. COMMAND STRIP MODULE ───────────────────────────
+  // Sticky band below header: brand left, system controls right.
+  // Consolidates Logout, Reset Nav, voice controls into one always-visible row.
+  // Hides old scattered controls from .cc-banner-actions after injection.
+  function _initCommandStrip() {
+    if (document.getElementById('cc-command-strip')) return;
+    var cfg = state.config || {};
+    var homeHref = (cfg.brand && cfg.brand.link) || 'alessio.html';
+
+    var brand = el('div', { attrs: { id: 'cc-strip-brand' }, children: [
+      el('a', { attrs: { href: homeHref }, text: 'AZ Custom Knives | Command Centre' })
+    ]});
+
+    var controls = el('div', { attrs: { id: 'cc-strip-controls' } });
+
+    controls.appendChild(el('button', {
+      cls: 'cc-strip-btn', text: 'Logout',
+      on: { click: function () {
+        if (typeof ccLogout === 'function') { ccLogout(); }
+        else { try { sessionStorage.removeItem('azck_cc_auth'); } catch (e) {} window.location.href = 'index.html'; }
+      }}
+    }));
+
+    controls.appendChild(el('button', {
+      cls: 'cc-strip-btn', text: 'Reset Nav',
+      on: { click: function () { if (window.CC) CC.resetNav(); } }
+    }));
+
+    if ('speechSynthesis' in window) {
+      var volWrap = el('div', { cls: 'cc-strip-vol-wrap' });
+      volWrap.appendChild(el('span', { cls: 'cc-strip-vol-icon', text: '🔉' }));
+      var volRange = document.createElement('input');
+      volRange.type = 'range'; volRange.className = 'cc-strip-range';
+      volRange.min = '0'; volRange.max = '100'; volRange.step = '1';
+      volRange.value = String(Math.round(_voiceVolume * 100));
+      volRange.title = 'Speech volume';
+      volRange.addEventListener('input', function () { _setVolume(Number(this.value) / 100); });
+      volWrap.appendChild(volRange);
+      controls.appendChild(volWrap);
+
+      var voiceSel = document.createElement('select');
+      voiceSel.id = 'cc-strip-voice-picker';
+      voiceSel.className = 'cc-strip-select';
+      voiceSel.title = 'Voice';
+      voiceSel.addEventListener('change', function () { if (this.value) _setVoiceName(this.value); });
+      controls.appendChild(voiceSel);
+
+      var _sAudioOn = _autoBusOn;
+      var audioReadBtn = el('button', {
+        cls: 'cc-strip-btn cc-strip-toggle' + (_sAudioOn ? ' active' : ''),
+        text: 'Audio Read', attrs: { title: 'Auto-read incoming bus messages' },
+        on: { click: function () {
+          _sAudioOn = !_sAudioOn;
+          audioReadBtn.classList.toggle('active', _sAudioOn);
+          _setAutoBusOn(_sAudioOn);
+        }}
+      });
+      controls.appendChild(audioReadBtn);
+
+      var _sClickOn = _clickReadOn;
+      var clickReadBtn = el('button', {
+        cls: 'cc-strip-btn cc-strip-toggle' + (_sClickOn ? ' active' : ''),
+        text: 'Click to Read', attrs: { title: 'Per-item 🔊 click-to-speak' },
+        on: { click: function () {
+          _sClickOn = !_sClickOn;
+          clickReadBtn.classList.toggle('active', _sClickOn);
+          _setClickReadOn(_sClickOn);
+        }}
+      });
+      controls.appendChild(clickReadBtn);
+
+      function _populateStripVoicePicker() {
+        var vs = window.speechSynthesis.getVoices();
+        if (!vs.length) return;
+        var toShow = vs.filter(function (v) { return /^en[-_]/i.test(v.lang) || /english/i.test(v.name); });
+        if (!toShow.length) toShow = vs;
+        voiceSel.innerHTML = '';
+        toShow.forEach(function (v) {
+          var opt = document.createElement('option');
+          opt.value = opt.textContent = v.name;
+          if (v.name === _voiceName) opt.selected = true;
+          voiceSel.appendChild(opt);
+        });
+      }
+      _populateStripVoicePicker();
+      if ('onvoiceschanged' in window.speechSynthesis) {
+        window.speechSynthesis.onvoiceschanged = _populateStripVoicePicker;
+      }
+    }
+
+    var strip = el('div', { attrs: { id: 'cc-command-strip' }, children: [brand, controls] });
+
+    // Insert immediately after .cc-banner, before .cc-quickview if it exists
+    var banner = document.querySelector('.cc-banner');
+    if (banner && banner.parentNode) {
+      var ref = document.querySelector('.cc-quickview') || banner.nextSibling;
+      if (ref) banner.parentNode.insertBefore(strip, ref);
+      else banner.parentNode.appendChild(strip);
+    } else {
+      document.body.insertBefore(strip, document.body.firstChild);
+    }
+
+    // Move brand from header to strip
+    var hBrand = document.querySelector('.cc-banner .cc-brand');
+    if (hBrand) hBrand.style.display = 'none';
+
+    // Move system controls from banner-actions to strip
+    // (mobile toggle added AFTER this by _initMobileDrawer — not affected)
+    document.querySelectorAll('.cc-banner-actions button').forEach(function (b) { b.style.display = 'none'; });
+    document.querySelectorAll('.cc-banner-actions select, .cc-banner-actions .cc-voice-vol-wrap').forEach(function (b) { b.style.display = 'none'; });
   }
 
   // ─── 2c. CMD+K PALETTE MODULE ────────────────────────────
@@ -727,7 +837,6 @@
     });
     applySubtabVisibility(id);
     state.subtabListeners.forEach(function (fn) { try { fn(id); } catch (e) {} });
-    if (typeof state.syncDrawerActive === 'function') state.syncDrawerActive();
   }
 
   function applySubtabVisibility(id) {
@@ -913,18 +1022,32 @@
     // Theme first (so first paint uses Alessio's tokens), then config+render.
     loadTheme(function () {
       loadConfig(function () {
-        renderBanner();
-        renderQuickview();
-        renderSubtabs();
-        renderStatsBar();
-        wrapContent();
-        renderViewToolbar();
-        _initPalette();
-        _initClickToRead();
-        _initSpeakButtons();
-        _initMobileDrawer();
-        // Ready signal
-        document.dispatchEvent(new CustomEvent('cc-shell-ready', { detail: { page: state.page } }));
+        try {
+          renderBanner();
+          renderQuickview();
+          renderSubtabs();
+          renderStatsBar();
+          wrapContent();
+          renderViewToolbar();
+          _initPalette();
+          _initClickToRead();
+          _initSpeakButtons();
+          _initCommandStrip();
+          _initMobileDrawer();
+          document.dispatchEvent(new CustomEvent('cc-shell-ready', { detail: { page: state.page } }));
+        } catch (err) {
+          console.error('[cc-shell] boot error:', err);
+          // Best-effort banner so strip and drawer have an anchor
+          if (!document.querySelector('.cc-banner')) { try { renderBanner(); } catch (e3) {} }
+          if (!document.getElementById('cc-command-strip')) {
+            try { _initCommandStrip(); } catch (e4) { console.error('[cc-shell] strip fallback:', e4); }
+          }
+          if (!document.getElementById('cc-mobile-backdrop')) {
+            try { _initMobileDrawer(); } catch (e2) { console.error('[cc-shell] drawer fallback:', e2); }
+          }
+          // Always dispatch ready so page scripts don't stall
+          document.dispatchEvent(new CustomEvent('cc-shell-ready', { detail: { page: state.page, error: true } }));
+        }
       });
     });
   }
