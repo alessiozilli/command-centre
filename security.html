@@ -4,309 +4,239 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Security — AZCK Command Centre</title>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://twrlvnfszohyrmivdhre.supabase.co https://raw.githubusercontent.com;">
   <link rel="stylesheet" href="cc-shell.css">
   <style>
-    .sec-grid { display: grid; gap: 12px; }
-    .sec-card { background: var(--cc-bg-card); border: 1px solid var(--cc-border); border-radius: var(--cc-r-md); padding: 14px 16px; }
-    .sec-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
-    .sec-card-title { font-size: 15px; font-weight: 600; color: var(--cc-text); line-height: 1.35; }
-    .sec-card-body { color: var(--cc-text-muted); font-size: 13px; line-height: 1.5; }
-    .sec-card-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; font-size: 12px; color: var(--cc-text-muted); }
-    .sec-card-fix { margin-top: 8px; padding: 8px 10px; background: var(--cc-bg-hover); border-left: 3px solid var(--cc-accent); border-radius: 4px; font-size: 12px; color: var(--cc-text); }
-    .sec-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; }
-    .sev-critical { background: #7a1f1f; color: #ffd4d4; }
-    .sev-high     { background: #7a4a1f; color: #ffe0c4; }
-    .sev-medium   { background: #5a5a1f; color: #fff4c4; }
-    .sev-pass     { background: #1f5a2f; color: #c4ffd4; }
-    .sec-stats { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
-    .sec-stat { background: var(--cc-bg-card); border: 1px solid var(--cc-border); border-radius: var(--cc-r-md); padding: 10px 14px; min-width: 110px; }
-    .sec-stat-label { font-size: 11px; color: var(--cc-text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
-    .sec-stat-value { font-size: 22px; font-weight: 700; color: var(--cc-text); margin-top: 2px; }
-    .sec-stat.critical .sec-stat-value { color: #ff6b6b; }
-    .sec-stat.high     .sec-stat-value { color: #ff9e4a; }
-    .sec-stat.medium   .sec-stat-value { color: #f5d64a; }
-    .sec-stat.pass     .sec-stat-value { color: #4ade80; }
-    .phase-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-    .phase-num { font-size: 20px; font-weight: 700; color: var(--cc-accent); width: 32px; text-align: center; }
-    .phase-info { flex: 1; }
-    .phase-status { padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
-    .status-complete        { background: #1f5a2f; color: #c4ffd4; }
-    .status-awaiting_approval { background: #7a4a1f; color: #ffe0c4; }
-    .status-queued          { background: #333; color: #aaa; }
-    .status-in_progress     { background: #1f4a7a; color: #c4e0ff; }
-    .phase-actions { display: flex; gap: 6px; flex-wrap: wrap; }
-    .btn { padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; border: 1px solid var(--cc-border); background: var(--cc-bg-card); color: var(--cc-text); font-weight: 500; }
-    .btn:hover { background: var(--cc-bg-hover); border-color: var(--cc-accent); }
-    .btn-approve { background: #1f5a2f; border-color: #1f5a2f; color: #c4ffd4; }
-    .btn-approve:hover { background: #267a3a; }
-    .btn-park { background: #5a1f1f; border-color: #5a1f1f; color: #ffd4d4; }
-    .btn-park:hover { background: #7a2828; }
-    .sec-filter { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
-    .sec-filter-btn { padding: 4px 10px; border-radius: 14px; border: 1px solid var(--cc-border); background: transparent; color: var(--cc-text-muted); cursor: pointer; font-size: 12px; }
-    .sec-filter-btn.active { background: var(--cc-accent); border-color: var(--cc-accent); color: #000; }
-    .pass-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; font-size: 13px; color: var(--cc-text); }
-    .pass-item::before { content: "✓"; color: #4ade80; font-weight: 700; }
-    .drive-link { display: inline-block; margin-top: 10px; padding: 8px 14px; background: var(--cc-accent); color: #000; text-decoration: none; border-radius: 4px; font-weight: 600; font-size: 13px; }
-    .toast-area { position: fixed; bottom: 20px; right: 20px; z-index: 1000; }
-    .toast { background: var(--cc-bg-card); border: 1px solid var(--cc-accent); padding: 10px 14px; border-radius: 6px; margin-top: 8px; color: var(--cc-text); font-size: 13px; max-width: 320px; }
-    .sec-header-meta { color: var(--cc-text-muted); font-size: 12px; margin-bottom: 16px; }
-    .sec-empty { color: var(--cc-text-muted); font-size: 13px; padding: 20px; text-align: center; }
+    /* ── Security page styles ── */
+    .audit-banner { background:var(--cc-bg-card); border:1px solid var(--cc-border); border-radius:var(--cc-r-lg); padding:20px 24px; margin-bottom:24px; display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
+    .audit-banner-icon { font-size:36px; flex-shrink:0; }
+    .audit-banner-label { font-size:1.1rem; font-weight:700; color:var(--cc-text); }
+    .audit-banner-sub { font-size:0.82rem; color:var(--cc-text-muted); margin-top:2px; }
+    .audit-banner-phase { margin-left:auto; font-size:0.78rem; font-weight:700; padding:5px 12px; border-radius:var(--cc-r-pill); background:rgba(88,166,255,0.1); color:var(--cc-accent); border:1px solid rgba(88,166,255,0.2); white-space:nowrap; }
+
+    /* Phase progress bar */
+    .phase-bar { display:flex; gap:6px; margin-bottom:24px; flex-wrap:wrap; }
+    .phase-pill { padding:5px 14px; border-radius:var(--cc-r-pill); font-size:0.75rem; font-weight:700; border:1px solid; }
+    .phase-done    { background:rgba(63,185,80,0.12);  color:var(--cc-success); border-color:rgba(63,185,80,0.3); }
+    .phase-partial { background:rgba(210,153,34,0.12); color:var(--cc-warn);    border-color:rgba(210,153,34,0.3); }
+    .phase-open    { background:var(--cc-bg-card);     color:var(--cc-text-muted); border-color:var(--cc-border); }
+
+    /* Findings table */
+    .findings-table { width:100%; border-collapse:collapse; }
+    .findings-table th { text-align:left; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--cc-text-muted); padding:8px 12px; border-bottom:1px solid var(--cc-border); }
+    .findings-table td { padding:10px 12px; border-bottom:1px solid var(--cc-border-soft); font-size:0.85rem; vertical-align:top; }
+    .findings-table tr:last-child td { border-bottom:none; }
+    .findings-table tr:hover td { background:var(--cc-bg-hover); }
+    .find-id    { font-family:var(--cc-font-mono); font-size:0.75rem; color:var(--cc-text-dim); white-space:nowrap; }
+    .find-label { color:var(--cc-text); font-weight:600; }
+    .find-note  { color:var(--cc-text-muted); font-size:0.78rem; margin-top:3px; }
+    .find-action{ color:var(--cc-accent); font-size:0.76rem; margin-top:4px; }
+
+    /* Status pills */
+    .pill { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:var(--cc-r-pill); font-size:0.72rem; font-weight:700; border:1px solid; white-space:nowrap; }
+    .pill-clear  { background:rgba(63,185,80,0.1);  color:var(--cc-success); border-color:rgba(63,185,80,0.25); }
+    .pill-open   { background:rgba(248,81,73,0.1);  color:var(--cc-danger);  border-color:rgba(248,81,73,0.25); }
+    .pill-pending{ background:rgba(210,153,34,0.1); color:var(--cc-warn);    border-color:rgba(210,153,34,0.25); }
+    .pill-low    { background:rgba(240,136,62,0.1); color:var(--cc-orange);  border-color:rgba(240,136,62,0.25); }
+    .pill-unknown{ background:var(--cc-bg-card);    color:var(--cc-text-muted); border-color:var(--cc-border); }
+    .pill-keep   { background:rgba(88,166,255,0.1); color:var(--cc-accent);  border-color:rgba(88,166,255,0.25); }
+
+    /* Summary count cards */
+    .summary-row { display:flex; gap:12px; margin-bottom:24px; flex-wrap:wrap; }
+    .summary-card { flex:1; min-width:90px; background:var(--cc-bg-card); border:1px solid var(--cc-border); border-radius:var(--cc-r-md); padding:14px 18px; text-align:center; }
+    .summary-card-val   { font-size:1.8rem; font-weight:800; }
+    .summary-card-label { font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--cc-text-muted); margin-top:2px; }
+    .val-clear   { color:var(--cc-success); }
+    .val-open    { color:var(--cc-danger); }
+    .val-pending { color:var(--cc-warn); }
+    .val-total   { color:var(--cc-accent); }
+
+    /* Not-audited placeholder */
+    .not-audited { text-align:center; padding:60px 24px; color:var(--cc-text-dim); }
+    .not-audited-icon  { font-size:48px; margin-bottom:16px; }
+    .not-audited-title { font-size:1.1rem; font-weight:700; color:var(--cc-text-muted); margin-bottom:8px; }
+    .not-audited-sub   { font-size:0.85rem; }
+
+    #loadingMsg { padding:40px; text-align:center; color:var(--cc-text-muted); }
   </style>
 </head>
 <body>
-  <script>
-    window.PAGE = {
-      id: 'security',
-      title: 'Security',
-      subtabs: [
-        { id: 'overview', label: 'Overview' },
-        { id: 'findings', label: 'Findings' },
-        { id: 'phases',   label: 'Phases' },
-        { id: 'passes',   label: 'Passed' }
+
+<script>
+/* ═══════════════════════════════════════════════════
+   DATA BLOCK — update here only. ENGINE never changes.
+   Last updated: 2026-04-28 · forge-cowork Sonnet 4.6
+   ═══════════════════════════════════════════════════ */
+const SECURITY_DATA = {
+  devices: [
+    {
+      id: 'beast',
+      label: 'Beast',
+      sublabel: 'Home PC · Windows 11',
+      icon: '🖥️',
+      lastAudit: '2026-04-27',
+      phase: [
+        { label:'Phase 1 — Audit',     state:'done' },
+        { label:'Phase 2 — Hardening', state:'partial' },
+        { label:'Phase 3 — Firewall',  state:'open' },
+        { label:'Phase 4 — Monitor',   state:'open' }
       ],
-      stats: [
-        { id: 'stat-phase',    label: 'Phase',    value: '—' },
-        { id: 'stat-critical', label: 'Critical', value: '—' },
-        { id: 'stat-high',     label: 'High',     value: '—' },
-        { id: 'stat-medium',   label: 'Medium',   value: '—' },
-        { id: 'stat-pass',     label: 'Pass',     value: '—' }
+      findings: [
+        { id:'C1', sev:'clear',   label:'ForgeWatcher password plaintext',        status:'Fixed',   date:'2026-04-27', note:'Moved to Windows Credential Manager (DPAPI)' },
+        { id:'C2', sev:'clear',   label:'Ollama exposed on LAN (port 11434)',      status:'Fixed',   date:'2026-04-27', note:'OLLAMA_HOST=127.0.0.1:11434' },
+        { id:'C3', sev:'keep',    label:'Chrome Remote Desktop',                  status:'Keep',    date:null,         note:'Intentional — used for remote access', action:'Google Workspace 2SV: resolve via Neo (admin loop)' },
+        { id:'H1', sev:'open',    label:'Outbound firewall allow-all',             status:'Open',    date:null,         note:'Phase 3 — deny-by-default + allowlist', action:'Scheduled: Phase 3 session' },
+        { id:'H2', sev:'keep',    label:'Adobe Acrobat extension <all_urls>',      status:'Keep',    date:null,         note:'Intentional — required for PDF open workflow' },
+        { id:'H3', sev:'clear',   label:'JWT strings in .claude history',          status:'Cleared', date:'2026-04-28', note:'Drive sync confirmed safe — .claude/ not in Google Drive' },
+        { id:'H4', sev:'pending', label:'Microsoft admin account 2FA',             status:'Pending', date:null,         note:'MS Authenticator loop — retry when resolved', action:'Retry MS 2FA setup' },
+        { id:'M1', sev:'clear',   label:'SMB Users share exposed',                 status:'Fixed',   date:'2026-04-27', note:'Removed via Remove-SmbShare' },
+        { id:'M2', sev:'low',     label:'Nearby sharing port 5040 on 0.0.0.0',    status:'Low',     date:null,         note:'Phase 3 — low priority' },
+        { id:'M3', sev:'low',     label:'Delivery Optimization port 7680',         status:'Low',     date:null,         note:'Phase 3 — low priority' },
+        { id:'M4', sev:'low',     label:'Logitech agent port 59869 on 0.0.0.0',   status:'Low',     date:null,         note:'Phase 3 — low priority' },
+        { id:'EL', sev:'unknown', label:'BitLocker / Secure Boot / TPM status',   status:'Unknown', date:null,         note:'Requires elevated PowerShell on beast', action:'forge-code elevated check queued' },
+        { id:'PW', sev:'open',    label:'forge2026 master password rotation',      status:'Open',    date:null,         note:'Separate task — scheduled after Phase 3' }
       ]
-    };
-  </script>
+    },
+    {
+      id: 'imac',
+      label: 'iMac',
+      sublabel: 'Shop · macOS',
+      icon: '🖥️',
+      lastAudit: null,
+      phase: [],
+      findings: []
+    },
+    {
+      id: 'neo',
+      label: 'Neo',
+      sublabel: "Reanna's MacBook · macOS Tahoe",
+      icon: '💻',
+      lastAudit: null,
+      phase: [],
+      findings: []
+    }
+  ]
+};
+/* ═══════════════════════ END DATA BLOCK ═══════════════════════ */
 
-  <main id="cc-content" class="cc-content">
+window.PAGE = {
+  id: 'security',
+  title: 'Security',
+  subtitle: 'Device hardening · Audit findings · Phase tracker',
+  subtabs: SECURITY_DATA.devices.map(d => ({ id: d.id, label: d.label })),
+  stats: (() => {
+    const beast = SECURITY_DATA.devices.find(d => d.id === 'beast');
+    const f = beast ? beast.findings : [];
+    return [
+      { label:'Total (Beast)', value: String(f.length) },
+      { label:'Fixed / Clear', value: String(f.filter(x => x.sev === 'clear').length) },
+      { label:'Open',          value: String(f.filter(x => x.sev === 'open').length) },
+      { label:'Pending',       value: String(f.filter(x => x.sev === 'pending' || x.sev === 'unknown').length) },
+      { label:'Low Priority',  value: String(f.filter(x => x.sev === 'low').length) }
+    ];
+  })()
+};
+</script>
 
-    <section data-subtab="overview">
-      <div id="overview-container"></div>
-    </section>
+<div id="loadingMsg">Loading…</div>
+<script src="cc-shell.js"></script>
 
-    <section data-subtab="findings">
-      <div class="sec-filter" id="finding-filters">
-        <button class="sec-filter-btn active" data-filter="all">All</button>
-        <button class="sec-filter-btn" data-filter="critical">Critical</button>
-        <button class="sec-filter-btn" data-filter="high">High</button>
-        <button class="sec-filter-btn" data-filter="medium">Medium</button>
+<script>
+/* ═══ ENGINE ═══ */
+(function () {
+
+  function pill(sev, label) {
+    const cls   = { clear:'pill-clear', open:'pill-open', pending:'pill-pending', low:'pill-low', unknown:'pill-unknown', keep:'pill-keep' };
+    const icons = { clear:'✅', open:'🔴', pending:'⚠️', low:'🟡', unknown:'❓', keep:'🔵' };
+    return `<span class="pill ${cls[sev]||'pill-unknown'}">${icons[sev]||''} ${label}</span>`;
+  }
+
+  function phaseBar(phases) {
+    if (!phases.length) return '';
+    const cls = { done:'phase-done', partial:'phase-partial', open:'phase-open' };
+    return '<div class="phase-bar">' +
+      phases.map(p => `<span class="phase-pill ${cls[p.state]||'phase-open'}">${p.label}</span>`).join('') +
+      '</div>';
+  }
+
+  function summary(findings) {
+    const clear   = findings.filter(f => f.sev === 'clear').length;
+    const open    = findings.filter(f => f.sev === 'open').length;
+    const pending = findings.filter(f => f.sev === 'pending' || f.sev === 'unknown').length;
+    return `<div class="summary-row">
+      <div class="summary-card"><div class="summary-card-val val-total">${findings.length}</div><div class="summary-card-label">Total</div></div>
+      <div class="summary-card"><div class="summary-card-val val-clear">${clear}</div><div class="summary-card-label">Fixed/Clear</div></div>
+      <div class="summary-card"><div class="summary-card-val val-open">${open}</div><div class="summary-card-label">Open</div></div>
+      <div class="summary-card"><div class="summary-card-val val-pending">${pending}</div><div class="summary-card-label">Pending</div></div>
+    </div>`;
+  }
+
+  function table(findings) {
+    if (!findings.length) return '';
+    const rows = findings.map(f => `<tr>
+      <td><span class="find-id">${f.id}</span></td>
+      <td>
+        <div class="find-label">${f.label}</div>
+        <div class="find-note">${f.note}</div>
+        ${f.action ? `<div class="find-action">→ ${f.action}</div>` : ''}
+      </td>
+      <td>${pill(f.sev, f.status)}</td>
+      <td style="color:var(--cc-text-muted);font-size:0.78rem;white-space:nowrap">${f.date || '—'}</td>
+    </tr>`).join('');
+    return `<table class="findings-table">
+      <thead><tr>
+        <th style="width:44px">ID</th><th>Finding</th>
+        <th style="width:110px">Status</th><th style="width:96px">Resolved</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+  }
+
+  function renderDevice(d) {
+    const audited = d.lastAudit !== null;
+    const phaseLabel = audited
+      ? (d.phase.find(p => p.state === 'partial') || d.phase.find(p => p.state === 'done') || d.phase[0])?.label || 'Audited'
+      : 'Not audited';
+
+    let html = `<div class="audit-banner">
+      <div class="audit-banner-icon">${d.icon}</div>
+      <div>
+        <div class="audit-banner-label">${d.label}</div>
+        <div class="audit-banner-sub">${d.sublabel} · ${audited ? 'Last audit: ' + d.lastAudit : 'No audit on record'}</div>
       </div>
-      <div class="sec-grid" id="findings-grid"></div>
-    </section>
+      <span class="audit-banner-phase">${phaseLabel}</span>
+    </div>`;
 
-    <section data-subtab="phases">
-      <div class="sec-grid" id="phases-grid"></div>
-    </section>
-
-    <section data-subtab="passes">
-      <div class="sec-grid" id="passes-grid"></div>
-    </section>
-
-  </main>
-
-  <div class="toast-area" id="toast-area"></div>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="cc-shell.js" defer></script>
-  <script src="auth.js" defer></script>
-
-  <script>
-    const SUPABASE_URL = 'https://twrlvnfszohyrmivdhre.supabase.co';
-    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3cmx2bmZzem9oeXJtaXZkaHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NjkxMTMsImV4cCI6MjA5MDE0NTExM30.o96DFNbBObst0EAmX51rnRFXzu8oTN1o-HNAxN7MY8A';
-
-    let DATA = null;
-    let supa = null;
-
-    function toast(msg) {
-      const ta = document.getElementById('toast-area');
-      const el = document.createElement('div');
-      el.className = 'toast';
-      el.textContent = msg;
-      ta.appendChild(el);
-      setTimeout(() => { el.style.transition = 'opacity .4s'; el.style.opacity = 0; setTimeout(() => el.remove(), 400); }, 3500);
+    if (!audited) {
+      html += `<div class="not-audited">
+        <div class="not-audited-icon">${d.icon}</div>
+        <div class="not-audited-title">${d.label} — Not yet audited</div>
+        <div class="not-audited-sub">Security audit scheduled for a future session.</div>
+      </div>`;
+      return html;
     }
 
-    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    html += phaseBar(d.phase);
+    html += summary(d.findings);
+    html += table(d.findings);
+    return html;
+  }
 
-    function renderOverview() {
-      const c = document.getElementById('overview-container');
-      if (!DATA) { c.innerHTML = '<div class="sec-empty">Loading security-data.json…</div>'; return; }
-      const d = DATA;
-      const driveUrl = 'https://drive.google.com/drive/search?q=PC_Security_Findings_2026-04-23';
-      const planUrl  = 'https://drive.google.com/drive/search?q=PC_Security_Hardening_Plan_v1_2026-04-23';
-      c.innerHTML = `
-        <div class="sec-stats">
-          <div class="sec-stat"><div class="sec-stat-label">Phase</div><div class="sec-stat-value">${d.currentPhase}/${d.phasesTotal}</div></div>
-          <div class="sec-stat critical"><div class="sec-stat-label">Critical</div><div class="sec-stat-value">${d.severityCounts.critical}</div></div>
-          <div class="sec-stat high"><div class="sec-stat-label">High</div><div class="sec-stat-value">${d.severityCounts.high}</div></div>
-          <div class="sec-stat medium"><div class="sec-stat-label">Medium</div><div class="sec-stat-value">${d.severityCounts.medium}</div></div>
-          <div class="sec-stat pass"><div class="sec-stat-label">Passed</div><div class="sec-stat-value">${d.severityCounts.pass}</div></div>
-        </div>
-        <div class="sec-card">
-          <div class="sec-card-head">
-            <div>
-              <div class="sec-card-title">${esc(d.taskTitle)}</div>
-              <div class="sec-card-meta">
-                <span>Host: ${esc(d.auditHost)}</span>
-                <span>Last run: ${new Date(d.lastAuditRun).toLocaleString()}</span>
-                <span>Model: ${esc(d.auditModel)}</span>
-              </div>
-            </div>
-            <span class="sec-badge status-complete">Phase 1 complete</span>
-          </div>
-          <div class="sec-card-body">
-            Phase 1 (audit) ran read-only on Alessio's home PC. <strong>${d.severityCounts.critical} critical, ${d.severityCounts.high} high, ${d.severityCounts.medium} medium</strong> findings. ${d.severityCounts.pass} checks passed.
-          </div>
-          <a href="${planUrl}" target="_blank" class="drive-link">Open full plan in Drive</a>
-          <a href="${driveUrl}" target="_blank" class="drive-link" style="margin-left:8px;">Open findings report</a>
-        </div>
-      `;
-    }
-
-    function renderFindings(filter) {
-      const grid = document.getElementById('findings-grid');
-      if (!DATA) { grid.innerHTML = '<div class="sec-empty">Loading…</div>'; return; }
-      const items = DATA.findings.filter(f => filter === 'all' || f.severity === filter);
-      if (!items.length) { grid.innerHTML = '<div class="sec-empty">No findings at this severity.</div>'; return; }
-      grid.innerHTML = items.map(f => `
-        <div class="sec-card">
-          <div class="sec-card-head">
-            <div class="sec-card-title">${esc(f.id)}. ${esc(f.title)}</div>
-            <span class="sec-badge sev-${f.severity}">${f.severity}</span>
-          </div>
-          <div class="sec-card-body">${esc(f.summary)}</div>
-          <div class="sec-card-meta">
-            <span>📍 ${esc(f.location)}</span>
-            <span>⏱ ~${f.effortMin} min</span>
-            <span>Phase ${f.phase}</span>
-          </div>
-          <div class="sec-card-fix"><strong>Fix:</strong> ${esc(f.fix)}</div>
-        </div>
-      `).join('');
-    }
-
-    function renderPhases() {
-      const grid = document.getElementById('phases-grid');
-      if (!DATA) { grid.innerHTML = '<div class="sec-empty">Loading…</div>'; return; }
-      grid.innerHTML = DATA.phases.map(p => {
-        const canApprove = p.status === 'awaiting_approval';
-        const actions = canApprove ? `
-          <div class="phase-actions">
-            <button class="btn btn-approve" data-phase="${p.id}" data-action="approve">Approve</button>
-            <button class="btn btn-park" data-phase="${p.id}" data-action="park">Park</button>
-          </div>
-        ` : '';
-        return `
-          <div class="sec-card">
-            <div class="phase-row">
-              <div class="phase-num">${p.id}</div>
-              <div class="phase-info">
-                <div class="sec-card-title">${esc(p.name)}</div>
-                <div class="sec-card-body">${esc(p.summary)}</div>
-                <div class="sec-card-meta">
-                  <span>⏱ ~${p.estMin} min</span>
-                  ${p.completedAt ? `<span>✓ ${new Date(p.completedAt).toLocaleString()}</span>` : ''}
-                </div>
-              </div>
-              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
-                <span class="sec-badge status-${p.status}">${p.status.replace(/_/g,' ')}</span>
-                ${actions}
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('');
-      grid.querySelectorAll('button[data-action]').forEach(btn => {
-        btn.addEventListener('click', () => handlePhaseAction(btn.dataset.phase, btn.dataset.action, btn));
-      });
-    }
-
-    function renderPasses() {
-      const grid = document.getElementById('passes-grid');
-      if (!DATA) { grid.innerHTML = '<div class="sec-empty">Loading…</div>'; return; }
-      grid.innerHTML = `
-        <div class="sec-card">
-          <div class="sec-card-title">What's already good</div>
-          <div style="margin-top:10px;">
-            ${DATA.passChecks.map(p => `<div class="pass-item">${esc(p)}</div>`).join('')}
-          </div>
-        </div>
-        <div class="sec-card">
-          <div class="sec-card-title">Deferred — need elevated PowerShell</div>
-          <div class="sec-card-body" style="margin-top:8px;">
-            ${DATA.deferredChecks.map(d => `<div style="padding:4px 0;">• ${esc(d)}</div>`).join('')}
-          </div>
-        </div>
-      `;
-    }
-
-    async function handlePhaseAction(phaseId, action, btn) {
-      btn.disabled = true;
-      btn.textContent = '…';
-      try {
-        const { data: { session } } = await supa.auth.getSession();
-        if (!session) { toast('Sign in first to dispatch'); btn.disabled = false; btn.textContent = action === 'approve' ? 'Approve' : 'Park'; return; }
-        const body = action === 'approve'
-          ? `APPROVE Phase ${phaseId} of task cd71596d-2309-4a78-9c46-2530f65f9667 (PC Security Audit + Hardening). Proceed with per-item approval inside the phase.`
-          : `PARK Phase ${phaseId} of task cd71596d-2309-4a78-9c46-2530f65f9667 (PC Security Audit + Hardening). Hold for review.`;
-        const { error } = await supa.from('agent_messages').insert({
-          from_user: 'alessio',
-          to_user: 'forge-code',
-          channel: 'task',
-          body,
-          status: 'sent'
-        });
-        if (error) throw error;
-        toast(`Phase ${phaseId} — ${action} sent to forge-code`);
-        btn.textContent = '✓';
-      } catch (e) {
-        toast(`Failed: ${e.message}`);
-        btn.disabled = false;
-        btn.textContent = action === 'approve' ? 'Approve' : 'Park';
-      }
-    }
-
-    function updateStats() {
-      if (!DATA) return;
-      document.getElementById('stat-phase').querySelector('.cc-stat-value, [data-value]')?.setAttribute('data-value', '');
-      const setStat = (id, val) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        const valEl = el.querySelector('.cc-stat-value') || el.querySelector('[data-value]') || el;
-        if (valEl) valEl.textContent = val;
-      };
-      setStat('stat-phase',    `${DATA.currentPhase}/${DATA.phasesTotal}`);
-      setStat('stat-critical', DATA.severityCounts.critical);
-      setStat('stat-high',     DATA.severityCounts.high);
-      setStat('stat-medium',   DATA.severityCounts.medium);
-      setStat('stat-pass',     DATA.severityCounts.pass);
-    }
-
-    async function loadData() {
-      try {
-        const resp = await fetch('security-data.json', { cache: 'no-store' });
-        DATA = await resp.json();
-        updateStats();
-        renderOverview();
-        renderFindings('all');
-        renderPhases();
-        renderPasses();
-      } catch (e) {
-        console.error(e);
-        document.getElementById('overview-container').innerHTML = `<div class="sec-empty">Failed to load security-data.json: ${esc(e.message)}</div>`;
-      }
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
-        auth: { storageKey: 'sb-twrlvnfszohyrmivdhre-auth-token', persistSession: true, autoRefreshToken: true }
-      });
-      document.querySelectorAll('.sec-filter-btn').forEach(b => {
-        b.addEventListener('click', () => {
-          document.querySelectorAll('.sec-filter-btn').forEach(x => x.classList.remove('active'));
-          b.classList.add('active');
-          renderFindings(b.dataset.filter);
-        });
-      });
-      loadData();
+  function boot() {
+    const msg = document.getElementById('loadingMsg');
+    if (msg) msg.remove();
+    SECURITY_DATA.devices.forEach(d => {
+      const panel = document.querySelector(`[data-subtab="${d.id}"]`);
+      if (panel) panel.innerHTML = renderDevice(d);
     });
-  </script>
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+})();
+</script>
+
 </body>
 </html>
