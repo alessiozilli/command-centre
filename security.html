@@ -6,32 +6,28 @@
   <title>Security — AZCK Command Centre</title>
   <link rel="stylesheet" href="cc-shell.css">
   <style>
-    /* ── Security page styles ── */
     .audit-banner { background:var(--cc-bg-card); border:1px solid var(--cc-border); border-radius:var(--cc-r-lg); padding:20px 24px; margin-bottom:24px; display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
     .audit-banner-icon { font-size:36px; flex-shrink:0; }
     .audit-banner-label { font-size:1.1rem; font-weight:700; color:var(--cc-text); }
     .audit-banner-sub { font-size:0.82rem; color:var(--cc-text-muted); margin-top:2px; }
     .audit-banner-phase { margin-left:auto; font-size:0.78rem; font-weight:700; padding:5px 12px; border-radius:var(--cc-r-pill); background:rgba(88,166,255,0.1); color:var(--cc-accent); border:1px solid rgba(88,166,255,0.2); white-space:nowrap; }
 
-    /* Phase progress bar */
     .phase-bar { display:flex; gap:6px; margin-bottom:24px; flex-wrap:wrap; }
     .phase-pill { padding:5px 14px; border-radius:var(--cc-r-pill); font-size:0.75rem; font-weight:700; border:1px solid; }
     .phase-done    { background:rgba(63,185,80,0.12);  color:var(--cc-success); border-color:rgba(63,185,80,0.3); }
     .phase-partial { background:rgba(210,153,34,0.12); color:var(--cc-warn);    border-color:rgba(210,153,34,0.3); }
     .phase-open    { background:var(--cc-bg-card);     color:var(--cc-text-muted); border-color:var(--cc-border); }
 
-    /* Findings table */
     .findings-table { width:100%; border-collapse:collapse; }
     .findings-table th { text-align:left; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--cc-text-muted); padding:8px 12px; border-bottom:1px solid var(--cc-border); }
     .findings-table td { padding:10px 12px; border-bottom:1px solid var(--cc-border-soft); font-size:0.85rem; vertical-align:top; }
     .findings-table tr:last-child td { border-bottom:none; }
     .findings-table tr:hover td { background:var(--cc-bg-hover); }
-    .find-id    { font-family:var(--cc-font-mono); font-size:0.75rem; color:var(--cc-text-dim); white-space:nowrap; }
-    .find-label { color:var(--cc-text); font-weight:600; }
-    .find-note  { color:var(--cc-text-muted); font-size:0.78rem; margin-top:3px; }
-    .find-action{ color:var(--cc-accent); font-size:0.76rem; margin-top:4px; }
+    .find-id     { font-family:var(--cc-font-mono); font-size:0.75rem; color:var(--cc-text-dim); white-space:nowrap; }
+    .find-label  { color:var(--cc-text); font-weight:600; }
+    .find-note   { color:var(--cc-text-muted); font-size:0.78rem; margin-top:3px; }
+    .find-action { color:var(--cc-accent); font-size:0.76rem; margin-top:4px; }
 
-    /* Status pills */
     .pill { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:var(--cc-r-pill); font-size:0.72rem; font-weight:700; border:1px solid; white-space:nowrap; }
     .pill-clear  { background:rgba(63,185,80,0.1);  color:var(--cc-success); border-color:rgba(63,185,80,0.25); }
     .pill-open   { background:rgba(248,81,73,0.1);  color:var(--cc-danger);  border-color:rgba(248,81,73,0.25); }
@@ -40,7 +36,6 @@
     .pill-unknown{ background:var(--cc-bg-card);    color:var(--cc-text-muted); border-color:var(--cc-border); }
     .pill-keep   { background:rgba(88,166,255,0.1); color:var(--cc-accent);  border-color:rgba(88,166,255,0.25); }
 
-    /* Summary count cards */
     .summary-row { display:flex; gap:12px; margin-bottom:24px; flex-wrap:wrap; }
     .summary-card { flex:1; min-width:90px; background:var(--cc-bg-card); border:1px solid var(--cc-border); border-radius:var(--cc-r-md); padding:14px 18px; text-align:center; }
     .summary-card-val   { font-size:1.8rem; font-weight:800; }
@@ -50,13 +45,10 @@
     .val-pending { color:var(--cc-warn); }
     .val-total   { color:var(--cc-accent); }
 
-    /* Not-audited placeholder */
     .not-audited { text-align:center; padding:60px 24px; color:var(--cc-text-dim); }
     .not-audited-icon  { font-size:48px; margin-bottom:16px; }
     .not-audited-title { font-size:1.1rem; font-weight:700; color:var(--cc-text-muted); margin-bottom:8px; }
     .not-audited-sub   { font-size:0.85rem; }
-
-    #loadingMsg { padding:40px; text-align:center; color:var(--cc-text-muted); }
   </style>
 </head>
 <body>
@@ -75,25 +67,25 @@ const SECURITY_DATA = {
       icon: '🖥️',
       lastAudit: '2026-04-27',
       phase: [
-        { label:'Phase 1 — Audit',     state:'done' },
+        { label:'Phase 1 — Audit',     state:'done'    },
         { label:'Phase 2 — Hardening', state:'partial' },
-        { label:'Phase 3 — Firewall',  state:'open' },
-        { label:'Phase 4 — Monitor',   state:'open' }
+        { label:'Phase 3 — Firewall',  state:'open'    },
+        { label:'Phase 4 — Monitor',   state:'open'    }
       ],
       findings: [
-        { id:'C1', sev:'clear',   label:'ForgeWatcher password plaintext',        status:'Fixed',   date:'2026-04-27', note:'Moved to Windows Credential Manager (DPAPI)' },
-        { id:'C2', sev:'clear',   label:'Ollama exposed on LAN (port 11434)',      status:'Fixed',   date:'2026-04-27', note:'OLLAMA_HOST=127.0.0.1:11434' },
-        { id:'C3', sev:'keep',    label:'Chrome Remote Desktop',                  status:'Keep',    date:null,         note:'Intentional — used for remote access', action:'Google Workspace 2SV: resolve via Neo (admin loop)' },
-        { id:'H1', sev:'open',    label:'Outbound firewall allow-all',             status:'Open',    date:null,         note:'Phase 3 — deny-by-default + allowlist', action:'Scheduled: Phase 3 session' },
-        { id:'H2', sev:'keep',    label:'Adobe Acrobat extension <all_urls>',      status:'Keep',    date:null,         note:'Intentional — required for PDF open workflow' },
-        { id:'H3', sev:'clear',   label:'JWT strings in .claude history',          status:'Cleared', date:'2026-04-28', note:'Drive sync confirmed safe — .claude/ not in Google Drive' },
-        { id:'H4', sev:'pending', label:'Microsoft admin account 2FA',             status:'Pending', date:null,         note:'MS Authenticator loop — retry when resolved', action:'Retry MS 2FA setup' },
-        { id:'M1', sev:'clear',   label:'SMB Users share exposed',                 status:'Fixed',   date:'2026-04-27', note:'Removed via Remove-SmbShare' },
-        { id:'M2', sev:'low',     label:'Nearby sharing port 5040 on 0.0.0.0',    status:'Low',     date:null,         note:'Phase 3 — low priority' },
-        { id:'M3', sev:'low',     label:'Delivery Optimization port 7680',         status:'Low',     date:null,         note:'Phase 3 — low priority' },
-        { id:'M4', sev:'low',     label:'Logitech agent port 59869 on 0.0.0.0',   status:'Low',     date:null,         note:'Phase 3 — low priority' },
-        { id:'EL', sev:'unknown', label:'BitLocker / Secure Boot / TPM status',   status:'Unknown', date:null,         note:'Requires elevated PowerShell on beast', action:'forge-code elevated check queued' },
-        { id:'PW', sev:'open',    label:'forge2026 master password rotation',      status:'Open',    date:null,         note:'Separate task — scheduled after Phase 3' }
+        { id:'C1', sev:'clear',   label:'ForgeWatcher password plaintext',       status:'Fixed',   date:'2026-04-27', note:'Moved to Windows Credential Manager (DPAPI)' },
+        { id:'C2', sev:'clear',   label:'Ollama exposed on LAN (port 11434)',     status:'Fixed',   date:'2026-04-27', note:'OLLAMA_HOST=127.0.0.1:11434' },
+        { id:'C3', sev:'keep',    label:'Chrome Remote Desktop',                 status:'Keep',    date:null,         note:'Intentional — used for remote access', action:'Google Workspace 2SV: resolve via Neo (admin loop)' },
+        { id:'H1', sev:'open',    label:'Outbound firewall allow-all',            status:'Open',    date:null,         note:'Phase 3 — deny-by-default + allowlist', action:'Scheduled: Phase 3 session' },
+        { id:'H2', sev:'keep',    label:'Adobe Acrobat extension <all_urls>',     status:'Keep',    date:null,         note:'Intentional — required for PDF open workflow' },
+        { id:'H3', sev:'clear',   label:'JWT strings in .claude history',         status:'Cleared', date:'2026-04-28', note:'Drive sync confirmed safe — .claude/ not in Google Drive' },
+        { id:'H4', sev:'pending', label:'Microsoft admin account 2FA',            status:'Pending', date:null,         note:'MS Authenticator loop — retry when resolved', action:'Retry MS 2FA setup' },
+        { id:'M1', sev:'clear',   label:'SMB Users share exposed',                status:'Fixed',   date:'2026-04-27', note:'Removed via Remove-SmbShare' },
+        { id:'M2', sev:'low',     label:'Nearby sharing port 5040 on 0.0.0.0',   status:'Low',     date:null,         note:'Phase 3 — low priority' },
+        { id:'M3', sev:'low',     label:'Delivery Optimization port 7680',        status:'Low',     date:null,         note:'Phase 3 — low priority' },
+        { id:'M4', sev:'low',     label:'Logitech agent port 59869 on 0.0.0.0',  status:'Low',     date:null,         note:'Phase 3 — low priority' },
+        { id:'EL', sev:'unknown', label:'BitLocker / Secure Boot / TPM status',  status:'Unknown', date:null,         note:'Requires elevated PowerShell on beast', action:'forge-code elevated check queued' },
+        { id:'PW', sev:'open',    label:'forge2026 master password rotation',     status:'Open',    date:null,         note:'Separate task — scheduled after Phase 3' }
       ]
     },
     {
@@ -122,119 +114,113 @@ window.PAGE = {
   id: 'security',
   title: 'Security',
   subtitle: 'Device hardening · Audit findings · Phase tracker',
-  subtabs: SECURITY_DATA.devices.map(d => ({ id: d.id, label: d.label })),
-  stats: (() => {
-    const beast = SECURITY_DATA.devices.find(d => d.id === 'beast');
-    const f = beast ? beast.findings : [];
+  subtabs: SECURITY_DATA.devices.map(function(d) { return { id: d.id, label: d.label }; }),
+  stats: (function() {
+    var f = SECURITY_DATA.devices.find(function(d){ return d.id==='beast'; }).findings;
     return [
       { label:'Total (Beast)', value: String(f.length) },
-      { label:'Fixed / Clear', value: String(f.filter(x => x.sev === 'clear').length) },
-      { label:'Open',          value: String(f.filter(x => x.sev === 'open').length) },
-      { label:'Pending',       value: String(f.filter(x => x.sev === 'pending' || x.sev === 'unknown').length) },
-      { label:'Low Priority',  value: String(f.filter(x => x.sev === 'low').length) }
+      { label:'Fixed / Clear', value: String(f.filter(function(x){ return x.sev==='clear'; }).length) },
+      { label:'Open',          value: String(f.filter(function(x){ return x.sev==='open'; }).length) },
+      { label:'Pending',       value: String(f.filter(function(x){ return x.sev==='pending'||x.sev==='unknown'; }).length) },
+      { label:'Low Priority',  value: String(f.filter(function(x){ return x.sev==='low'; }).length) }
     ];
   })()
 };
 </script>
 
-<div id="loadingMsg">Loading…</div>
+<!-- Subtab panels — cc-shell.js toggles visibility, engine fills content -->
+<div data-subtab="beast"></div>
+<div data-subtab="imac"></div>
+<div data-subtab="neo"></div>
+
 <script src="cc-shell.js"></script>
 
 <script>
-/* ═══ ENGINE ═══ */
+/* ═══ ENGINE — do not edit below ═══ */
 (function () {
 
   function pill(sev, label) {
-    const cls   = { clear:'pill-clear', open:'pill-open', pending:'pill-pending', low:'pill-low', unknown:'pill-unknown', keep:'pill-keep' };
-    const icons = { clear:'✅', open:'🔴', pending:'⚠️', low:'🟡', unknown:'❓', keep:'🔵' };
-    return `<span class="pill ${cls[sev]||'pill-unknown'}">${icons[sev]||''} ${label}</span>`;
+    var cls   = { clear:'pill-clear', open:'pill-open', pending:'pill-pending', low:'pill-low', unknown:'pill-unknown', keep:'pill-keep' };
+    var icons = { clear:'✅', open:'🔴', pending:'⚠️', low:'🟡', unknown:'❓', keep:'🔵' };
+    return '<span class="pill ' + (cls[sev]||'pill-unknown') + '">' + (icons[sev]||'') + ' ' + label + '</span>';
   }
 
   function phaseBar(phases) {
     if (!phases.length) return '';
-    const cls = { done:'phase-done', partial:'phase-partial', open:'phase-open' };
+    var cls = { done:'phase-done', partial:'phase-partial', open:'phase-open' };
     return '<div class="phase-bar">' +
-      phases.map(p => `<span class="phase-pill ${cls[p.state]||'phase-open'}">${p.label}</span>`).join('') +
+      phases.map(function(p){ return '<span class="phase-pill ' + (cls[p.state]||'phase-open') + '">' + p.label + '</span>'; }).join('') +
       '</div>';
   }
 
   function summary(findings) {
-    const clear   = findings.filter(f => f.sev === 'clear').length;
-    const open    = findings.filter(f => f.sev === 'open').length;
-    const pending = findings.filter(f => f.sev === 'pending' || f.sev === 'unknown').length;
-    return `<div class="summary-row">
-      <div class="summary-card"><div class="summary-card-val val-total">${findings.length}</div><div class="summary-card-label">Total</div></div>
-      <div class="summary-card"><div class="summary-card-val val-clear">${clear}</div><div class="summary-card-label">Fixed/Clear</div></div>
-      <div class="summary-card"><div class="summary-card-val val-open">${open}</div><div class="summary-card-label">Open</div></div>
-      <div class="summary-card"><div class="summary-card-val val-pending">${pending}</div><div class="summary-card-label">Pending</div></div>
-    </div>`;
+    var clear   = findings.filter(function(f){ return f.sev==='clear'; }).length;
+    var open    = findings.filter(function(f){ return f.sev==='open'; }).length;
+    var pending = findings.filter(function(f){ return f.sev==='pending'||f.sev==='unknown'; }).length;
+    return '<div class="summary-row">' +
+      '<div class="summary-card"><div class="summary-card-val val-total">' + findings.length + '</div><div class="summary-card-label">Total</div></div>' +
+      '<div class="summary-card"><div class="summary-card-val val-clear">' + clear + '</div><div class="summary-card-label">Fixed / Clear</div></div>' +
+      '<div class="summary-card"><div class="summary-card-val val-open">' + open + '</div><div class="summary-card-label">Open</div></div>' +
+      '<div class="summary-card"><div class="summary-card-val val-pending">' + pending + '</div><div class="summary-card-label">Pending</div></div>' +
+      '</div>';
   }
 
   function table(findings) {
     if (!findings.length) return '';
-    const rows = findings.map(f => `<tr>
-      <td><span class="find-id">${f.id}</span></td>
-      <td>
-        <div class="find-label">${f.label}</div>
-        <div class="find-note">${f.note}</div>
-        ${f.action ? `<div class="find-action">→ ${f.action}</div>` : ''}
-      </td>
-      <td>${pill(f.sev, f.status)}</td>
-      <td style="color:var(--cc-text-muted);font-size:0.78rem;white-space:nowrap">${f.date || '—'}</td>
-    </tr>`).join('');
-    return `<table class="findings-table">
-      <thead><tr>
-        <th style="width:44px">ID</th><th>Finding</th>
-        <th style="width:110px">Status</th><th style="width:96px">Resolved</th>
-      </tr></thead>
-      <tbody>${rows}</tbody>
-    </table>`;
+    var rows = findings.map(function(f) {
+      return '<tr>' +
+        '<td><span class="find-id">' + f.id + '</span></td>' +
+        '<td><div class="find-label">' + f.label + '</div>' +
+          '<div class="find-note">' + f.note + '</div>' +
+          (f.action ? '<div class="find-action">&rarr; ' + f.action + '</div>' : '') +
+        '</td>' +
+        '<td>' + pill(f.sev, f.status) + '</td>' +
+        '<td style="color:var(--cc-text-muted);font-size:0.78rem;white-space:nowrap">' + (f.date||'—') + '</td>' +
+      '</tr>';
+    }).join('');
+    return '<table class="findings-table"><thead><tr>' +
+      '<th style="width:44px">ID</th><th>Finding</th>' +
+      '<th style="width:110px">Status</th><th style="width:96px">Resolved</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table>';
   }
 
   function renderDevice(d) {
-    const audited = d.lastAudit !== null;
-    const phaseLabel = audited
-      ? (d.phase.find(p => p.state === 'partial') || d.phase.find(p => p.state === 'done') || d.phase[0])?.label || 'Audited'
+    var audited = d.lastAudit !== null;
+    var activePhase = audited
+      ? (d.phase.filter(function(p){ return p.state==='partial'; })[0] ||
+         d.phase.filter(function(p){ return p.state==='done'; })[0] ||
+         d.phase[0] || { label:'Audited' }).label
       : 'Not audited';
 
-    let html = `<div class="audit-banner">
-      <div class="audit-banner-icon">${d.icon}</div>
-      <div>
-        <div class="audit-banner-label">${d.label}</div>
-        <div class="audit-banner-sub">${d.sublabel} · ${audited ? 'Last audit: ' + d.lastAudit : 'No audit on record'}</div>
-      </div>
-      <span class="audit-banner-phase">${phaseLabel}</span>
-    </div>`;
+    var html = '<div class="audit-banner">' +
+      '<div class="audit-banner-icon">' + d.icon + '</div>' +
+      '<div><div class="audit-banner-label">' + d.label + '</div>' +
+      '<div class="audit-banner-sub">' + d.sublabel + ' &middot; ' + (audited ? 'Last audit: ' + d.lastAudit : 'No audit on record') + '</div></div>' +
+      '<span class="audit-banner-phase">' + activePhase + '</span>' +
+      '</div>';
 
     if (!audited) {
-      html += `<div class="not-audited">
-        <div class="not-audited-icon">${d.icon}</div>
-        <div class="not-audited-title">${d.label} — Not yet audited</div>
-        <div class="not-audited-sub">Security audit scheduled for a future session.</div>
-      </div>`;
-      return html;
+      return html +
+        '<div class="not-audited">' +
+        '<div class="not-audited-icon">' + d.icon + '</div>' +
+        '<div class="not-audited-title">' + d.label + ' — Not yet audited</div>' +
+        '<div class="not-audited-sub">Security audit scheduled for a future session.</div>' +
+        '</div>';
     }
 
-    html += phaseBar(d.phase);
-    html += summary(d.findings);
-    html += table(d.findings);
-    return html;
+    return html + phaseBar(d.phase) + summary(d.findings) + table(d.findings);
   }
 
   function boot() {
-    const msg = document.getElementById('loadingMsg');
-    if (msg) msg.remove();
-    SECURITY_DATA.devices.forEach(d => {
-      const panel = document.querySelector(`[data-subtab="${d.id}"]`);
+    SECURITY_DATA.devices.forEach(function(d) {
+      var panel = document.querySelector('[data-subtab="' + d.id + '"]');
       if (panel) panel.innerHTML = renderDevice(d);
     });
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', boot);
-  } else {
-    boot();
-  }
+  /* cc-shell.js is fully executed before this inline script runs — call directly */
+  boot();
+
 })();
 </script>
 
