@@ -226,6 +226,16 @@ a:hover { text-decoration: underline; }
   color: var(--cc-text);
 }
 
+/* Fix 4 — voice picker contrast (surgical — only this element, not the header) */
+#cc-voice-picker {
+  background: var(--cc-bg-raised) !important;
+  color: var(--cc-text) !important;
+}
+#cc-voice-picker option {
+  background: var(--cc-bg-raised);
+  color: var(--cc-text);
+}
+
 /* Voice v2 — active toggle state */
 .cc-banner-actions button.cc-voice-btn-active {
   background: var(--cc-accent);
@@ -254,9 +264,11 @@ a:hover { text-decoration: underline; }
   background: transparent;
 }
 
-/* Voice v2 — floating click-to-read button */
+/* Voice v2 — floating click-to-read button (Fix 1: fixed viewport, top-right below header) */
 #cc-voice-read-btn {
   position: fixed;
+  top: 58px;
+  right: 16px;
   z-index: 9999;
   background: var(--cc-bg-raised);
   border: 1px solid var(--cc-accent);
@@ -274,6 +286,22 @@ a:hover { text-decoration: underline; }
   background: var(--cc-accent);
   color: var(--cc-bg);
 }
+
+/* Fix 2+3 — per-item speak buttons (injected by cc-shell.js on [data-speak-text] elements) */
+.cc-speak-item-btn {
+  background: transparent;
+  border: none;
+  color: var(--cc-text-dim);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 2px 5px;
+  border-radius: var(--cc-r-sm);
+  transition: color var(--cc-t-fast);
+  flex-shrink: 0;
+  line-height: 1;
+  vertical-align: middle;
+}
+.cc-speak-item-btn:hover { color: var(--cc-accent); }
 
 /* ─── 4. LEVEL 2 — QUICKVIEW STRIP ─── */
 .cc-quickview {
