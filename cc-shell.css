@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════
    cc-shell.css — AZCK Command Centre unified shell
+   v1.1 — 2026-04-28 (Plan 7dc6ce70 — command strip styles + banner-h vars)
    v1.0 — 2026-04-17 (Forge v0.9.5 The Operator)
 
    Design tokens + layout for all CC pages. Pages load this file
@@ -66,6 +67,10 @@
 
   /* Max content width */
   --cc-max-w: 1200px;
+
+  /* Shell height tracking — update if banner or strip height changes */
+  --cc-banner-h: 56px;
+  --cc-strip-h: 40px;
 }
 
 /* ─── 2. GLOBAL RESET + BODY ─── */
@@ -306,7 +311,7 @@ a:hover { text-decoration: underline; }
 /* ─── 4. LEVEL 2 — QUICKVIEW STRIP ─── */
 .cc-quickview {
   position: sticky;
-  top: 48px;  /* below banner */
+  top: calc(var(--cc-banner-h) + var(--cc-strip-h));  /* below banner + strip */
   z-index: var(--cc-z-quickview);
   background: var(--cc-bg-card);
   border-bottom: 1px solid var(--cc-border);
@@ -349,7 +354,7 @@ a:hover { text-decoration: underline; }
 /* ─── 5. LEVEL 3 — SUB-TABS (per page, drag-reorder) ─── */
 .cc-subtabs {
   position: sticky;
-  top: 86px;  /* below banner + quickview */
+  top: calc(var(--cc-banner-h) + var(--cc-strip-h) + 38px);  /* below banner + strip + quickview */
   z-index: var(--cc-z-subtabs);
   background: var(--cc-bg);
   padding: 12px 24px 0;
@@ -626,6 +631,110 @@ body.cc-drawer-open #cc-mobile-backdrop {
 @media (max-width: 1024px) {
   .cc-nav { display: none; }
   #cc-mobile-toggle { display: flex; }
+}
+
+/* ─── 8b. COMMAND STRIP ─── */
+#cc-command-strip {
+  position: sticky;
+  top: var(--cc-banner-h, 56px);
+  z-index: 99;
+  height: 40px;
+  background: var(--cc-bg-card);
+  border-bottom: 1px solid var(--cc-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+#cc-strip-brand a {
+  font-family: 'Optima', 'Optima Nova LT', 'Palatino', serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--cc-text);
+  white-space: nowrap;
+  text-decoration: none;
+  letter-spacing: 0.3px;
+}
+#cc-strip-brand a:hover { color: var(--cc-accent); }
+
+#cc-strip-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.cc-strip-btn {
+  background: transparent;
+  border: 1px solid var(--cc-border);
+  color: var(--cc-text-muted);
+  padding: 3px 10px;
+  border-radius: var(--cc-r-sm);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--cc-t-fast);
+}
+.cc-strip-btn:hover {
+  color: var(--cc-text);
+  border-color: var(--cc-text-muted);
+}
+.cc-strip-toggle.active {
+  background: var(--cc-accent);
+  color: var(--cc-bg);
+  border-color: var(--cc-accent);
+}
+
+.cc-strip-vol-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.cc-strip-vol-icon {
+  font-size: 13px;
+  user-select: none;
+}
+.cc-strip-range {
+  width: 70px;
+  cursor: pointer;
+  accent-color: var(--cc-accent);
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+#cc-strip-voice-picker {
+  background: var(--cc-bg-raised);
+  border: 1px solid var(--cc-border);
+  color: var(--cc-text);
+  padding: 3px 6px;
+  border-radius: var(--cc-r-sm);
+  font-size: 12px;
+  cursor: pointer;
+  max-width: 120px;
+}
+#cc-strip-voice-picker:focus {
+  outline: none;
+  border-color: var(--cc-accent);
+}
+#cc-strip-voice-picker option {
+  background: var(--cc-bg-raised);
+  color: var(--cc-text);
+}
+
+@media (max-width: 1024px) {
+  #cc-command-strip {
+    height: 48px;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: thin;
+    --cc-strip-h: 48px;
+  }
+  #cc-strip-controls { flex-shrink: 0; }
 }
 
 /* ─── 9. UTILITIES ─── */
