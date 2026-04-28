@@ -74,6 +74,7 @@
   .drill-chart-wrap2 { position:relative; height:200px; margin-bottom:18px; }
   .drill-conf-section h3 { color:#e6edf3; font-size:0.88rem; margin:0 0 10px; font-weight:600; }
   .drill-conf-row { display:grid; grid-template-columns:80px 70px 90px 1fr; gap:8px; align-items:center; padding:8px 12px; background:#0d1117; border:1px solid #30363d; border-radius:6px; margin-bottom:6px; font-size:0.82rem; }
+  @media(max-width:480px){ .drill-conf-row { grid-template-columns:1fr 1fr; } .drill-conf-note { grid-column:1/-1; } }
   .drill-conf-qtr { color:#e6edf3; font-weight:500; }
   .drill-conf-ratio { font-variant-numeric:tabular-nums; font-weight:500; }
   .drill-conf-ratio.over { color:#3fb950; }
@@ -147,6 +148,65 @@
   .ins-modal label { display:flex; gap:8px; align-items:flex-start; color:#e6edf3; font-size:0.88rem; cursor:pointer; margin-bottom:16px; }
   .ins-modal label input { margin-top:2px; flex:none; }
   .ins-modal-btns { display:flex; gap:10px; justify-content:flex-end; }
+
+  /* ── Tier 4L Activation Gate ── */
+  .gate-card { background:#0d1117; border:2px dashed #30363d; border-radius:10px; padding:20px 24px; margin-top:20px; }
+  .gate-card.ready { border-color:#238636; }
+  .gate-card-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .gate-card-head h3 { color:#e6edf3; font-size:1rem; margin:0; }
+  .gate-card-sub { color:#8b949e; font-size:0.82rem; margin-bottom:16px; line-height:1.5; }
+  .gate-checks { display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
+  .gate-check { display:flex; align-items:flex-start; gap:10px; padding:10px 14px; background:#161b22; border:1px solid #30363d; border-radius:6px; cursor:pointer; transition:border-color .15s,background .15s; }
+  .gate-check.checked { border-color:#238636; background:#0d1f14; }
+  .gate-check input[type=checkbox] { margin:2px 0 0; flex:none; cursor:pointer; accent-color:#3fb950; }
+  .gate-check label { color:#adbac7; font-size:0.88rem; cursor:pointer; line-height:1.4; pointer-events:none; }
+  .gate-check.checked label { color:#e6edf3; }
+  .gate-progress { height:4px; background:#21262d; border-radius:4px; margin-bottom:16px; overflow:hidden; }
+  .gate-progress-bar { height:100%; background:#238636; border-radius:4px; transition:width .3s; }
+  .gate-activate { width:100%; padding:10px 18px; border-radius:6px; border:none; font-weight:600; font-size:0.9rem; cursor:pointer; transition:all .2s; }
+  .gate-activate.locked { background:#21262d; color:#484f58; cursor:not-allowed; }
+  .gate-activate.ready { background:#238636; color:#fff; }
+  .gate-activate.ready:hover { background:#2ea043; }
+  .gate-tag { display:inline-block; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:10px; background:#1a2d4a; color:#58a6ff; margin-left:8px; vertical-align:middle; }
+
+  /* ── Runway / Scenario sliders ── */
+  .runway-grid { display:grid; grid-template-columns:1fr 300px; gap:20px; align-items:start; }
+  @media(max-width:820px){ .runway-grid { grid-template-columns:1fr; } }
+  .runway-panel { background:#161b22; border:1px solid #30363d; border-radius:8px; padding:20px; margin-bottom:16px; }
+  .runway-panel h3 { color:#e6edf3; font-size:0.95rem; margin:0 0 14px; font-weight:600; }
+  .scenario-presets { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+  .preset-btn { padding:5px 14px; border-radius:6px; border:1px solid #30363d; background:#21262d; color:#adbac7; font-size:0.82rem; cursor:pointer; transition:all .15s; }
+  .preset-btn.active { background:#1a2d4a; border-color:#58a6ff; color:#58a6ff; }
+  .preset-btn:hover:not(.active) { background:#30363d; color:#e6edf3; }
+  .slider-group { margin-bottom:18px; }
+  .slider-label { display:flex; justify-content:space-between; align-items:center; color:#adbac7; font-size:0.85rem; margin-bottom:7px; }
+  .slider-label .sl-val { color:#e6edf3; font-weight:600; font-variant-numeric:tabular-nums; background:#21262d; padding:2px 8px; border-radius:4px; font-size:0.82rem; min-width:44px; text-align:center; }
+  input[type=range].cc-slider { width:100%; accent-color:#58a6ff; cursor:pointer; height:4px; }
+  .cash-row { display:flex; gap:10px; align-items:center; padding-top:4px; }
+  .cash-row label { color:#8b949e; font-size:0.82rem; white-space:nowrap; }
+  .cash-input { flex:1; padding:7px 10px; background:#0d1117; border:1px solid #30363d; border-radius:6px; color:#e6edf3; font-size:0.88rem; }
+  .cash-input:focus { outline:none; border-color:#58a6ff; }
+  .runway-summary { display:flex; flex-direction:column; gap:12px; }
+  .runway-kpi { background:#0d1117; border:1px solid #30363d; border-radius:8px; padding:16px; }
+  .runway-kpi .lbl { color:#8b949e; font-size:0.72rem; text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px; }
+  .runway-kpi .val { color:#e6edf3; font-size:1.35rem; font-weight:600; line-height:1.2; }
+  .runway-kpi .val.pos { color:#3fb950; }
+  .runway-kpi .val.neg { color:#f85149; }
+  .runway-kpi .sub { color:#8b949e; font-size:0.77rem; margin-top:5px; line-height:1.4; }
+  .rw-bar-wrap { margin-top:10px; }
+  .rw-bar-track { height:6px; background:#21262d; border-radius:4px; overflow:hidden; margin-bottom:5px; }
+  .rw-bar-fill { height:100%; border-radius:4px; transition:width .4s; }
+  .rw-bar-fill.green { background:#3fb950; }
+  .rw-bar-fill.amber { background:#d29922; }
+  .rw-bar-fill.red   { background:#f85149; }
+  .rw-scale { display:flex; justify-content:space-between; color:#6e7681; font-size:0.7rem; }
+  .rw-stream-table { border-top:1px solid #30363d; padding-top:12px; }
+  .rw-stream-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid #21262d; font-size:0.8rem; }
+  .rw-stream-row:last-child { border-bottom:none; }
+  .rw-stream-lbl { color:#8b949e; }
+  .rw-stream-val { font-variant-numeric:tabular-nums; font-weight:500; }
+  .rw-stream-delta { color:#58a6ff; font-size:0.72rem; margin-left:6px; }
+  .rw-note { color:#6e7681; font-size:0.78rem; font-style:italic; margin-top:12px; line-height:1.4; }
 </style>
 </head>
 <body>
@@ -181,6 +241,17 @@
       revenue: ['core','tier-1','tier-2','tier-3','tier-4','partnership'],
       expense: ['ops-shop','admin-digital','quadfang-rnd','fc-tier-1','tier-5-insurance','tier-5-wealth','variable']
     },
+    streamLabels: {
+      'sharpening-sub':    'Sharpening Subscription',
+      'custom-knife':      'Custom Knife Orders',
+      'retail-walk-in':    'Retail Walk-In',
+      'classes-beginner':  'Beginner Classes',
+      'classes-advanced':  'Advanced Classes',
+      'engraving':         'Engraving & Personalisation',
+      'gift-cert':         'Gift Certificates',
+      'quadfang-partner':  'QuadFang Partnership',
+      'footpics':          'Tier 4L — Footpics'
+    },
     // Combined Insurance addendum — 2025 calibration reference.
     // Dollars local-only per Spec §9; these numbers live in the page, not Supabase.
     insurance2025: {
@@ -205,6 +276,7 @@
       { id:'net',       label:'Net' },
       { id:'revenue',   label:'Revenue' },
       { id:'expenses',  label:'Expenses' },
+      { id:'runway',    label:'Runway' },
       { id:'insurance', label:'Combined Insurance' }
     ],
     stats: []
@@ -312,6 +384,7 @@
     if (id==='net')       return renderNet();
     if (id==='revenue')   return renderStreams('revenue');
     if (id==='expenses')  return renderStreams('expense');
+    if (id==='runway')    return renderRunway();
     if (id==='insurance') return renderInsurance();
     app.innerHTML = fail('Unknown subtab: '+id);
   }
@@ -470,9 +543,226 @@
         </div>`;
     });
 
+    if (type === 'revenue') html += renderTier4LGate(rows);
     app.innerHTML = html;
     _drillRows = rows; // expose for click delegation
   }
+
+  // ─── RUNWAY / SCENARIO SLIDERS ──────────────────────────────────────────
+  var RW_KEY = 'cc.runway.state.v1';
+  var RW_PRESETS = [
+    { id:'pessimistic', label:'Pessimistic', rev:70,  exp:115 },
+    { id:'base',        label:'Base',        rev:100, exp:100 },
+    { id:'optimistic',  label:'Optimistic',  rev:130, exp:95  }
+  ];
+
+  async function renderRunway(){
+    app.innerHTML = banner + '<div class="loading">Loading…</div>';
+    let rows;
+    try { rows = await ensureProjections(); }
+    catch(e){ return app.innerHTML = banner + fail(e.message); }
+
+    const revRows = rows.filter(r => r.stream_type==='revenue' && r.active);
+    const expRows = rows.filter(r => r.stream_type==='expense' && r.active);
+    const baseRev = revRows.reduce((s,r)=>s+sumCurve(r),0) / 12;
+    const baseExp = expRows.reduce((s,r)=>s+sumCurve(r),0) / 12;
+
+    // Load state
+    var rs = { revMult:100, expMult:100, cash:0, preset:'base' };
+    try { var _rs = JSON.parse(localStorage.getItem(RW_KEY)); if (_rs && typeof _rs==='object') rs=Object.assign(rs,_rs); } catch(e){}
+
+    function saveRS(){ try { localStorage.setItem(RW_KEY, JSON.stringify(rs)); } catch(e){} }
+    function calc(){
+      const adjRev = baseRev * (rs.revMult/100);
+      const adjExp = baseExp * (rs.expMult/100);
+      const adjNet = adjRev - adjExp;
+      const cash   = Number(rs.cash)||0;
+      const months = adjNet >= 0 ? 999 : (cash > 0 ? Math.floor(cash/(-adjNet)) : 0);
+      return { adjRev, adjExp, adjNet, cash, months };
+    }
+    function barClass(m){ return m>=24?'green':m>=12?'amber':'red'; }
+    function monthsLabel(m){ return m>=999?'∞ cash-flow positive':m===0?'0 months (no cash buffer)':m+' months'; }
+
+    function buildHTML(){
+      const { adjRev, adjExp, adjNet, cash, months } = calc();
+      const pct    = months>=999?100:Math.min(100,Math.round(months/24*100));
+      const bCls   = barClass(months);
+      const netCls = adjNet>=0?'pos':'neg';
+      const presetBtns = RW_PRESETS.map(p=>
+        `<button class="preset-btn ${rs.preset===p.id?'active':''}" onclick="rwPreset('${p.id}',${p.rev},${p.exp})">${p.label}</button>`
+      ).join('');
+
+      const revTable = revRows.map(r=>{
+        const b=sumCurve(r)/12, a=b*(rs.revMult/100), d=a-b;
+        return `<div class="rw-stream-row">
+          <span class="rw-stream-lbl">${esc(r.stream_id)}</span>
+          <span><span class="rw-stream-val pos">${fmt$(a)}/mo</span>
+            <span class="rw-stream-delta">${d>=0?'+':''}${fmt$(d)}</span></span>
+        </div>`;
+      }).join('');
+      const expTable = expRows.map(r=>{
+        const b=sumCurve(r)/12, a=b*(rs.expMult/100), d=-(a-b);
+        return `<div class="rw-stream-row">
+          <span class="rw-stream-lbl">${esc(r.stream_id)}</span>
+          <span><span class="rw-stream-val neg">${fmt$(-a)}/mo</span>
+            <span class="rw-stream-delta">${d>=0?'+':''}${fmt$(d)}</span></span>
+        </div>`;
+      }).join('');
+
+      return banner + `
+      <div class="runway-grid">
+        <div>
+          <div class="runway-panel">
+            <h3>Scenario</h3>
+            <div class="scenario-presets">${presetBtns}</div>
+            <div class="slider-group">
+              <div class="slider-label"><span>Revenue ×</span><span class="sl-val" id="rw-rev-val">${rs.revMult}%</span></div>
+              <input type="range" class="cc-slider" min="0" max="200" value="${rs.revMult}" oninput="rwSlide('rev',this.value)">
+            </div>
+            <div class="slider-group">
+              <div class="slider-label"><span>Expenses ×</span><span class="sl-val" id="rw-exp-val">${rs.expMult}%</span></div>
+              <input type="range" class="cc-slider" min="50" max="200" value="${rs.expMult}" oninput="rwSlide('exp',this.value)">
+            </div>
+            <div class="cash-row">
+              <label>Starting cash ($)</label>
+              <input class="cash-input" type="number" placeholder="e.g. 15000" value="${rs.cash||''}" oninput="rwCash(this.value)">
+            </div>
+          </div>
+          <div class="runway-panel">
+            <h3>Stream Breakdown</h3>
+            <div style="color:#58a6ff;font-size:0.75rem;text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:8px">Revenue streams</div>
+            <div class="rw-stream-table">${revTable}</div>
+            <div style="color:#f85149;font-size:0.75rem;text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin:14px 0 8px">Expense streams</div>
+            <div class="rw-stream-table">${expTable}</div>
+            <p class="rw-note">Delta = adjusted minus base. All math is local — nothing sent to Supabase.</p>
+          </div>
+        </div>
+        <div class="runway-summary">
+          <div class="runway-kpi">
+            <div class="lbl">Monthly Net (adjusted)</div>
+            <div class="val ${netCls}" id="rw-net">${fmt$(adjNet)}/mo</div>
+            <div class="sub">Base ${fmt$(baseRev-baseExp)}/mo · Delta ${adjNet-(baseRev-baseExp)>=0?'+':''}${fmt$(adjNet-(baseRev-baseExp))}</div>
+          </div>
+          <div class="runway-kpi">
+            <div class="lbl">Revenue / month</div>
+            <div class="val pos" id="rw-rev">${fmt$(adjRev)}/mo</div>
+            <div class="sub">Base ${fmt$(baseRev)}/mo</div>
+          </div>
+          <div class="runway-kpi">
+            <div class="lbl">Expenses / month</div>
+            <div class="val neg" id="rw-exp">${fmt$(-adjExp)}/mo</div>
+            <div class="sub">Base ${fmt$(-baseExp)}/mo</div>
+          </div>
+          <div class="runway-kpi">
+            <div class="lbl">Runway</div>
+            <div class="val ${bCls==='green'?'pos':bCls==='red'?'neg':''}" id="rw-mo">${monthsLabel(months)}</div>
+            <div class="rw-bar-wrap">
+              <div class="rw-bar-track"><div id="rw-bar" class="rw-bar-fill ${bCls}" style="width:${pct}%"></div></div>
+              <div class="rw-scale"><span>0</span><span>12 mo</span><span>24 mo</span></div>
+            </div>
+            <div class="sub" style="margin-top:6px">Cash buffer: ${cash>0?fmt$(cash):'not set'}</div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    function updateKPIs(){
+      const { adjRev, adjExp, adjNet, cash, months } = calc();
+      const pct  = months>=999?100:Math.min(100,Math.round(months/24*100));
+      const bCls = barClass(months);
+      const g = id => document.getElementById(id);
+      if (g('rw-net')) { g('rw-net').textContent = fmt$(adjNet)+'/mo'; g('rw-net').className='val '+(adjNet>=0?'pos':'neg'); }
+      if (g('rw-rev')) g('rw-rev').textContent = fmt$(adjRev)+'/mo';
+      if (g('rw-exp')) g('rw-exp').textContent = fmt$(-adjExp)+'/mo';
+      if (g('rw-mo'))  { g('rw-mo').textContent=monthsLabel(months); g('rw-mo').className='val '+(bCls==='green'?'pos':bCls==='red'?'neg':''); }
+      if (g('rw-bar')) { g('rw-bar').style.width=pct+'%'; g('rw-bar').className='rw-bar-fill '+bCls; }
+      if (g('rw-rev-val')) g('rw-rev-val').textContent=rs.revMult+'%';
+      if (g('rw-exp-val')) g('rw-exp-val').textContent=rs.expMult+'%';
+    }
+
+    window.rwSlide = function(type, val){ rs.preset='custom'; rs[type+'Mult']=Number(val); saveRS(); updateKPIs(); };
+    window.rwCash  = function(val){ rs.cash=Number(val)||0; saveRS(); updateKPIs(); };
+    window.rwPreset = function(id, rev, exp){ rs.preset=id; rs.revMult=rev; rs.expMult=exp; saveRS(); renderRunway(); };
+
+    app.innerHTML = buildHTML();
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // ─── TIER 4L ACTIVATION GATE ────────────────────────────────────────────
+  var TIER4L_KEY = 'cc.tier4l.gate.v1';
+  var TIER4L_CONDITIONS = [
+    'Reanna dashboard access confirmed (tested CC login on neo)',
+    'Chart library locked in — Chart.js 4.4.1, no swap',
+    'Private-Net behaviour on load documented (login wall = confirmed default)',
+    'Expense split defined: fixed vs variable per stream (agreed with Alessio)',
+    'Kyran / QuadFang revenue split ratio agreed and signed off'
+  ];
+
+  function tier4lReadState(){
+    try { var s = JSON.parse(localStorage.getItem(TIER4L_KEY)); return Array.isArray(s) && s.length===5 ? s : [false,false,false,false,false]; }
+    catch(e){ return [false,false,false,false,false]; }
+  }
+  function tier4lWriteState(s){ try { localStorage.setItem(TIER4L_KEY, JSON.stringify(s)); } catch(e){} }
+
+  window.tier4lToggle = function(idx){
+    const s = tier4lReadState(); s[idx] = !s[idx]; tier4lWriteState(s); refreshGateUI(s);
+  };
+
+  window.tier4lActivate = async function(){
+    const s = tier4lReadState(); if (!s.every(Boolean)) return;
+    const btn = document.getElementById('tier4l-btn');
+    if (btn){ btn.textContent = 'Activating…'; btn.disabled = true; }
+    const { error } = await supa.from('projections').insert({
+      stream_id: 'footpics', stream_type: 'revenue', category: 'tier-4',
+      confidence: 0.4, active: true, curve_json: { points: [] },
+      notes_ratio: 'Tier 4L — exploratory. Activated ' + new Date().toISOString().slice(0,10) + '.'
+    });
+    if (error){
+      const g = document.getElementById('tier4l-gate');
+      if (g) g.insertAdjacentHTML('beforeend', `<div class="error" style="margin-top:12px">${esc(error.message)}</div>`);
+      if (btn){ btn.textContent = '🚀 Activate Tier 4L — footpics'; btn.disabled = false; }
+      return;
+    }
+    projections = null; // bust cache → ensureProjections will re-fetch
+    renderStreams('revenue');
+  };
+
+  function refreshGateUI(s){
+    const card = document.getElementById('tier4l-gate'); if (!card) return;
+    card.className = 'gate-card' + (s.every(Boolean) ? ' ready' : '');
+    card.innerHTML = buildGateInner(s);
+  }
+
+  function buildGateInner(s){
+    const allDone = s.every(Boolean);
+    const done = s.filter(Boolean).length;
+    const pct  = Math.round(done / TIER4L_CONDITIONS.length * 100);
+    const checks = TIER4L_CONDITIONS.map((txt, i) => `
+      <div class="gate-check ${s[i]?'checked':''}" onclick="tier4lToggle(${i})">
+        <input type="checkbox" ${s[i]?'checked':''} onclick="event.stopPropagation()">
+        <label>${esc(txt)}</label>
+      </div>`).join('');
+    return `
+      <div class="gate-card-head">
+        <h3>Tier 4L Activation Gate <span class="gate-tag">footpics</span></h3>
+        <span style="color:#8b949e;font-size:0.82rem">${done}/${TIER4L_CONDITIONS.length} ready</span>
+      </div>
+      <p class="gate-card-sub">Resolve all 5 open questions (Spec §14) before activating the <strong>footpics</strong> stream.
+        Check each item when confirmed — the Activate button unlocks when all 5 are done.</p>
+      <div class="gate-checks">${checks}</div>
+      <div class="gate-progress"><div class="gate-progress-bar" style="width:${pct}%"></div></div>
+      <button id="tier4l-btn" class="gate-activate ${allDone?'ready':'locked'}" ${allDone?'':'disabled'} onclick="tier4lActivate()">
+        ${allDone ? '🚀 Activate Tier 4L — footpics' : `${TIER4L_CONDITIONS.length - done} remaining — complete all checks to unlock`}
+      </button>`;
+  }
+
+  function renderTier4LGate(rows){
+    const existing = rows.find(r => r.stream_id === 'footpics');
+    if (existing && existing.active) return ''; // stream live, gate gone
+    const s = tier4lReadState();
+    return `<div id="tier4l-gate" class="gate-card${s.every(Boolean)?' ready':''}">${buildGateInner(s)}</div>`;
+  }
+  // ─────────────────────────────────────────────────────────────────────────
 
   function rowStream(r){
     const total = sumCurve(r);
@@ -480,7 +770,7 @@
     const note = r.notes_ratio ? `<span class="note">${esc(r.notes_ratio)}</span>` : '';
     return `
       <div class="stream-row ${r.active?'':'inactive'}" data-stream-id="${esc(r.stream_id)}" style="cursor:pointer" title="Click to drill in">
-        <div class="name">${esc(r.stream_id)}${note}</div>
+        <div class="name">${esc((D.streamLabels && D.streamLabels[r.stream_id]) || r.stream_id)}${D.streamLabels && D.streamLabels[r.stream_id] ? ` <span style="color:#6e7681;font-size:0.75rem">${esc(r.stream_id)}</span>` : ''}${note}</div>
         <div class="num ${numClass}">${fmt$(r.stream_type==='expense'?-total:total)}</div>
         <div class="conf">${fmtPct(Number(r.confidence||0))}</div>
         <div class="status ${r.active?'on':'off'}">${r.active?'ACTIVE':'DORMANT'}</div>
@@ -493,6 +783,7 @@
     const labels = pts.map(p => p.m);
     const vals   = pts.map(p => Number(p.v||0));
     const isRev  = row.stream_type === 'revenue';
+    const hasData = pts.length > 0 && !vals.every(v => v === 0);
 
     let confs = [];
     const { data: cd } = await supa.from('confirmations')
@@ -502,8 +793,14 @@
       .limit(12);
     if (cd) confs = cd;
 
+    const confHeader = `<div class="drill-conf-row" style="border-bottom:1px solid #30363d;margin-bottom:6px">
+      <span style="color:#8b949e;font-size:0.75rem;text-transform:uppercase">Quarter</span>
+      <span style="color:#8b949e;font-size:0.75rem;text-transform:uppercase">Ratio</span>
+      <span style="color:#8b949e;font-size:0.75rem;text-transform:uppercase">vs Target</span>
+      <span style="color:#8b949e;font-size:0.75rem;text-transform:uppercase">Note</span>
+    </div>`;
     const confHTML = confs.length
-      ? confs.map(c => {
+      ? confHeader + confs.map(c => {
           const r = Number(c.ratio_vs_projection||0);
           const cl = c.direction==='over' ? 'over' : c.direction==='under' ? 'under' : 'on';
           const sign = c.direction==='over' ? '↑ ' : c.direction==='under' ? '↓ ' : '= ';
@@ -521,7 +818,7 @@
     overlay.innerHTML = `
       <div class="drill-modal">
         <div class="drill-head">
-          <h2>${esc(row.stream_id)}</h2>
+          <h2>${esc((D.streamLabels && D.streamLabels[row.stream_id]) || row.stream_id)}</h2>
           <button class="drill-close" id="drill-close-btn">×</button>
         </div>
         <div class="drill-meta">
@@ -532,7 +829,7 @@
         </div>
         ${row.notes_ratio ? `<div style="color:#8b949e;font-size:0.85rem;margin-bottom:14px;line-height:1.5">${esc(row.notes_ratio)}</div>` : ''}
         <div class="drill-chart-wrap2">
-          <canvas id="drill-chart-canvas"></canvas>
+          ${hasData ? '<canvas id="drill-chart-canvas"></canvas>' : '<div class="empty" style="padding:40px 0;text-align:center;color:#6e7681">No projected curve data for this stream.</div>'}
         </div>
         <div class="drill-conf-section">
           <h3>Quarterly Confirmation History</h3>
@@ -541,35 +838,38 @@
       </div>`;
     document.body.appendChild(overlay);
 
-    const dc = new Chart(
-      document.getElementById('drill-chart-canvas').getContext('2d'),
-      {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [{
-            label: isRev ? 'Projected Revenue' : 'Projected Expense',
-            data: vals,
-            borderColor:     isRev ? '#3fb950' : '#f85149',
-            backgroundColor: isRev ? 'rgba(63,185,80,0.12)' : 'rgba(248,81,73,0.12)',
-            borderWidth: 2, tension: 0.3, pointRadius: 4, fill: true
-          }]
-        },
-        options: {
-          responsive:true, maintainAspectRatio:false,
-          plugins: {
-            legend: { labels: { color:'#adbac7' } },
-            tooltip: { callbacks: { label: ctx => ctx.dataset.label+': '+fmt$(ctx.parsed.y) } }
+    let dc = null;
+    if (hasData) {
+      dc = new Chart(
+        document.getElementById('drill-chart-canvas').getContext('2d'),
+        {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [{
+              label: isRev ? 'Projected Revenue' : 'Projected Expense',
+              data: vals,
+              borderColor:     isRev ? '#3fb950' : '#f85149',
+              backgroundColor: isRev ? 'rgba(63,185,80,0.12)' : 'rgba(248,81,73,0.12)',
+              borderWidth: 2, tension: 0.3, pointRadius: 4, fill: true
+            }]
           },
-          scales: {
-            x: { ticks:{ color:'#8b949e' }, grid:{ color:'#21262d' } },
-            y: { ticks:{ color:'#8b949e', callback: v => fmt$(v) }, grid:{ color:'#21262d' } }
+          options: {
+            responsive:true, maintainAspectRatio:false,
+            plugins: {
+              legend: { labels: { color:'#adbac7' } },
+              tooltip: { callbacks: { label: ctx => ctx.dataset.label+': '+fmt$(ctx.parsed.y) } }
+            },
+            scales: {
+              x: { ticks:{ color:'#8b949e' }, grid:{ color:'#21262d' } },
+              y: { ticks:{ color:'#8b949e', callback: v => fmt$(v) }, grid:{ color:'#21262d' } }
+            }
           }
         }
-      }
-    );
+      );
+    }
 
-    const close = () => { dc.destroy(); overlay.remove(); document.removeEventListener('keydown', onKey); };
+    const close = () => { if (dc) dc.destroy(); overlay.remove(); document.removeEventListener('keydown', onKey); };
     const onKey = e => { if (e.key==='Escape') close(); };
     overlay.querySelector('#drill-close-btn').addEventListener('click', close);
     overlay.addEventListener('click', e => { if (e.target===overlay) close(); });
@@ -594,6 +894,16 @@
       return;
     }
     const qtr = latest[0].quarter;
+
+    let staleWarning = '';
+    try {
+      const qm = qtr.match(/(\d{4})[- ]?Q(\d)/i);
+      if (qm) {
+        const now = new Date(), curQ = Math.ceil((now.getMonth()+1)/3);
+        const qtrsSince = (now.getFullYear() - parseInt(qm[1])) * 4 + (curQ - parseInt(qm[2]));
+        if (qtrsSince > 3) staleWarning = ` <span style="background:#b08800;color:#fff;font-size:0.75rem;padding:2px 8px;border-radius:10px">⚠ Data from ${esc(qtr)} — no recent confirmations</span>`;
+      }
+    } catch(e) {}
 
     const { data: confs } = await supa.from('confirmations')
       .select('stream_id, ratio_vs_projection, direction')
@@ -626,7 +936,7 @@
     el.innerHTML = `
       <div class="section">
         <div class="section-header">
-          <h2>Ratio Mode — ${esc(qtr)} vs projection</h2>
+          <h2>Ratio Mode — ${esc(qtr)} vs projection${staleWarning}</h2>
           <span class="meta">avg confirmed / projected across active streams</span>
         </div>
         <div class="ratio-section">
@@ -635,6 +945,7 @@
           <div class="ratio-row"><span class="ratio-lbl">Net trend</span><span class="ratio-val ${nr.cls}">${nr.str}</span></div>
           <div class="ratio-row"><span class="ratio-lbl">Streams confirmed</span><span class="ratio-val neutral">${confs.length} / ${rows.filter(r=>r.active).length} active</span></div>
         </div>
+        <p class="ratio-lbl" style="font-style:italic;font-size:0.8rem;margin-top:8px">Equal-weight avg across active confirmed streams. Revenue pace: above 100% = beating projections. Expense pace: inverse (over-budget reduces score).</p>
         <div style="color:#6e7681;font-size:0.8rem;margin-top:4px">Ratios from ${esc(qtr)} confirmations · Switch to Dollar view for full cashflow chart</div>
       </div>`;
   }
