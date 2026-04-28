@@ -1,556 +1,362 @@
-/* ═══════════════════════════════════════════════════════════════
-   cc-shell.css — AZCK Command Centre unified shell
-   v1.0 — 2026-04-17 (Forge v0.9.5 The Operator)
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:;">
+  <title>Swiss Delicious — AZCK Command Centre</title>
+  <link rel="stylesheet" href="cc-shell.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    /* Layout comes from cc-shell.css. Keep only component styles. */
+    .section-title { font-size:1.3rem; font-weight:700; color:var(--cc-text); margin:2rem 0 1rem; }
+    .section-title:first-child { margin-top:0; }
 
-   Design tokens + layout for all CC pages. Pages load this file
-   and get the header/quickview/subtabs/statsbar/content layout
-   automatically. No per-page theme overrides.
-   ═══════════════════════════════════════════════════════════════ */
+    /* Product cards */
+    .product-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:20px; margin-bottom:16px; }
+    .product-card { background:var(--cc-bg-card); border:1px solid var(--cc-border); border-radius:var(--cc-r-lg); padding:24px; position:relative; overflow:hidden; transition:border-color 0.2s; }
+    .product-card:hover { border-color:#990000; }
+    .product-card-icon { font-size:40px; margin-bottom:12px; }
+    .product-card-name { font-size:1.1rem; font-weight:700; color:var(--cc-text); margin-bottom:4px; }
+    .product-card-origin { font-size:0.72rem; color:#990000; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:10px; }
+    .product-card-desc { font-size:0.85rem; color:var(--cc-text-dim); line-height:1.75; margin-bottom:14px; }
+    .product-card-note { font-size:0.75rem; color:var(--cc-text-dim); border-top:1px solid var(--cc-border-soft); padding-top:10px; }
+    .product-badge { position:absolute; top:16px; right:16px; padding:4px 10px; border-radius:12px; font-size:0.7rem; font-weight:700; background:rgba(153,0,0,0.12); color:#cc3333; border:1px solid rgba(153,0,0,0.3); }
 
-/* ─── 1. DESIGN TOKENS ─── */
-:root {
-  /* Backgrounds */
-  --cc-bg:          #0d1117;
-  --cc-bg-card:     #161b22;
-  --cc-bg-raised:   #21262d;
-  --cc-bg-hover:    #1c2128;
+    /* Payment strip */
+    .payment-strip { background:rgba(153,0,0,0.06); border:1px solid rgba(153,0,0,0.18); border-radius:var(--cc-r-lg); padding:14px 20px; margin-bottom:20px; display:flex; align-items:center; gap:12px; }
+    .payment-strip-icon { font-size:20px; flex-shrink:0; }
+    .payment-strip-text { font-size:0.85rem; color:var(--cc-text-dim); }
+    .payment-strip-text strong { color:var(--cc-text); }
 
-  /* Borders */
-  --cc-border:      #30363d;
-  --cc-border-soft: #21262d;
+    /* Order channel cards */
+    .order-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:16px; }
+    .order-card { background:var(--cc-bg-card); border:1px solid var(--cc-border); border-radius:var(--cc-r-lg); padding:20px; text-decoration:none; color:var(--cc-text); transition:all 0.2s; display:block; }
+    .order-card:hover { border-color:#990000; background:#1c1222; transform:translateY(-2px); }
+    .order-card-icon { font-size:28px; margin-bottom:10px; }
+    .order-card-channel { font-size:1rem; font-weight:700; margin-bottom:6px; }
+    .order-card-detail { font-size:0.82rem; color:var(--cc-text-dim); line-height:1.65; }
+    .order-card-cta { margin-top:12px; font-size:0.75rem; color:#cc3333; font-weight:700; }
 
-  /* Text */
-  --cc-text:        #e6edf3;
-  --cc-text-body:   #c9d1d9;
-  --cc-text-muted:  #8b949e;
-  --cc-text-dim:    #484f58;
+    /* Event card */
+    .event-card { background:var(--cc-bg-card); border:1px solid var(--cc-border); border-radius:var(--cc-r-lg); padding:24px; margin-bottom:20px; }
+    .event-header { display:flex; align-items:flex-start; gap:16px; margin-bottom:14px; }
+    .event-icon { font-size:36px; flex-shrink:0; }
+    .event-title { font-size:1.15rem; font-weight:700; color:var(--cc-text); margin-bottom:4px; }
+    .event-recurrence { font-size:0.78rem; color:#990000; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+    .event-body { font-size:0.85rem; color:var(--cc-text-dim); line-height:1.75; }
+    .event-next { display:inline-block; margin-top:14px; padding:6px 14px; background:rgba(153,0,0,0.1); border:1px solid rgba(153,0,0,0.28); border-radius:8px; font-size:0.8rem; color:#cc3333; font-weight:700; }
 
-  /* Accents (semantic) */
-  --cc-accent:      #58a6ff;   /* primary blue */
-  --cc-success:     #3fb950;   /* green */
-  --cc-warn:        #d29922;   /* yellow/amber */
-  --cc-danger:      #f85149;   /* red */
-  --cc-magenta:     #bc8cff;   /* purple */
-  --cc-orange:      #f0883e;
-  --cc-pink:        #f778ba;
+    /* Media / TV card */
+    .media-card { background:var(--cc-bg-card); border:1px solid var(--cc-border); border-radius:var(--cc-r-lg); padding:24px; margin-bottom:20px; display:flex; align-items:flex-start; gap:16px; }
+    .media-icon { font-size:32px; flex-shrink:0; }
+    .media-title { font-size:1rem; font-weight:700; color:var(--cc-text); margin-bottom:4px; }
+    .media-channel { font-size:0.78rem; color:var(--cc-text-dim); font-weight:600; margin-bottom:8px; }
+    .media-detail { font-size:0.82rem; color:var(--cc-text-dim); line-height:1.7; }
+    .media-badge { display:inline-block; margin-top:10px; padding:4px 10px; border-radius:12px; font-size:0.7rem; font-weight:700; background:rgba(88,166,255,0.1); color:var(--cc-accent); border:1px solid rgba(88,166,255,0.25); }
 
-  /* AZCK brand (for occasional accent use) */
-  --cc-azck-red:    #990000;
-  --cc-azck-gray:   #78909C;
+    /* Sign-out button injected into banner */
+    .cc-banner-actions .btn-signout { padding:6px 10px; border:1px solid var(--cc-border); border-radius:6px; background:transparent; color:var(--cc-text-dim); cursor:pointer; font-size:0.75rem; font-family:inherit; }
+    .cc-banner-actions .btn-signout:hover { color:var(--cc-danger); border-color:var(--cc-danger); }
 
-  /* Typography */
-  --cc-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --cc-font-mono: 'SF Mono', Consolas, Menlo, monospace;
+    #loadingMsg { padding:40px; text-align:center; color:var(--cc-text-dim); }
+    /* NOTE: subtab visibility handled natively by cc-shell.js (applySubtabVisibility).
+       Do NOT add [data-subtab] { display:none; } — cc-shell uses inline style. */
+  </style>
+</head>
+<body>
 
-  /* Spacing scale */
-  --cc-pad-xs: 4px;
-  --cc-pad-sm: 8px;
-  --cc-pad-md: 16px;
-  --cc-pad-lg: 24px;
-  --cc-pad-xl: 32px;
+<script>
+  window.PAGE = {
+    id: 'swiss-delicious',
+    title: 'Swiss Delicious',
+    subtitle: 'Home bakery by Alessio · A division of AZ Custom Knives Ltd',
+    subtabs: [
+      { id:'menu',   label:'Menu' },
+      { id:'order',  label:'How to Order' },
+      { id:'events', label:'Events' }
+    ],
+    stats: [
+      { label:'Products',        value:'3' },
+      { label:'Order Channels',  value:'3' },
+      { label:'Events',          value:'1' },
+      { label:'Next Guys Night', value:'—' }
+    ]
+  };
+</script>
+<script src="cc-shell.js" defer></script>
 
-  /* Radii */
-  --cc-r-sm: 6px;
-  --cc-r-md: 8px;
-  --cc-r-lg: 12px;
-  --cc-r-pill: 20px;
+<div id="loadingMsg">Checking session…</div>
 
-  /* Transitions */
-  --cc-t-fast: 0.15s ease;
-  --cc-t-smooth: 0.25s ease;
+<!-- Menu -->
+<section data-subtab="menu">
+  <h2 class="section-title">Our Breads</h2>
+  <div class="product-grid" id="productGrid"></div>
+  <p style="font-size:0.75rem;color:#484f58;margin-top:4px;">All items baked fresh by Alessio. Seasonal availability may vary. Cash preferred.</p>
+</section>
 
-  /* Shell sticky z-indices */
-  --cc-z-banner: 100;
-  --cc-z-quickview: 99;
-  --cc-z-subtabs: 98;
+<!-- How to Order -->
+<section data-subtab="order">
+  <h2 class="section-title">How to Order</h2>
+  <div class="payment-strip" id="paymentStrip"></div>
+  <div class="order-grid" id="orderGrid"></div>
+</section>
 
-  /* Max content width */
-  --cc-max-w: 1200px;
-}
+<!-- Events -->
+<section data-subtab="events">
+  <h2 class="section-title">Events</h2>
+  <div id="eventsContainer"></div>
+  <h2 class="section-title" style="margin-top:2.5rem;">Media</h2>
+  <div id="mediaContainer"></div>
+</section>
 
-/* ─── 2. GLOBAL RESET + BODY ─── */
-* { margin: 0; padding: 0; box-sizing: border-box; }
+<!-- ═══════════════════════════════════════════════════════════════
+     DATA BLOCK — UPDATE THIS SECTION ONLY
+     To update: edit the objects below. Engine auto-renders.
+     ═══════════════════════════════════════════════════════════════ -->
+<script>
+var DATA = {
 
-html, body {
-  background: var(--cc-bg);
-  color: var(--cc-text);
-  font-family: var(--cc-font);
-  font-size: 15px;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+  lastUpdated: '2026-04-27',
 
-a { color: var(--cc-accent); text-decoration: none; }
-a:hover { text-decoration: underline; }
+  payment: {
+    icon: '💵',
+    detail: '<strong>Cash first</strong> — occasional e-transfer accepted. Confirm at time of order.'
+  },
 
-/* ─── 3. LEVEL 1 — BANNER + MAIN NAV (sticky top) ─── */
-.cc-banner {
-  position: sticky;
-  top: 0;
-  z-index: var(--cc-z-banner);
-  background: var(--cc-bg);
-  border-bottom: 1px solid var(--cc-border);
-  padding: 10px 24px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-.cc-brand {
-  font-size: 15px;
-  font-weight: 800;
-  color: var(--cc-accent);
-  letter-spacing: 0.5px;
-  padding: 4px 12px;
-  border: 1px solid var(--cc-border);
-  border-radius: var(--cc-r-sm);
-  flex-shrink: 0;
-  white-space: nowrap;
-  user-select: none;
-}
-.cc-brand .cc-brand-sub {
-  color: var(--cc-text-muted);
-  font-weight: 500;
-  font-size: 12px;
-  margin-left: 6px;
-}
-.cc-nav {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  flex: 1;
-  min-width: 0;
-}
-.cc-nav a {
-  background: var(--cc-bg-raised);
-  border: 1px solid var(--cc-border);
-  color: var(--cc-text-muted);
-  padding: 7px 18px;
-  border-radius: var(--cc-r-pill);
-  font-size: 14px;
-  font-weight: 600;
-  transition: all var(--cc-t-fast);
-  cursor: grab;
-  user-select: none;
-  white-space: nowrap;
-}
-.cc-nav a:hover {
-  color: var(--cc-text);
-  background: var(--cc-border);
-  text-decoration: none;
-}
-.cc-nav a.active {
-  background: var(--cc-accent);
-  color: var(--cc-bg);
-  border-color: var(--cc-accent);
-}
-.cc-nav a.dragging {
-  opacity: 0.4;
-  cursor: grabbing;
-}
-.cc-nav a.drop-before { box-shadow: -3px 0 0 var(--cc-accent); }
-.cc-nav a.drop-after  { box-shadow:  3px 0 0 var(--cc-accent); }
+  products: [
+    {
+      icon: '🍞',
+      name: 'Zopf',
+      origin: 'Swiss Classic',
+      badge: 'Signature',
+      desc: 'A traditional Swiss braided butter bread. Rich, soft, and golden — baked the way Alessio grew up eating it. Perfect for breakfast or a Sunday table.',
+      note: 'Seasonal availability. Contact to pre-order.'
+    },
+    {
+      icon: '🫓',
+      name: 'Rustic Breads',
+      origin: 'Artisan',
+      badge: 'Rotating',
+      desc: 'Hearty artisan loaves baked in small batches. Crust, character, and real ingredients — the kind of bread that makes the kitchen smell like a Swiss farmhouse.',
+      note: 'Variety changes by season. Ask what\'s available.'
+    },
+    {
+      icon: '🍰',
+      name: 'Swiss Meringue',
+      origin: 'Swiss Patisserie',
+      badge: 'Special Order',
+      desc: 'Light, crisp, and delicate — Swiss meringue made the traditional way. A staple of Swiss celebrations and a perfect companion to fresh berries and cream.',
+      note: 'Special order only. Lead time required.'
+    }
+  ],
 
-/* Grouped nav (v2): group label + separator between groups */
-.cc-nav-group-label {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 1.2px;
-  color: var(--cc-text-dim);
-  padding: 6px 4px 6px 8px;
-  align-self: center;
-  user-select: none;
-  white-space: nowrap;
-  text-transform: uppercase;
-}
-.cc-nav-group-label:first-child {
-  padding-left: 0;
-}
-.cc-nav-group-sep {
-  display: inline-block;
-  width: 1px;
-  height: 18px;
-  background: var(--cc-border);
-  margin: 0 4px;
-  align-self: center;
-}
+  orderChannels: [
+    {
+      icon: '📘',
+      channel: 'Facebook Message',
+      detail: 'Message the Swiss Delicious Facebook page directly. Quickest way to reach Alessio for availability and pre-orders.',
+      cta: 'Message on Facebook →',
+      href: 'https://www.facebook.com/SwissDelicious'
+    },
+    {
+      icon: '🌐',
+      channel: 'AZCK Website',
+      detail: 'Visit azcustomknives.com and use the contact form. Reference Swiss Delicious in your message.',
+      cta: 'Visit website →',
+      href: 'https://azcustomknives.com'
+    },
+    {
+      icon: '📞',
+      channel: 'Phone',
+      detail: 'Call the shop during business hours. Ask for Alessio or leave a message for a callback.',
+      cta: '1-780-831-2987',
+      href: 'tel:+17808312987'
+    }
+  ],
 
-.cc-banner-actions {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-}
-.cc-banner-actions button {
-  background: transparent;
-  border: 1px solid var(--cc-border);
-  color: var(--cc-text-muted);
-  padding: 5px 10px;
-  border-radius: var(--cc-r-sm);
-  font-size: 12px;
-  cursor: pointer;
-  transition: all var(--cc-t-fast);
-}
-.cc-banner-actions button:hover {
-  color: var(--cc-text);
-  border-color: var(--cc-text-muted);
-}
+  events: [
+    {
+      icon: '🍺',
+      name: 'Guys Night',
+      recurrence: 'Last Friday of every month',
+      desc: 'Alessio bakes and personally delivers fresh bread to Guys Night — a monthly tradition. Zopf and seasonal items on the menu. First come, first served.'
+    }
+  ],
 
-/* ─── Plan 7abbcc33 Cycle 4: focal pulse + pips ─── */
-.cc-nav-item { opacity: 0.7; transition: opacity 0.25s; position: relative; }
-.cc-nav-item.active { opacity: 1; animation: cc-focal-pulse 1.8s ease-out forwards; }
-@keyframes cc-focal-pulse {
-  0%   { box-shadow: 0 0 0 0   rgba(88,166,255,0.45); }
-  60%  { box-shadow: 0 0 0 5px rgba(88,166,255,0); }
-  100% { box-shadow: 0 0 0 0   rgba(88,166,255,0); }
-}
-.cc-pip { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-left: 5px; vertical-align: middle; flex-shrink: 0; transition: background 0.3s; }
-.cc-pip-empty  { background: transparent; }
-.cc-pip-green  { background: var(--cc-success); }
-.cc-pip-yellow { background: var(--cc-warn); }
-.cc-pip-red    { background: var(--cc-danger); }
-.cc-pip-grey   { background: var(--cc-text-dim); }
+  media: [
+    {
+      icon: '📺',
+      title: 'Just Cook with Ryan Blais',
+      channel: 'Eastlink Community TV',
+      detail: 'Alessio appears as a featured guest, showcasing Swiss baking traditions alongside his craft as a journeyman blacksmith and knifemaker.',
+      badge: 'Airing Oct 2026'
+    }
+  ]
 
-.cc-banner-actions select {
-  background: transparent;
-  border: 1px solid var(--cc-border);
-  color: var(--cc-text-muted);
-  padding: 4px 6px;
-  border-radius: var(--cc-r-sm);
-  font-size: 12px;
-  cursor: pointer;
-  max-width: 130px;
-}
-.cc-banner-actions select:focus {
-  outline: none;
-  border-color: var(--cc-accent);
-  color: var(--cc-text);
-}
+};
+</script>
+<!-- ═══ END DATA BLOCK ═══ -->
 
-/* Fix 4 — voice picker contrast (surgical — only this element, not the header) */
-#cc-voice-picker {
-  background: var(--cc-bg-raised) !important;
-  color: var(--cc-text) !important;
-}
-#cc-voice-picker option {
-  background: var(--cc-bg-raised);
-  color: var(--cc-text);
-}
+<!-- ═══ ENGINE — DO NOT EDIT BELOW ═══ -->
+<script>
+(function(){
+  'use strict';
 
-/* Voice v2 — active toggle state */
-.cc-banner-actions button.cc-voice-btn-active {
-  background: var(--cc-accent);
-  color: var(--cc-bg);
-  border-color: var(--cc-accent);
-}
+  const SUPABASE_URL = 'https://twrlvnfszohyrmivdhre.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3cmx2bmZzem9oeXJtaXZkaHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NjkxMTMsImV4cCI6MjA5MDE0NTExM30.o96DFNbBObst0EAmX51rnRFXzu8oTN1o-HNAxN7MY8A';
 
-/* Voice v2 — volume slider wrap */
-.cc-voice-vol-wrap {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.cc-voice-vol-icon {
-  font-size: 13px;
-  cursor: default;
-  user-select: none;
-}
-.cc-banner-actions input[type=range] {
-  width: 70px;
-  cursor: pointer;
-  accent-color: var(--cc-accent);
-  vertical-align: middle;
-  padding: 0;
-  border: none;
-  background: transparent;
-}
+  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { storageKey:'sb-twrlvnfszohyrmivdhre-auth-token', persistSession:true, autoRefreshToken:true }
+  });
 
-/* Voice v2 — floating click-to-read button (Fix 1: fixed viewport, top-right below header) */
-#cc-voice-read-btn {
-  position: fixed;
-  top: 58px;
-  right: 16px;
-  z-index: 9999;
-  background: var(--cc-bg-raised);
-  border: 1px solid var(--cc-accent);
-  color: var(--cc-accent);
-  border-radius: var(--cc-r-pill);
-  padding: 4px 12px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  pointer-events: auto;
-  transition: all var(--cc-t-fast);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-}
-#cc-voice-read-btn:hover {
-  background: var(--cc-accent);
-  color: var(--cc-bg);
-}
+  var authResolved = false;
 
-/* Fix 2+3 — per-item speak buttons (injected by cc-shell.js on [data-speak-text] elements) */
-.cc-speak-item-btn {
-  background: transparent;
-  border: none;
-  color: var(--cc-text-dim);
-  cursor: pointer;
-  font-size: 11px;
-  padding: 2px 5px;
-  border-radius: var(--cc-r-sm);
-  transition: color var(--cc-t-fast);
-  flex-shrink: 0;
-  line-height: 1;
-  vertical-align: middle;
-}
-.cc-speak-item-btn:hover { color: var(--cc-accent); }
+  function bootDashboard(session){
+    if (authResolved) return;
+    authResolved = true;
+    document.getElementById('loadingMsg').style.display = 'none';
+    attachSignOut(session.user.email);
+    renderAll();
+  }
 
-/* ─── 4. LEVEL 2 — QUICKVIEW STRIP ─── */
-.cc-quickview {
-  position: sticky;
-  top: 48px;  /* below banner */
-  z-index: var(--cc-z-quickview);
-  background: var(--cc-bg-card);
-  border-bottom: 1px solid var(--cc-border);
-  padding: 8px 24px;
-  display: flex;
-  gap: 20px;
-  overflow-x: auto;
-  scrollbar-width: thin;
-  font-size: 13px;
-}
-.cc-quickview::-webkit-scrollbar { height: 4px; }
-.cc-quickview::-webkit-scrollbar-thumb { background: var(--cc-border); border-radius: 2px; }
-.cc-qv-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--cc-text-body);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.cc-qv-item .cc-qv-icon { font-size: 14px; }
-.cc-qv-item .cc-qv-label {
-  color: var(--cc-text-muted);
-  font-weight: 600;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-.cc-qv-item .cc-qv-value {
-  color: var(--cc-text);
-  font-weight: 600;
-}
-.cc-qv-item a.cc-qv-value:hover { color: var(--cc-accent); }
-.cc-qv-item + .cc-qv-item::before {
-  content: '·';
-  color: var(--cc-text-dim);
-  margin-right: 12px;
-}
+  function attachSignOut(email){
+    var actions = document.querySelector('.cc-banner-actions');
+    if (!actions) { setTimeout(function(){ attachSignOut(email); }, 50); return; }
+    var emailSpan = document.createElement('span');
+    emailSpan.style.cssText = 'font-size:0.75rem;color:var(--cc-text-dim);margin-right:8px;';
+    emailSpan.textContent = email;
+    var btn = document.createElement('button');
+    btn.className = 'btn-signout';
+    btn.textContent = 'Sign out';
+    btn.addEventListener('click', async function(){
+      await sb.auth.signOut();
+      window.location.href = 'index.html';
+    });
+    actions.appendChild(emailSpan);
+    actions.appendChild(btn);
+  }
 
-/* ─── 5. LEVEL 3 — SUB-TABS (per page, drag-reorder) ─── */
-.cc-subtabs {
-  position: sticky;
-  top: 86px;  /* below banner + quickview */
-  z-index: var(--cc-z-subtabs);
-  background: var(--cc-bg);
-  padding: 12px 24px 0;
-  border-bottom: 1px solid var(--cc-border-soft);
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-  overflow-x: auto;
-}
-.cc-subtab {
-  background: transparent;
-  border: 1px solid transparent;
-  border-bottom: none;
-  color: var(--cc-text-muted);
-  padding: 8px 18px;
-  border-radius: var(--cc-r-md) var(--cc-r-md) 0 0;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: grab;
-  transition: all var(--cc-t-fast);
-  user-select: none;
-  white-space: nowrap;
-}
-.cc-subtab:hover {
-  color: var(--cc-text);
-  background: var(--cc-bg-card);
-}
-.cc-subtab.active {
-  color: var(--cc-accent);
-  background: var(--cc-bg-card);
-  border-color: var(--cc-border);
-}
-.cc-subtab.dragging { opacity: 0.4; cursor: grabbing; }
-.cc-subtab.drop-before { box-shadow: -3px 0 0 var(--cc-accent); }
-.cc-subtab.drop-after  { box-shadow:  3px 0 0 var(--cc-accent); }
+  sb.auth.onAuthStateChange(function(event, session){
+    if (session && session.user) bootDashboard(session);
+    else if (event === 'SIGNED_OUT') window.location.href = 'index.html';
+  });
 
-/* ─── 6. LEVEL 4 — STATS BAR ─── */
-.cc-statsbar {
-  background: var(--cc-bg-card);
-  border-bottom: 1px solid var(--cc-border);
-  padding: 10px 24px;
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-  font-size: 12px;
-}
-.cc-stat {
-  display: flex;
-  gap: 6px;
-  align-items: baseline;
-  color: var(--cc-text-muted);
-  white-space: nowrap;
-}
-.cc-stat .cc-stat-label {
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-size: 11px;
-}
-.cc-stat .cc-stat-value {
-  color: var(--cc-text);
-  font-weight: 700;
-  font-size: 14px;
-}
-.cc-stat.cc-stat-success .cc-stat-value { color: var(--cc-success); }
-.cc-stat.cc-stat-warn    .cc-stat-value { color: var(--cc-warn); }
-.cc-stat.cc-stat-danger  .cc-stat-value { color: var(--cc-danger); }
-.cc-stat.cc-stat-muted   .cc-stat-value { color: var(--cc-text-muted); }
+  (async function(){
+    var r = await sb.auth.getSession();
+    if (r.data.session && r.data.session.user) { bootDashboard(r.data.session); return; }
+    setTimeout(async function(){
+      if (authResolved) return;
+      var r2 = await sb.auth.getSession();
+      if (r2.data.session && r2.data.session.user) bootDashboard(r2.data.session);
+      else window.location.href = 'index.html';
+    }, 2000);
+  })();
 
-/* ─── 7. LEVEL 5 — CONTENT AREA ─── */
-.cc-content {
-  max-width: var(--cc-max-w);
-  margin: 0 auto;
-  padding: 24px;
-}
+  /* Last Friday of the given year/month (0-indexed month) */
+  function lastFriday(year, month) {
+    var d = new Date(year, month + 1, 0);
+    var dow = d.getDay();
+    d.setDate(d.getDate() - ((dow - 5 + 7) % 7));
+    return d;
+  }
 
-.cc-page-header {
-  margin-bottom: 24px;
-}
-.cc-page-header h1 {
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--cc-accent);
-  margin-bottom: 4px;
-}
-.cc-page-header .cc-page-sub {
-  font-size: 14px;
-  color: var(--cc-text-muted);
-}
+  function nextGuysNight() {
+    var now = new Date();
+    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    var candidate = lastFriday(now.getFullYear(), now.getMonth());
+    if (candidate < today) {
+      var m = now.getMonth() + 1, y = now.getFullYear();
+      if (m > 11) { m = 0; y++; }
+      candidate = lastFriday(y, m);
+    }
+    return candidate;
+  }
 
-.cc-view-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
-.cc-view-modes {
-  display: flex;
-  gap: 4px;
-  background: var(--cc-bg-card);
-  padding: 4px;
-  border-radius: var(--cc-r-md);
-  border: 1px solid var(--cc-border);
-}
-.cc-view-modes button {
-  background: transparent;
-  border: none;
-  color: var(--cc-text-muted);
-  padding: 6px 14px;
-  border-radius: var(--cc-r-sm);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--cc-t-fast);
-}
-.cc-view-modes button:hover { color: var(--cc-text); }
-.cc-view-modes button.active {
-  background: var(--cc-accent);
-  color: var(--cc-bg);
-}
+  function fmtDate(d) {
+    var mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return mo[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+  }
 
-.cc-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.cc-btn {
-  background: var(--cc-bg-raised);
-  border: 1px solid var(--cc-border);
-  color: var(--cc-text);
-  padding: 7px 14px;
-  border-radius: var(--cc-r-md);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--cc-t-fast);
-}
-.cc-btn:hover { background: var(--cc-border); }
-.cc-btn-primary {
-  background: var(--cc-accent);
-  color: var(--cc-bg);
-  border-color: var(--cc-accent);
-}
-.cc-btn-primary:hover {
-  background: #79c0ff;
-  border-color: #79c0ff;
-}
+  function renderAll(){
+    var D = DATA;
 
-/* Card — generic container */
-.cc-card {
-  background: var(--cc-bg-card);
-  border: 1px solid var(--cc-border);
-  border-radius: var(--cc-r-lg);
-  padding: var(--cc-pad-lg);
-  margin-bottom: var(--cc-pad-md);
-}
+    var nextGN = nextGuysNight();
+    var msLeft = nextGN - new Date();
+    var daysLeft = Math.ceil(msLeft / 864e5);
+    var daysLabel = daysLeft <= 0 ? 'Tonight!' : 'in ' + daysLeft + (daysLeft === 1 ? ' day' : ' days');
 
-/* Inline-edit affordance (task pages) */
-.cc-editable {
-  cursor: text;
-  padding: 2px 4px;
-  border-radius: 3px;
-  transition: background var(--cc-t-fast);
-}
-.cc-editable:hover {
-  background: var(--cc-bg-raised);
-  outline: 1px solid var(--cc-border);
-}
-.cc-editable:focus {
-  outline: 2px solid var(--cc-accent);
-  background: var(--cc-bg);
-}
+    if (window.CC && window.CC.updateStats) {
+      window.CC.updateStats([
+        { label:'Products',        value: String(D.products.length) },
+        { label:'Order Channels',  value: String(D.orderChannels.length) },
+        { label:'Events',          value: String(D.events.length) },
+        { label:'Next Guys Night', value: fmtDate(nextGN), tone: daysLeft <= 7 ? 'warn' : 'good' }
+      ]);
+    }
 
-/* Typography defaults for content */
-.cc-content h1 { font-size: 32px; color: var(--cc-accent); margin-bottom: 4px; }
-.cc-content h2 { font-size: 22px; color: var(--cc-accent); margin: 32px 0 16px; }
-.cc-content h3 { font-size: 17px; color: var(--cc-text); margin: 20px 0 10px; }
-.cc-content p  { margin-bottom: 14px; color: var(--cc-text-body); }
-.cc-content ul { margin: 8px 0 14px 24px; color: var(--cc-text-body); }
-.cc-content ul li { margin-bottom: 4px; }
+    /* Products */
+    var prodHTML = '';
+    D.products.forEach(function(p){
+      prodHTML += '<div class="product-card">';
+      prodHTML += '<span class="product-badge">'+p.badge+'</span>';
+      prodHTML += '<div class="product-card-icon">'+p.icon+'</div>';
+      prodHTML += '<div class="product-card-name">'+p.name+'</div>';
+      prodHTML += '<div class="product-card-origin">'+p.origin+'</div>';
+      prodHTML += '<div class="product-card-desc">'+p.desc+'</div>';
+      prodHTML += '<div class="product-card-note">'+p.note+'</div>';
+      prodHTML += '</div>';
+    });
+    document.getElementById('productGrid').innerHTML = prodHTML;
 
-/* ─── 8. RESPONSIVE ─── */
-@media (max-width: 768px) {
-  .cc-banner { padding: 8px 14px; gap: 10px; flex-wrap: wrap; }
-  .cc-brand  { font-size: 13px; padding: 3px 10px; }
-  .cc-nav a  { padding: 5px 12px; font-size: 13px; }
-  .cc-quickview { padding: 6px 14px; gap: 14px; }
-  .cc-subtabs   { padding: 10px 14px 0; top: auto; position: static; }
-  .cc-statsbar  { padding: 8px 14px; gap: 14px; }
-  .cc-content   { padding: 16px 14px; }
-  .cc-content h1 { font-size: 24px; }
-  .cc-view-toolbar { flex-direction: column; align-items: stretch; }
-}
+    /* Payment */
+    document.getElementById('paymentStrip').innerHTML =
+      '<span class="payment-strip-icon">'+D.payment.icon+'</span>' +
+      '<span class="payment-strip-text">'+D.payment.detail+'</span>';
 
-/* ─── 9. UTILITIES ─── */
-.cc-hidden { display: none !important; }
-.cc-muted  { color: var(--cc-text-muted); }
-.cc-mono   { font-family: var(--cc-font-mono); }
-.cc-flex   { display: flex; gap: 8px; align-items: center; }
-.cc-right  { margin-left: auto; }
+    /* Order channels */
+    var orderHTML = '';
+    D.orderChannels.forEach(function(c){
+      orderHTML += '<a class="order-card" href="'+c.href+'" target="_blank" rel="noopener">';
+      orderHTML += '<div class="order-card-icon">'+c.icon+'</div>';
+      orderHTML += '<div class="order-card-channel">'+c.channel+'</div>';
+      orderHTML += '<div class="order-card-detail">'+c.detail+'</div>';
+      orderHTML += '<div class="order-card-cta">'+c.cta+'</div>';
+      orderHTML += '</a>';
+    });
+    document.getElementById('orderGrid').innerHTML = orderHTML;
 
-/* ═══ END cc-shell.css ═══ */
+    /* Events */
+    var eventsHTML = '';
+    D.events.forEach(function(e){
+      eventsHTML += '<div class="event-card">';
+      eventsHTML += '<div class="event-header">';
+      eventsHTML += '<div class="event-icon">'+e.icon+'</div>';
+      eventsHTML += '<div><div class="event-title">'+e.name+'</div>';
+      eventsHTML += '<div class="event-recurrence">'+e.recurrence+'</div></div>';
+      eventsHTML += '</div>';
+      eventsHTML += '<div class="event-body">'+e.desc+'</div>';
+      eventsHTML += '<div class="event-next">Next: '+fmtDate(nextGN)+' · '+daysLabel+'</div>';
+      eventsHTML += '</div>';
+    });
+    document.getElementById('eventsContainer').innerHTML = eventsHTML;
+
+    /* Media */
+    var mediaHTML = '';
+    D.media.forEach(function(m){
+      mediaHTML += '<div class="media-card">';
+      mediaHTML += '<div class="media-icon">'+m.icon+'</div>';
+      mediaHTML += '<div><div class="media-title">'+m.title+'</div>';
+      mediaHTML += '<div class="media-channel">'+m.channel+'</div>';
+      mediaHTML += '<div class="media-detail">'+m.detail+'</div>';
+      mediaHTML += '<span class="media-badge">'+m.badge+'</span></div>';
+      mediaHTML += '</div>';
+    });
+    document.getElementById('mediaContainer').innerHTML = mediaHTML;
+  }
+
+})();
+</script>
+
+</body>
+</html>
