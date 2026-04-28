@@ -36,6 +36,7 @@
   };
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/ninja-keys@1/dist/ninja-keys.min.js"></script>
 <script defer src="auth.js"></script>
 <style>
 /* Fleet-scoped styles — shell + base from cc-shell.css */
@@ -819,7 +820,7 @@
     if (!data || !data.length) { setEl('fleetLiveList', '<div class="fleet-empty">No active tasks right now. Forge is idle.</div>'); return; }
     setEl('fleetLiveList', data.map(t => {
       const lastExec = t.last_exec_entry ? JSON.parse(typeof t.last_exec_entry === 'string' ? t.last_exec_entry : JSON.stringify(t.last_exec_entry)) : null;
-      return `<div class="fleet-card clickable${t.priority === 'urgent' ? ' urgent' : ''}" onclick="openDrawer('${esc(t.id)}')">
+      return `<div class="fleet-card clickable${t.priority === 'urgent' ? ' urgent' : ''}" data-speak-text="${esc(t.title)}" onclick="openDrawer('${esc(t.id)}')">
         <div class="fleet-card-head">
           <div class="fleet-card-title">${esc(t.title)}</div>
           ${badgeStatus('in_progress')}
@@ -941,7 +942,7 @@
 
   function queueCardFn(t) {
     _menuCache[t.id] = { id: t.id, title: t.title, status: t.status, suggested_to: t.suggested_to, suggested_model: t.suggested_model, priority: t.priority };
-    return `<div class="fleet-card clickable${t.priority === 'urgent' ? ' urgent' : ''}" data-menu-type="forge_task" data-menu-id="${esc(t.id)}" onclick="openDrawer('${esc(t.id)}')" oncontextmenu="showActionMenu(event,'forge_task','${esc(t.id)}')">
+    return `<div class="fleet-card clickable${t.priority === 'urgent' ? ' urgent' : ''}" data-speak-text="${esc(t.title)}" data-menu-type="forge_task" data-menu-id="${esc(t.id)}" onclick="openDrawer('${esc(t.id)}')" oncontextmenu="showActionMenu(event,'forge_task','${esc(t.id)}')">
       <div class="fleet-card-head">
         <div class="fleet-card-title">${esc(t.title)}</div>
         ${badgePriority(t.priority)}
@@ -1492,12 +1493,20 @@
     renderPlansList();
   }
 
+  function _cleanVerdict(v) {
+    if (!v) return '';
+    // Strip ALL_CAPS_CODES (verdict tokens like GREEN_WITH_DELTAS, ACCEPT, etc.)
+    var c = v.replace(/\b[A-Z][A-Z_]{2,}\b/g, '').replace(/^\s*[-—:]+\s*/, '').replace(/\s{2,}/g, ' ').trim();
+    return c.length > 60 ? c.slice(0, 57) + '…' : c;
+  }
+
   function planCardFn(p) {
     const lastBounce = Array.isArray(p.bounce_history) && p.bounce_history.length
       ? p.bounce_history[p.bounce_history.length - 1] : null;
-    const lastVerdict = lastBounce && lastBounce.verdict
-      ? `<span style="color:var(--cc-text-dim);font-size:0.75rem">${esc(lastBounce.verdict)}</span>` : '';
-    return `<div class="fleet-card clickable" onclick="openPlanDrawer('${esc(p.id)}')">
+    const verdictText = lastBounce ? _cleanVerdict(lastBounce.verdict || lastBounce.delta_summary || '') : '';
+    const lastVerdict = verdictText
+      ? `<span style="color:var(--cc-text-dim);font-size:0.75rem">${esc(verdictText)}</span>` : '';
+    return `<div class="fleet-card clickable" data-speak-text="${esc(p.title)}" onclick="openPlanDrawer('${esc(p.id)}')">
       <div class="fleet-card-head">
         <div class="fleet-card-title">${esc(p.title)}</div>
         ${badgePlanStatus(p.status)}
@@ -1692,7 +1701,7 @@
       const ts = m.sent_at ? new Date(m.sent_at).toLocaleString('en-CA', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
       const preview = (m.body || '').replace(/^#+\s*/m, '').slice(0, 200);
       const statusClass = `badge-status-${m.status}`;
-      return `<div class="fleet-card" style="margin-bottom:10px">
+      return `<div class="fleet-card" data-speak-text="${esc('#' + m.id + ' ' + m.from_user + ' to ' + m.to_user + ': ' + (m.body || '').slice(0, 200))}" style="margin-bottom:10px">
         <div class="fleet-card-head">
           <span class="fleet-card-title">#${m.id} &mdash; ${esc(m.from_user)} → ${esc(m.to_user)}</span>
           <span class="badge ${statusClass}">${m.status}</span>
@@ -1753,7 +1762,7 @@
     const sym = BOARD_STATUS_SYM[plan.status] || '○';
     const shortTitle = plan.title.length > 52 ? plan.title.slice(0, 49) + '…' : plan.title;
     _menuCache[plan.id] = { id: plan.id, title: plan.title, status: plan.status, bounce_count: plan.bounce_count };
-    return `<div class="board-plan-card${isRoot ? ' board-plan-root' : ''}" style="border-left-color:${col}" data-menu-type="forge_plan" data-menu-id="${esc(plan.id)}" onclick="openDrawer('${esc(plan.id)}')" oncontextmenu="showActionMenu(event,'forge_plan','${esc(plan.id)}')">
+    return `<div class="board-plan-card${isRoot ? ' board-plan-root' : ''}" data-speak-text="${esc(plan.title)}" style="border-left-color:${col}" data-menu-type="forge_plan" data-menu-id="${esc(plan.id)}" onclick="openDrawer('${esc(plan.id)}')" oncontextmenu="showActionMenu(event,'forge_plan','${esc(plan.id)}')">
       <div class="board-card-head">
         <span class="board-card-sym" style="color:${col}">${sym}</span>
         <span class="board-card-title">${esc(shortTitle)}</span>
@@ -1772,7 +1781,7 @@
     const sym = BOARD_STATUS_SYM[t.status] || '◆';
     const shortTitle = t.title.length > 60 ? t.title.slice(0, 57) + '…' : t.title;
     _menuCache[t.id] = { id: t.id, title: t.title, status: t.status, suggested_to: t.suggested_to, suggested_model: t.suggested_model, priority: t.priority };
-    return `<div class="board-task-card" style="border-left-color:${col}" data-menu-type="forge_task" data-menu-id="${esc(t.id)}" onclick="openDrawer('${esc(t.id)}')" oncontextmenu="showActionMenu(event,'forge_task','${esc(t.id)}')">
+    return `<div class="board-task-card" data-speak-text="${esc(t.title)}" style="border-left-color:${col}" data-menu-type="forge_task" data-menu-id="${esc(t.id)}" onclick="openDrawer('${esc(t.id)}')" oncontextmenu="showActionMenu(event,'forge_task','${esc(t.id)}')">
       <div class="board-card-head">
         <span class="board-card-sym" style="color:${col};font-size:0.65rem">${sym}</span>
         <span class="board-card-title" style="font-size:0.72rem">${esc(shortTitle)}</span>
@@ -2244,6 +2253,51 @@
       return;
     }
     _setupBoardRealtime();
+
+    // ── Cmd+K palette live data source ──────────────────────
+    if (window.CC && CC.palette) {
+      CC.palette.setDataSource(async () => {
+        const [pr, tr] = await Promise.all([
+          supa.from('forge_plans').select('id,title,status').not('status','in','(archived,abandoned)').limit(50),
+          supa.from('forge_tasks').select('id,title,status,assigned_to').not('status','in','(done,cancelled)').limit(100)
+        ]);
+        const items = [];
+        (pr.data || []).forEach(p => items.push({
+          id: 'plan-' + p.id, title: p.title, section: 'Plans · ' + p.status,
+          handler: () => { if (typeof openDrawer === 'function') openDrawer(p.id); }
+        }));
+        (tr.data || []).forEach(t => items.push({
+          id: 'task-' + t.id, title: t.title,
+          section: 'Tasks · ' + (t.assigned_to || t.status),
+          handler: () => { if (typeof openDrawer === 'function') openDrawer(t.id); }
+        }));
+        return items;
+      });
+    }
+
+    // ── Status pips — 60s polling ────────────────────────────
+    const _DOMAIN_TAB = { 'forge_evolution': 'fleet', 'tech': 'fleet' };
+    async function _pollPips() {
+      if (!window.CC || !CC.pips) return;
+      const { data } = await supa.from('forge_tasks').select('domain,status')
+        .in('status', ['queued','in_progress','blocked','done']);
+      if (!data) return;
+      const byTab = {};
+      data.forEach(r => {
+        const tab = _DOMAIN_TAB[r.domain]; if (!tab) return;
+        if (!byTab[tab]) byTab[tab] = {};
+        byTab[tab][r.status] = (byTab[tab][r.status] || 0) + 1;
+      });
+      Object.entries(byTab).forEach(([tab, c]) => {
+        const color = c.blocked > 0 ? 'red'
+          : (c.in_progress > 0 || c.queued > 0) ? 'yellow'
+          : c.done > 0 ? 'green' : 'grey';
+        CC.pips.apply(tab, color);
+      });
+    }
+    _pollPips();
+    setInterval(_pollPips, 60000);
+
     loadBoard();
     loadLive();
     loadQueue();
