@@ -230,6 +230,26 @@
     .v-empty { color:#8b949e; font-size:0.9rem; padding:1rem 0; }
     .btn-audit { padding:0.4rem 0.9rem; border:1px solid #30363d; border-radius:6px; background:transparent; color:#8b949e; cursor:not-allowed; font-size:0.8rem; font-family:inherit; }
     @media(max-width:768px) { .violations-counters { grid-template-columns:1fr 1fr; } .rules-table thead { display:none; } .rules-table tr { display:block; margin-bottom:0.75rem; border:1px solid #30363d; border-radius:6px; } .rules-table td { display:block; padding:0.4rem 0.75rem; } }
+    /* ===== CALENDAR ===== */
+    .cal-controls { padding:1rem 2rem; display:flex; gap:0.75rem; align-items:center; border-bottom:1px solid #30363d; background:#0d1117; }
+    .cal-controls-label { font-size:0.85rem; color:#8b949e; }
+    .cal-toggle-btn { padding:0.4rem 1rem; border:1px solid #30363d; border-radius:6px; background:transparent; color:#8b949e; cursor:pointer; font-size:0.85rem; font-family:inherit; transition:all 0.2s; }
+    .cal-toggle-btn.active { background:#58a6ff; color:#0d1117; border-color:#58a6ff; font-weight:600; }
+    .cal-content { max-width:800px; margin:0 auto; padding:2rem; }
+    .cal-day-group { margin-bottom:1.75rem; }
+    .cal-day-label { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#8b949e; margin-bottom:0.6rem; padding-bottom:0.4rem; border-bottom:1px solid #21262d; }
+    .cal-day-label.today-label { color:#58a6ff; }
+    .cal-event { background:#161b22; border:1px solid #30363d; border-radius:6px; padding:0.75rem 1rem; margin-bottom:0.4rem; display:flex; gap:1rem; align-items:flex-start; transition:border-color 0.2s; }
+    .cal-event:hover { border-color:#58a6ff; }
+    .cal-event-time { font-size:0.8rem; color:#8b949e; white-space:nowrap; min-width:70px; padding-top:0.1rem; }
+    .cal-event-details { flex:1; min-width:0; }
+    .cal-event-summary { font-size:0.9rem; font-weight:600; color:#e6edf3; }
+    .cal-event-location { font-size:0.78rem; color:#8b949e; margin-top:0.15rem; }
+    .cal-empty { text-align:center; padding:3rem; color:#8b949e; }
+    .cal-loading { text-align:center; padding:2rem; color:#8b949e; font-style:italic; }
+    /* ===== FLEET HEADER LINK ===== */
+    .fleet-header-link { font-size:0.8rem; color:#8b949e; text-decoration:none; padding:0.35rem 0.75rem; border:1px solid #30363d; border-radius:6px; transition:all 0.2s; white-space:nowrap; }
+    .fleet-header-link:hover { color:#e6edf3; border-color:#58a6ff; }
   </style>
 </head>
 <body>
@@ -242,6 +262,7 @@ window.PAGE = {
   subtabs: [
     { id: 'cockpit',    label: 'Cockpit' },
     { id: 'tasks',      label: 'Tasks' },
+    { id: 'calendar',   label: 'Calendar' },
     { id: 'violations', label: 'Violations' }
   ],
   stats: []
@@ -367,6 +388,18 @@ window.PAGE = {
         <button class="btn-audit" disabled title="Coming Phase D — Edge Function not yet deployed">Run Audit ▸</button>
       </div>
       <div id="recentViolations"><div class="v-empty">Loading…</div></div>
+    </div>
+  </div>
+
+  <!-- ===== CALENDAR VIEW ===== -->
+  <div id="view-calendar" class="view-panel" style="display:none">
+    <div class="cal-controls">
+      <span class="cal-controls-label">Show:</span>
+      <button class="cal-toggle-btn active" id="calBtn7d" onclick="calSetView(7)">Next 7 Days</button>
+      <button class="cal-toggle-btn" id="calBtnAll" onclick="calSetView(0)">All Upcoming</button>
+    </div>
+    <div class="cal-content">
+      <div id="calendarContent"><div class="cal-loading">Loading calendar&hellip;</div></div>
     </div>
   </div>
 
@@ -1261,6 +1294,10 @@ function switchView(view) {
     violationsLoaded = true;
     initViolations();
   }
+  if (view === 'calendar' && !calendarLoaded) {
+    calendarLoaded = true;
+    loadCalendarTab();
+  }
 }
 
 function restoreView() {
@@ -1271,12 +1308,17 @@ function restoreView() {
 function wireCCShell() {
   if (!window.CC) return;
   window.CC.onSubtabChange(function(id) { switchView(id); });
+  const actions = document.querySelector('.cc-banner-actions');
   const signOut = document.createElement('button');
   signOut.className = 'btn-logout';
   signOut.textContent = 'Sign Out';
   signOut.onclick = handleLogout;
-  const actions = document.querySelector('.cc-banner-actions');
   if (actions) actions.insertBefore(signOut, actions.firstChild);
+  const fleetLink = document.createElement('a');
+  fleetLink.href = 'fleet.html';
+  fleetLink.textContent = 'Fleet →';
+  fleetLink.className = 'fleet-header-link';
+  if (actions) actions.insertBefore(fleetLink, actions.firstChild);
 }
 document.addEventListener('cc-shell-ready', wireCCShell, { once: true });
 if (window.CC) wireCCShell();
@@ -1658,6 +1700,76 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   setInterval(updateSyncDisplay, 60000);
 });
+
+// ===== CALENDAR =====
+let calendarLoaded = false;
+let _calDays = 7;
+
+function calSetView(days) {
+  _calDays = days;
+  document.getElementById('calBtn7d').classList.toggle('active', days === 7);
+  document.getElementById('calBtnAll').classList.toggle('active', days === 0);
+  calendarLoaded = false;
+  loadCalendarTab();
+  calendarLoaded = true;
+}
+
+async function loadCalendarTab() {
+  const el = document.getElementById('calendarContent');
+  if (!el) return;
+  el.innerHTML = '<div class="cal-loading">Loading calendar&hellip;</div>';
+  const now = new Date();
+  let q = sb.from('calendar_events')
+    .select('id,summary,description,location,start_time,end_time,all_day')
+    .eq('source_email', 'admin@azcustomknives.com')
+    .gte('start_time', now.toISOString())
+    .order('start_time', { ascending: true });
+  if (_calDays > 0) {
+    const cutoff = new Date(now); cutoff.setDate(cutoff.getDate() + _calDays);
+    q = q.lte('start_time', cutoff.toISOString());
+  }
+  const { data, error } = await q;
+  if (error) { el.innerHTML = '<div class="cal-empty">Could not load calendar. Please try again.</div>'; return; }
+  renderCalendar(data || []);
+}
+
+function renderCalendar(events) {
+  const el = document.getElementById('calendarContent');
+  if (!events.length) { el.innerHTML = '<div class="cal-empty">No upcoming events' + (_calDays > 0 ? ' in the next ' + _calDays + ' days' : '') + '.</div>'; return; }
+  const today = new Date(); today.setHours(0,0,0,0);
+  const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
+  const byDate = {};
+  events.forEach(ev => {
+    const d = new Date(ev.start_time);
+    const key = d.toLocaleDateString('en-CA');
+    if (!byDate[key]) byDate[key] = { date: d, events: [] };
+    byDate[key].events.push(ev);
+  });
+  let html = '';
+  for (const key of Object.keys(byDate).sort()) {
+    const group = byDate[key];
+    const d = group.date;
+    const dMid = new Date(d); dMid.setHours(0,0,0,0);
+    let label = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+    let isToday = false;
+    if (dMid.getTime() === today.getTime()) { label = 'Today — ' + label; isToday = true; }
+    else if (dMid.getTime() === tomorrow.getTime()) label = 'Tomorrow — ' + label;
+    html += `<div class="cal-day-group"><div class="cal-day-label${isToday ? ' today-label' : ''}">${esc(label)}</div>`;
+    group.events.forEach(ev => {
+      const startD = new Date(ev.start_time);
+      const timeStr = ev.all_day ? 'All day' : startD.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      html += `<div class="cal-event">
+        <div class="cal-event-time">${esc(timeStr)}</div>
+        <div class="cal-event-details">
+          <div class="cal-event-summary">${esc(ev.summary || '(No title)')}</div>
+          ${ev.location ? `<div class="cal-event-location">📍 ${esc(ev.location)}</div>` : ''}
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+  el.innerHTML = html;
+}
 
 // ===== VIOLATIONS =====
 let violationsLoaded = false;
