@@ -1,6 +1,6 @@
 {
-  "_comment": "AZCK Command Centre — global config. v2.9 adds Security tab under SYSTEMS. v2.8 adds Swiss Delicious tab under SIDE HUSTLES. v2.7 adds Quarterly confirmation page to OPERATIONS. v2.6 adds PEOPLE group.",
-  "_version": "2.9",
+  "_comment": "AZCK Command Centre — global config. v3.0 adds Bugs tab under SYSTEMS. v2.9 adds Security tab under SYSTEMS. v2.8 adds Swiss Delicious tab under SIDE HUSTLES. v2.7 adds Quarterly confirmation page to OPERATIONS. v2.6 adds PEOPLE group.",
+  "_version": "3.0",
   "_updated": "2026-04-28",
   "brand": {
     "text": "AZCK",
@@ -96,6 +96,11 @@
           "id": "security",
           "label": "Security",
           "href": "security.html"
+        },
+        {
+          "id": "bugs",
+          "label": "Bugs",
+          "href": "bugs.html"
         }
       ]
     },
