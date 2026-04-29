@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════
    cc-shell.css — AZCK Command Centre unified shell
+   v1.2 — 2026-04-28 (bus #260 — Oswald font restored for nav + command strip)
    v1.1 — 2026-04-28 (Plan 7dc6ce70 — command strip styles + banner-h vars)
    v1.0 — 2026-04-17 (Forge v0.9.5 The Operator)
 
@@ -7,6 +8,8 @@
    and get the header/quickview/subtabs/statsbar/content layout
    automatically. No per-page theme overrides.
    ═══════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&display=swap');
 
 /* ─── 1. DESIGN TOKENS ─── */
 :root {
@@ -158,6 +161,7 @@ a:hover { text-decoration: underline; }
 
 /* Grouped nav (v2): group label + separator between groups */
 .cc-nav-group-label {
+  font-family: 'Oswald', sans-serif;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 1.2px;
@@ -201,7 +205,7 @@ a:hover { text-decoration: underline; }
 }
 
 /* ─── Plan 7abbcc33 Cycle 4: focal pulse + pips ─── */
-.cc-nav-item { opacity: 0.7; transition: opacity 0.25s; position: relative; }
+.cc-nav-item { opacity: 0.7; transition: opacity 0.25s; position: relative; font-family: 'Oswald', sans-serif; font-weight: 500; }
 .cc-nav-item.active { opacity: 1; animation: cc-focal-pulse 1.8s ease-out forwards; }
 @keyframes cc-focal-pulse {
   0%   { box-shadow: 0 0 0 0   rgba(88,166,255,0.45); }
@@ -371,8 +375,9 @@ a:hover { text-decoration: underline; }
   color: var(--cc-text-muted);
   padding: 8px 18px;
   border-radius: var(--cc-r-md) var(--cc-r-md) 0 0;
+  font-family: 'Oswald', sans-serif;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 400;
   cursor: grab;
   transition: all var(--cc-t-fast);
   user-select: none;
@@ -650,8 +655,8 @@ body.cc-drawer-open #cc-mobile-backdrop {
 }
 
 #cc-strip-brand a {
-  font-family: 'Optima', 'Optima Nova LT', 'Palatino', serif;
-  font-weight: 700;
+  font-family: 'Oswald', sans-serif;
+  font-weight: 600;
   font-size: 13px;
   color: var(--cc-text);
   white-space: nowrap;
@@ -673,6 +678,7 @@ body.cc-drawer-open #cc-mobile-backdrop {
   color: var(--cc-text-muted);
   padding: 3px 10px;
   border-radius: var(--cc-r-sm);
+  font-family: 'Oswald', sans-serif;
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
