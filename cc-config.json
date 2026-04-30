@@ -101,6 +101,11 @@
           "id": "bugs",
           "label": "Bugs",
           "href": "bugs.html"
+        },
+        {
+          "id": "ai-structure",
+          "label": "AI Structure",
+          "href": "ai-structure.html"
         }
       ]
     },
