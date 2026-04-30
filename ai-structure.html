@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Structure — AZCK Command Centre</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --card: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --orange: #d29922;
+    --red: #f85149;
+    --purple: #bc8cff;
+    --yellow: #e3b341;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; line-height: 1.6; }
+
+  header { background: var(--card); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
+  header h1 { font-size: 18px; font-weight: 600; color: var(--text); }
+  header .badge { font-size: 11px; background: #1f2937; color: var(--muted); border: 1px solid var(--border); border-radius: 4px; padding: 2px 8px; }
+
+  .page { max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  @media (max-width: 900px) { .grid, .grid-3 { grid-template-columns: 1fr; } }
+
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .card-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+  .card-header h2 { font-size: 13px; font-weight: 600; color: var(--text); }
+  .card-header .icon { font-size: 16px; }
+  .card-header .sub { font-size: 11px; color: var(--muted); margin-left: auto; }
+  .card-body { padding: 16px; }
+
+  .tree { font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 12px; line-height: 1.8; }
+  .tree .folder { color: var(--accent); font-weight: 600; cursor: pointer; user-select: none; }
+  .tree .folder:hover { text-decoration: underline; }
+  .tree .file { color: var(--muted); }
+  .tree .file.key { color: var(--yellow); }
+  .tree .file.active { color: var(--green); }
+  .tree .note { color: var(--purple); font-style: italic; font-size: 11px; }
+  .tree .branch { color: #444c56; }
+
+  .pill { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 10px; font-weight: 600; margin-left: 6px; vertical-align: middle; }
+  .pill.live { background: #1a3a2a; color: var(--green); border: 1px solid #2d6a4f; }
+  .pill.cloud { background: #1a2a3a; color: var(--accent); border: 1px solid #2d4f6a; }
+  .pill.local { background: #2a2a1a; color: var(--yellow); border: 1px solid #6a5a2d; }
+  .pill.private { background: #2a1a2a; color: var(--purple); border: 1px solid #5a2d6a; }
+  .pill.archive { background: #1a1a1a; color: var(--muted); border: 1px solid #444; }
+
+  .flow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 12px; background: #0d1117; border-radius: 6px; margin-top: 8px; }
+  .flow-node { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; font-size: 12px; text-align: center; min-width: 90px; }
+  .flow-node .label { font-weight: 600; color: var(--text); }
+  .flow-node .sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .flow-node.cloud-node { border-color: #2d4f6a; background: #0d1f2d; }
+  .flow-node.local-node { border-color: #6a5a2d; background: #1f1a0d; }
+  .flow-node.private-node { border-color: #5a2d6a; background: #1f0d2d; }
+  .flow-node.forge-node { border-color: #58a6ff; background: #0d1a2d; }
+  .arrow { color: var(--muted); font-size: 16px; }
+  .arrow.down { display: block; text-align: center; margin: 4px 0; }
+
+  .decision { border-left: 3px solid var(--accent); padding: 8px 12px; margin-bottom: 8px; background: #0d1a2d; border-radius: 0 6px 6px 0; }
+  .decision .q { font-weight: 600; color: var(--accent); font-size: 12px; }
+  .decision .a { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .decision .path { font-family: monospace; color: var(--green); font-size: 11px; }
+
+  .copy-block { background: #0d1117; border: 1px solid var(--border); border-radius: 6px; padding: 12px; position: relative; margin-top: 8px; }
+  .copy-block pre { font-family: 'Cascadia Code', monospace; font-size: 11px; color: var(--text); white-space: pre-wrap; overflow-x: auto; }
+  .copy-btn { position: absolute; top: 8px; right: 8px; background: var(--card); border: 1px solid var(--border); color: var(--muted); border-radius: 4px; padding: 4px 10px; font-size: 11px; cursor: pointer; }
+  .copy-btn:hover { color: var(--text); border-color: var(--accent); }
+
+  .section-title { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  .full-width { grid-column: 1 / -1; }
+</style>
+</head>
+<body>
+
+<header>
+  <span style="font-size:20px">🗺️</span>
+  <h1>AI Structure</h1>
+  <span class="badge">AZCK — Forge v0.9.9</span>
+  <span class="badge" style="margin-left:auto" id="updated">Updated: —</span>
+</header>
+
+<div class="page">
+
+  <!-- CONNECTION FLOW -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-header"><span class="icon">⚡</span><h2>How Everything Connects</h2></div>
+    <div class="card-body">
+      <div class="flow">
+        <div class="flow-node forge-node"><div class="label">Forge</div><div class="sub">Claude Sessions</div></div>
+        <span class="arrow">→</span>
+        <div class="flow-node cloud-node"><div class="label">cloud mem0</div><div class="sub">mem0.ai · Public Brain</div></div>
+        <span class="arrow">→</span>
+        <div class="flow-node cloud-node"><div class="label">Supabase</div><div class="sub">Tasks · Plans · Bus</div></div>
+        <span class="arrow">→</span>
+        <div class="flow-node cloud-node"><div class="label">Google Drive</div><div class="sub">AZCK Ltd · AI/</div></div>
+      </div>
+      <div class="flow" style="margin-top:8px">
+        <div class="flow-node cloud-node"><div class="label">cloud mem0</div><div class="sub">source of truth</div></div>
+        <span class="arrow">→ scheduled sync →</span>
+        <div class="flow-node local-node"><div class="label">Local Brain</div><div class="sub">D:\AI\Brains\Local · port 8051</div></div>
+        <span class="arrow" style="color:#5a2d6a">✕ isolated</span>
+        <div class="flow-node private-node"><div class="label">Private Brain</div><div class="sub">D:\AI\Brains\Private · port 8052</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <!-- GOOGLE DRIVE -->
+    <div class="card">
+      <div class="card-header">
+        <span class="icon">☁️</span>
+        <h2>Google Drive — AZCK Ltd</h2>
+        <span class="pill cloud">Cloud</span>
+        <span class="sub">G Drive</span>
+      </div>
+      <div class="card-body">
+        <div class="tree">
+<span class="folder">AZCK Ltd/</span>
+├── <span class="file key">CLAUDE.md</span> <span class="note">← auto-loads every session</span>
+├── <span class="folder">.claude/</span>
+│   └── <span class="file">hooks/</span> <span class="note">← iMac bash hooks</span>
+└── <span class="folder">AI/</span>
+    ├── <span class="folder">Forge/</span>
+    │   ├── <span class="folder">Assets/</span> <span class="note">← brand assets + MANIFEST.md</span>
+    │   ├── <span class="folder">Brain/</span>
+    │   │   ├── <span class="folder">Condensed/</span> <span class="note">← CLAUDE versions</span>
+    │   │   ├── <span class="folder">Shared/</span>
+    │   │   │   ├── <span class="folder">Core/</span>
+    │   │   │   ├── <span class="folder">Workers/</span>
+    │   │   │   └── <span class="folder">Lifecycle/</span>
+    │   │   └── <span class="folder">Super/</span>
+    │   │       └── <span class="file key">SuperBrain.md</span>
+    │   └── <span class="folder">Identity/</span>
+    │       ├── <span class="file active">Forge.md</span>
+    │       └── <span class="file active">Forge_Lessons.md</span>
+    ├── <span class="folder">Business/</span>
+    │   ├── <span class="folder">Projects/</span>
+    │   │   ├── <span class="folder">Command-Centre/</span>
+    │   │   ├── <span class="folder">Website/</span>
+    │   │   └── <span class="folder">Mac-Fleet/</span>
+    │   ├── <span class="folder">Grants/</span>
+    │   │   └── <span class="folder">Logs/</span>
+    │   └── <span class="folder">SOPs/</span>
+    └── <span class="folder">Ops/</span>
+        ├── <span class="folder">Passoffs/</span>
+        ├── <span class="folder">Outputs/</span> <span class="note">← GitHub paste staging</span>
+        ├── <span class="folder">Audits/</span>
+        ├── <span class="file active">handoff.md</span>
+        ├── <span class="file active">session-log.md</span>
+        ├── <span class="file active">tasks.md</span>
+        └── <span class="file active">usage-log.md</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- D: DRIVE LOCAL AI -->
+    <div class="card">
+      <div class="card-header">
+        <span class="icon">💽</span>
+        <h2>D: Drive — Local AI</h2>
+        <span class="pill local">Local</span>
+        <span class="sub">beast only</span>
+      </div>
+      <div class="card-body">
+        <div class="tree">
+<span class="folder">D:\</span>
+├── <span class="folder">3D\</span> <span class="note">← 3D printing files (unrelated)</span>
+└── <span class="folder">AI\</span>
+    ├── <span class="folder">Brains\</span>
+    │   ├── <span class="folder">Local\</span> <span class="pill local">port 8051</span>
+    │   │   ├── <span class="folder">server\</span> <span class="note">← mem0 server code</span>
+    │   │   └── <span class="folder">data\</span> <span class="note">← ChromaDB vectors (cloud backup)</span>
+    │   │
+    │   ├── <span class="folder">Private\</span> <span class="pill private">port 8052</span>
+    │   │   ├── <span class="folder">server\</span> <span class="note">← mem0 server code</span>
+    │   │   └── <span class="folder">data\</span> <span class="note">← ChromaDB vectors (isolated)</span>
+    │   │
+    │   ├── <span class="folder">Sync\</span>
+    │   │   └── <span class="file active">Public-to-Local.py</span> <span class="note">← cloud→Local only</span>
+    │   │
+    │   └── <span class="folder">mcpo\</span> <span class="pill local">port 9000</span>
+    │       └── <span class="file key">config.json</span> <span class="note">← OWUI bridge config</span>
+    │
+    └── <span class="folder">Vault\</span>
+        └── <span class="file key">SUPABASE KEY.txt</span> <span class="note">← critical, keep offline</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLOUD SERVICES -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-header"><span class="icon">🌐</span><h2>Cloud Services</h2><span class="pill cloud">External</span></div>
+    <div class="card-body">
+      <div class="grid-3" style="margin-bottom:0">
+        <div>
+          <div class="section-title">Memory</div>
+          <div class="decision">
+            <div class="q">mem0.ai — Public Brain</div>
+            <div class="a">Forge's semantic memory. Searched every session boot (A3). Source of truth for all Forge memories.</div>
+            <div class="path">mcp__bfe0a6c7-…__search_memories</div>
+          </div>
+        </div>
+        <div>
+          <div class="section-title">Database</div>
+          <div class="decision">
+            <div class="q">Supabase — twrlvnfszohyrmivdhre</div>
+            <div class="a">forge_tasks · forge_plans · agent_messages · forge_sessions · cc_devices · forge_config · forge_strings</div>
+            <div class="path">command.azcustomknives.com</div>
+          </div>
+        </div>
+        <div>
+          <div class="section-title">Code + Deploy</div>
+          <div class="decision">
+            <div class="q">GitHub — alessiozilli</div>
+            <div class="a">command-centre · azck-site · quadfang repos. Alessio pastes from AI/Ops/Outputs/ → GitHub edit URL.</div>
+            <div class="path">github.com/alessiozilli</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WHAT GOES WHERE -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-header"><span class="icon">🎯</span><h2>What Goes Where — Decision Guide</h2><span class="sub">for Forge sessions + local AI</span></div>
+    <div class="card-body">
+      <div class="grid" style="margin-bottom:0">
+        <div>
+          <div class="decision">
+            <div class="q">A Forge lesson, rule, or business decision</div>
+            <div class="a">→ Write to cloud mem0 (stays forever, searchable)</div>
+            <div class="path">AZCK Ltd/AI/Forge/Identity/Forge_Lessons.md + mem0</div>
+          </div>
+          <div class="decision">
+            <div class="q">A passoff or session handoff</div>
+            <div class="a">→ Write to Google Drive Ops</div>
+            <div class="path">AZCK Ltd/AI/Ops/Passoffs/YYYY-MM-DD_HH-MM_*.md</div>
+          </div>
+          <div class="decision">
+            <div class="q">A file to deploy to the live website</div>
+            <div class="a">→ Stage in Outputs/, then Alessio pastes to GitHub</div>
+            <div class="path">AZCK Ltd/AI/Ops/Outputs/ → GitHub edit URL</div>
+          </div>
+          <div class="decision">
+            <div class="q">A brand asset (logo, sigil, palette)</div>
+            <div class="a">→ Save to Assets/, log in MANIFEST.md first</div>
+            <div class="path">AZCK Ltd/AI/Forge/Assets/</div>
+          </div>
+        </div>
+        <div>
+          <div class="decision">
+            <div class="q">A task or plan for forge-code or forge-cowork</div>
+            <div class="a">→ INSERT into Supabase forge_tasks or forge_plans</div>
+            <div class="path">Supabase → agent_messages bus if cross-instance</div>
+          </div>
+          <div class="decision">
+            <div class="q">Something private — personal notes, experiments</div>
+            <div class="a">→ Feed manually to Private Brain (Alessio only, not Forge)</div>
+            <div class="path">D:\AI\Brains\Private\ · port 8052 · never syncs</div>
+          </div>
+          <div class="decision">
+            <div class="q">A backup of Forge's cloud memories</div>
+            <div class="a">→ Sync script runs cloud→Local automatically</div>
+            <div class="path">D:\AI\Brains\Sync\Public-to-Local.py</div>
+          </div>
+          <div class="decision">
+            <div class="q">A critical key or credential</div>
+            <div class="a">→ Offline only, never in Drive or cloud</div>
+            <div class="path">D:\AI\Vault\ (beast only)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTEXT BLOCK FOR LOCAL AI -->
+  <div class="card">
+    <div class="card-header"><span class="icon">📋</span><h2>Context Block — Feed to Local AI</h2><span class="sub">copy and paste as system prompt or context</span></div>
+    <div class="card-body">
+      <p style="font-size:12px; color:var(--muted); margin-bottom:8px">Use this block to orient any local AI model to the AZCK structure so it knows where to save and find things.</p>
+      <div class="copy-block">
+        <button class="copy-btn" onclick="copyContext()">Copy</button>
+        <pre id="context-text">== AZCK AI STRUCTURE CONTEXT ==
+
+You are operating within the AZ Custom Knives Ltd (AZCK) AI system.
+Owner: Alessio Zilli (alessio.zilli@azcustomknives.com)
+Co-owner: Reanna Leach (admin@azcustomknives.com)
+
+== CLOUD SOURCES OF TRUTH ==
+- Forge memory: cloud mem0 (mem0.ai) — semantic search, all session learnings
+- Database: Supabase project twrlvnfszohyrmivdhre — tasks, plans, messages, sessions
+- Files: Google Drive "AZCK Ltd" — all business docs, brain files, ops logs
+- Code: github.com/alessiozilli — command-centre, azck-site, quadfang repos
+
+== GOOGLE DRIVE STRUCTURE ==
+AZCK Ltd/
+  CLAUDE.md                    ← loads every Forge session
+  AI/Forge/Brain/Condensed/    ← CLAUDE versions (operator brain)
+  AI/Forge/Brain/Shared/Core/  ← core brain docs
+  AI/Forge/Brain/Shared/Workers/ ← specialist worker files
+  AI/Forge/Brain/Super/        ← SuperBrain.md (full history)
+  AI/Forge/Identity/           ← Forge.md, Forge_Lessons.md
+  AI/Forge/Assets/             ← brand assets + MANIFEST.md
+  AI/Business/Projects/        ← CC, Website, Mac-Fleet, QuadFang
+  AI/Business/Grants/Logs/     ← SR&ED time + expense logs
+  AI/Ops/Passoffs/             ← session handoffs
+  AI/Ops/Outputs/              ← staging for GitHub paste
+  AI/Ops/handoff.md            ← latest passoff pointer
+  AI/Ops/usage-log.md          ← cost tracking
+
+== LOCAL AI STRUCTURE (beast / D: drive) ==
+D:\AI\Brains\Local\      ← backup of cloud mem0, port 8051, ChromaDB
+D:\AI\Brains\Private\    ← Alessio personal AI, port 8052, ISOLATED, never syncs
+D:\AI\Brains\Sync\       ← Public-to-Local.py (cloud→Local scheduled sync)
+D:\AI\Brains\mcpo\       ← OWUI bridge, port 9000
+D:\AI\Vault\             ← critical keys, offline only
+
+== WHAT GOES WHERE ==
+Forge lesson/rule → cloud mem0 + AI/Forge/Identity/Forge_Lessons.md
+Session handoff → AI/Ops/Passoffs/YYYY-MM-DD_HH-MM_*.md
+File for website → AI/Ops/Outputs/ then paste to GitHub
+Brand asset → AI/Forge/Assets/ (log in MANIFEST.md first)
+Task/plan → Supabase forge_tasks or forge_plans
+Personal/private → D:\AI\Brains\Private\ (manual, Forge-accessible but Anthropic-isolated)
+Critical key → D:\AI\Vault\ (offline, beast only)
+
+== USERS ==
+Alessio: shop/R&D/equipment/teaching/custom orders
+Reanna: client comms/orders/store/social/bookkeeping/grants/admin
+Both: dyslexic-friendly output, bullets + bold + emojis</pre>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleDateString('en-CA');
+
+  function copyContext() {
+    const text = document.getElementById('context-text').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.querySelector('.copy-btn');
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 2000);
+    });
+  }
+</script>
+
+</body>
+</html>
