@@ -3,7 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Structure — AZCK Command Centre</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:;">
+<title>AI Structure &mdash; AZCK Command Centre</title>
+<link rel="stylesheet" href="cc-shell.css">
+<script src="cc-shell.js" defer></script>
+<script>
+  window.PAGE = {
+    id: 'ai-structure',
+    title: 'AI Structure',
+    subtitle: 'Drive map, brain architecture, and deployment flow.',
+    subtabs: [],
+    stats: []
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script defer src="auth.js"></script>
 <style>
   :root {
     --bg: #0d1117;
@@ -81,12 +95,6 @@
 </head>
 <body>
 
-<header>
-  <span style="font-size:20px">🗺️</span>
-  <h1>AI Structure</h1>
-  <span class="badge">AZCK — Forge v0.9.9</span>
-  <span class="badge" style="margin-left:auto" id="updated">Updated: —</span>
-</header>
 
 <div class="page">
 
