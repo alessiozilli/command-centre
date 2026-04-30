@@ -23,6 +23,7 @@
       { id: 'cost',    label: 'Cost'    },
       { id: 'tree',    label: 'Tree'    },
       { id: 'plans',   label: 'Plans'   },
+      { id: 'strings', label: 'Strings' },
       { id: 'bus',     label: 'Bus'     }
     ],
     stats: [
@@ -35,6 +36,7 @@
   };
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/ninja-keys@1/dist/ninja-keys.min.js"></script>
 <script defer src="auth.js"></script>
 <style>
 /* Fleet-scoped styles — shell + base from cc-shell.css */
@@ -118,38 +120,22 @@
 .today-cell .lbl { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--cc-text-muted); margin-bottom: 4px; }
 .today-cell .val { font-size: 1.3rem; font-weight: 700; color: var(--cc-text); }
 
-/* ── C4 Drill-in: modal on desktop, full-page on mobile ── */
+/* ── Slide-out drawer ──────────────────────────────────── */
 #fleet-drawer-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.62);
-  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
-  z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.22s ease;
+  position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+  z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
 }
 #fleet-drawer-overlay.open { opacity: 1; pointer-events: all; }
-@media (min-width: 1024px) {
-  #fleet-drawer {
-    position: fixed; z-index: 201;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%) scale(0.96);
-    width: min(900px, 92vw); max-height: 88vh;
-    overflow-y: auto; background: var(--cc-bg-card);
-    border: 1px solid var(--cc-border); border-radius: var(--cc-r-md);
-    box-shadow: 0 24px 64px rgba(0,0,0,0.6);
-    display: flex; flex-direction: column;
-    opacity: 0; pointer-events: none;
-    transition: opacity 0.22s ease, transform 0.22s ease;
-  }
-  #fleet-drawer.open { opacity: 1; pointer-events: all; transform: translate(-50%, -50%) scale(1); }
+#fleet-drawer {
+  position: fixed; top: 0; right: -520px; width: 480px; height: 100%;
+  background: var(--cc-bg-card); border-left: 1px solid var(--cc-border);
+  z-index: 201; overflow-y: auto; transition: right 0.3s ease;
+  display: flex; flex-direction: column;
 }
-@media (max-width: 1023px) {
-  #fleet-drawer {
-    position: fixed; z-index: 201; inset: 0;
-    width: 100%; height: 100%; overflow-y: auto;
-    background: var(--cc-bg-card); border: none; border-radius: 0;
-    display: flex; flex-direction: column;
-    transform: translateY(5%); opacity: 0; pointer-events: none;
-    transition: opacity 0.25s ease, transform 0.25s ease;
-  }
-  #fleet-drawer.open { opacity: 1; pointer-events: all; transform: translateY(0); }
+#fleet-drawer.open { right: 0; }
+@media (max-width: 768px) {
+  #fleet-drawer { width: 100%; right: -110%; }
 }
 .dr-hd {
   position: sticky; top: 0; background: var(--cc-bg-card);
@@ -330,6 +316,57 @@
 .cc-sheet-handle { width: 36px; height: 4px; background: var(--cc-border); border-radius: 2px; margin: 10px auto 4px; }
 .cc-sheet-title { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--cc-text-dim); padding: 4px 16px 10px; font-weight: 700; border-bottom: 1px solid var(--cc-border); }
 
+/* ─── Strings tab ────────────────────────────────────────────── */
+.str-pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: var(--cc-r-pill); border: 1px solid; font-size: 0.8rem; font-weight: 700; }
+.str-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.str-filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.str-grid { display: grid; gap: 10px; }
+.str-card { background: var(--cc-bg-card); border: 1px solid var(--cc-border); border-radius: var(--cc-r-md); padding: 14px 16px; cursor: default; transition: border-color var(--cc-t-fast); }
+.str-card:hover { border-color: rgba(255,255,255,0.15); }
+.str-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+.str-card-meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-size: 0.75rem; color: var(--cc-text-muted); margin-bottom: 6px; }
+.str-card-focus { font-size: 0.82rem; color: var(--cc-text-muted); margin-bottom: 10px; line-height: 1.45; }
+.str-card-footer { display: flex; gap: 8px; align-items: center; padding-top: 8px; border-top: 1px solid var(--cc-border); }
+.btn-str-menu { background: none; border: 1px solid var(--cc-border); color: var(--cc-text-muted); border-radius: var(--cc-r-sm); padding: 4px 12px; font-size: 0.75rem; cursor: pointer; transition: border-color 0.12s, color 0.12s; }
+.btn-str-menu:hover { border-color: var(--cc-accent); color: var(--cc-accent); }
+.btn-str-resume { background: rgba(63,185,80,0.1); border: 1px solid rgba(63,185,80,0.3); color: var(--cc-success); border-radius: var(--cc-r-sm); padding: 4px 12px; font-size: 0.75rem; cursor: pointer; font-weight: 600; }
+.btn-str-resume:hover { background: rgba(63,185,80,0.2); }
+
+/* ─── C4 Drill-in ──────────────────────────────────── */
+#drill-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:320;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+#drill-overlay.open{opacity:1;pointer-events:all;}
+#drill-panel{position:fixed;z-index:321;background:var(--cc-bg-card);border:1px solid var(--cc-border);overflow-y:auto;opacity:0;pointer-events:none;display:flex;flex-direction:column;transition:opacity 0.2s,transform 0.25s cubic-bezier(0.2,0.8,0.2,1);}
+@media(min-width:1024px){#drill-panel{top:50%;left:50%;transform:translate(-50%,-48%);width:min(720px,92vw);max-height:88vh;border-radius:12px;}#drill-panel.open{opacity:1;transform:translate(-50%,-50%);pointer-events:all;}}
+@media(max-width:1023px){#drill-panel{inset:0;border-radius:0;border:none;transform:translateY(20px);}#drill-panel.open{opacity:1;transform:none;pointer-events:all;}}
+.drill-hd{position:sticky;top:0;background:var(--cc-bg-card);border-bottom:1px solid var(--cc-border);padding:18px 20px 14px;display:flex;align-items:flex-start;gap:12px;z-index:1;}
+.drill-hd-main{flex:1;min-width:0;}
+.drill-title{font-size:1.1rem;font-weight:700;color:var(--cc-text);margin:0 0 10px;line-height:1.3;word-break:break-word;}
+.drill-badges{display:flex;flex-wrap:wrap;gap:6px;}
+.drill-close{background:none;border:none;color:var(--cc-text-muted);cursor:pointer;font-size:1.5rem;line-height:1;padding:2px 8px;border-radius:var(--cc-r-sm);transition:color var(--cc-t-fast),background var(--cc-t-fast);flex-shrink:0;margin-top:-4px;}
+.drill-close:hover{color:var(--cc-text);background:var(--cc-bg-raised);}
+.drill-body{padding:0 20px 32px;flex:1;}
+.drill-section{margin-top:22px;}
+.drill-section-label{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.09em;color:var(--cc-text-dim);margin-bottom:10px;font-weight:700;}
+.drill-prose{font-size:0.85rem;color:var(--cc-text-body);line-height:1.65;background:var(--cc-bg);border-radius:var(--cc-r-md);padding:14px 16px;}
+.drill-prose p{margin:0 0 0.65em;}.drill-prose p:last-child{margin:0;}
+.drill-prose strong{color:var(--cc-text);}
+.drill-prose code{font-family:var(--cc-font-mono);font-size:0.82em;background:var(--cc-bg-raised);padding:1px 5px;border-radius:3px;}
+.drill-next-step{background:rgba(88,166,255,0.06);border:1px solid rgba(88,166,255,0.2);border-radius:var(--cc-r-md);padding:14px 16px;margin-top:10px;}
+.drill-next-step .ns-label{font-size:0.75rem;font-weight:700;color:var(--cc-accent);margin-bottom:8px;}
+.drill-next-step .ns-cmd{font-family:var(--cc-font-mono);font-size:0.78rem;color:var(--cc-text-body);background:var(--cc-bg);border-radius:var(--cc-r-sm);padding:10px 12px;word-break:break-all;white-space:pre-wrap;}
+.drill-dep-list{display:flex;flex-direction:column;gap:6px;}
+.drill-dep-item{display:flex;align-items:center;gap:8px;padding:7px 12px;background:var(--cc-bg);border-radius:var(--cc-r-sm);font-size:0.82rem;cursor:pointer;transition:background var(--cc-t-fast);border:1px solid transparent;}
+.drill-dep-item:hover{background:var(--cc-bg-hover);border-color:rgba(88,166,255,0.2);}
+.drill-dep-tag{font-size:0.66rem;color:var(--cc-text-dim);text-transform:uppercase;letter-spacing:0.05em;flex-shrink:0;min-width:56px;}
+.drill-dep-title{flex:1;color:var(--cc-text-body);}
+.drill-meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 16px;}
+@media(max-width:600px){.drill-meta-grid{grid-template-columns:repeat(2,1fr);}}
+.drill-meta-item .k{font-size:0.64rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--cc-text-dim);}
+.drill-meta-item .v{font-size:0.82rem;color:var(--cc-text-muted);margin-top:2px;}
+.drill-deeplink{font-size:0.7rem;font-family:var(--cc-font-mono);color:var(--cc-text-dim);margin-top:6px;}
+.drill-deeplink a{color:var(--cc-accent);text-decoration:none;cursor:pointer;}
+.drill-deeplink a:hover{text-decoration:underline;}
+
 /* Auto-refresh indicator */
 #fleet-refresh-pill {
   position: fixed; bottom: 16px; left: 16px; z-index: 50;
@@ -339,21 +376,6 @@
   pointer-events: none; opacity: 0.75; transition: color 0.3s, border-color 0.3s;
 }
 #fleet-refresh-pill.syncing { color: var(--cc-accent); border-color: rgba(88,166,255,0.3); opacity: 1; }
-
-/* ── C4 Drill-in extras ──────────────────────────────────── */
-.dr-header-meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; font-size: 0.75rem; color: var(--cc-text-muted); }
-.dr-header-meta .sep { color: var(--cc-text-dim); }
-.dr-deeplink { font-size: 0.65rem; color: var(--cc-text-dim); font-family: var(--cc-font-mono); background: var(--cc-bg); padding: 2px 8px; border-radius: var(--cc-r-pill); cursor: pointer; border: 1px solid var(--cc-border); text-decoration: none; user-select: none; }
-.dr-deeplink:hover { color: var(--cc-accent); border-color: rgba(88,166,255,0.3); }
-.dr-next-step { background: rgba(88,166,255,0.07); border: 1px solid rgba(88,166,255,0.22); border-left: 4px solid var(--cc-accent); border-radius: var(--cc-r-md); padding: 12px 14px; }
-.dr-next-step-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.09em; color: var(--cc-accent); font-weight: 700; margin-bottom: 5px; }
-.dr-next-step-body  { font-size: 0.86rem; color: var(--cc-text); line-height: 1.55; white-space: pre-wrap; word-break: break-word; }
-.dr-next-step-actor { font-size: 0.72rem; color: var(--cc-text-muted); margin-top: 5px; }
-.dr-dep-list { display: flex; flex-direction: column; gap: 5px; }
-.dr-dep-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; background: var(--cc-bg); border: 1px solid var(--cc-border); border-radius: var(--cc-r-sm); cursor: pointer; transition: background var(--cc-t-fast); }
-.dr-dep-item:hover { background: var(--cc-bg-hover); }
-.dr-dep-role  { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--cc-text-dim); min-width: 74px; flex-shrink: 0; }
-.dr-dep-title { font-size: 0.82rem; color: var(--cc-text-body); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -433,6 +455,17 @@
 </section>
 
 
+<section data-subtab="strings">
+  <p class="fleet-section-intro">Active work contexts. Each String groups sessions, tasks, and cost under a named theme. Right-click or tap ⋯ to act.</p>
+  <div class="str-filter-bar" id="strFilterBar">
+    <button class="filter-btn active" data-str-filter="all"      onclick="strSetFilter('all')">All Active</button>
+    <button class="filter-btn"        data-str-filter="active"   onclick="strSetFilter('active')">Active</button>
+    <button class="filter-btn"        data-str-filter="paused"   onclick="strSetFilter('paused')">Paused</button>
+    <button class="filter-btn"        data-str-filter="archived" onclick="strSetFilter('archived')">Archived</button>
+  </div>
+  <div class="str-grid" id="fleetStringsList"><div class="fleet-empty">Loading&hellip;</div></div>
+</section>
+
 <section data-subtab="bus">
   <p class="fleet-section-intro">Active bus messages — status not done or archived. Mark done once the triggered work is complete.</p>
   <div class="plan-filter-bar" id="busFilterBar">
@@ -462,6 +495,12 @@
   <div class="cc-sheet-handle"></div>
   <div class="cc-sheet-title" id="cc-sheet-title"></div>
   <div id="cc-sheet-items"></div>
+</div>
+
+<!-- C4 Drill-in -->
+<div id="drill-overlay" onclick="closeDrillIn()"></div>
+<div id="drill-panel" role="dialog" aria-modal="true" aria-label="Drill-in detail">
+  <div id="drill-inner"></div>
 </div>
 
 <script>
@@ -578,16 +617,11 @@
     return `<span class="badge ${cls}">${lbl}</span>`;
   }
 
-  function renderDrawerContent(task, claim, deps) {
-    deps = deps || {};
-
+  function renderDrawerContent(task, claim) {
     // 1. Header
     const tags = (task.tags || []).map(tg =>
       `<span class="badge" style="background:rgba(88,166,255,0.08);color:#79c0ff;border:1px solid rgba(88,166,255,0.2)">${esc(tg)}</span>`
     ).join('');
-
-    const deepUrl = location.origin + location.pathname + '#task=' + task.id;
-    const ownerName = task.assigned_to || task.suggested_to;
 
     const header = `
       <div class="dr-hd">
@@ -597,14 +631,6 @@
             ${badgeStatus(task.status)}
             ${badgePriority(task.priority)}
             ${tags}
-          </div>
-          <div class="dr-header-meta">
-            ${ownerName ? badgeInstance(ownerName) : ''}
-            ${task.suggested_model ? `<span class="sep">·</span>${badgeModel(task.suggested_model)}` : ''}
-            ${task.cost_est_cad != null ? `<span class="sep">·</span><span>est ${fmtCost(task.cost_est_cad)}</span>` : ''}
-            ${task.cost_actual_cad != null ? `<span>/ actual ${fmtCost(task.cost_actual_cad)}</span>` : ''}
-            ${task.updated_at ? `<span class="sep">·</span><span>updated ${fmtAge(task.updated_at)}</span>` : ''}
-            <span class="dr-deeplink" onclick="navigator.clipboard.writeText(${JSON.stringify(deepUrl)}).catch(()=>{});_ccToast('Link copied')">⧉ link</span>
           </div>
         </div>
         <button class="dr-close" onclick="closeDrawer()" aria-label="Close">&times;</button>
@@ -625,36 +651,7 @@
         <p class="dr-criteria">${esc(task.acceptance_criteria)}</p>
       </div>` : '';
 
-    // 4. Dependencies (parent plan + parent task)
-    let depsSection = '';
-    if (deps.parentPlan || deps.parentTask) {
-      const depItems = [];
-      if (deps.parentPlan) {
-        const col = BOARD_STATUS_COLOR[deps.parentPlan.status] || '#8b949e';
-        depItems.push(`<div class="dr-dep-item" onclick="openDrillin('plan','${esc(deps.parentPlan.id)}')">
-          <span class="dr-dep-role">Parent plan</span>
-          <span class="badge" style="background:rgba(88,166,255,0.06);color:${col};border:1px solid ${col}40;font-size:0.6rem">${esc(deps.parentPlan.status)}</span>
-          <span class="dr-dep-title">${esc(deps.parentPlan.title)}</span>
-          <span style="color:var(--cc-text-dim);font-size:0.7rem">→</span>
-        </div>`);
-      }
-      if (deps.parentTask) {
-        const col = BOARD_STATUS_COLOR[deps.parentTask.status] || '#8b949e';
-        depItems.push(`<div class="dr-dep-item" onclick="openDrillin('task','${esc(deps.parentTask.id)}')">
-          <span class="dr-dep-role">Parent task</span>
-          <span class="badge" style="background:rgba(88,166,255,0.06);color:${col};border:1px solid ${col}40;font-size:0.6rem">${esc(deps.parentTask.status)}</span>
-          <span class="dr-dep-title">${esc(deps.parentTask.title)}</span>
-          <span style="color:var(--cc-text-dim);font-size:0.7rem">→</span>
-        </div>`);
-      }
-      depsSection = `
-        <div class="dr-section">
-          <div class="dr-section-label">Dependencies</div>
-          <div class="dr-dep-list">${depItems.join('')}</div>
-        </div>`;
-    }
-
-    // 5. Active claim (if in_progress)
+    // 4. Active claim (if in_progress)
     let claimSection = '';
     if (task.status === 'in_progress') {
       const claimAge = claim && claim.claimed_at ? fmtAge(claim.claimed_at) : '—';
@@ -722,28 +719,8 @@
         </div>`;
     }
 
-    // 7. Next Step block (last execution log entry)
-    const rawExecLog = Array.isArray(task.execution_log) ? task.execution_log : [];
-    let nextStepSection = '';
-    if (rawExecLog.length) {
-      const last = rawExecLog[rawExecLog.length - 1];
-      if (last.note || last.action) {
-        const actorParts = [last.instance, last.model].filter(Boolean);
-        const actorStr = actorParts.length ? actorParts.join(' · ') : '';
-        nextStepSection = `
-          <div class="dr-section">
-            <div class="dr-section-label">Next Step</div>
-            <div class="dr-next-step">
-              <div class="dr-next-step-label">▶ next action</div>
-              <div class="dr-next-step-body">${esc(last.note || last.action)}</div>
-              ${actorStr ? `<div class="dr-next-step-actor">${esc(actorStr)}</div>` : ''}
-            </div>
-          </div>`;
-      }
-    }
-
-    // 8. Execution log (most recent first)
-    const execLog = rawExecLog.length ? [...rawExecLog].reverse() : [];
+    // 6. Execution log (most recent first)
+    const execLog = Array.isArray(task.execution_log) ? [...task.execution_log].reverse() : [];
     const execTimeline = execLog.length ? execLog.map(e => `
       <div class="dr-tl-item">
         <div class="dr-tl-time">${fmtTs(e.timestamp)}</div>
@@ -806,10 +783,10 @@
         </div>
       </div>`;
 
-    return header + bodySection + acSection + depsSection + claimSection + cycleSection + nextStepSection + execSection + safetySection + drawerActionsSection + footerSection + '</div>';
+    return header + bodySection + acSection + claimSection + cycleSection + execSection + safetySection + drawerActionsSection + footerSection + '</div>';
   }
 
-  window.openDrillin = async function(type, id) {
+  window.openDrawer = async function (id) {
     const overlay = document.getElementById('fleet-drawer-overlay');
     const drawer  = document.getElementById('fleet-drawer');
     const inner   = document.getElementById('fleet-drawer-inner');
@@ -817,47 +794,27 @@
     overlay.classList.add('open');
     drawer.classList.add('open');
     document.body.style.overflow = 'hidden';
+    history.replaceState(null, '', '#task=' + id);
 
-    if (type === 'plan') {
-      history.replaceState(null, '', '#plan=' + id);
-      const [planRes, sessionRes] = await Promise.all([
-        supa.from('forge_plans').select('*').eq('id', id).single(),
-        supa.auth.getSession()
-      ]);
-      if (planRes.error) { inner.innerHTML = `<div class="dr-loading">Error: ${esc(planRes.error.message)}</div>`; return; }
-      const isAlessio = sessionRes.data?.session?.user?.email === 'alessio.zilli@azcustomknives.com';
-      inner.innerHTML = renderPlanDrawer(planRes.data, isAlessio);
-    } else {
-      history.replaceState(null, '', '#task=' + id);
-      const [taskRes, claimRes] = await Promise.all([
-        supa.from('forge_tasks').select('*').eq('id', id).single(),
-        supa.from('forge_claims').select('claimed_by,instance_id,claimed_at,verify_url').eq('task_id', id).is('released_at', null).maybeSingle()
-      ]);
-      if (taskRes.error) { inner.innerHTML = `<div class="dr-loading">Error loading task: ${esc(taskRes.error.message)}</div>`; return; }
-      const task = taskRes.data;
-      let parentPlan = null, parentTask = null;
-      const depFetches = [];
-      if (task.parent_plan_id) depFetches.push(
-        supa.from('forge_plans').select('id,title,status').eq('id', task.parent_plan_id).single()
-          .then(r => { if (!r.error && r.data) parentPlan = r.data; })
-      );
-      if (task.parent_task_id) depFetches.push(
-        supa.from('forge_tasks').select('id,title,status').eq('id', task.parent_task_id).single()
-          .then(r => { if (!r.error && r.data) parentTask = r.data; })
-      );
-      if (depFetches.length) await Promise.all(depFetches);
-      inner.innerHTML = renderDrawerContent(task, claimRes.data, { parentPlan, parentTask });
+    const [taskRes, claimRes] = await Promise.all([
+      supa.from('forge_tasks').select('*').eq('id', id).single(),
+      supa.from('forge_claims')
+        .select('claimed_by,instance_id,claimed_at,verify_url')
+        .eq('task_id', id).is('released_at', null).maybeSingle()
+    ]);
+
+    if (taskRes.error) {
+      inner.innerHTML = `<div class="dr-loading">Error loading task: ${esc(taskRes.error.message)}</div>`;
+      return;
     }
+    inner.innerHTML = renderDrawerContent(taskRes.data, claimRes.data);
   };
-
-  // Backward-compat wrappers
-  window.openDrawer = id => openDrillin('task', id);
 
   window.closeDrawer = function () {
     document.getElementById('fleet-drawer-overlay').classList.remove('open');
     document.getElementById('fleet-drawer').classList.remove('open');
     document.body.style.overflow = '';
-    if (location.hash.startsWith('#task=') || location.hash.startsWith('#plan=')) {
+    if (location.hash.startsWith('#task=')) {
       history.replaceState(null, '', location.pathname);
     }
   };
@@ -904,7 +861,7 @@
     if (!data || !data.length) { setEl('fleetLiveList', '<div class="fleet-empty">No active tasks right now. Forge is idle.</div>'); return; }
     setEl('fleetLiveList', data.map(t => {
       const lastExec = t.last_exec_entry ? JSON.parse(typeof t.last_exec_entry === 'string' ? t.last_exec_entry : JSON.stringify(t.last_exec_entry)) : null;
-      return `<div class="fleet-card clickable${t.priority === 'urgent' ? ' urgent' : ''}" onclick="openDrawer('${esc(t.id)}')">
+      return `<div class="fleet-card clickable${t.priority === 'urgent' ? ' urgent' : ''}" data-speak-text="${esc(t.title)}" onclick="openDrawer('${esc(t.id)}')">
         <div class="fleet-card-head">
           <div class="fleet-card-title">${esc(t.title)}</div>
           ${badgeStatus('in_progress')}
@@ -1026,7 +983,7 @@
 
   function queueCardFn(t) {
     _menuCache[t.id] = { id: t.id, title: t.title, status: t.status, suggested_to: t.suggested_to, suggested_model: t.suggested_model, priority: t.priority };
-    return `<div class="fleet-card clickable${t.priority === 'urgent' ? ' urgent' : ''}" data-menu-type="forge_task" data-menu-id="${esc(t.id)}" onclick="openDrawer('${esc(t.id)}')" oncontextmenu="showActionMenu(event,'forge_task','${esc(t.id)}')">
+    return `<div class="fleet-card clickable${t.priority === 'urgent' ? ' urgent' : ''}" data-speak-text="${esc(t.title)}" data-menu-type="forge_task" data-menu-id="${esc(t.id)}" onclick="openDrawer('${esc(t.id)}')" oncontextmenu="showActionMenu(event,'forge_task','${esc(t.id)}')">
       <div class="fleet-card-head">
         <div class="fleet-card-title">${esc(t.title)}</div>
         ${badgePriority(t.priority)}
@@ -1577,12 +1534,20 @@
     renderPlansList();
   }
 
+  function _cleanVerdict(v) {
+    if (!v) return '';
+    // Strip ALL_CAPS_CODES (verdict tokens like GREEN_WITH_DELTAS, ACCEPT, etc.)
+    var c = v.replace(/\b[A-Z][A-Z_]{2,}\b/g, '').replace(/^\s*[-—:]+\s*/, '').replace(/\s{2,}/g, ' ').trim();
+    return c.length > 60 ? c.slice(0, 57) + '…' : c;
+  }
+
   function planCardFn(p) {
     const lastBounce = Array.isArray(p.bounce_history) && p.bounce_history.length
       ? p.bounce_history[p.bounce_history.length - 1] : null;
-    const lastVerdict = lastBounce && lastBounce.verdict
-      ? `<span style="color:var(--cc-text-dim);font-size:0.75rem">${esc(lastBounce.verdict)}</span>` : '';
-    return `<div class="fleet-card clickable" onclick="openPlanDrawer('${esc(p.id)}')">
+    const verdictText = lastBounce ? _cleanVerdict(lastBounce.verdict || lastBounce.delta_summary || '') : '';
+    const lastVerdict = verdictText
+      ? `<span style="color:var(--cc-text-dim);font-size:0.75rem">${esc(verdictText)}</span>` : '';
+    return `<div class="fleet-card clickable" data-speak-text="${esc(p.title)}" onclick="openPlanDrawer('${esc(p.id)}')">
       <div class="fleet-card-head">
         <div class="fleet-card-title">${esc(p.title)}</div>
         ${badgePlanStatus(p.status)}
@@ -1613,8 +1578,27 @@
     if (_plansCache) renderPlansList();
   };
 
-  // openPlanDrawer: backward-compat wrapper — logic lives in openDrillin
-  window.openPlanDrawer = id => openDrillin('plan', id);
+  window.openPlanDrawer = async function(id) {
+    const overlay = document.getElementById('fleet-drawer-overlay');
+    const drawer  = document.getElementById('fleet-drawer');
+    const inner   = document.getElementById('fleet-drawer-inner');
+    inner.innerHTML = '<div class="dr-loading">Loading plan&hellip;</div>';
+    overlay.classList.add('open');
+    drawer.classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    const [planRes, sessionRes] = await Promise.all([
+      supa.from('forge_plans').select('*').eq('id', id).single(),
+      supa.auth.getSession()
+    ]);
+
+    if (planRes.error) {
+      inner.innerHTML = `<div class="dr-loading">Error: ${esc(planRes.error.message)}</div>`;
+      return;
+    }
+    const isAlessio = sessionRes.data?.session?.user?.email === 'alessio.zilli@azcustomknives.com';
+    inner.innerHTML = renderPlanDrawer(planRes.data, isAlessio);
+  };
 
   function renderPlanDrawer(plan, isAlessio) {
     const header = `
@@ -1758,7 +1742,7 @@
       const ts = m.sent_at ? new Date(m.sent_at).toLocaleString('en-CA', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
       const preview = (m.body || '').replace(/^#+\s*/m, '').slice(0, 200);
       const statusClass = `badge-status-${m.status}`;
-      return `<div class="fleet-card" style="margin-bottom:10px">
+      return `<div class="fleet-card" data-speak-text="${esc('#' + m.id + ' ' + m.from_user + ' to ' + m.to_user + ': ' + (m.body || '').slice(0, 200))}" style="margin-bottom:10px">
         <div class="fleet-card-head">
           <span class="fleet-card-title">#${m.id} &mdash; ${esc(m.from_user)} → ${esc(m.to_user)}</span>
           <span class="badge ${statusClass}">${m.status}</span>
@@ -1819,7 +1803,7 @@
     const sym = BOARD_STATUS_SYM[plan.status] || '○';
     const shortTitle = plan.title.length > 52 ? plan.title.slice(0, 49) + '…' : plan.title;
     _menuCache[plan.id] = { id: plan.id, title: plan.title, status: plan.status, bounce_count: plan.bounce_count };
-    return `<div class="board-plan-card${isRoot ? ' board-plan-root' : ''}" style="border-left-color:${col}" data-menu-type="forge_plan" data-menu-id="${esc(plan.id)}" onclick="openDrillin('plan','${esc(plan.id)}')" oncontextmenu="showActionMenu(event,'forge_plan','${esc(plan.id)}')">
+    return `<div class="board-plan-card${isRoot ? ' board-plan-root' : ''}" data-speak-text="${esc(plan.title)}" style="border-left-color:${col}" data-menu-type="forge_plan" data-menu-id="${esc(plan.id)}" onclick="openDrillIn('plan','${esc(plan.id)}')" oncontextmenu="showActionMenu(event,'forge_plan','${esc(plan.id)}')">
       <div class="board-card-head">
         <span class="board-card-sym" style="color:${col}">${sym}</span>
         <span class="board-card-title">${esc(shortTitle)}</span>
@@ -1838,7 +1822,7 @@
     const sym = BOARD_STATUS_SYM[t.status] || '◆';
     const shortTitle = t.title.length > 60 ? t.title.slice(0, 57) + '…' : t.title;
     _menuCache[t.id] = { id: t.id, title: t.title, status: t.status, suggested_to: t.suggested_to, suggested_model: t.suggested_model, priority: t.priority };
-    return `<div class="board-task-card" style="border-left-color:${col}" data-menu-type="forge_task" data-menu-id="${esc(t.id)}" onclick="openDrawer('${esc(t.id)}')" oncontextmenu="showActionMenu(event,'forge_task','${esc(t.id)}')">
+    return `<div class="board-task-card" data-speak-text="${esc(t.title)}" style="border-left-color:${col}" data-menu-type="forge_task" data-menu-id="${esc(t.id)}" onclick="openDrillIn('task','${esc(t.id)}')" oncontextmenu="showActionMenu(event,'forge_task','${esc(t.id)}')">
       <div class="board-card-head">
         <span class="board-card-sym" style="color:${col};font-size:0.65rem">${sym}</span>
         <span class="board-card-title" style="font-size:0.72rem">${esc(shortTitle)}</span>
@@ -1942,11 +1926,95 @@
     setEl('boardWrap', html);
   }
 
+  // ─── STRINGS tab ─────────────────────────────────────────────
+  let _strFilter = 'all';
+
+  window.strSetFilter = function(f) {
+    _strFilter = f;
+    document.querySelectorAll('#strFilterBar .filter-btn').forEach(b => b.classList.toggle('active', b.dataset.strFilter === f));
+    loadStrings();
+  };
+
+  async function loadStrings() {
+    let q = supa.from('forge_strings')
+      .select('id,name,color,status,description,current_instance,last_activity,total_cost_cad,current_focus_task_id,current_focus_plan_id,archived_at')
+      .order('last_activity', { ascending: false, nullsFirst: false });
+
+    if (_strFilter === 'all')      q = q.in('status', ['active','paused']);
+    else if (_strFilter === 'archived') q = q.eq('status', 'archived');
+    else                           q = q.eq('status', _strFilter);
+
+    const { data, error } = await q;
+    if (error) { setEl('fleetStringsList', `<div class="fleet-empty">Error: ${esc(error.message)}</div>`); return; }
+    if (!data || !data.length) {
+      setEl('fleetStringsList', '<div class="fleet-empty">No strings match this filter.</div>');
+      return;
+    }
+
+    const taskIds = [...new Set(data.map(s => s.current_focus_task_id).filter(Boolean))];
+    let taskMap = {};
+    if (taskIds.length) {
+      const { data: tasks } = await supa.from('forge_tasks')
+        .select('id,title,status,assigned_to').in('id', taskIds);
+      (tasks || []).forEach(t => { taskMap[t.id] = t; });
+    }
+
+    data.forEach(s => { _menuCache[s.id] = { ...s, _type: 'forge_string' }; });
+
+    const cards = data.map(s => {
+      const ft = s.current_focus_task_id ? taskMap[s.current_focus_task_id] : null;
+      const color = s.color || '#8b949e';
+      const statusBadge = {
+        active:   `<span class="badge" style="background:rgba(63,185,80,0.12);color:var(--cc-success);border:1px solid rgba(63,185,80,0.25)">active</span>`,
+        paused:   `<span class="badge" style="background:rgba(210,153,34,0.12);color:var(--cc-warn);border:1px solid rgba(210,153,34,0.25)">paused</span>`,
+        archived: `<span class="badge" style="background:rgba(139,148,158,0.12);color:var(--cc-text-muted);border:1px solid rgba(139,148,158,0.25)">archived</span>`,
+      }[s.status] || `<span class="badge">${esc(s.status)}</span>`;
+
+      return `<div class="str-card"
+        data-menu-type="forge_string" data-menu-id="${esc(s.id)}"
+        oncontextmenu="showActionMenu(event,'forge_string','${esc(s.id)}')">
+        <div class="str-card-head">
+          <span class="str-pill" style="background:${color}18;border-color:${color}44;color:${color}">
+            <span class="str-dot" style="background:${color}"></span>${esc(s.name)}
+          </span>
+          ${statusBadge}
+        </div>
+        <div class="str-card-meta">
+          ${s.current_instance ? badgeInstance(s.current_instance) : '<span style="color:var(--cc-text-dim)">no instance</span>'}
+          ${s.last_activity ? `<span>active ${fmtAge(s.last_activity)}</span>` : ''}
+          ${s.total_cost_cad != null ? `<span style="color:var(--cc-text)">${fmtCost(s.total_cost_cad)}</span>` : ''}
+        </div>
+        ${s.description ? `<div class="str-card-focus" style="color:var(--cc-text-dim);font-size:0.78rem">${esc(s.description)}</div>` : ''}
+        ${ft ? `<div class="str-card-focus">Focus: <strong>${esc(ft.title)}</strong> ${badgeStatus(ft.status)} ${ft.assigned_to ? badgeInstance(ft.assigned_to) : ''}</div>` : ''}
+        <div class="str-card-footer">
+          ${s.status === 'paused' ? `<button class="btn-str-resume" onclick="handleStrResume('${esc(s.id)}')">▶ Resume</button>` : ''}
+          <button class="btn-str-menu" onclick="showActionMenu(event,'forge_string','${esc(s.id)}');event.stopPropagation()">⋯ Actions</button>
+        </div>
+      </div>`;
+    }).join('');
+
+    setEl('fleetStringsList', cards);
+  }
+
+  window.handleStrResume = async function(id) {
+    const { error } = await supa.from('forge_strings').update({ status: 'active' }).eq('id', id);
+    if (error) { _ccToast('Failed: ' + error.message, true); return; }
+    _ccToast('String resumed'); loadStrings();
+  };
+
   function _setupBoardRealtime() {
     _boardChannels.forEach(c => supa.removeChannel(c));
     _boardChannels = [
       supa.channel('board-plans').on('postgres_changes', { event: '*', schema: 'public', table: 'forge_plans' }, () => loadBoard()).subscribe(),
-      supa.channel('board-tasks').on('postgres_changes', { event: '*', schema: 'public', table: 'forge_tasks' }, () => loadBoard()).subscribe()
+      supa.channel('board-tasks').on('postgres_changes', { event: '*', schema: 'public', table: 'forge_tasks' }, () => loadBoard()).subscribe(),
+      supa.channel('board-bus-voice').on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'agent_messages'
+      }, (payload) => {
+        const msg = payload && payload.new;
+        if (!msg) return;
+        if (!['alessio', 'forge', 'team'].includes(msg.to_user)) return;
+        if (window.CC && CC.voice) CC.voice.speak(msg.body || '');
+      }).subscribe()
     ];
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) { _boardChannels.forEach(c => supa.removeChannel(c)); _boardChannels = []; }
@@ -1984,6 +2052,17 @@
       'sep',
       { id:'copy_id',  label:'Copy ID' },
     ].filter(i => i === 'sep' || !i.show === false || i.show === undefined);
+
+    if (type === 'forge_string') return [
+      { id:'resume',   label:'Resume',     show: s === 'paused'   },
+      { id:'pause',    label:'Pause',      show: s === 'active'   },
+      { id:'dispatch', label:'Dispatch to instance…' },
+      { id:'edit',     label:'Edit description' },
+      'sep',
+      { id:'archive',  label:'Archive',    show: s !== 'archived', danger: true },
+      'sep',
+      { id:'copy_id',  label:'Copy ID' },
+    ].filter(i => i === 'sep' || i.show !== false);
 
     return [];
   }
@@ -2035,7 +2114,7 @@
     const type = _menuType, id = _menuRowId, data = _menuCache[id] || {};
     if (!id) return;
 
-    if (actionId === 'view') { openDrillin(type === 'forge_plan' ? 'plan' : 'task', id); return; }
+    if (actionId === 'view')    { openDrawer(id); return; }
     if (actionId === 'copy_id') { navigator.clipboard.writeText(id).catch(()=>{}); _ccToast('ID copied'); return; }
 
     if (actionId === 'bounce') {
@@ -2068,6 +2147,43 @@
       if (error) { _ccToast('Failed: ' + error.message, true); return; }
       _ccToast({ approve:'Approved', park:'Parked', unpark:'Unparked', archive:'Archived' }[actionId]);
       loadBoard(); loadPlans(); return;
+    }
+
+    if (type === 'forge_string') {
+      if (actionId === 'pause') {
+        const { error } = await supa.from('forge_strings').update({ status: 'paused' }).eq('id', id);
+        if (error) { _ccToast('Failed: ' + error.message, true); return; }
+        _ccToast('String paused'); loadStrings(); return;
+      }
+      if (actionId === 'resume') {
+        const { error } = await supa.from('forge_strings').update({ status: 'active' }).eq('id', id);
+        if (error) { _ccToast('Failed: ' + error.message, true); return; }
+        _ccToast('String resumed'); loadStrings(); return;
+      }
+      if (actionId === 'dispatch') {
+        const name = data.name || id;
+        const body = `RESUME STRING from fleet.html Strings tab\nString: ${name}\nID: ${id}\n\nResume command (beast):\ncd "C:\\Users\\user\\My Drive (alessio.zilli@azcustomknives.com)\\AZCK Ltd" ; claude --model sonnet "[STRING:${name}] resume handoff"`;
+        const { error } = await supa.from('agent_messages')
+          .insert({ from_user: 'alessio', to_user: 'forge', body, status: 'sent' });
+        if (error) { _ccToast('Dispatch failed: ' + error.message, true); return; }
+        _ccToast('Dispatched to bus — forge picks it up next boot'); loadStrings(); return;
+      }
+      if (actionId === 'edit') {
+        const cur = data.description || '';
+        const newDesc = prompt('Description for "' + (data.name || '') + '":\n(leave blank to clear)', cur);
+        if (newDesc === null) return;
+        const { error } = await supa.from('forge_strings').update({ description: newDesc }).eq('id', id);
+        if (error) { _ccToast('Failed: ' + error.message, true); return; }
+        _ccToast('Description updated'); loadStrings(); return;
+      }
+      if (actionId === 'archive') {
+        if (!confirm('Archive string "' + (data.name || '') + '"?\nThis hides it from the Active view.')) return;
+        const { error } = await supa.from('forge_strings')
+          .update({ status: 'archived', archived_at: new Date().toISOString() }).eq('id', id);
+        if (error) { _ccToast('Failed: ' + error.message, true); return; }
+        _ccToast('String archived'); loadStrings(); return;
+      }
+      return;
     }
 
     if (type === 'forge_task') {
@@ -2157,7 +2273,7 @@
       live: loadLive, queue: loadQueue, cycles: loadCycles,
       today: loadToday, blocked: loadBlocked, history: loadHistory,
       cost: loadCost, tree: () => loadTree(true), plans: () => loadPlans(true),
-      bus: loadBus
+      strings: loadStrings, bus: loadBus
     };
     const fn = TAB_FNS[_getActiveTab()];
     if (!fn) return;
@@ -2178,6 +2294,51 @@
       return;
     }
     _setupBoardRealtime();
+
+    // ── Cmd+K palette live data source ──────────────────────
+    if (window.CC && CC.palette) {
+      CC.palette.setDataSource(async () => {
+        const [pr, tr] = await Promise.all([
+          supa.from('forge_plans').select('id,title,status').not('status','in','(archived,abandoned)').limit(50),
+          supa.from('forge_tasks').select('id,title,status,assigned_to').not('status','in','(done,cancelled)').limit(100)
+        ]);
+        const items = [];
+        (pr.data || []).forEach(p => items.push({
+          id: 'plan-' + p.id, title: p.title, section: 'Plans · ' + p.status,
+          handler: () => { if (typeof openDrawer === 'function') openDrawer(p.id); }
+        }));
+        (tr.data || []).forEach(t => items.push({
+          id: 'task-' + t.id, title: t.title,
+          section: 'Tasks · ' + (t.assigned_to || t.status),
+          handler: () => { if (typeof openDrawer === 'function') openDrawer(t.id); }
+        }));
+        return items;
+      });
+    }
+
+    // ── Status pips — 60s polling ────────────────────────────
+    const _DOMAIN_TAB = { 'forge_evolution': 'fleet', 'tech': 'fleet' };
+    async function _pollPips() {
+      if (!window.CC || !CC.pips) return;
+      const { data } = await supa.from('forge_tasks').select('domain,status')
+        .in('status', ['queued','in_progress','blocked','done']);
+      if (!data) return;
+      const byTab = {};
+      data.forEach(r => {
+        const tab = _DOMAIN_TAB[r.domain]; if (!tab) return;
+        if (!byTab[tab]) byTab[tab] = {};
+        byTab[tab][r.status] = (byTab[tab][r.status] || 0) + 1;
+      });
+      Object.entries(byTab).forEach(([tab, c]) => {
+        const color = c.blocked > 0 ? 'red'
+          : (c.in_progress > 0 || c.queued > 0) ? 'yellow'
+          : c.done > 0 ? 'green' : 'grey';
+        CC.pips.apply(tab, color);
+      });
+    }
+    _pollPips();
+    setInterval(_pollPips, 60000);
+
     loadBoard();
     loadLive();
     loadQueue();
@@ -2188,14 +2349,28 @@
     loadCost();
     loadTree();
     loadPlans();
+    loadStrings();
     loadBus();
     setEl('fleetEcoContainer', renderEcosystem());
 
-    // Deep-link: fleet.html#task=<uuid> or #plan=<uuid>
-    const taskMatch = location.hash.match(/^#task=([0-9a-f-]{36})$/);
-    const planMatch = location.hash.match(/^#plan=([0-9a-f-]{36})$/);
-    if (taskMatch) openDrillin('task', taskMatch[1]);
-    else if (planMatch) openDrillin('plan', planMatch[1]);
+    // Deep-link: fleet.html#task=<uuid>
+    const hashMatch = location.hash.match(/^#task=([0-9a-f-]{36})$/);
+    if (hashMatch) openDrawer(hashMatch[1]);
+
+    // Deep-link: fleet.html#drill=<uuid> — auto-detect plan vs task
+    const drillMatch = location.hash.match(/^#drill=([0-9a-f-]{36})$/);
+    if (drillMatch) {
+      const dId = drillMatch[1];
+      supa.from('forge_plans').select('id').eq('id', dId).single()
+        .then(({ data }) => openDrillIn(data ? 'plan' : 'task', dId));
+    }
+
+    // Escape key closes drill-in or drawer
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Escape') return;
+      if (_drillOpen) { closeDrillIn(); return; }
+      if (document.getElementById('fleet-drawer').classList.contains('open')) closeDrawer();
+    });
 
     // Start auto-refresh
     _lastRefresh = Date.now();
@@ -2203,6 +2378,182 @@
     setInterval(_refreshActiveTab, 30000);
     _refreshLabelTimer = setInterval(() => _updateRefreshPill(false), 5000);
   }
+
+  // ─── C4 DRILL-IN ─────────────────────────────────────────
+  let _drillOpen = false;
+
+  window.closeDrillIn = function() {
+    document.getElementById('drill-overlay').classList.remove('open');
+    document.getElementById('drill-panel').classList.remove('open');
+    document.body.style.overflow = '';
+    _drillOpen = false;
+    if (location.hash.startsWith('#drill=')) history.replaceState(null, '', location.pathname);
+  };
+
+  function _renderBounceHistory(bounceHistory) {
+    if (!Array.isArray(bounceHistory) || !bounceHistory.length) {
+      return '<div style="font-size:0.8rem;color:var(--cc-text-dim);padding:6px 0">No bounces yet.</div>';
+    }
+    return '<div class="dr-timeline">' + [...bounceHistory].reverse().map(b => `
+      <div class="dr-tl-item">
+        <div class="dr-tl-time">${fmtTs(b.timestamp || b.at)}</div>
+        <div class="dr-tl-right">
+          <div><span class="dr-tl-who" style="color:${instColor(b.instance || b.from)}">${esc(b.instance || b.from || '—')}</span><span class="dr-tl-action"> → ${esc(b.to || '—')}</span></div>
+          ${b.verdict ? `<div style="margin-top:3px">${verdictBadge(b.verdict)}</div>` : ''}
+          ${(b.delta_summary || b.note) ? `<div class="dr-tl-note">${esc(b.delta_summary || b.note)}</div>` : ''}
+        </div>
+      </div>`).join('') + '</div>';
+  }
+
+  function _renderPlanDrillIn(plan, childPlans, linkedTasks) {
+    const col = BOARD_STATUS_COLOR[plan.status] || '#8b949e';
+    const deepLink = location.origin + location.pathname + '#drill=' + plan.id;
+    const header = `
+      <div class="drill-hd">
+        <div class="drill-hd-main">
+          <h2 class="drill-title">${esc(plan.title)}</h2>
+          <div class="drill-badges">
+            <span class="badge badge-instance" style="border-color:${col}40;color:${col}">${esc(plan.status)}</span>
+            ${plan.bounce_count ? `<span style="color:var(--cc-text-dim);font-size:0.75rem">↩ ${plan.bounce_count}</span>` : ''}
+            ${plan.current_instance ? badgeInstance(plan.current_instance) : ''}
+            ${plan.domain ? `<span class="badge badge-priority-normal">${esc(plan.domain)}</span>` : ''}
+          </div>
+          <div class="drill-deeplink"><a onclick="navigator.clipboard&&navigator.clipboard.writeText('${esc(deepLink)}');this.textContent='copied!';" title="Copy deep-link"># deep-link</a></div>
+        </div>
+        <button class="drill-close" onclick="closeDrillIn()" aria-label="Close">&times;</button>
+      </div>
+      <div class="drill-body">`;
+    const bodySection = plan.body ? `<div class="drill-section"><div class="drill-section-label">Body</div><div class="drill-prose">${renderMd(plan.body)}</div></div>` : '';
+    const nextStepSection = plan.first_step_for_picker ? `
+      <div class="drill-section"><div class="drill-section-label">Next Step</div>
+      <div class="drill-next-step"><div class="ns-label">${esc(plan.current_instance || '?')} — paste and run</div>
+      <div class="ns-cmd">${esc(plan.first_step_for_picker)}</div></div></div>` : '';
+    const depItems = [];
+    if (plan.parent_plan_id && plan._parentTitle) {
+      depItems.push(`<div class="drill-dep-item" onclick="openDrillIn('plan','${esc(plan.parent_plan_id)}')"><span class="drill-dep-tag">parent</span><span class="drill-dep-title">${esc(plan._parentTitle)}</span></div>`);
+    }
+    (childPlans || []).forEach(cp => {
+      depItems.push(`<div class="drill-dep-item" onclick="openDrillIn('plan','${esc(cp.id)}')"><span class="drill-dep-tag">child</span><span class="drill-dep-title">${esc(cp.title)}</span>${badgeInstance(cp.current_instance)}</div>`);
+    });
+    const shownTasks = (linkedTasks || []).slice(0, 8);
+    shownTasks.forEach(t => {
+      depItems.push(`<div class="drill-dep-item" onclick="openDrillIn('task','${esc(t.id)}')"><span class="drill-dep-tag">task</span><span class="drill-dep-title">${esc(t.title)}</span>${badgeStatus(t.status)}</div>`);
+    });
+    if ((linkedTasks || []).length > 8) depItems.push(`<div style="font-size:0.75rem;color:var(--cc-text-dim);padding:4px 12px">+${linkedTasks.length - 8} more</div>`);
+    const depsSection = depItems.length ? `<div class="drill-section"><div class="drill-section-label">Dependencies</div><div class="drill-dep-list">${depItems.join('')}</div></div>` : '';
+    const bounceSection = `<div class="drill-section"><div class="drill-section-label">Bounce History</div>${_renderBounceHistory(plan.bounce_history)}</div>`;
+    const execLog = Array.isArray(plan.execution_log) ? [...plan.execution_log].reverse() : [];
+    const execSection = execLog.length ? `<div class="drill-section"><div class="drill-section-label">Execution Log</div><div class="dr-timeline">${execLog.map(e => `
+      <div class="dr-tl-item"><div class="dr-tl-time">${fmtTs(e.timestamp)}</div>
+      <div class="dr-tl-right"><span class="dr-tl-who" style="color:${instColor(e.instance)}">${esc(e.instance||'—')}</span><span class="dr-tl-action"> · ${esc(e.action||'—')}</span>${e.note?`<div class="dr-tl-note">${esc(e.note)}</div>`:''}</div></div>`).join('')}</div></div>` : '';
+    const metaSection = `<div class="drill-section"><div class="drill-meta-grid">
+      <div class="drill-meta-item"><div class="k">Created</div><div class="v">${fmtDateTime(plan.created_at)}</div></div>
+      <div class="drill-meta-item"><div class="k">Updated</div><div class="v">${fmtDateTime(plan.updated_at)}</div></div>
+      <div class="drill-meta-item"><div class="k">Est cost</div><div class="v">${fmtCost(plan.cost_est_cad)}</div></div>
+      <div class="drill-meta-item"><div class="k">Completion</div><div class="v">${esc(plan.completion_rule||'—')}</div></div>
+      <div class="drill-meta-item"><div class="k">Created by</div><div class="v">${esc(plan.created_by||'—')}</div></div>
+      ${plan.shipped_at?`<div class="drill-meta-item"><div class="k">Shipped</div><div class="v">${fmtDateTime(plan.shipped_at)}</div></div>`:''}
+    </div></div>`;
+    return header + bodySection + nextStepSection + depsSection + bounceSection + execSection + metaSection + '</div>';
+  }
+
+  function _renderTaskDrillIn(task, claim, depTasks) {
+    const deepLink = location.origin + location.pathname + '#drill=' + task.id;
+    const baseTags = (task.tags || []).map(tg =>
+      `<span class="badge" style="background:rgba(88,166,255,0.08);color:#79c0ff;border:1px solid rgba(88,166,255,0.2)">${esc(tg)}</span>`).join('');
+    const header = `
+      <div class="drill-hd">
+        <div class="drill-hd-main">
+          <h2 class="drill-title">${esc(task.title)}</h2>
+          <div class="drill-badges">
+            ${badgeStatus(task.status)}${badgePriority(task.priority)}
+            ${(task.assigned_to||task.suggested_to) ? badgeInstance(task.assigned_to||task.suggested_to) : ''}
+            ${badgeModel(task.suggested_model)}${baseTags}
+          </div>
+          <div class="drill-deeplink"><a onclick="navigator.clipboard&&navigator.clipboard.writeText('${esc(deepLink)}');this.textContent='copied!';" title="Copy deep-link"># deep-link</a></div>
+        </div>
+        <button class="drill-close" onclick="closeDrillIn()" aria-label="Close">&times;</button>
+      </div>
+      <div class="drill-body">`;
+    const bodySection = task.body ? `<div class="drill-section"><div class="drill-section-label">Plan</div><div class="drill-prose">${renderMd(task.body)}</div></div>` : '';
+    const inst = task.assigned_to || task.suggested_to || '?';
+    const mdl = task.suggested_model || 'sonnet';
+    const cmd = task.first_step_for_picker || `cd "C:\\Users\\user\\My Drive (alessio.zilli@azcustomknives.com)\\AZCK Ltd" ; claude --model ${mdl} "claim task ${task.id}"`;
+    const nextStepSection = `<div class="drill-section"><div class="drill-section-label">Next Step</div>
+      <div class="drill-next-step"><div class="ns-label">${esc(inst)} · ${esc(mdl)} — paste and run</div>
+      <div class="ns-cmd">${esc(cmd)}</div></div></div>`;
+    const depItems = [];
+    if (task.parent_plan_id) {
+      depItems.push(`<div class="drill-dep-item" onclick="openDrillIn('plan','${esc(task.parent_plan_id)}')"><span class="drill-dep-tag">plan</span><span class="drill-dep-title">${esc(task.parent_plan_id.slice(0,8)+'…')}</span></div>`);
+    }
+    (depTasks || []).forEach(dt => {
+      depItems.push(`<div class="drill-dep-item" onclick="openDrillIn('task','${esc(dt.id)}')"><span class="drill-dep-tag">${esc(dt._rel||'sibling')}</span><span class="drill-dep-title">${esc(dt.title)}</span>${badgeStatus(dt.status)}</div>`);
+    });
+    const depsSection = depItems.length ? `<div class="drill-section"><div class="drill-section-label">Dependencies</div><div class="drill-dep-list">${depItems.join('')}</div></div>` : '';
+    const acSection = task.acceptance_criteria ? `<div class="drill-section"><div class="drill-section-label">Acceptance Criteria</div><p class="dr-criteria">${esc(task.acceptance_criteria)}</p></div>` : '';
+    let claimSection = '';
+    if (task.status === 'in_progress') {
+      claimSection = `<div class="drill-section"><div class="drill-section-label">Active Claim</div><div class="dr-claim-row">
+        ${claim ? badgeInstance(claim.claimed_by) : (task.assigned_to ? badgeInstance(task.assigned_to) : '<span style="color:var(--cc-text-dim)">no active claim</span>')}
+        ${claim && claim.claimed_at ? `<span>${fmtAge(claim.claimed_at)}</span>` : ''}
+      </div></div>`;
+    }
+    const execLog = Array.isArray(task.execution_log) ? [...task.execution_log].reverse() : [];
+    const execSection = `<div class="drill-section"><div class="drill-section-label">Execution Log</div><div class="dr-timeline">${execLog.length ? execLog.map(e => `
+      <div class="dr-tl-item"><div class="dr-tl-time">${fmtTs(e.timestamp)}</div>
+      <div class="dr-tl-right"><span class="dr-tl-who" style="color:${instColor(e.instance)}">${esc(e.instance||'—')}</span><span class="dr-tl-action"> · ${esc(e.action||'—')}</span>${e.note?`<div class="dr-tl-note">${esc(e.note)}</div>`:''}</div></div>`).join('') :
+      '<div style="font-size:0.8rem;color:var(--cc-text-dim);padding:6px 0">No execution entries yet.</div>'}</div></div>`;
+    const metaSection = `<div class="drill-section"><div class="drill-meta-grid">
+      <div class="drill-meta-item"><div class="k">Created</div><div class="v">${fmtDateTime(task.created_at)}</div></div>
+      <div class="drill-meta-item"><div class="k">Updated</div><div class="v">${fmtDateTime(task.updated_at)}</div></div>
+      <div class="drill-meta-item"><div class="k">Est cost</div><div class="v">${fmtCost(task.cost_est_cad)}</div></div>
+      ${task.cost_actual_cad!=null?`<div class="drill-meta-item"><div class="k">Actual</div><div class="v">${fmtCost(task.cost_actual_cad)}</div></div>`:''}
+      <div class="drill-meta-item"><div class="k">Side effects</div><div class="v">${esc(task.side_effects||'—')}</div></div>
+      <div class="drill-meta-item"><div class="k">Created by</div><div class="v">${esc(task.created_by||'—')}</div></div>
+    </div></div>`;
+    return header + bodySection + nextStepSection + depsSection + acSection + claimSection + execSection + metaSection + '</div>';
+  }
+
+  window.openDrillIn = async function(type, id) {
+    const overlay = document.getElementById('drill-overlay');
+    const panel   = document.getElementById('drill-panel');
+    const inner   = document.getElementById('drill-inner');
+    inner.innerHTML = '<div class="dr-loading">Loading&hellip;</div>';
+    overlay.classList.add('open');
+    panel.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    _drillOpen = true;
+    history.replaceState(null, '', '#drill=' + id);
+
+    if (type === 'plan') {
+      const [planRes, childRes, taskRes] = await Promise.all([
+        supa.from('forge_plans').select('*').eq('id', id).single(),
+        supa.from('forge_plans').select('id,title,status,current_instance').eq('parent_plan_id', id).order('created_at'),
+        supa.from('forge_tasks').select('id,title,status,suggested_to,suggested_model').eq('parent_plan_id', id).order('created_at')
+      ]);
+      if (planRes.error) { inner.innerHTML = `<div class="dr-loading">Error: ${esc(planRes.error.message)}</div>`; return; }
+      const plan = planRes.data;
+      if (plan.parent_plan_id) {
+        const { data: par } = await supa.from('forge_plans').select('title').eq('id', plan.parent_plan_id).single();
+        if (par) plan._parentTitle = par.title;
+      }
+      inner.innerHTML = _renderPlanDrillIn(plan, childRes.data || [], taskRes.data || []);
+    } else {
+      const [taskRes, claimRes] = await Promise.all([
+        supa.from('forge_tasks').select('*').eq('id', id).single(),
+        supa.from('forge_claims').select('claimed_by,instance_id,claimed_at,verify_url').eq('task_id', id).is('released_at', null).maybeSingle()
+      ]);
+      if (taskRes.error) { inner.innerHTML = `<div class="dr-loading">Error: ${esc(taskRes.error.message)}</div>`; return; }
+      const task = taskRes.data;
+      let depTasks = [];
+      if (task.parent_plan_id) {
+        const { data: siblings } = await supa.from('forge_tasks')
+          .select('id,title,status').eq('parent_plan_id', task.parent_plan_id).neq('id', id).limit(6);
+        if (siblings) depTasks = siblings.map(s => ({ ...s, _rel: 'sibling' }));
+      }
+      inner.innerHTML = _renderTaskDrillIn(task, claimRes.data, depTasks);
+    }
+  };
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
